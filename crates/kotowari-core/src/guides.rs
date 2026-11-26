@@ -1,13 +1,11 @@
-//! `ガイド`を読み、`ガイドの印`を取り出す（REQ-core-198〜REQ-core-202、REQ-core-206、TBL-core-036）
+//! `ガイド`を読み、`ガイドの印`を取り出す
 
-use crate::fingerprint::fingerprint_of;
-use crate::ir::{IrDocument, is_valid_id, split_lines};
-use crate::{Finding, FindingKind, StopReason};
+use crate::{Finding, FindingKind, StopReason, split_lines};
 use markdown::mdast::Node;
 use std::collections::BTreeMap;
 use std::ops::Range;
 
-/// 形の正しい`ガイドの印`の1件（TBL-core-036）
+/// 形の正しい`ガイドの印`の1件
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuideEntry {
     /// `ガイド`の`基準のディレクトリ`からの相対パス
@@ -19,7 +17,7 @@ pub struct GuideEntry {
     pub fingerprint: String,
 }
 
-/// "kotowari check" の "guides"（REQ-core-206、TBL-core-005）
+/// "kotowari check" の "guides"
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize)]
 pub struct GuideTally {
     /// 読んだ`ガイド`の数。パスごとに1回
@@ -31,25 +29,16 @@ impl GuideTally {
     readonly!(copy files: usize, marks: usize);
 }
 
-/// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、
-/// 同じ文書では行の小さい順）に引く。docs も items もその順に並んでいる
-fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
-    let mut by_id: BTreeMap<&str, Vec<String>> = BTreeMap::new();
-    for doc in docs {
-        let lines = split_lines(&doc.raw_content);
-        for item in &doc.items {
-            if let Some(id) = item.id() {
-                by_id
-                    .entry(id)
-                    .or_default()
-                    .push(fingerprint_of(doc, item, &lines));
-            }
-        }
+/// 決定の文書の決定の`指紋`を、印が指す行き先（"<文書のパス>#<見出しの行き先の名前>"）から引く
+fn fingerprints_by_id(decisions: &[crate::decisions::Document]) -> BTreeMap<String, Vec<String>> {
+    let mut by_id: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (target, fingerprint) in crate::decisions::fingerprints(decisions) {
+        by_id.entry(target).or_default().push(fingerprint);
     }
     by_id
 }
 
-/// 1つの文書から読んだ形の正しい`ガイドの印`の1件と、その古さ（REQ-core-204）
+/// 1つの文書から読んだ形の正しい`ガイドの印`の1件と、その古さ
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GuideMark {
     line: usize,
@@ -93,16 +82,16 @@ impl GuideMarks {
     }
 }
 
-/// `ガイド`と同じ規則で、ほかの文書の`ガイドの印`を1つずつ読む（REQ-core-200〜REQ-core-204）。
-/// 置き場の重なりの`停止`（REQ-core-199）は読む側が決めるので、ここでは見ない。
+/// `ガイド`と同じ規則で、ほかの文書の`ガイドの印`を1つずつ読む。
+/// 置き場の重なりの`停止`は読む側が決めるので、ここでは見ない。
 /// `項目`と`シナリオ`の`指紋`は作るときに1回だけ求める
-pub struct GuideReader<'a> {
-    fingerprints: BTreeMap<&'a str, Vec<String>>,
+pub struct GuideReader {
+    fingerprints: BTreeMap<String, Vec<String>>,
 }
-impl<'a> GuideReader<'a> {
-    pub(crate) fn new(docs: &'a [IrDocument]) -> Self {
+impl GuideReader {
+    pub(crate) fn new(decisions: &[crate::decisions::Document]) -> Self {
         Self {
-            fingerprints: fingerprints_by_id(docs),
+            fingerprints: fingerprints_by_id(decisions),
         }
     }
     /// path を指摘の "path" にして1つの文書を読む
@@ -131,16 +120,16 @@ impl<'a> GuideReader<'a> {
     }
 }
 
-fn is_current(entry: &GuideEntry, fingerprints: &BTreeMap<&str, Vec<String>>) -> bool {
+fn is_current(entry: &GuideEntry, fingerprints: &BTreeMap<String, Vec<String>>) -> bool {
     fingerprints
         .get(entry.id.as_str())
         .is_some_and(|all| all.contains(&entry.fingerprint))
 }
 
-pub fn check_entries<'a>(
+pub(crate) fn check_entries<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     test_files: &[String],
-    docs: &[IrDocument],
+    decisions: &[crate::decisions::Document],
     findings: &mut Vec<Finding>,
 ) -> Result<GuideTally, StopReason> {
     let files: Vec<_> = files.into_iter().collect();
@@ -149,7 +138,7 @@ pub fn check_entries<'a>(
     for (path, text) in &files {
         read_marks(path, text, &parsed_comments(text), &mut entries, findings);
     }
-    check_stale(&entries, &fingerprints_by_id(docs), findings);
+    check_stale(&entries, &fingerprints_by_id(decisions), findings);
     Ok(GuideTally {
         files: files.len(),
         marks: entries.len(),
@@ -173,11 +162,11 @@ pub fn validate_overlap<'a>(
     Ok(())
 }
 
-/// REQ-core-204: どの`項目`と`シナリオ`の`指紋`とも同じでない1件ごとに guide_stale を出す。
-/// detail の今の`指紋`は、`IR`に無ければ "-"、あれば1つ目の`指紋`
+/// どの`項目`と`シナリオ`の`指紋`とも同じでない1件ごとに guide_stale を出す。
+/// detail の今の`指紋`は、指す決定が無ければ "-"、あれば1つ目の`指紋`
 fn check_stale(
     entries: &[GuideEntry],
-    fingerprints: &BTreeMap<&str, Vec<String>>,
+    fingerprints: &BTreeMap<String, Vec<String>>,
     findings: &mut Vec<Finding>,
 ) {
     for entry in entries {
@@ -208,7 +197,7 @@ pub(crate) fn mark_entries(content: &str, root: Option<&Node>) -> Vec<GuideEntry
 }
 
 /// 1つの`ガイド`から`ガイドの印`を読む。形の正しい印の1件を entries に、形の誤った印ごとに
-/// invalid_marker を findings に積む（REQ-core-200、REQ-core-202）
+/// invalid_marker を findings に積む
 fn read_marks(
     path: &str,
     content: &str,
@@ -223,7 +212,7 @@ fn read_marks(
             let start = from + found;
             let line = lines.line_of(start);
             let inner_start = start + MARK_START.len();
-            // TBL-core-036: 終わりは始まりと同じ行の "]"。コメントの外の "]" は読まない
+            // 終わりは始まりと同じ行の "]"。コメントの外の "]" は読まない
             let line_end = comment.end.min(lines.end_of(line));
             let parsed = content[inner_start..line_end]
                 .find(']')
@@ -249,7 +238,8 @@ fn read_marks(
     }
 }
 
-/// TBL-core-036 の中身を (`ID`, `指紋`) の並びに分ける。形の誤りがあれば None（REQ-core-202）
+/// 印の中身を (行き先, `指紋`) の並びに分ける。形の誤りがあれば None。行き先は決定の文書の決定を
+/// 指す "<文書のパス>#<見出しの行き先の名前>"
 fn parse_entries(inner: &str) -> Option<Vec<(String, String)>> {
     let parts: Vec<&str> = inner.split(',').map(str::trim).collect();
     // 中が空か区切りだけ
@@ -261,13 +251,13 @@ fn parse_entries(inner: &str) -> Option<Vec<(String, String)>> {
         .map(|part| {
             let (id, fingerprint) = part.split_once(':')?;
             let (id, fingerprint) = (id.trim(), fingerprint.trim());
-            (is_valid_id(id) && is_fingerprint(fingerprint))
+            (crate::decisions::is_decision_target(id) && is_fingerprint(fingerprint))
                 .then(|| (id.to_string(), fingerprint.to_string()))
         })
         .collect()
 }
 
-/// TBL-core-036: 16進の小文字の8文字
+/// 16進の小文字の8文字
 fn is_fingerprint(text: &str) -> bool {
     text.len() == 8 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
 }
@@ -279,7 +269,7 @@ fn parsed_comments(content: &str) -> Vec<Range<usize>> {
         .map_or_else(|_| Vec::new(), |root| html_comments(content, &root))
 }
 
-/// HTML のコメントの "<!--" と "-->" の間のバイトの範囲（REQ-core-200）。
+/// HTML のコメントの "<!--" と "-->" の間のバイトの範囲。
 /// `ガイド`を CommonMark として読み、HTML の節（ブロックの形と段落の中の形）だけを見るので、
 /// コードブロック（字下げの形とフェンスの形）とコードスパンの中は入らない。
 /// 範囲は節の値ではなく元の文字から取る。リストの中などでは節の値から字下げが除かれるが、
@@ -314,7 +304,7 @@ fn collect_html(node: &Node, html: &mut Vec<Range<usize>>) {
     }
 }
 
-/// バイトの位置から行（1始まり）と行の文字を引く。行の区切りは TBL-core-010（`split_lines`）と同じ
+/// バイトの位置から行（1始まり）と行の文字を引く。行の区切りは `split_lines` と同じ
 struct LineIndex<'a> {
     lines: Vec<&'a str>,
     /// 各行の始まりのバイトの位置

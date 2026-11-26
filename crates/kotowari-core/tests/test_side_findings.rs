@@ -2,7 +2,7 @@
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
 )]
-//! テスト側の指摘の範囲（docs/ir/core/test-side-findings.md）
+//! テスト側の指摘の範囲（docs/decisions/core/test-side-findings.md）
 
 use kotowari_core::{
     CheckInputs, Finding, FindingGroup, FindingKind, Inspection, SourceText, SurfaceAnalysis,
@@ -38,9 +38,7 @@ fn inspect_with(findings: Vec<Finding>) -> Inspection {
     let surface_only = SourceText::new(SURFACE_ONLY, "fn b() {}").unwrap();
     let both = SourceText::new(TEST_AND_SURFACE, "fn c() {}").unwrap();
     let mut inputs = CheckInputs::default();
-    inputs.read.ir = Some(vec![]);
-    inputs.read.records = Some(vec![]);
-    inputs.read.adr = Some(vec![]);
+    inputs.read.decisions = Some(vec![]);
     inputs.read.tests = Some(vec![test_file(&test_only), test_file(&both)]);
     inputs.read.config.surface.rules = vec!["rules.yaml".into()];
     inputs.read.config.surface.files = vec!["src/**".into()];
@@ -49,17 +47,16 @@ fn inspect_with(findings: Vec<Finding>) -> Inspection {
     Inspection::build(inputs).unwrap()
 }
 
-// @kotowari[TBL-core-047]
+// @kotowari[C-core-testside-4, C-core-testside-5, C-core-testside-6, C-core-testside-7, C-core-testside-8]
 #[test]
-fn tbl_core_047_each_row_decides_whether_an_error_is_a_test_side_finding() {
+fn each_row_decides_whether_an_error_is_a_test_side_finding() {
     let cases = [
         (
-            FindingKind::RequirementWithoutTest,
-            "docs/ir/topic.md",
+            FindingKind::ConfirmationWithoutTest,
+            "docs/decisions/topic.md",
             true,
         ),
-        (FindingKind::ScenarioWithoutTest, "docs/ir/topic.md", true),
-        (FindingKind::TestWithoutId, "docs/ir/topic.md", true),
+        (FindingKind::TestWithoutId, "docs/decisions/topic.md", true),
         (FindingKind::InvalidMarker, TEST_ONLY, true),
         (FindingKind::InvalidMarker, "docs/guides/a.md", false),
         (FindingKind::UnresolvedReference, TEST_ONLY, true),
@@ -68,7 +65,7 @@ fn tbl_core_047_each_row_decides_whether_an_error_is_a_test_side_finding() {
         (FindingKind::UnparsableFile, TEST_AND_SURFACE, false),
         (FindingKind::UnparsableFile, SURFACE_ONLY, false),
         // 表に無い種類は、テストのファイルから出てもテスト側の指摘でない
-        (FindingKind::UnknownTerm, TEST_ONLY, false),
+        (FindingKind::MissingTitle, TEST_ONLY, false),
     ];
     for (kind, path, expected) in cases {
         let inspection = inspect_with(vec![Finding::new(

@@ -12,16 +12,11 @@ fn send<T: Send>(value: T) -> T {
     value
 }
 
-// @kotowari[REQ-core-318, REQ-core-321, EX-core-492, EX-core-495]
+// @kotowari[C-core-libasync-1, C-core-libasync-8]
 #[test]
 fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
     let dir = tempfile::tempdir().unwrap();
-    for path in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
+    for path in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(dir.path().join(path)).unwrap();
     }
     std::fs::write(
@@ -29,7 +24,6 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
         "tests:\n  files: []\n",
     )
     .unwrap();
-    std::fs::write(dir.path().join("docs/ir/topic.md"), "# Topic\n").unwrap();
     std::fs::write(dir.path().join("plan.md"), "# Plan\n").unwrap();
     std::fs::write(dir.path().join("outcomes.json"), "{\"outcomes\": []}").unwrap();
     let options = send(ProjectOptions::new(dir.path()));
@@ -56,8 +50,8 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
             sync.list().unwrap().items().len()
         );
         assert_eq!(
-            send(adapter.query("REQ-999")).await.err().unwrap().kind(),
-            sync.query("REQ-999").err().unwrap().kind()
+            send(adapter.query("C-t-999")).await.err().unwrap().kind(),
+            sync.query("C-t-999").err().unwrap().kind()
         );
         let read = send(send(adapter.read()).await.unwrap());
         let inspection = send(send(adapter.inspect()).await.unwrap());
@@ -94,33 +88,28 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
     });
 }
 
-// @kotowari[REQ-core-310, TBL-core-041, REQ-core-318]
+// @kotowari[C-core-libapi-13, C-core-libasync-1]
 #[test]
 fn overview_prepare_and_build_return_what_the_sync_operations_return() {
     let make = || {
         let dir = tempfile::tempdir().unwrap();
-        for path in [
-            ".kotowari/overview",
-            "docs/ir",
-            "docs/decision/records",
-            "docs/decision/adr",
-        ] {
+        for path in [".kotowari/overview", "docs/decisions"] {
             std::fs::create_dir_all(dir.path().join(path)).unwrap();
         }
         std::fs::write(
             dir.path().join(".kotowari/config.yaml"),
-            "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+            "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
         )
         .unwrap();
         for name in ["a", "b"] {
             std::fs::write(
                 dir.path().join(format!(".kotowari/overview/{name}.md")),
-                format!("---\nir:\n  - docs/ir/{name}.md\n---\n\n# {name}\n\n```view lead\nconclusion: c\n```\n"),
+                format!("---\ndocuments:\n  - docs/decisions/{name}.md\n---\n\n# {name}\n\n```view lead\nconclusion: c\n```\n"),
             )
             .unwrap();
             std::fs::write(
-                dir.path().join(format!("docs/ir/{name}.md")),
-                "# Topic\n\nScope.\n",
+                dir.path().join(format!("docs/decisions/{name}.md")),
+                "# Topic\n\nDecides the topic.\n",
             )
             .unwrap();
         }

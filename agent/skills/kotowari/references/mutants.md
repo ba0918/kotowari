@@ -1,6 +1,6 @@
 Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-Mutation testing puts one small change (a mutation) into the implementation and sees whether the tests fail. If they do not fail, there is no test constraining that change. A mutation that did not make the tests fail is called a miss. `kotowari check` looks only as far as "do requirements and examples have tests with marks", so whether the tests constrain the implementation is looked at here.
+Mutation testing puts one small change (a mutation) into the implementation and sees whether the tests fail. If they do not fail, there is no test constraining that change. A mutation that did not make the tests fail is called a miss. `kotowari check` looks only as far as "does each confirmation row have a test with a marker", so whether the tests constrain the implementation is looked at here.
 
 ## Using kotowari mutants
 
@@ -79,7 +79,7 @@ Sort each miss into one of the following three.
 | Untested | The behaviour changes, but no test looks at it | "The untested steps" below |
 | Suspected defect | The original code is wrong | Fix it. If it needs an interpretation of the specification, return to brainstorm |
 
-The untested steps: first confirm whether the requirement is specific enough to distinguish that mutation. If it is vague and cannot distinguish it, do not add a test; return to the IR. Adding a test first would pin the vague requirement to the implementation's current behaviour. If it is specific, add a test with the mark of that requirement or example.
+The untested steps: first confirm whether the decision and its rows to confirm are specific enough to distinguish that mutation. If they are vague and cannot distinguish it, do not add a test; return to brainstorm. Adding a test first would pin the vague decision to the implementation's current behaviour. If they are specific, add a test with the mark of the row it confirms.
 
 The equivalent steps:
 

@@ -1,9 +1,9 @@
-//! `テスト側の指摘`の範囲（TBL-core-047）
+//! `テスト側の指摘`の範囲
 
 use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
-/// TBL-core-047 の「`テスト側の指摘`である条件」の列
+/// 「`テスト側の指摘`である条件」の列
 enum Condition {
     Always,
     InTestFile,
@@ -14,65 +14,33 @@ enum Condition {
 
 fn condition(kind: FindingKind) -> Condition {
     match kind {
-        FindingKind::RequirementWithoutTest
-        | FindingKind::ScenarioWithoutTest
-        | FindingKind::TestWithoutId => Condition::Always,
+        FindingKind::TestWithoutId | FindingKind::ConfirmationWithoutTest => Condition::Always,
         FindingKind::InvalidMarker | FindingKind::UnresolvedReference => Condition::InTestFile,
         FindingKind::UnparsableFile => Condition::InTestFileNotSurface,
-        FindingKind::AlgorithmWithoutDefinition
-        | FindingKind::DeferredWithTest
-        | FindingKind::DependsOnDeferred
-        | FindingKind::DuplicateField
-        | FindingKind::DuplicateId
-        | FindingKind::DuplicateTerm
+        FindingKind::DuplicateId
         | FindingKind::EquivalentInvalid
         | FindingKind::EquivalentStale
         | FindingKind::IdDomainMismatch
-        | FindingKind::InvalidGlossaryRow
-        | FindingKind::MissingDocument
-        | FindingKind::MissingField
-        | FindingKind::MissingScope
-        | FindingKind::MissingSource
-        | FindingKind::MissingStatement
-        | FindingKind::MissingTable
-        | FindingKind::MissingTag
         | FindingKind::MissingTitle
         | FindingKind::MultipleTitles
         | FindingKind::MutantSurvived
         | FindingKind::MutantTimeout
-        | FindingKind::RecordFieldMissing
-        | FindingKind::RecordFieldUnknown
-        | FindingKind::RevisionLinkInvalid
-        | FindingKind::SourceInvalid
         | FindingKind::SurfaceUnspecifiedInvalid
         | FindingKind::SurfaceUnspecifiedStale
         | FindingKind::SurfaceWithoutSpec
-        | FindingKind::TooManyLines
-        | FindingKind::TooManyRequirements
-        | FindingKind::UnclosedBacktick
         | FindingKind::UnclosedCodeBlock
-        | FindingKind::UnknownCodeBlock
-        | FindingKind::UnknownField
         | FindingKind::UnknownHeading
-        | FindingKind::UnknownKind
         | FindingKind::UnknownLine
-        | FindingKind::UnknownTag
-        | FindingKind::UnknownTerm
-        | FindingKind::InvalidGherkinLine
         | FindingKind::InvalidId
         | FindingKind::InvalidPlan
-        | FindingKind::GlossaryInvalid
-        | FindingKind::GlossaryTitleInvalid
         | FindingKind::GuideStale
         | FindingKind::VagueWord
-        | FindingKind::VerificationInvalid
-        | FindingKind::VerificationMissing
         | FindingKind::OverviewFormInvalid
         | FindingKind::OverviewPartUnknown
         | FindingKind::OverviewPartInvalid
         | FindingKind::OverviewLeadMissing
-        | FindingKind::OverviewIrMissing
-        | FindingKind::OverviewIrShared
+        | FindingKind::OverviewDocumentMissing
+        | FindingKind::OverviewDocumentShared
         | FindingKind::OverviewRefUnresolved
         | FindingKind::OverviewNameConflict
         | FindingKind::OverviewTocInvalid
@@ -86,7 +54,11 @@ fn condition(kind: FindingKind) -> Condition {
         | FindingKind::TranslationStructureMismatch
         | FindingKind::TranslationSwitcherInvalid
         | FindingKind::LinkLanguageMismatch
-        | FindingKind::LinkToRecord => Condition::Never,
+        | FindingKind::LinkToRecord
+        | FindingKind::DecisionStateInvalid
+        | FindingKind::DecisionSectionMissing
+        | FindingKind::TopicLeadMissing
+        | FindingKind::LinkTargetMissing => Condition::Never,
     }
 }
 
@@ -112,7 +84,7 @@ impl TestSideFiles {
             tests: tests.iter().cloned().collect(),
         }
     }
-    /// finding が TBL-core-047 の条件に当たるか。表の種類の重大度はどれも "error" なので、
+    /// finding が 表の種類の重大度はどれも "error" なので、
     /// 重大度は見ない
     pub(crate) fn contains(&self, finding: &Finding) -> bool {
         let in_tests = self.tests.contains(finding.path());

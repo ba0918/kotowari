@@ -1,6 +1,6 @@
-//! 停止の理由（TBL-core-018）
+//! 停止の理由
 
-/// 停止の理由と、標準エラーの1行目で詳細の前に出る文言（TBL-core-018）。
+/// 停止の理由と、標準エラーの1行目で詳細の前に出る文言。
 /// この呼び出しの一覧が変種の唯一の在り処で、列挙体・`WORDINGS`・`Display` はここから作る。
 macro_rules! stop_reasons {
     ($($variant:ident => $wording:literal,)+) => {

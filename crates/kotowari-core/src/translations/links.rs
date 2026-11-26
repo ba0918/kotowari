@@ -1,14 +1,14 @@
-//! `側`のリンクの行き先（REQ-core-347、TBL-core-044）
+//! `側`のリンクの行き先
 
 use super::*;
 
 /// CommonMark のリンクと画像の行き先と、リンクの参照の定義の行き先
-pub(super) struct Link {
-    pub(super) destination: String,
-    pub(super) line: usize,
+pub(crate) struct Link {
+    pub(crate) destination: String,
+    pub(crate) line: usize,
 }
 
-pub(super) fn links(root: &markdown::mdast::Node) -> Vec<Link> {
+pub(crate) fn links(root: &markdown::mdast::Node) -> Vec<Link> {
     fn definitions<'a>(
         node: &'a markdown::mdast::Node,
         out: &mut std::collections::BTreeMap<&'a str, &'a String>,
@@ -56,7 +56,7 @@ pub(super) fn links(root: &markdown::mdast::Node) -> Vec<Link> {
 }
 
 /// 検査するリンクの行き先を、その`側`のあるディレクトリから辿った`基準のディレクトリ`からの相対パスに
-/// する。スキームか "#" で始まる行き先は検査しないので None（REQ-core-347）
+/// する。スキームか "#" で始まる行き先は検査しないので None
 pub(super) fn target(side: &str, destination: &str) -> Option<String> {
     let mut chars = destination.chars();
     let scheme = chars.next().is_some_and(|c| c.is_ascii_alphabetic())
@@ -73,7 +73,6 @@ pub(super) fn target(side: &str, destination: &str) -> Option<String> {
 }
 
 /// `骨組み`の link の部分。ほかの言語の`側`を指す行き先はその`対`の`先頭の言語`の`側`に読み替える
-/// （TBL-core-044）
 pub(super) fn link_part(
     path: &str,
     root: &markdown::mdast::Node,

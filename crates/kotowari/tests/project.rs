@@ -6,24 +6,20 @@ use kotowari::{Project, ProjectOptions};
 
 fn project() -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
-    for path in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
+    for path in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(dir.path().join(path)).unwrap();
     }
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\n",
+        "decisions:\n  documents: docs/decisions\ntests:\n  files: []\n",
     )
     .unwrap();
-    std::fs::write(dir.path().join("docs/ir/topic.md"), "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: Inspect.\n\nStatement.\n").unwrap();
+    // テストの指していない確認することの行が1つあり、check の誤りになる
+    std::fs::write(dir.path().join("docs/decisions/topic.md"), "# Topic\n\nScope.\n\n## Name\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nStatement.\n\n### Confirmations\n\n- C-t-1 Inspected\n").unwrap();
     dir
 }
 
-// @kotowari[REQ-core-310, REQ-core-311, REQ-core-312, REQ-core-316, REQ-core-317, EX-core-483, EX-core-484, EX-core-490, EX-core-491]
+// @kotowari[C-core-libapi-1, C-core-libapi-4, C-core-libpaths-13, C-core-libinputs-9, C-core-libinputs-10]
 #[test]
 fn project_operations_reuse_owned_results_and_explicit_reads_observe_changes() {
     let dir = project();
@@ -31,25 +27,25 @@ fn project_operations_reuse_owned_results_and_explicit_reads_observe_changes() {
     let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
     let read = project.read().unwrap();
     let inspection = project.inspect().unwrap();
-    assert!(read.query("REQ-001").is_ok());
+    assert!(read.query("C-t-1").is_ok());
     assert!(!read.list().items().is_empty());
-    assert!(read.query("REQ-999").is_err());
+    assert!(read.query("C-t-999").is_err());
     assert!(!inspection.check().findings().is_empty());
     assert!(!inspection.status().complete());
-    std::fs::write(dir.path().join("docs/ir/topic.md"), "# Changed\n").unwrap();
-    assert!(read.query("REQ-001").is_ok());
-    assert!(inspection.read().query("REQ-001").is_ok());
-    assert!(project.read().unwrap().query("REQ-001").is_err());
-    assert!(project.query("REQ-001").is_err());
+    std::fs::write(dir.path().join("docs/decisions/topic.md"), "# Changed\n").unwrap();
+    assert!(read.query("C-t-1").is_ok());
+    assert!(inspection.read().query("C-t-1").is_ok());
+    assert!(project.read().unwrap().query("C-t-1").is_err());
+    assert!(project.query("C-t-1").is_err());
     assert!(project.list().unwrap().items().is_empty());
     assert!(!project.check().unwrap().findings().is_empty());
     assert!(!project.status().unwrap().complete());
     assert_eq!(std::env::current_dir().unwrap(), cwd);
 }
 
-// @kotowari[REQ-core-310, REQ-core-312, REQ-core-323, EX-core-484, EX-core-486, EX-core-500]
+// @kotowari[C-core-libapi-1, C-core-libapi-5, C-core-libinputs-12, C-core-libpaths-11]
 #[test]
-fn project_rejects_relative_roots_and_plan_does_not_require_ir() {
+fn project_rejects_relative_roots_and_plan_does_not_require_decision_documents() {
     assert!(Project::new(ProjectOptions::new("relative")).is_err());
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("plan.md"), "# Incomplete\n").unwrap();
@@ -64,9 +60,9 @@ fn project_rejects_relative_roots_and_plan_does_not_require_ir() {
     assert!(project.plan(std::path::Path::new("missing.md")).is_err());
 }
 
-// @kotowari[REQ-core-310, REQ-core-312, EX-core-484, EX-core-486]
+// @kotowari[C-core-libapi-1, C-core-libapi-5, C-core-libinputs-12]
 #[test]
-fn mutants_have_typed_inputs_and_failures_without_ir_loading() {
+fn mutants_have_typed_inputs_and_failures_without_loading_decision_documents() {
     use kotowari::{MutantsOptions, Tool};
     let dir = tempfile::tempdir().unwrap();
     let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
@@ -88,7 +84,7 @@ fn mutants_have_typed_inputs_and_failures_without_ir_loading() {
     );
 }
 
-// @kotowari[REQ-core-311, REQ-core-323, EX-core-483, EX-core-501]
+// @kotowari[C-core-libpaths-3, C-core-libpaths-12]
 #[test]
 fn absolute_resolution_bases_survive_a_child_process_directory_change() {
     const CHILD: &str = "KOTOWARI_PROJECT_BASIS_CHILD";
@@ -98,7 +94,7 @@ fn absolute_resolution_bases_survive_a_child_process_directory_change() {
         let project = Project::new(options).unwrap();
         let other = std::env::var_os("KOTOWARI_PROJECT_OTHER_ROOT").unwrap();
         std::env::set_current_dir(other).unwrap();
-        assert!(project.query("REQ-001").is_ok());
+        assert!(project.query("C-t-1").is_ok());
         return;
     }
     let original = project();
@@ -118,13 +114,13 @@ fn absolute_resolution_bases_survive_a_child_process_directory_change() {
         String::from_utf8_lossy(&output.stdout)
     );
 }
-// @kotowari[REQ-core-322, EX-core-499]
+// @kotowari[C-core-libcrates-10]
 #[test]
 fn facade_names_are_the_same_lower_result_types() {
     fn same_query(value: &kotowari::QueryItem) -> &kotowari_core::QueryItem {
         value
     }
-    fn same_requirement(value: &kotowari::RequirementItem) -> &kotowari_core::RequirementItem {
+    fn same_decision(value: &kotowari::DecisionItem) -> &kotowari_core::DecisionItem {
         value
     }
     fn same_guides(value: &kotowari::GuideTally) -> &kotowari_core::guides::GuideTally {
@@ -133,15 +129,15 @@ fn facade_names_are_the_same_lower_result_types() {
     fn same_mutants(value: &kotowari::MutantCounts) -> &kotowari_core::mutants::MutantCounts {
         value
     }
-    fn same_guide_reader(model: &kotowari::ReadModel) -> kotowari::GuideReader<'_> {
+    fn same_guide_reader(model: &kotowari::ReadModel) -> kotowari::GuideReader {
         model.guide_reader()
     }
-    fn same_documents(model: &kotowari::ReadModel) -> &[kotowari::IrDocument] {
-        model.documents()
+    fn same_documents(model: &kotowari::ReadModel) -> Vec<kotowari_core::ParsedDecisionDocument> {
+        model.decision_documents()
     }
     let _ = (
         same_query,
-        same_requirement,
+        same_decision,
         same_guides,
         same_mutants,
         same_guide_reader,
@@ -149,7 +145,7 @@ fn facade_names_are_the_same_lower_result_types() {
     );
 }
 
-// @kotowari[REQ-core-312, REQ-core-315, REQ-core-322, EX-core-484, EX-core-488, EX-core-498]
+// @kotowari[C-core-libapi-5, C-core-libinputs-1, C-core-libpaths-5]
 #[test]
 fn public_admission_errors_keep_distinct_facade_classifications_and_details() {
     use kotowari::ErrorKind;
@@ -177,9 +173,9 @@ fn check_with_config(dir: &std::path::Path, config: &str) -> kotowari::Error {
     Project::new(options).unwrap().check().err().unwrap()
 }
 
-// @kotowari[REQ-core-312, EX-core-554]
+// @kotowari[C-core-libapi-7]
 #[test]
-fn ex_core_554_a_configuration_file_that_is_a_directory_is_invalid_input_like_a_missing_one() {
+fn a_configuration_file_that_is_a_directory_is_invalid_input_like_a_missing_one() {
     use kotowari::ErrorKind;
     let dir = project();
     let directory = check_with_config(dir.path(), ".kotowari");
@@ -189,9 +185,9 @@ fn ex_core_554_a_configuration_file_that_is_a_directory_is_invalid_input_like_a_
     assert_ne!(directory.kind(), ErrorKind::ReadFailure);
 }
 
-// @kotowari[REQ-core-312, EX-core-555]
+// @kotowari[C-core-libapi-8]
 #[test]
-fn ex_core_555_a_directory_at_the_default_location_is_a_read_failure() {
+fn a_directory_at_the_default_location_is_a_read_failure() {
     let dir = project();
     let config = dir.path().join(".kotowari/config.yaml");
     std::fs::remove_file(&config).unwrap();
@@ -204,24 +200,24 @@ fn ex_core_555_a_directory_at_the_default_location_is_a_read_failure() {
     assert_eq!(error.kind(), kotowari::ErrorKind::ReadFailure);
 }
 
-// @kotowari[REQ-core-312, EX-core-556]
+// @kotowari[C-core-libapi-9]
 #[test]
-fn ex_core_556_the_unknown_id_can_be_taken_from_a_failed_query() {
+fn the_unknown_id_can_be_taken_from_a_failed_query() {
     let dir = project();
     let error = Project::new(ProjectOptions::new(dir.path()))
         .unwrap()
-        .query("REQ-core-999")
+        .query("C-core-t-999")
         .err()
         .unwrap();
     assert_eq!(error.kind(), kotowari::ErrorKind::UnknownQuery);
-    assert_eq!(error.unknown_id(), Some("REQ-core-999"));
+    assert_eq!(error.unknown_id(), Some("C-core-t-999"));
 }
 
-// @kotowari[REQ-core-312, EX-core-557]
+// @kotowari[C-core-libapi-10, C-core-libapi-5]
 #[test]
-fn ex_core_557_a_failure_of_another_kind_provides_no_unknown_id() {
+fn a_failure_of_another_kind_provides_no_unknown_id() {
     let dir = project();
-    std::fs::remove_dir_all(dir.path().join("docs/ir")).unwrap();
+    std::fs::remove_dir_all(dir.path().join("docs/decisions")).unwrap();
     let error = Project::new(ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
@@ -231,19 +227,25 @@ fn ex_core_557_a_failure_of_another_kind_provides_no_unknown_id() {
     assert_eq!(error.unknown_id(), None);
 }
 
-// @kotowari[REQ-core-290, REQ-core-310, TBL-core-041]
+// @kotowari[C-core-libapi-2, C-core-ovout-2]
 #[test]
 fn project_check_status_and_inspect_include_the_overview_group() {
     let dir = project();
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+        "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.path().join("docs/decisions")).unwrap();
+    std::fs::write(
+        dir.path().join("docs/decisions/topic.md"),
+        "# Topic\n\nDecides the topic.\n\n## Do it\n\nStatus: proposed\n\n### Problem\n\nP.\n\n### Decision\n\nD.\n",
     )
     .unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
     std::fs::write(
         dir.path().join(".kotowari/overview/a.md"),
-        "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n## no lead\n",
+        "---\ndocuments:\n  - docs/decisions/topic.md\n---\n\n# a\n\n## no lead\n",
     )
     .unwrap();
     std::fs::write(
@@ -273,7 +275,13 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     let dir = project();
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+        "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.path().join("docs/decisions")).unwrap();
+    std::fs::write(
+        dir.path().join("docs/decisions/topic.md"),
+        "# Topic\n\nDecides the topic.\n\n## Do it\n\nStatus: proposed\n\n### Problem\n\nP.\n\n### Decision\n\nD.\n",
     )
     .unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
@@ -284,7 +292,9 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     };
     std::fs::write(
         dir.path().join(".kotowari/overview/a.md"),
-        format!("---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n{lead}\n## s\n\ntext\n"),
+        format!(
+            "---\ndocuments:\n  - docs/decisions/topic.md\n---\n\n# a\n\n{lead}\n## s\n\ntext\n"
+        ),
     )
     .unwrap();
     std::fs::write(
@@ -295,7 +305,7 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     dir
 }
 
-// @kotowari[REQ-core-310, TBL-core-041, REQ-core-293, REQ-core-294]
+// @kotowari[C-core-libapi-3, C-core-libapi-13, C-core-ovcmd-1, C-core-ovcmd-2]
 #[test]
 fn overview_prepare_writes_nothing_and_overview_build_writes_the_cache() {
     let dir = overview_project(true);
@@ -316,7 +326,7 @@ fn overview_prepare_writes_nothing_and_overview_build_writes_the_cache() {
     assert_eq!(again.unchanged(), 3);
 }
 
-// @kotowari[REQ-core-294, REQ-core-312, REQ-core-279]
+// @kotowari[C-core-libapi-5, C-core-ovcmd-8, C-core-ovdata-2]
 #[test]
 fn overview_operations_fail_with_kinds_for_bad_data_and_a_missing_key() {
     let dir = overview_project(false);
@@ -332,7 +342,7 @@ fn overview_operations_fail_with_kinds_for_bad_data_and_a_missing_key() {
     assert_eq!(error.kind(), kotowari::ErrorKind::ConfigError);
 }
 
-// @kotowari[REQ-core-324, REQ-core-312]
+// @kotowari[C-core-libapi-5, C-core-ovcmd-6]
 #[test]
 fn overview_build_stops_with_a_cache_error_when_the_place_is_not_a_directory() {
     let dir = overview_project(true);
@@ -347,7 +357,7 @@ fn overview_build_stops_with_a_cache_error_when_the_place_is_not_a_directory() {
     );
 }
 
-// @kotowari[REQ-core-324, REQ-core-312]
+// @kotowari[C-core-libapi-5, C-core-ovcmd-7]
 #[test]
 fn overview_build_stops_with_a_cache_error_and_the_os_error_when_a_write_fails() {
     let dir = overview_project(true);
@@ -364,7 +374,7 @@ fn overview_build_stops_with_a_cache_error_and_the_os_error_when_a_write_fails()
     assert!(detail.len() > "cache error: .kotowari/cache/overview/index.html: ".len());
 }
 
-// @kotowari[REQ-core-324, TBL-core-020]
+// @kotowari[C-core-clienv-7, C-core-ovcmd-7]
 #[cfg(unix)]
 #[test]
 fn overview_write_names_the_place_it_could_not_inspect() {

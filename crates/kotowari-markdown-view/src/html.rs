@@ -29,7 +29,7 @@ pub(crate) fn href(name: &str) -> String {
     out
 }
 
-/// 共通のスタイルを相対パスで参照するページの骨格（REQ-view-002）
+/// 共通のスタイルを相対パスで参照するページの骨格（C-view-rendering-6）
 pub(crate) fn shell(language: &str, title: &str, body: &str) -> String {
     format!(
         "<!DOCTYPE html>\n<html lang=\"{}\">\n<head>\n<meta charset=\"utf-8\">\n\

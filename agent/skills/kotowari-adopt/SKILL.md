@@ -1,31 +1,34 @@
 ---
 name: kotowari-adopt
-description: "Workflow station of the kotowari workflow: bring one topic of an existing project into kotowari by sorting its legacy documents, implementation, and tests into the IR and its records. Use in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`) or is about to adopt it. Use when asked to bring an existing specification or existing code into the IR, to adopt kotowari into a project midway, or when it is unclear whether the IR matches the implementation. 日本語キーワード: 導入 取り込み 既存プロジェクト 途中から 旧資料 現状追認 仕分け IRと実装の突き合わせ"
+description: "Workflow station of the kotowari workflow: bring one topic of an existing project into kotowari by sorting its legacy material, implementation, and tests into the decision documents. Use in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`) or is about to adopt it. Use when asked to bring an existing specification or existing code into the decision documents, to adopt kotowari into a project midway, or when it is unclear whether the decision documents match the implementation. 日本語キーワード: 導入 取り込み 既存プロジェクト 途中から 旧資料 現状追認 仕分け 決定の文書と実装の突き合わせ"
 ---
 
 # Adopt
 
-Bring one topic of an existing project into kotowari. Legacy documents, the implementation, and
-the tests are compared and each finding is sorted to a fixed destination: what agrees becomes
-the specification as it stands, what disagrees or is missing is left undecided as a FLAG, and
-nothing is decided on the spot. Deciding belongs to brainstorm, when the feature is next worked on.
+Bring one topic of an existing project into kotowari. The legacy material, the implementation and
+the tests are compared, and each row is sorted to a fixed destination: what agrees becomes the
+specification as it stands, and what disagrees or could not be read through is left undecided
+under the open section of the topic document. Nothing is decided on the spot; deciding belongs to
+kotowari-brainstorm, when the feature is next worked on.
 
-**Legacy documents** (旧資料): documents older than the adoption that
-state a specification or a decision — old specifications, existing decision records and ADRs, the
-parts of a README that explain behavior, and, when re-adopting a topic that already has IR, that
-topic's IR. Code comments and commit logs are not legacy documents. Use this term only.
+**Legacy material** (旧資料): documents that existed before the adoption and write down a
+specification or decisions — old specifications, existing decision records and ADRs, the parts of
+a README that explain behavior. Code comments and commit logs are not legacy material. The
+decisions of a decision document the topic already has are not legacy material either: they are
+**existing decisions**, handled only by the rows of that name below. Use these terms only.
 
 ## Inputs and outputs
 
-In: the repository. Out, for one topic: IR documents in the IR store, rows in the glossary
-`CONTEXT.md`, FLAGs in `FLAGS.md`, and exactly one decision record named
-`docs/decision/records/YYYY-MM-DD-adopt-<topic>.md` — approved. Tests are never changed here: this
-skill places no mark on a test, deletes no test, and moves no test.
+In: the repository. Out, for one topic: its topic document under the place of the decision
+documents — the decisions the person ratified as `状態: 実装済み` (implemented), the legacy
+statements the person answered will be built as `状態: 提案` (proposed), and one item under
+`## 未決` per row left undecided — approved. No record is written per adoption. Tests are never
+changed here: this skill places no marker on a test, deletes no test, and moves no test.
 
-The forms live in the kotowari skill; do not restate them. Before writing, read its scene write
-(`references/ir-form.md` — Flags, Deferred requirements, Glossary, Sources — and
-`references/records.md`); before approval, its scene check (`references/findings.md`) and
-`references/collate.md`.
+The form lives in the kotowari skill; do not restate it. Before writing, read its scene decide
+(`references/decision-documents.md`); before approval, its scene check (`references/findings.md`).
+Section names and keywords below are in their Japanese spelling; an English side writes the English
+spelling of the same keyword (`Status: implemented`, `## Open`), as that reference lists.
 
 First, check whether the repository has `.kotowari/config.yaml`. If not, do the steps of setup in
 the kotowari skill's `references/config.md` before anything else. Questions asked during setup do
@@ -39,129 +42,127 @@ interview item by item.
 ### 1. Scope round
 
 - One topic per run. The person chooses it; the default offered is the feature they plan to change
-  next. Topics not chosen stay as legacy documents, untouched; there is no project-wide inventory.
+  next. Topics not chosen stay as legacy material, untouched; there is no project-wide inventory.
 - In the same round, propose the topic's user entry points (the commands, subcommands, or screen
-  operations a user touches), its code files and test files, and the candidate legacy documents to
+  operations a user touches), its code files and test files, and the candidate legacy material to
   read, and have the person confirm them.
 - This session reads and sorts everything itself. If the topic is too large to read in one go, do
   not hand the reading to another agent: propose, in this same round, splitting the topic smaller.
 
 ### 2. List round
 
-After sorting (below), show one list. One row is one candidate requirement: behaviors under one rule
-that differ only in a value or a wording (skip-reason messages, for example) are one row, a
-candidate decision table, with the table's contents listed briefly in the implementation column.
+After sorting (below), show one list. One behavior row is a candidate for one decision. Behaviors
+under one rule that differ only in a value or a wording (skip-reason messages, for example) are one
+row, a candidate decision table, with the table's contents listed briefly in the implementation
+column.
 
-- a behavior row: the legacy statement, the implementation's behavior, where the grounds test is
-  (or "none"), and the verification value the requirement gets (below);
-- a term row: the legacy definition, how the implementation uses the term, and the grounds.
+A behavior row sets out the legacy statement, the implementation's behavior, where the grounds
+test is (or "none"), and how the row is checked (**Decisions written by ratification**). The list
+has no rows for terms: terms are not sorted.
 
-The person answers two things only. For confirmation candidates, they remove only the rows that feel
-wrong; a row they are unsure of stays and is confirmed. For legacy statements and existing
-requirements with no implementation, they say whether it will be built. FLAG rows and the test
-breakdown are shown, not asked. Also show, as a count only, the behaviors found outside the scope
-(below), with the names of the topics they suggest next.
-
-When the candidate requirements outnumber `limits.requirements` in the configuration, check whether
-the entry points are mixed. If they are, propose in this same round to split the topic, and the
-person picks the side for this run. If they are not, do not split for the count; split the IR into
-documents by responsibility when writing it.
+The person answers two things only. Of the ratification candidates, they remove only the rows that
+feel wrong; a row they are unsure of stays and is ratified. For each legacy statement with no
+implementation, they say whether it will be built. The rows that become items under `## 未決`, the
+rows of decisions in the legacy decision records that agree with the implementation, how each row is
+checked, and the test breakdown are shown, not asked. Also show, as a count only, the
+behaviors found outside the scope (below), with the names of the topics they suggest next.
 
 ### 3. Approval
 
-Write the IR and the decision record from the answers, then approve once by kotowari-brainstorm's
-**Finishing**, step 3 ("Approve in this order"). The decision record's diff the person reads there is
-the final version of the list.
+Write the topic document from the answers, then approve once by kotowari-brainstorm's
+**Finishing**, step 3 ("Approve in this order"), and commit by its step 4. The diff of the decision
+documents the person reads there is the final version of the list.
 
-## Sorting behaviors and terms
+- 3.1 (running check) applies as written.
+- 3.2 (showing the scene solved) is not done: an adoption builds nothing.
+- 3.3 (rebuilding the overview) is done only when the configuration has the `overview` key, as
+  written.
+- In 3.4, show the proposed decisions written, when there are any, in place of the list of
+  decisions to build.
+- Step 4 applies as written up to the branch with its worktree (the commit, cutting the branch,
+  checking it out in its worktree). Do not go on to kotowari-cycle: in place of that hand-off, give
+  the request text of **After approval**, which names that branch, its worktree, and the decisions
+  written.
+
+## Sorting behaviors
 
 Only behaviors observable through the topic's entry points become rows. Code shared with another
 entry point does not widen the scope: a behavior observed through another entry point (merge taking
 a backup, when the topic is rollback) is outside it. Reading files outside the confirmed scope to
-understand the topic is fine, but a behavior found there becomes no row and is not written in the
-decision record; it is only counted for the list round.
+understand the topic is fine, but a behavior found there becomes no row; it is only counted for the
+list round.
 
 Judge agreement by reading the implementation; whether a test exists is written in the list, not a
-condition of agreement. "A legacy statement" below does not include the topic's existing IR
-requirements: those are handled only by the "existing requirement" rows. Every FLAG, of any kind,
-cites as its source a decision of its own.
+condition of agreement. "Legacy statement" below includes the decisions in the decision records of
+the legacy material, and does not include existing decisions.
 
 | Subject | Situation | Destination |
 |---|---|---|
-| Legacy statement | A decision in the decision records that can be cited as a source agrees with the implementation | A requirement citing that decision |
-| Legacy statement | Agrees with the implementation (no decision that can be cited) | Confirmation candidate |
-| Legacy statement | Disagrees with the implementation | contradiction FLAG |
-| Legacy statement | After reading, no confidence whether it agrees or disagrees | ambiguity FLAG |
-| Legacy statement | No implementation; the person answered it will be built | Deferred requirement citing a decision to defer it |
-| Legacy statement | No implementation; the person answered it will not be built | Rejected in the decision record |
-| Behavior with no legacy statement | Visible to users, and a test checks it | Confirmation candidate marked "no legacy document" |
-| Behavior with no legacy statement | Visible to users, no test | gap FLAG |
-| Behavior with no legacy statement | Internal, not visible to users | Not put in the IR |
-| Confirmation candidate | The person did not remove it in the list | A requirement or term citing that row's own confirmation decision |
-| Confirmation candidate | The person removed it in the list | contradiction FLAG |
-| Existing requirement | Agrees with the implementation | Keep the requirement as it is |
-| Existing requirement | Disagrees with the implementation | Do not rewrite it; contradiction FLAG with its ID in related |
-| Existing requirement | After reading, no confidence whether it agrees or disagrees | Do not rewrite it; ambiguity FLAG with its ID in related |
-| Existing requirement | No implementation; the person answered it will be built | Add a `- deferred:` line citing a decision to defer it to that requirement |
-| Existing requirement | No implementation; the person answered it will not be built | Do not delete it; contradiction FLAG with its ID in related |
-| Legacy term definition | Agrees with how the implementation and tests use it | Confirmation candidate |
-| Legacy term definition | Disagrees with how the implementation and tests use it | contradiction FLAG |
-| Legacy term definition | Its reading splits | ambiguity FLAG |
-| Term used in a requirement's statement | No legacy definition | Write a definition from how the implementation uses it; confirmation candidate |
+| Legacy statement | A decision in the legacy decision records that agrees with the implementation | Only shown in the list, not asked for ratification; written as an implemented decision, as that decision says |
+| Legacy statement | Agrees with the implementation (no decision record decided it) | Ratification candidate |
+| Legacy statement | Disagrees with the implementation | An item under `## 未決` |
+| Legacy statement | After reading, no confidence whether it agrees or disagrees | An item under `## 未決` |
+| Legacy statement | No implementation; the person answered it will be built | A proposed decision |
+| Legacy statement | No implementation; the person answered it will not be built | Not written in the decision documents |
+| Behavior with no legacy statement | Visible to users, and a test checks it | Ratification candidate marked "no legacy material" |
+| Behavior with no legacy statement | Visible to users, no test checks it | Ratification candidate marked "no legacy material, no grounds test" |
+| Behavior with no legacy statement | Internal, not visible to users | Not written |
+| Ratification candidate | The person did not remove it in the list | An implemented decision |
+| Ratification candidate | The person removed it in the list | An item under `## 未決` |
+| Existing decision | Its state is proposed | Neither rewritten nor deleted; an item under `## 未決` that links to that decision |
+| Existing decision | Its state is implemented, and it agrees with the implementation | Kept as it is |
+| Existing decision | Its state is implemented, and it disagrees with the implementation, or no confidence whether it agrees | Neither rewritten nor deleted; an item under `## 未決` that links to that decision |
 
-Confirmation candidates include terms: a confirmed term goes into `CONTEXT.md`, a removed one becomes
-a contradiction FLAG. When citing an existing decision that agrees, cite it even if it lacks a reason,
-and do not rewrite the legacy document.
+Disagreements and rows that could not be read through are not decided during adoption. Write each
+as one item under `## 未決` at the end of the topic document: what disagrees (for a row the person
+removed, the disagreement between their expectation and the implementation; for a row with no
+confidence, what could not be read through), where the legacy material is, and that the person
+decides it when that feature is next brainstormed.
 
-## Requirements written by confirmation
+An existing decision is never rewritten here, whatever its state: when the topic already has a
+proposed decision for a row, the row becomes an item under `## 未決` that links to that decision.
 
-Decide each requirement's `- verification:` by what the behavior is, never by whether a test exists:
-`unit` for a behavior of the implementation, `property` for a property that holds over the whole
-input, `review` for something outside the code (a document, an operating procedure), with
-`- how_to_verify:` saying how to check it. Making a requirement `review` because it has no test hides
-the missing test in the specification; do not. The value is shown in the list, not asked.
+The legacy material is never rewritten. How a decision taken from the legacy decision records is
+written is under **Decisions written by ratification**.
 
-Scenarios (success condition and counter-example) are not required for these requirements. Write one
-only when a legacy document or a grounds test already holds a concrete case.
+## Decisions written by ratification
+
+Write each ratified row as one decision whose state is `実装済み`, in the form of the kotowari
+skill's `references/decision-documents.md`. Behavior the person has not ratified is not written.
+
+- **Problem**: for a candidate whose legacy material and implementation agreed, one sentence saying
+  that the legacy material and the implementation agreed, so it was taken as the specification
+  without review. For a candidate marked "no legacy material", one sentence saying that there was
+  no legacy material, and the implementation's behavior was taken as the specification without
+  review. When why the behavior is that way is not known, also write that no reason remains; never
+  invent one. Write no rejected options nobody considered.
+- **Decision**: what the implementation does, as the row set it out (a decision table for a row
+  that is one).
+- **Confirmations**: decide how each row is checked by what the behavior is, never by whether a
+  test exists. A behavior of the implementation, and a property that holds over the whole input,
+  become rows checked by tests; something outside the code (a document, an operating procedure)
+  becomes a `（読んで確認）` row. Making a row `（読んで確認）` because it has no test hides the
+  missing test in the specification; do not.
+
+A decision in the legacy decision records that agrees with the implementation was decided by a
+person before, so it counts as already ratified: it is only shown in the list, never asked, and is
+written as an implemented decision, as that decision says. Its **Problem** holds the reason the
+record gives; when the record gives none, it says that no reason remains in the records — never
+invent one. Its **Confirmations** are checked as decided above for a ratified row.
 
 ## Sorting tests
 
 Sort every test in the topic's scope, each to exactly one of four destinations:
 
-- **grounds of a requirement** — checks a row that becomes a requirement or a confirmation candidate
-  (the candidates for a mark after approval);
-- **test of a FLAG's behavior** — kept; its handling is decided when the FLAG is collected;
+- **grounds of a decision** — checks a row that becomes a decision or a ratification candidate
+  (the candidates for a marker after approval);
+- **test of a behavior left under `## 未決`** — kept; its handling is decided when that item is
+  decided;
 - **only traces implementation details** — a deletion candidate;
-- **keep** — checks internal behavior that is not put in the IR, or cannot be judged.
+- **keep** — checks internal behavior that is not written in the decision documents, or cannot be
+  judged.
 
-Show the breakdown (the count per destination) in the list round and at approval, and write it as one
-line in the decision record's Context.
-
-## Writing the decision record
-
-One decision record per run, `docs/decision/records/YYYY-MM-DD-adopt-<topic>.md`, form as in
-`references/records.md`. One decision per line. Besides its fixed wording, each decision's body
-states that row's own content: the approval's collation (`references/collate.md`) accepts an item
-only when the decision it cites states the item's content.
-
-- Each confirmed behavior row and each confirmed term (one word) gets its own decision: "the legacy
-  document and the current implementation agree, so this is taken as the specification without
-  review" (for a row marked "no legacy document", or a term defined from the implementation: the
-  current implementation is taken as the specification without review), followed by the content —
-  for a behavior, what the legacy document says and what the implementation does (only the latter
-  for a row marked "no legacy document"); for a term, its definition. Its `- decided_by:` is `利用者（現状追認の一覧を承認）` (the person, approving the
-  confirmation list). The requirement or term cites that row's decision.
-- Each FLAG, whatever its kind, gets its own decision "leave this undecided as a FLAG", followed by
-  what disagrees (contradiction), what is missing (gap), or what is unclear (ambiguity), and the FLAG
-  cites it. Show where the legacy document is, in the decision's body or as a link. A FLAG born from an
-  existing requirement has that requirement's ID in `- related:`, whatever its kind.
-- Each deferral gets its own decision to defer, stating what is deferred, and each legacy statement
-  that will not be built gets its own entry under `## Rejected`, stating what is not built — one per
-  line, in the same record.
-
-The confirmation, "leave this undecided as a FLAG", and deferral decisions go under `## Agreements`,
-because they are cited as sources and the numbers of `## Undecided` cannot be. Only the entries for
-what is not built go under `## Rejected`.
+Show the breakdown (the count per destination) in the list round and at approval.
 
 ## Surfaces
 
@@ -169,40 +170,43 @@ When the project checks surfaces (`surface.rules` in the configuration; the koto
 `references/surface.md`), the list of unspecified surfaces carries what adoption has not reached yet.
 
 - When surface rules are first written, the first `kotowari check` raises surface_without_spec for
-  every user-visible surface the IR does not quote yet. Put every one of them into the list of
-  unspecified surfaces, one entry each, with a `why` that names it as not yet adopted. Do not write
-  requirements for them then; that is the work of each topic's adoption.
-- In each run, the topic's surfaces become requirements through the list round like any other behavior
-  row. When a confirmed requirement quotes a surface's name, remove that surface's entry from the list
-  in the same run; `kotowari check` raises surface_unspecified_stale for an entry left behind.
-- A surface of the topic that becomes a FLAG, or that the person removes from the list round, keeps its
-  entry.
+  every user-visible surface no decision quotes yet. Put every one of them into the list of
+  unspecified surfaces, one entry each, with a `why` that names it as not yet adopted. Write no
+  decisions for them then; that is the work of each topic's adoption.
+- In each run, when the Decision or the Confirmations of a ratified decision quotes the name of a
+  surface of the topic, remove that surface's entry from the list in the same run;
+  `kotowari check` raises surface_unspecified_stale for an entry left behind.
+- A surface of the topic that became an item under `## 未決`, or that the person removed in the list
+  round, keeps its entry.
 
 ## After approval
 
-Hand the person one request text, in the conversation only — do not write it to a file. It holds:
+Hand the person one request text, in the conversation only — do not write it to a file. It names
+the branch and worktree cut at approval and the decisions written, each as `path#anchor`, and holds:
 
-- review whether each grounds test checks its requirement sufficiently, and mark only the sufficient
-  ones (the kotowari skill's `references/mark.md`);
+- for each confirmation row with a grounds test, review whether the test checks the row
+  sufficiently, and place a marker with that row's ID only on the sufficient ones (the kotowari
+  skill's `references/mark.md`);
+- write tests for the confirmation rows that have no grounds test;
 - let the person decide in one batch whether to delete the tests that only trace implementation
   details;
-- bring the tests to be marked into the range of `tests.files` in the configuration — move them in or
-  widen `tests.files`, following the project's existing setting;
-- write tests for the requirements that have no grounds test;
+- bring the tests to receive a marker into the range of `tests.files` in the configuration — move
+  them in or widen `tests.files`, following the project's existing setting;
 - in a project that runs mutation tests: compare the surviving mutants on the topic's code before and
-  after the deletion, and if they increase, restore the deleted tests and put them in "keep".
+  after the deletion, and if they increase, restore the deleted tests and put them in "keep". A
+  project that does not run them is not asked to.
 
-Which station runs it is decided by kotowari-using-workflow, not here. The FLAGs are collected by
-kotowari-brainstorm when that feature is next worked on.
+Which station runs it is decided by kotowari-using-workflow, not here. The items under `## 未決` are
+decided by kotowari-brainstorm when that feature is next worked on.
 
 Tell the person three things:
 
-- tests outside `tests.files` are outside kotowari: a test with no mark there is not an error;
-- a requirement with no grounds test keeps its requirement_without_test until its test is written, and
-  a project whose push or CI requires `kotowari check` to pass stops on it — so run the adoption and the
-  test work that follows on one branch. Commits on that branch pass when the pre-commit hook runs
-  `kotowari check --allow-test-findings`, which leaves test-side findings out of the exit code; the
-  pre-push hook and CI run `kotowari check` without the option, so the branch is stopped there until the
-  tests are written;
-- while FLAGs remain, `kotowari status` reports `complete` false. That is intended: it is the list of
-  what awaits collection, not a breakage.
+- tests outside `tests.files` are outside kotowari: a test with no marker there is not an error;
+- a confirmation row with no grounds test keeps a confirmation_without_test error until its test is
+  written, and a project whose push or CI requires `kotowari check` to pass stops on it — so run the
+  adoption and the test work that follows on one branch. Commits on that branch pass when the
+  pre-commit hook runs `kotowari check --allow-test-findings`, which leaves test-side findings out of
+  the exit code; the pre-push hook and CI run `kotowari check` without the option, so the branch is
+  stopped there until the tests are written;
+- while items remain under `## 未決`, `kotowari status` reports `complete` false. That is intended:
+  it is the list of what awaits a decision, not a breakage.

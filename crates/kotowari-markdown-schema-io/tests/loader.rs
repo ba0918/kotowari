@@ -1,7 +1,7 @@
 use kotowari_markdown_schema_io::{LoaderOptions, SchemaLoader};
 use std::path::{Path, PathBuf};
 
-// @kotowari[REQ-schema-044, REQ-schema-073]
+// @kotowari[C-schema-cli-26, C-schema-io-2]
 #[test]
 fn directory_checks_dot_prefixed_documents_but_skips_hidden_directories() {
     let root = tempfile::tempdir().unwrap();
@@ -29,7 +29,7 @@ fn directory_checks_dot_prefixed_documents_but_skips_hidden_directories() {
     );
 }
 
-// @kotowari[REQ-core-323, EX-core-500]
+// @kotowari[C-core-libpaths-11]
 #[test]
 fn relative_start_and_cache_bases_are_rejected() {
     let root = tempfile::tempdir().unwrap();
@@ -39,7 +39,7 @@ fn relative_start_and_cache_bases_are_rejected() {
     assert!(SchemaLoader::new(options).is_err());
 }
 
-// @kotowari[REQ-schema-072, REQ-schema-073, EX-schema-090]
+// @kotowari[C-schema-io-1]
 #[test]
 fn loaded_pairs_are_reusable_and_findings_do_not_prevent_partial_extraction() {
     let root = tempfile::tempdir().unwrap();
@@ -86,7 +86,7 @@ fn loaded_pairs_are_reusable_and_findings_do_not_prevent_partial_extraction() {
     );
 }
 
-// @kotowari[REQ-schema-074, REQ-schema-073, EX-schema-091]
+// @kotowari[C-schema-io-5]
 #[test]
 fn execution_failures_are_typed_and_distinct_from_document_findings() {
     use kotowari_markdown_schema_io::ErrorKind;
@@ -119,7 +119,7 @@ fn execution_failures_are_typed_and_distinct_from_document_findings() {
     );
 }
 
-// @kotowari[REQ-core-323, EX-core-501, REQ-schema-073]
+// @kotowari[C-schema-io-8, C-core-libpaths-4, C-core-libpaths-12, C-core-libpaths-13]
 #[test]
 fn later_current_directory_changes_do_not_change_the_load_base() {
     const CHILD: &str = "KOTOWARI_LOADER_CWD_CHILD";
@@ -157,7 +157,7 @@ fn later_current_directory_changes_do_not_change_the_load_base() {
     );
 }
 
-// @kotowari[REQ-schema-072]
+// @kotowari[C-schema-io-3]
 #[test]
 fn read_document_strips_the_bom_and_rejects_non_utf8_with_the_given_path() {
     let root = tempfile::tempdir().unwrap();

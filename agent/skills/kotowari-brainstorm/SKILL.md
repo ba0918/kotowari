@@ -1,32 +1,52 @@
 ---
 name: kotowari-brainstorm
-description: "Workflow station of the kotowari workflow: interview the person until shared understanding is complete, then write the specification and get it approved. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
+description: "Workflow station of the kotowari workflow: interview the person until shared understanding is complete, then write the specification and get it approved. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
 ---
 
 # Brainstorm
 
-Interview the person until nothing is left implicit, then write the specification. This is
-domain modeling: the goal is shared understanding, not a document. Compromise is not allowed,
-and the station never ends itself — it ends when the tree is exhausted and the person approves.
+Interview the person until nothing is left implicit, then write what they decided into the
+decision documents. This is domain modeling: the goal is shared understanding, not a document.
+Compromise is not allowed, and the station never ends itself — it ends when the tree is exhausted,
+the scene it started from is solved, and the person approves.
 
 ## Inputs and outputs
 
-In: what the person wants to talk about; when revising, the existing IR documents and decision
-records. Before the first round, look for an uncommitted decision record under
-`docs/decision/records/` and resume from a matching one; otherwise start the record now as
-`docs/decision/records/YYYY-MM-DD-<name>.md`. Write the record there from the first round on; do
-not gather it at the end. Note the branch the main working tree is on when the brainstorm begins;
-**Finishing** puts it back there. A brainstorm that resumes after kotowari-cycle handed the work
-back writes in that run's worktree, on its branch, and cuts no branch.
-Out: IR documents in the IR store, one per topic (new, or appended to an existing one), the
-glossary `CONTEXT.md`, the problem record `FLAGS.md` when there is a contradiction, a gap, or an
-ambiguity to record, and the decision record — approved and committed. The decision record is
-kept after approval.
+In: what the person wants to talk about; when revising, the existing decision documents of the
+topic. Before the first round, look at the uncommitted changes under the place of the decision
+documents (`git status --porcelain -- <place>` and `git diff -- <place>`): a brainstorm that
+stopped part way left its decisions there, and resumes from them. Note the branch the main working
+tree is on when the brainstorm begins; **Finishing** puts it back there. A brainstorm that resumes
+after kotowari-cycle handed the work back writes in that run's worktree, on its branch, and cuts no
+branch.
+Out: the decision documents changed — new decisions written as proposed, overturned ones replaced,
+open items under `## 未決` — approved and committed, and the list of the decisions to build this
+time, handed to kotowari-cycle.
 
-Read the kotowari skill's scene write (`references/ir-form.md` and `references/records.md`)
-before writing the IR or the decision record: the IR's form, the record's form, and where each
-kind of content belongs are defined there, not here. Before approval, read its scene check
-(`references/findings.md`) and its `references/collate.md`.
+Read the kotowari skill's scene decide (`references/decision-documents.md`) before writing a
+decision document: the form check reads, the states, the rows to confirm and their IDs, the open
+section, links and the pair of language sides are defined there, not here. Section names and
+keywords in this skill are given in their Japanese spelling; an English side writes the English
+spelling of the same keyword (that reference's table of keywords). Before approval, read its scene
+check (`references/findings.md`).
+
+## Before the first round
+
+1. **The person's standing principles.** Read the principles file shared by every project of this
+   person before recommending anything: `kotowari/principles.md` under the person's configuration
+   directory (`$XDG_CONFIG_HOME` when it is set, else `~/.config`). Recommend nothing that
+   contradicts it without saying which line it contradicts and why. When the file does not exist
+   or cannot be read, say so at the start of the first round and go on without it. When the person
+   corrects a recommendation because it went against a principle they hold across projects, add
+   that correction to the file as one line, in their words, at that moment.
+2. **Where the request came from.** Look into its origin before asking anything: the records of
+   the person or repository that raised it, the issue, the earlier exchanges it points to. What is
+   written there is grounds; do not ask the person what it already answers.
+3. **The scene.** Build one concrete scene of the person in trouble: who does what, what happens
+   now, and what should happen instead. When the origin holds the scene and the answers to what is
+   to be decided, use them as grounds without asking. Only when it does not, build the scene from
+   the person's words and ask in the first round whether it is right. This scene is what
+   **Finishing** shows solved before approval.
 
 ## The tree and its rounds
 
@@ -54,137 +74,131 @@ walked and no implicit assumption remains.
   with counter-arguments and counter-examples; "no objection" is not agreement.
 - Say which statements are verified facts, inferences from facts, and unverified hypotheses.
 - Before proposing to replace something that exists, read it; never judge by name or summary.
+  Read the decisions it rests on too: a decision not to build something binds the replacement.
 - Delegate fact-finding to a separate-context agent and keep asking meanwhile.
 
-### Terms and scenarios
+### Showing a sample
+
+When the request changes behavior a user can see (an output, a screen, a message, how a command
+is used), do not settle it by asking in words. Make a sample and show it, and turn the person's
+reaction into the decision. The sample is a working prototype, a mock, or a sample of the output;
+which one to make, and whether to make one at all, you decide on the spot with a reason, without
+asking the person. No step is added where a person tries the built product before the merge.
+
+A working prototype is thrown away once it has done its job: it is never the base of the product
+code. Hand its path to the implementer as something to compare with (with the list of decisions,
+**Finishing**). What the prototype settled that a machine can check becomes a row to confirm, so
+that a test carries it.
+
+### Terms and concrete cases
 
 When a word can be read two ways, ask "does *X* mean this?" with your reading as the
-recommended answer, in the normal round. Settled definitions go into the glossary (a
-`CONTEXT.md` in the IR store; which one follows the glossary chain in the kotowari skill's
-`references/records.md`): what the term *is*, and the words not to use for it. Only words
-read two ways whose meaning here is this project's — no general vocabulary in its general sense.
+recommended answer, in the normal round. A settled definition used by several decisions goes into
+the decision that settled it, and the others link to it; the meaning of a term goes into the
+project's glossary.
 
-When deciding how concepts relate, present concrete scenarios — normal and edge cases — and ask
-"what happens here?" so the person meets boundaries they had not considered. Only scenarios
-whose prerequisites are settled go into a round. Counter-examples found this way become the
-counter-examples attached to requirements.
+When deciding how concepts relate, present concrete cases — normal and edge cases — and ask
+"what happens here?" so the person meets boundaries they had not considered. Only cases
+whose prerequisites are settled go into a round. A counter-example found this way becomes a row to
+confirm, or a rejected option with its reason.
 
-A rule that does not change what a user of the product observes (release automation, build
-configuration, CI) is not IR: the kotowari skill's **What the IR holds** says what is left out and where it goes
-instead. Record it in the decision record as not IR, with the reason, and say so in the round;
-never add it to the IR, silently or otherwise.
+A question comes back here from implementation only when two decisions the person made cannot
+both hold; it arrives as an item under `## 未決` of the topic. Settle it with the person, write the
+decision, and remove the item. Change the decision documents after the person decides.
 
-Whoever notices an ambiguous term or a boundary that disagrees with the code asks it there, records
-what becomes clear, and hands it back here. Change the glossary and specification after the person
-decides.
+## Writing the decisions
 
-## Records
+Write each decision into its topic document as soon as the person makes it, in the form of the
+kotowari skill's `references/decision-documents.md`, with the state `提案` (proposed). Keep no
+record per brainstorm and no IR, and do not restate the decisions in another document: the topic documents
+are the only place the decisions go, and a resume reads them back from the working tree.
 
-The decision record holds six kinds of item from the first round on; its form (`## Context`, the
-section headings, the lines each item carries, links across documents) is the kotowari skill's
-`references/records.md`. Keep its Position line on where the tree stands and what the next round
-covers, and resume from the record.
+When `languages` lists two or more tags, each topic document is a pair: write every side in the
+same change, each in its own language and keywords, with the same headings, states and row IDs,
+and bring the agreement record up to date before approval (that reference's **Languages: a pair of
+sides**). The person approves the side in the language they read; the other sides say the same.
 
-| Kind | Holds | Goes to |
-|---|---|---|
-| agreement | what was decided, in the person's words when possible | `## Agreements`; the IR items built on it cite it as their source |
-| prohibition | what will not be built | `## Prohibitions` |
-| undecided | the open question and **who decides it** (the person, or a later brainstorm — never the implementer) | `## Undecided` |
-| delegated | a choice the person agreed to leave to implementation, and **why** every option keeps approved behavior — never filed before they answer | `## Delegated` |
-| rejected | the alternative and **why** it lost | `## Rejected`, one line each, no mechanism description |
-| revision | what replaced what, and why | `## Revisions`, and the replaced decision's link to its replacement |
+- **Only what a person decided.** A decision document holds the person's decisions. A detail the
+  implementer can decide with its grounds (a limit, an order, the wording of a message nobody
+  specified) is not written; it is decided during implementation and explained in the commit and
+  pull request bodies. A recommendation the person did not answer is not a decision and is not
+  written.
+- **What was decided is the present rule.** Write no history into it. Why the decision was made goes
+  in the problem and in the sentences of what was decided; options considered and dropped go in the
+  rejected options, each with why it lost. Never invent a rejected option nobody considered.
+- **A decision that concerns two topics** is written in the topic where the behavior is visible
+  (where its rows to confirm can be placed); the other topic links to its heading.
+- **A decision not to build something** is written as a decision of its topic (its heading says
+  what is not built), or as a rejected option of the decision it concerns.
+- **Open questions.** What the person has not decided yet, and what must be decided by someone at a
+  later point, goes under `## 未決` at the end of the topic document: what is open, who decides it,
+  and when. A detail the implementer may decide never goes there.
+- **A fact that changed** (a value, a name, a path) is rewritten in place.
+- **Overturning a decision.** Write a new decision. Put the old decision and why it was dropped in
+  its rejected options as `以前の決定:`, move over the old reasons and rejected options that still
+  mean something, and delete the old decision's text. Leave the tests that pointed at the old
+  rows to the implementer: list those row IDs with the decision that replaces them in the handover
+  (**Finishing**), so that the tests are pointed at the new rows or deleted.
+- **Rows to confirm.** Give each decision that changes something observable the rows that show it
+  is kept, worded for the person approving it; the exact inputs and outputs go in the tests later.
+  Rows added to a decision already `実装済み` (implemented) leave its state as it is; the
+  implementer writes their tests.
+  A row only a reading can confirm (skill text, a document) starts with `（読んで確認）`. A row whose
+  only oracle would fail the Evidence conditions (the kotowari-review skill's
+  `references/oracle-evidence.md`) is reworded, made a row confirmed by reading, or left out, as
+  that reference's **A row no oracle can meet** says. Require expensive model-running
+  verification only when the person asks.
+- A decision about the process, the build or the release is written in the same kind of document,
+  without rows when nothing observes it.
 
-Undecided is still open, waiting for the decider it names; delegated is closed by the person's
-consent to leave it to implementation. Never file one as the other. A recommended answer
-the person did not answer is undecided, not an agreement. When meaning changes, record the revision
-instead of rewriting the decision.
-
-## Writing the specification
-
-Before writing, check for drafts, contradictions, vague words, missing scope boundaries,
-related undecided items, and anything decided silently; any of these sends you back to the
-dialogue. Specification silence never means "implementer decides".
-
-Each requirement has an observable success condition and a counter-example, written as scenarios
-under the IR's `## Examples` (the kotowari skill's `references/records.md` says how). Test its
-verification against the Evidence conditions (the kotowari-review skill's
-`references/oracle-evidence.md`); a requirement that fails them is handled as its **A requirement
-no oracle can meet** says, and a code behavior dropped that way is recorded as rejected with its
-missing conditions. Agreements go into the IR documents, each item
-citing the decisions it rests on; prohibitions and rejected / undecided / delegated items stay in the
-decision record's own sections, since an IR document holds only requirements, decision tables,
-properties, and scenarios. Require
-expensive model-running verification only when the person asks.
-
-A requirement that is specified now but will not be built now (an upstream constraint, a later
-phase) is deferred rather than left out: write the decision to defer it, with its reason, in the
-decision record, and cite that decision as the source on a `- deferred:` line — under the
-requirement, or once after the title of a topic document to defer all its requirements (the
-kotowari skill's `references/ir-form.md`). Deferring keeps its form and reference checks and its
-ID; it only stops check from asking for its tests. When the person decides to build it, remove
-the line in the same way, with the decision recorded. A depends_on_deferred notice means an item
-that will be built relies on a deferred one; settle it with the person — defer that item too,
-bring the requirement back, or drop the reference.
+Before calling the writing done, check for drafts, contradictions between decisions, vague words,
+missing scope boundaries, related open items, and anything decided silently; any of these sends you
+back to the dialogue.
 
 ## Finishing
 
-1. Adversarial review, only when the specification's own requirements can contradict each other —
-   several interdependent requirements, or one that two decisions in the record could pull apart.
-   Say that reason, then launch one separate-context agent on the IR's own quality. Conformance
-   to the decision record is not a review here: the collation review in step 3 replaces it. A
-   specification of a few standalone requirements gets none. New findings become branches; keep
-   asking.
+1. Adversarial review, only when the decisions can contradict each other — several interdependent
+   decisions, or one that two existing decisions could pull apart. Say that reason, then launch one
+   separate-context agent on the decision documents' own quality. A specification of a few
+   standalone decisions gets none. New findings become branches; keep asking.
 2. Check the conditions for handing to cycle: one deliverable (one branch); result in one sentence;
-   built and unbuilt scope; stored state and its lifetime decided or confirmed absent; external
-   dependencies accepted or rejected; human decision points and what they see; an ID for every
-   requirement.
+   the list of decisions to build this time, every one of them proposed; built and unbuilt scope
+   (a proposed decision not on the list stays proposed); stored state and its lifetime decided or
+   confirmed absent; external dependencies accepted or rejected; human decision points and what
+   they see.
 3. Approve in this order:
    1. Run `kotowari check --format json`. Exit code 2 is a stop; handle it as the kotowari skill's
-      `references/findings.md` says. Fix the errors among `findings` whose `path` is a file in the
-      IR store or in the decision records until none remain. Test-side findings
-      (requirement_without_test, scenario_without_test, and findings on test files) may remain at
-      approval; the cycle brings them to zero at its end. Notices (too_many_lines,
-      too_many_requirements) may remain; to keep one, reread the document as the kotowari skill's
-      `references/ir-form.md` section "Limits and the unit of splitting" says, and write the reason for keeping
-      it in the decision record.
-   2. Collation review: count the collation scope as the kotowari skill's
-      `references/collate.md` says — the items this brainstorm added or changed, and the existing
-      items citing a decision it changed. Write one line with the count and the resulting choice
-      before acting. With a scope of zero, do not collate. Otherwise give a separate-session LLM on
-      the most capable model tier available (never a lower tier to save cost) the items in scope
-      and the decisions they cite, as `collate.md` directs, and have it list
-      the items whose cited decisions do not support their content. For each item in the returned JSON's `unsupported`,
-      add a source, add a decision to the record, or fix the item. After changing the IR or the
-      record, go back to step 1 (check) before collating again. The second and third collations take only
-      the items flagged last time and what was fixed since. What still remains at the third
-      collation becomes a problem record (FLAG) and goes back to the person.
-   3. Only in a project whose configuration has the `overview` key, draw the whole picture, as the
-      kotowari skill's `references/overview.md` says. The overview is reference material for the
-      person, not something they approve, and it changes neither what is approved nor the material
-      and order of step 4:
-      1. From the topic documents of the IR this brainstorm changed, find the overviews to revise
-         through the `ir` lists of the overview data. For a changed topic document that no overview
-         lists, propose adding it to an existing overview or starting a new one, and let the person
-         decide.
-      2. Create or revise that overview data.
-      3. Revise the table of contents: place each new overview in it, and add or split a group
-         when needed. Decide this yourself without asking the person; the table of contents is not
-         part of what is approved.
-      4. Run `kotowari overview build` and fix the errors until it exits 0.
-      5. Start `kotowari overview serve` in the background and give its URL as a reference; whether
-         to look is the person's choice. Where nothing can run in the background, give the command
-         instead.
-   4. Stage the IR documents, the glossary, the problem record, the decision record, and the
-      overview data and table of contents revised in step 3. Show the person the decision
-      record's diff (one decision per line; this is what they read), the check output (the count
-      of test-side findings, and each document whose notice was kept, with the reason), the
-      collation result, and the paths approved with a content identifier for each — never the full
-      text, never the IR's diff as something they must read, and never a summary as the thing
-      approved. The overview files are not part of what is shown for approval. The person commits
-      the staged files or says they may be committed, on a new branch named for the topic, which
-      the brainstorm cuts in the main working tree from the head of the merge target (the branch
-      the person names, else the repository's default branch): `git fetch origin <target>` and
-      `git switch -c <branch> origin/<target>`, the staged files going with it.
+      `references/findings.md` says. Fix the errors among `findings` whose `path` is a decision
+      document until none remain, test-side findings apart (that reference defines them: a marker
+      left pointing at a row this brainstorm deleted, a row added to an implemented decision). They
+      may remain at approval; the cycle brings them to zero at its end.
+   2. Show the scene solved. Walk the scene from **Before the first round** through what was
+      decided, and show the person what happens in it now. When it is not solved, do not go on to
+      approval: go back to the rounds. When it cannot be judged without the real thing, decide when
+      and by looking at what it will be judged, and write that under `## 未決` of the topic.
+   3. Only in a project whose configuration has the `overview` key, rebuild the overview, as the
+      kotowari skill's `references/overview.md` says. The overview is reference material, not
+      something the person approves; it changes neither what is shown for approval nor the order
+      in which the person reads it:
+      1. From the decision documents this brainstorm changed, find the overviews involved through
+         the `documents` lists of the overview data. For a changed decision document of a topic no
+         overview lists, propose adding it to an existing overview or starting a new one, and let
+         the person decide. The overview of an existing topic is made the first time a brainstorm
+         touches its decision document.
+      2. Create or revise that overview data, and place each new page in the table of contents
+         without asking the person. Fix the guide_stale notices on that overview data here.
+      3. Run `kotowari overview build` and fix the errors until it exits 0.
+      4. Give the URL `kotowari overview serve` prints, as reference; whether to look is the
+         person's choice. Where nothing can run in the background, give the command instead.
+   4. Stage the decision documents, and the overview data and table of contents the step above revised. Show
+      the person the diff of the decision documents (this is what they read and approve; with pairs, the diff of the side in the language they read; the
+      overview files are not shown), the list of decisions to build, the check output (the count of
+      test-side findings), and the paths approved with a content identifier for each — never a
+      summary as the thing approved. The person commits the staged files or says they may be
+      committed, on a new branch named for the topic, which the brainstorm cuts in the main working
+      tree from the head of the merge target (the branch the person names, else the repository's
+      default branch): `git fetch origin <target>` and `git switch -c <branch> origin/<target>`,
+      the staged files going with it.
 4. The commit comes before leaving the new branch: when the person said the staged files may be
    committed rather than committing them, the brainstorm commits them there (`git commit`). Then
    `git status --porcelain -- <the staged paths>` must print nothing and
@@ -196,5 +210,8 @@ bring the requirement back, or drop the reference.
    project's instructions place worktrees); a brainstorm resumed after a hand-back commits in its
    worktree and already has both. When the main working tree cannot be switched, to cut the
    branch or to go back, stop and tell the person. Then go on to kotowari-cycle in the same flow
-   unless the person says to put it off. Hand it the IR store path, the IDs of the requirements
-   this brainstorm added or changed, the merge target, and the branch with its worktree path.
+   unless the person says to put it off. Hand it the place of the decision documents, the list of
+   decisions to build this time (each as the topic document's path and the heading's anchor,
+   `docs/decisions/core/confirmations.md#<anchor>`), the row IDs of overturned decisions with the
+   decision replacing each, the path of any prototype to compare with, the merge target, and the
+   branch with its worktree path.

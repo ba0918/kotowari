@@ -1,4 +1,4 @@
-//! "kotowari plan" が計画書を1つ読み、同梱のスキーマで形を検査すること（docs/ir/core/plan.md）
+//! "kotowari plan" が計画書を1つ読み、同梱のスキーマで形を検査すること（docs/decisions/core/plan.md）
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -30,37 +30,41 @@ fn assert_argument_error(list: &[&str], dir: &Path) {
         first_line.starts_with("argument error: "),
         "{list:?}: got {first_line:?}"
     );
-    // plan はコマンドなので、知らないコマンドとしての停止ではない（REQ-core-001）
+    // plan はコマンドなので、知らないコマンドとしての停止ではない
     assert!(
         !first_line.starts_with("argument error: unknown command"),
         "{list:?}: plan should be a command: {first_line:?}"
     );
 }
 
-// --- REQ-core-190: plan の引数 ---
+// --- plan の引数 ---
 
-// @kotowari[REQ-core-190, EX-core-357]
+// @kotowari[C-core-plan-3]
 #[test]
-fn ex_core_357_plan_without_a_plan_file_stops() {
+fn plan_without_a_plan_file_stops() {
     let tmp = TempDir::new().unwrap();
     assert_argument_error(&["plan"], tmp.path());
 }
 
-// @kotowari[REQ-core-190, EX-core-342]
+// @kotowari[C-core-plan-3]
 #[test]
-fn ex_core_342_two_plan_files_stop() {
+fn two_plan_files_stop() {
     let tmp = TempDir::new().unwrap();
     std::fs::write(tmp.path().join("a.md"), "# a\n").unwrap();
     std::fs::write(tmp.path().join("b.md"), "# b\n").unwrap();
     assert_argument_error(&["plan", "a.md", "b.md"], tmp.path());
 }
 
-// @kotowari[REQ-core-190, EX-core-343]
+// @kotowari[C-core-plan-4]
 #[test]
-fn ex_core_343_config_on_plan_stops() {
+fn config_on_plan_stops() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: docs/ir\n").unwrap();
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: []\n",
+    )
+    .unwrap();
     std::fs::write(tmp.path().join("a.md"), "# a\n").unwrap();
     assert_argument_error(
         &["plan", "--config", ".kotowari/config.yaml", "a.md"],
@@ -68,24 +72,24 @@ fn ex_core_343_config_on_plan_stops() {
     );
 }
 
-// @kotowari[REQ-core-190]
+// @kotowari[C-core-plan-4]
 #[test]
-fn req_core_190_config_pointing_to_a_directory_on_plan_stops() {
+fn config_pointing_to_a_directory_on_plan_stops() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     std::fs::write(tmp.path().join("a.md"), "# a\n").unwrap();
     assert_argument_error(&["plan", "--config", ".kotowari", "a.md"], tmp.path());
 }
 
-// @kotowari[REQ-core-004]
+// @kotowari[C-core-cli-7]
 #[test]
-fn req_core_004_tool_on_plan_stops() {
+fn tool_on_plan_stops() {
     let tmp = TempDir::new().unwrap();
     std::fs::write(tmp.path().join("a.md"), "# a\n").unwrap();
     assert_argument_error(&["plan", "--tool", "cargo-mutants", "a.md"], tmp.path());
 }
 
-// --- REQ-core-191〜REQ-core-197: 計画書を読み、指摘を invalid_plan で出す ---
+// --- 計画書を読み、指摘を invalid_plan で出す ---
 
 /// 形の揃った計画書
 const VALID_PLAN: &str = include_str!("../fixtures/plans/valid.md");
@@ -131,9 +135,9 @@ fn findings_of(stdout: &str) -> Vec<serde_json::Value> {
     json["findings"].as_array().unwrap().clone()
 }
 
-// @kotowari[REQ-core-192, REQ-core-193, EX-core-333]
+// @kotowari[C-core-plan-11, C-core-plan-19]
 #[test]
-fn ex_core_333_a_step_missing_a_field_is_an_invalid_plan_error() {
+fn a_step_missing_a_field_is_an_invalid_plan_error() {
     let tmp = project_with_plan(&plan_without_done_when());
     let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md"]);
     assert_eq!(code, Some(1), "{stdout}");
@@ -156,18 +160,18 @@ fn ex_core_333_a_step_missing_a_field_is_an_invalid_plan_error() {
     }
 }
 
-// @kotowari[REQ-core-192, REQ-core-193]
+// @kotowari[C-core-plan-7]
 #[test]
-fn req_core_192_a_valid_plan_has_no_findings() {
+fn a_valid_plan_has_no_findings() {
     let tmp = project_with_plan(VALID_PLAN);
     let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md"]);
     assert_eq!(code, Some(0), "{stdout}");
     assert!(findings_of(&stdout).is_empty(), "{stdout}");
 }
 
-// @kotowari[REQ-core-193]
+// @kotowari[C-core-forder-4]
 #[test]
-fn req_core_193_a_finding_without_a_line_has_a_null_line() {
+fn a_finding_without_a_line_has_a_null_line() {
     // 題名が無い計画書。題名の欠けはスキーマの側が行を持たずに出す
     let plan: String = VALID_PLAN
         .lines()
@@ -186,9 +190,9 @@ fn req_core_193_a_finding_without_a_line_has_a_null_line() {
     );
 }
 
-// @kotowari[REQ-core-193]
+// @kotowari[C-core-plan-20, C-core-forder-3]
 #[test]
-fn req_core_193_the_line_is_the_line_the_schema_side_reported() {
+fn the_line_is_the_line_the_schema_side_reported() {
     // 宣言していない節を、スキーマの側はその見出しの行で指す
     let (plan, line) = plan_with_unknown_section();
     let tmp = project_with_plan(&plan);
@@ -199,9 +203,9 @@ fn req_core_193_the_line_is_the_line_the_schema_side_reported() {
     assert_eq!(findings[0]["line"], line, "{stdout}");
 }
 
-// @kotowari[REQ-core-025, REQ-core-193]
+// @kotowari[C-core-output-8, C-core-plan-23]
 #[test]
-fn req_core_025_plan_text_output_has_one_line_per_finding() {
+fn plan_text_output_has_one_line_per_finding() {
     let (plan, line) = plan_with_unknown_section();
     let tmp = project_with_plan(&plan);
     let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md", "--format", "text"]);
@@ -212,9 +216,9 @@ fn req_core_025_plan_text_output_has_one_line_per_finding() {
     assert!(lines[0].starts_with(&prefix), "{stdout}");
 }
 
-// @kotowari[REQ-core-193, REQ-core-207, EX-core-381]
+// @kotowari[C-core-plan-20, C-core-plan-23]
 #[test]
-fn ex_core_381_a_step_missing_a_field_points_at_its_heading() {
+fn a_step_missing_a_field_points_at_its_heading() {
     let plan = plan_without_done_when();
     let heading = plan
         .lines()
@@ -231,18 +235,18 @@ fn ex_core_381_a_step_missing_a_field_points_at_its_heading() {
     }
 }
 
-// @kotowari[REQ-core-207, EX-core-382]
+// @kotowari[C-core-plan-23]
 #[test]
-fn ex_core_382_the_text_of_a_plan_without_findings_is_empty() {
+fn the_text_of_a_plan_without_findings_is_empty() {
     let tmp = project_with_plan(VALID_PLAN);
     let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md", "--format", "text"]);
     assert_eq!(code, Some(0), "{stdout}");
     assert_eq!(stdout, "");
 }
 
-// @kotowari[REQ-core-025, REQ-core-193]
+// @kotowari[C-core-output-9]
 #[test]
-fn req_core_025_plan_text_output_shows_a_missing_line_as_a_dash() {
+fn plan_text_output_shows_a_missing_line_as_a_dash() {
     let tmp = project_with_plan("");
     let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md", "--format", "text"]);
     assert_eq!(code, Some(1), "{stdout}");
@@ -252,9 +256,9 @@ fn req_core_025_plan_text_output_shows_a_missing_line_as_a_dash() {
     );
 }
 
-// @kotowari[REQ-core-197, EX-core-344]
+// @kotowari[C-core-plan-6]
 #[test]
-fn ex_core_344_a_missing_plan_stops_as_an_unreadable_file() {
+fn a_missing_plan_stops_as_an_unreadable_file() {
     let tmp = TempDir::new().unwrap();
     let output = cmd()
         .args(["plan", "docs/plans/none.md"])
@@ -270,9 +274,9 @@ fn ex_core_344_a_missing_plan_stops_as_an_unreadable_file() {
     );
 }
 
-// @kotowari[REQ-core-197]
+// @kotowari[C-core-plan-6]
 #[test]
-fn req_core_197_a_directory_given_as_the_plan_stops_as_an_unreadable_file() {
+fn a_directory_given_as_the_plan_stops_as_an_unreadable_file() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/plans")).unwrap();
     let output = cmd()
@@ -288,9 +292,9 @@ fn req_core_197_a_directory_given_as_the_plan_stops_as_an_unreadable_file() {
     );
 }
 
-// @kotowari[REQ-core-197, EX-core-358]
+// @kotowari[C-core-plan-6]
 #[test]
-fn ex_core_358_a_non_utf8_plan_stops() {
+fn a_non_utf8_plan_stops() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/plans")).unwrap();
     let mut bytes = VALID_PLAN.as_bytes().to_vec();
@@ -306,9 +310,9 @@ fn ex_core_358_a_non_utf8_plan_stops() {
     assert!(first_line.starts_with("non-UTF-8 file: "), "{first_line:?}");
 }
 
-// @kotowari[REQ-core-191, EX-core-345]
+// @kotowari[C-core-plan-1]
 #[test]
-fn ex_core_345_a_schema_named_in_the_frontmatter_is_not_used() {
+fn a_schema_named_in_the_frontmatter_is_not_used() {
     let plan = format!("---\n$schema: missing.yaml\n---\n{VALID_PLAN}");
     let tmp = project_with_plan(&plan);
     assert!(!tmp.path().join("docs/plans/missing.yaml").exists());
@@ -316,18 +320,18 @@ fn ex_core_345_a_schema_named_in_the_frontmatter_is_not_used() {
     assert_eq!(code, Some(0), "{stdout}");
 }
 
-// @kotowari[REQ-core-191, EX-core-361]
+// @kotowari[C-core-plan-2]
 #[test]
-fn ex_core_361_a_broken_frontmatter_is_skipped_unread() {
+fn a_broken_frontmatter_is_skipped_unread() {
     let plan = format!("---\n: : [unclosed\n---\n{VALID_PLAN}");
     let tmp = project_with_plan(&plan);
     let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md"]);
     assert_eq!(code, Some(0), "{stdout}");
 }
 
-// @kotowari[REQ-core-194, TBL-core-005, EX-core-346]
+// @kotowari[C-core-plan-22]
 #[test]
-fn ex_core_346_plan_json_has_only_findings_and_counts() {
+fn plan_json_has_only_findings_and_counts() {
     let tmp = project_with_plan(&plan_without_done_when());
     let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md", "--format", "json"]);
     assert_eq!(code, Some(1), "{stdout}");
@@ -345,9 +349,9 @@ fn ex_core_346_plan_json_has_only_findings_and_counts() {
     assert_eq!(json["counts"]["invalid_plan"], invalid, "{stdout}");
 }
 
-// @kotowari[REQ-core-194, TBL-core-006]
+// @kotowari[C-core-output-6, C-core-plan-22]
 #[test]
-fn req_core_194_plan_finding_keys_are_those_of_check() {
+fn plan_finding_keys_are_those_of_check() {
     let tmp = project_with_plan(&plan_without_done_when());
     let (_, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md"]);
     for f in findings_of(&stdout) {
@@ -357,9 +361,9 @@ fn req_core_194_plan_finding_keys_are_those_of_check() {
     }
 }
 
-// @kotowari[REQ-core-196, EX-core-359]
+// @kotowari[C-core-plan-5]
 #[test]
-fn ex_core_359_a_broken_config_does_not_stop_plan() {
+fn a_broken_config_does_not_stop_plan() {
     let tmp = project_with_plan(VALID_PLAN);
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: [unclosed\n").unwrap();
@@ -367,9 +371,9 @@ fn ex_core_359_a_broken_config_does_not_stop_plan() {
     assert_eq!(code, Some(0), "{stdout}");
 }
 
-// @kotowari[REQ-core-193, TBL-core-006, EX-core-360]
+// @kotowari[C-core-plan-21]
 #[test]
-fn ex_core_360_a_plan_outside_the_base_has_a_parent_path() {
+fn a_plan_outside_the_base_has_a_parent_path() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join("work/.kotowari")).unwrap();
     std::fs::create_dir_all(tmp.path().join("plans")).unwrap();
@@ -383,9 +387,9 @@ fn ex_core_360_a_plan_outside_the_base_has_a_parent_path() {
     }
 }
 
-// @kotowari[REQ-core-193, TBL-core-006]
+// @kotowari[C-core-plan-21]
 #[test]
-fn req_core_193_the_path_is_normalised_from_the_base() {
+fn the_path_is_normalised_from_the_base() {
     // カレントディレクトリが基準の下でも、"./" を付けても、path は基準からの相対に正規化する
     let tmp = project_with_plan(&plan_without_done_when());
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
@@ -397,7 +401,7 @@ fn req_core_193_the_path_is_normalised_from_the_base() {
     }
 }
 
-// --- REQ-core-192: 計画書の形 ---
+// --- 計画書の形 ---
 
 /// 計画書を "docs/plans/a.md" に置いて "kotowari plan docs/plans/a.md" を実行し、終了コードと標準出力を返す
 fn plan_outcome(plan: &str) -> (Option<i32>, String) {
@@ -443,16 +447,16 @@ const STEP_S1: &str = "### S1: 入力を読む
 - Stop and hand back if: 入力の形が仕様から決まらないとき
 ";
 
-// @kotowari[REQ-core-192, REQ-core-193, EX-core-332]
+// @kotowari[C-core-plan-7]
 #[test]
-fn ex_core_332_a_well_formed_plan_has_no_findings() {
+fn a_well_formed_plan_has_no_findings() {
     assert!(VALID_PLAN.contains(STEP_S1));
     assert_valid_plan(VALID_PLAN);
 }
 
-// @kotowari[REQ-core-192, EX-core-334]
+// @kotowari[C-core-plan-12]
 #[test]
-fn ex_core_334_shown_by_not_starting_with_one_of_the_four_words_is_an_error() {
+fn shown_by_not_starting_with_one_of_the_four_words_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "- Shown by: test — REQ-core-001",
@@ -460,9 +464,9 @@ fn ex_core_334_shown_by_not_starting_with_one_of_the_four_words_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-335]
+// @kotowari[C-core-plan-12]
 #[test]
-fn ex_core_335_shown_by_word_followed_by_more_letters_is_an_error() {
+fn shown_by_word_followed_by_more_letters_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "- Shown by: test — REQ-core-001",
@@ -470,9 +474,9 @@ fn ex_core_335_shown_by_word_followed_by_more_letters_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-12]
 #[test]
-fn req_core_192_each_of_the_four_words_may_start_shown_by_alone_or_before_a_space() {
+fn each_of_the_four_words_may_start_shown_by_alone_or_before_a_space() {
     for value in [
         "test",
         "check — 3つのコマンド",
@@ -487,15 +491,15 @@ fn req_core_192_each_of_the_four_words_may_start_shown_by_alone_or_before_a_spac
     }
 }
 
-// @kotowari[REQ-core-192, EX-core-336]
+// @kotowari[C-core-plan-9]
 #[test]
-fn ex_core_336_a_plan_without_a_step_is_an_error() {
+fn a_plan_without_a_step_is_an_error() {
     assert_invalid_plan(&replace_once(VALID_PLAN, STEP_S1, ""));
 }
 
-// @kotowari[REQ-core-192, EX-core-337]
+// @kotowari[C-core-plan-8]
 #[test]
-fn ex_core_337_the_test_command_section_may_be_absent() {
+fn the_test_command_section_may_be_absent() {
     assert_valid_plan(&replace_once(
         VALID_PLAN,
         "## Test command\n\n`cargo test`\n\n",
@@ -503,9 +507,9 @@ fn ex_core_337_the_test_command_section_may_be_absent() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-8]
 #[test]
-fn req_core_192_two_test_command_sections_are_an_error() {
+fn two_test_command_sections_are_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "## Out of scope",
@@ -513,9 +517,9 @@ fn req_core_192_two_test_command_sections_are_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-338]
+// @kotowari[C-core-plan-8]
 #[test]
-fn ex_core_338_two_goal_sections_are_an_error() {
+fn two_goal_sections_are_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "## Out of scope",
@@ -523,9 +527,9 @@ fn ex_core_338_two_goal_sections_are_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-339]
+// @kotowari[C-core-plan-15]
 #[test]
-fn ex_core_339_a_plan_wide_section_may_hold_a_table() {
+fn a_plan_wide_section_may_hold_a_table() {
     assert_valid_plan(&replace_once(
         VALID_PLAN,
         "S1 が REQ-core-001 を確かめる。\n",
@@ -533,9 +537,9 @@ fn ex_core_339_a_plan_wide_section_may_hold_a_table() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-15]
 #[test]
-fn req_core_192_a_plan_wide_section_may_hold_a_code_block() {
+fn a_plan_wide_section_may_hold_a_code_block() {
     assert_valid_plan(&replace_once(
         VALID_PLAN,
         "`cargo test`\n",
@@ -543,9 +547,9 @@ fn req_core_192_a_plan_wide_section_may_hold_a_code_block() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-340]
+// @kotowari[C-core-plan-14]
 #[test]
-fn ex_core_340_prose_right_after_a_field_line_is_an_error() {
+fn prose_right_after_a_field_line_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "- Done when: 入力のファイルを読んだ結果が返る\n",
@@ -553,9 +557,9 @@ fn ex_core_340_prose_right_after_a_field_line_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-14]
 #[test]
-fn req_core_192_an_indented_line_after_a_blank_line_under_a_step_is_an_error() {
+fn an_indented_line_after_a_blank_line_under_a_step_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "- Stop and hand back if: 入力の形が仕様から決まらないとき\n",
@@ -563,9 +567,9 @@ fn req_core_192_an_indented_line_after_a_blank_line_under_a_step_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-341]
+// @kotowari[C-core-plan-17]
 #[test]
-fn ex_core_341_section_order_and_gaps_in_step_numbers_are_not_checked() {
+fn section_order_and_gaps_in_step_numbers_are_not_checked() {
     // "## Goal" を "## Out of scope" の後へ動かし、ステップを S1 と S3 にする
     let goal = "## Goal\n\n利用者が入力のファイルを渡すと、結果が標準出力に出る。\n\n";
     let moved = replace_once(VALID_PLAN, goal, "");
@@ -575,21 +579,21 @@ fn ex_core_341_section_order_and_gaps_in_step_numbers_are_not_checked() {
     assert_valid_plan(&plan);
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-18]
 #[test]
-fn req_core_192_two_steps_with_the_same_number_are_not_checked() {
+fn two_steps_with_the_same_number_are_not_checked() {
     assert_valid_plan(&format!("{VALID_PLAN}\n{STEP_S1}"));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-18]
 #[test]
-fn req_core_192_the_name_after_the_colon_of_a_step_heading_is_not_checked() {
+fn the_name_after_the_colon_of_a_step_heading_is_not_checked() {
     assert_valid_plan(&replace_once(VALID_PLAN, "### S1: 入力を読む", "### S12:"));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-10]
 #[test]
-fn req_core_192_a_step_heading_without_a_colon_is_an_error() {
+fn a_step_heading_without_a_colon_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "### S1: 入力を読む",
@@ -597,9 +601,9 @@ fn req_core_192_a_step_heading_without_a_colon_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-347]
+// @kotowari[C-core-plan-8]
 #[test]
-fn ex_core_347_a_missing_required_section_is_an_error() {
+fn a_missing_required_section_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "## Stop conditions\n\n- 入力の形が仕様から決まらないとき\n\n",
@@ -607,9 +611,9 @@ fn ex_core_347_a_missing_required_section_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-8]
 #[test]
-fn req_core_192_every_required_section_is_required() {
+fn every_required_section_is_required() {
     for name in [
         "Goal",
         "Specification",
@@ -637,15 +641,15 @@ fn req_core_192_every_required_section_is_required() {
     }
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-8]
 #[test]
-fn req_core_192_two_titles_are_an_error() {
+fn two_titles_are_an_error() {
     assert_invalid_plan(&format!("{VALID_PLAN}\n# もう1つの題名\n"));
 }
 
-// @kotowari[REQ-core-192, EX-core-348]
+// @kotowari[C-core-plan-8]
 #[test]
-fn ex_core_348_an_unknown_section_is_an_error() {
+fn an_unknown_section_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "## Out of scope",
@@ -653,9 +657,9 @@ fn ex_core_348_an_unknown_section_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-349]
+// @kotowari[C-core-plan-11]
 #[test]
-fn ex_core_349_fields_out_of_order_are_an_error() {
+fn fields_out_of_order_are_an_error() {
     let plan = replace_once(VALID_PLAN, "- Purpose: 入力のファイルを読む\n", "");
     let plan = replace_once(
         &plan,
@@ -667,9 +671,9 @@ fn ex_core_349_fields_out_of_order_are_an_error() {
     assert_invalid_plan(&plan);
 }
 
-// @kotowari[REQ-core-192, EX-core-350]
+// @kotowari[C-core-plan-11]
 #[test]
-fn ex_core_350_a_field_twice_is_an_error() {
+fn a_field_twice_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "- Purpose: 入力のファイルを読む\n",
@@ -677,9 +681,9 @@ fn ex_core_350_a_field_twice_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-11]
 #[test]
-fn req_core_192_every_step_field_is_required() {
+fn every_step_field_is_required() {
     for name in [
         "Purpose",
         "Specification",
@@ -702,9 +706,9 @@ fn req_core_192_every_step_field_is_required() {
     }
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-14]
 #[test]
-fn req_core_192_an_unknown_field_under_a_step_is_an_error() {
+fn an_unknown_field_under_a_step_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "- Stop and hand back if: 入力の形が仕様から決まらないとき\n",
@@ -712,9 +716,9 @@ fn req_core_192_an_unknown_field_under_a_step_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-351]
+// @kotowari[C-core-plan-14]
 #[test]
-fn ex_core_351_a_line_before_the_first_step_is_an_error() {
+fn a_line_before_the_first_step_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "## Steps\n\n",
@@ -722,9 +726,9 @@ fn ex_core_351_a_line_before_the_first_step_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-14]
 #[test]
-fn req_core_192_a_list_before_the_first_step_is_an_error() {
+fn a_list_before_the_first_step_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "## Steps\n\n",
@@ -732,9 +736,9 @@ fn req_core_192_a_list_before_the_first_step_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-352]
+// @kotowari[C-core-plan-10]
 #[test]
-fn ex_core_352_a_step_heading_not_of_s_and_a_number_is_an_error() {
+fn a_step_heading_not_of_s_and_a_number_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "### S1: 入力を読む",
@@ -742,9 +746,9 @@ fn ex_core_352_a_step_heading_not_of_s_and_a_number_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-353]
+// @kotowari[C-core-plan-16]
 #[test]
-fn ex_core_353_a_numbered_list_in_a_plan_wide_section_is_an_error() {
+fn a_numbered_list_in_a_plan_wide_section_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "S1 だけ。\n",
@@ -752,9 +756,9 @@ fn ex_core_353_a_numbered_list_in_a_plan_wide_section_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-16]
 #[test]
-fn req_core_192_a_deeper_heading_in_a_plan_wide_section_is_an_error() {
+fn a_deeper_heading_in_a_plan_wide_section_is_an_error() {
     for heading in ["### 小見出し", "#### 深い見出し"] {
         assert_invalid_plan(&replace_once(
             VALID_PLAN,
@@ -764,9 +768,9 @@ fn req_core_192_a_deeper_heading_in_a_plan_wide_section_is_an_error() {
     }
 }
 
-// @kotowari[REQ-core-192, EX-core-354]
+// @kotowari[C-core-plan-15]
 #[test]
-fn ex_core_354_a_plan_wide_section_may_hold_a_child_list() {
+fn a_plan_wide_section_may_hold_a_child_list() {
     assert_valid_plan(&replace_once(
         VALID_PLAN,
         "- `src/lib.rs`\n",
@@ -774,9 +778,9 @@ fn ex_core_354_a_plan_wide_section_may_hold_a_child_list() {
     ));
 }
 
-// @kotowari[REQ-core-192, EX-core-355]
+// @kotowari[C-core-plan-16]
 #[test]
-fn ex_core_355_a_line_between_the_title_and_the_first_section_is_an_error() {
+fn a_line_between_the_title_and_the_first_section_is_an_error() {
     assert_invalid_plan(&replace_once(
         VALID_PLAN,
         "# 計画: 入力を読んで結果を出す\n",
@@ -784,21 +788,21 @@ fn ex_core_355_a_line_between_the_title_and_the_first_section_is_an_error() {
     ));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-16]
 #[test]
-fn req_core_192_a_line_before_the_title_is_not_checked() {
+fn a_line_before_the_title_is_not_checked() {
     assert_valid_plan(&format!("前の行\n\n{VALID_PLAN}"));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-8]
 #[test]
-fn req_core_192_a_section_before_the_title_does_not_count_as_a_second_one() {
+fn a_section_before_the_title_does_not_count_as_a_second_one() {
     assert_valid_plan(&format!("## Goal\n\n{VALID_PLAN}"));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-8]
 #[test]
-fn req_core_192_a_section_before_the_title_does_not_fill_a_missing_one() {
+fn a_section_before_the_title_does_not_fill_a_missing_one() {
     let without_goal = replace_once(
         VALID_PLAN,
         "## Goal\n\n利用者が入力のファイルを渡すと、結果が標準出力に出る。\n\n",
@@ -807,9 +811,9 @@ fn req_core_192_a_section_before_the_title_does_not_fill_a_missing_one() {
     assert_invalid_plan(&format!("## Goal\n\n{without_goal}"));
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-16]
 #[test]
-fn req_core_192_a_line_before_the_title_does_not_hide_a_line_after_the_title() {
+fn a_line_before_the_title_does_not_hide_a_line_after_the_title() {
     // 題名は3行目、題名と最初の節の間の地の文は5行目
     let plan = format!(
         "前の行\n\n{}",
@@ -828,9 +832,9 @@ fn req_core_192_a_line_before_the_title_does_not_hide_a_line_after_the_title() {
     assert_eq!(lines, vec![serde_json::json!(5)], "{stdout}");
 }
 
-// @kotowari[REQ-core-192, EX-core-356]
+// @kotowari[C-core-plan-13]
 #[test]
-fn ex_core_356_field_lines_may_use_an_asterisk() {
+fn field_lines_may_use_an_asterisk() {
     let plan = STEP_S1
         .lines()
         .filter(|line| line.starts_with("- "))
@@ -841,9 +845,9 @@ fn ex_core_356_field_lines_may_use_an_asterisk() {
     assert_valid_plan(&plan);
 }
 
-// @kotowari[REQ-core-192]
+// @kotowari[C-core-plan-13]
 #[test]
-fn req_core_192_field_lines_may_use_a_plus() {
+fn field_lines_may_use_a_plus() {
     let plan = STEP_S1
         .lines()
         .filter(|line| line.starts_with("- "))

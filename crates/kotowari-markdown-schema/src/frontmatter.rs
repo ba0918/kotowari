@@ -13,7 +13,7 @@ pub enum SchemaRef {
     Url(String),
 }
 
-/// frontmatter を読めなかった理由。TBL-schema-009 の「frontmatter が壊れている」に相当する。
+/// frontmatter を読めなかった理由。「frontmatter が壊れている」に相当する。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FrontmatterError(pub String);
 
@@ -38,7 +38,7 @@ struct Frontmatter {
     schema: SchemaValue,
 }
 
-/// `$schema` キーの値。キーの有無と null を区別する（REQ-schema-014 は null を停止にする）。
+/// `$schema` キーの値。キーの有無と null を区別する（null は停止にする）。
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 enum SchemaValue {
     /// キーが無い。スキーマを持たない文書
@@ -80,7 +80,7 @@ where
     }
 
     // gray_matter の Pod は null を visit_unit、文字列を visit_str で渡す。
-    // 数値・配列などは visit_* が無く型エラーになり、REQ-schema-014 の「"$schema" の値が文字列でない」として扱う
+    // 数値・配列などは visit_* が無く型エラーになり、「"$schema" の値が文字列でない」として扱う
     deserializer.deserialize_any(Visitor)
 }
 
@@ -88,9 +88,12 @@ where
 /// `$schema` 以外のキーは無視する。壊れた YAML、null や文字列でない `$schema`、
 /// 空の `$schema` はエラー。
 pub fn frontmatter_schema(src: &str) -> Result<Option<SchemaRef>, FrontmatterError> {
+    // gray_matter は LF と CRLF の区切りしか見ないので、単独の CR で区切った文書の frontmatter を
+    // 見落とす。文書の木と同じく3つの区切りを読むため、LF にそろえてから渡す
+    let normalized = src.replace("\r\n", "\n").replace('\r', "\n");
     let matter = Matter::<YAML>::new();
     let result = matter
-        .parse::<Frontmatter>(src)
+        .parse::<Frontmatter>(&normalized)
         .map_err(|e| FrontmatterError(format!("{e}")))?;
     let Some(frontmatter) = result.data else {
         return Ok(None);
@@ -161,7 +164,16 @@ mod tests {
         "---\n$schema: ../.kotowari/schemas/adr.yaml\ntitle: 例\n---\n# 題名\n"
     }
 
-    // @kotowari[REQ-schema-011, REQ-schema-015]
+    // @kotowari[C-schema-resolve-1]
+    #[test]
+    fn reads_the_schema_ref_of_a_document_whose_lines_end_with_a_lone_carriage_return() {
+        let ref_ = frontmatter_schema("---\r$schema: ./a.yaml\r---\r# 題名\r")
+            .unwrap()
+            .unwrap();
+        assert_eq!(ref_, SchemaRef::Relative("./a.yaml".into()));
+    }
+
+    // @kotowari[C-schema-resolve-1]
     #[test]
     fn reads_relative_schema_ref_and_ignores_other_keys() {
         let ref_ = frontmatter_schema(adr()).unwrap().unwrap();
@@ -171,7 +183,7 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-schema-011]
+    // @kotowari[C-schema-resolve-1]
     #[test]
     fn reads_url_schema_ref() {
         let src = "---\n$schema: https://example.com/schema.yaml\n---\n# 題名\n";
@@ -182,20 +194,20 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-lib-1]
     #[test]
     fn document_without_frontmatter_has_no_schema() {
         assert_eq!(frontmatter_schema("# 題名\n").unwrap(), None);
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-lib-1]
     #[test]
     fn frontmatter_without_schema_key_has_no_schema() {
         let src = "---\ntitle: 例\n---\n# 題名\n";
         assert_eq!(frontmatter_schema(src).unwrap(), None);
     }
 
-    // @kotowari[REQ-schema-014, REQ-schema-049]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn broken_frontmatter_is_an_error() {
         let src = "---\n$schema: [\n---\n# 題名\n";
@@ -204,42 +216,42 @@ mod tests {
         let _: &dyn std::error::Error = &error;
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn non_string_schema_is_an_error() {
         let src = "---\n$schema: 42\n---\n# 題名\n";
         assert!(frontmatter_schema(src).is_err());
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn null_schema_is_an_error() {
         let src = "---\n$schema:\n---\n# 題名\n";
         assert!(frontmatter_schema(src).is_err());
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn empty_string_schema_is_an_error() {
         let src = "---\n$schema: \"\"\n---\n# 題名\n";
         assert!(frontmatter_schema(src).is_err());
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn whitespace_only_schema_is_an_error() {
         let src = "---\n$schema: \"   \"\n---\n# 題名\n";
         assert!(frontmatter_schema(src).is_err());
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn array_schema_is_an_error() {
         let src = "---\n$schema: [a, b]\n---\n# 題名\n";
         assert!(frontmatter_schema(src).is_err());
     }
 
-    // @kotowari[REQ-schema-012, EX-schema-005]
+    // @kotowari[C-schema-resolve-2]
     #[test]
     fn relative_ref_resolves_against_document_location() {
         let doc = std::path::Path::new("fixtures/adr/0001.md");
@@ -253,7 +265,7 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-schema-012]
+    // @kotowari[C-schema-resolve-2, C-schema-resolve-13]
     #[test]
     fn consecutive_parent_refs_are_not_collapsed() {
         // `..` が積まれている状態でさらに `..` を見たとき、積んだ `..` を
@@ -267,7 +279,7 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-schema-011]
+    // @kotowari[C-schema-resolve-1]
     #[test]
     fn url_ref_stays_a_url() {
         let doc = std::path::Path::new("fixtures/adr/0001.md");
@@ -278,23 +290,23 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn frontmatter_that_is_not_a_mapping_is_an_error() {
         let src = "---\nただのスカラ\n---\n# 題名\n";
         assert!(
             frontmatter_schema(src).is_err(),
-            "frontmatter が YAML のマッピングでなければ誤りにする（REQ-schema-014）"
+            "frontmatter が YAML のマッピングでなければ誤りにする"
         );
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[C-schema-resolve-3]
     #[test]
     fn frontmatter_that_is_a_sequence_is_an_error() {
         let src = "---\n- a\n- b\n---\n# 題名\n";
         assert!(
             frontmatter_schema(src).is_err(),
-            "frontmatter が並びでも誤りにする（REQ-schema-014）"
+            "frontmatter が並びでも誤りにする"
         );
     }
 }

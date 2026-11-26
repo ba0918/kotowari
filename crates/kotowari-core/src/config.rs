@@ -1,27 +1,24 @@
 use crate::StopReason;
 use std::collections::BTreeMap;
-use std::num::NonZeroU64;
 
-/// 設定ファイルの構造（TBL-core-004）
+/// 設定ファイルの構造
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
-    pub ir: String,
     pub decisions: DecisionsConfig,
     pub tests: TestsConfig,
     pub guides: GuidesConfig,
     pub mutants: MutantsConfig,
     pub surface: SurfaceConfig,
-    /// `全体像の元データ`の置き場。鍵が無ければ None で、元データを読まない（TBL-core-004）
+    /// `全体像の元データ`の置き場。鍵が無ければ None で、元データを読まない
     pub overview: Option<OverviewConfig>,
-    pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
-    /// "languages" に書いた言語タグ。鍵が無ければ空（`言語の一覧`は "en" だけ。REQ-core-334）
+    /// "languages" に書いた言語タグ。鍵が無ければ空（`言語の一覧`は "en" だけ）
     pub languages: Vec<String>,
-    /// "labels" の言語タグから、`UI の文字`の鍵から文字列への対応（TBL-core-046）
+    /// "labels" の言語タグから、`UI の文字`の鍵から文字列への対応
     pub labels: BTreeMap<String, BTreeMap<String, String>>,
 }
 
-/// `全体像の元データ`の置き場（TBL-core-004）
+/// `全体像の元データ`の置き場
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OverviewConfig {
     /// `全体像の元データ`に当たる glob の一覧。"overview" を書くときは必須
@@ -30,42 +27,42 @@ pub struct OverviewConfig {
     pub toc: String,
 }
 
-/// `面`の検査の設定（TBL-core-004、docs/ir/core/surface.md）
+/// `面`の検査の設定（docs/decisions/core/surface.md）
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SurfaceConfig {
     /// `面のファイル`に当たる glob の一覧。既定は空の一覧
     pub files: Vec<String>,
     /// `面の規則`の YAML ファイルのパス（基準のディレクトリからの相対）。空の一覧なら面の検査をしない
     pub rules: Vec<String>,
-    /// `未記載の面の一覧`のファイルのパス。既定は無く、無ければ一覧は0件（REQ-core-231）
+    /// `未記載の面の一覧`のファイルのパス。既定は無く、無ければ一覧は0件
     pub unspecified: Option<String>,
 }
 
-/// `ガイド`の置き場（TBL-core-004、REQ-core-198）
+/// `ガイド`の置き場
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct GuidesConfig {
     /// `ガイド`に当たる glob の一覧。既定は空の一覧で、空なら`ガイド`を1つも読まない
     pub files: Vec<String>,
 }
 
-/// 変異テストに関わる設定（TBL-core-004）
+/// 変異テストに関わる設定
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MutantsConfig {
-    /// `等価の一覧`のファイルのパス。既定は無く、無ければ一覧は0件（REQ-core-148）
+    /// `等価の一覧`のファイルのパス。既定は無く、無ければ一覧は0件
     pub equivalents: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DecisionsConfig {
-    pub records: String,
-    pub adr: String,
+    /// 決定の文書の置き場（docs/decisions/core/config.md）。既定は "docs/decisions"
+    pub documents: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestsConfig {
     pub files: Vec<String>,
     pub rust: RustTestsConfig,
-    /// ast-grep のルールの YAML ファイルのパス（基準のディレクトリからの相対、REQ-core-186）
+    /// ast-grep のルールの YAML ファイルのパス（基準のディレクトリからの相対）
     pub rules: Vec<String>,
 }
 
@@ -75,19 +72,11 @@ pub struct RustTestsConfig {
     pub macros: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LimitsConfig {
-    pub lines: NonZeroU64,
-    pub requirements: NonZeroU64,
-}
-
 impl Default for Config {
     fn default() -> Self {
         Config {
-            ir: "docs/ir".to_string(),
             decisions: DecisionsConfig {
-                records: "docs/decision/records".to_string(),
-                adr: "docs/decision/adr".to_string(),
+                documents: "docs/decisions".to_string(),
             },
             tests: TestsConfig {
                 files: vec!["src/**/*.rs".to_string(), "tests/**/*.rs".to_string()],
@@ -101,10 +90,6 @@ impl Default for Config {
             mutants: MutantsConfig { equivalents: None },
             surface: SurfaceConfig::default(),
             overview: None,
-            limits: LimitsConfig {
-                lines: NonZeroU64::new(200).expect("200 is non-zero"),
-                requirements: NonZeroU64::new(10).expect("10 is non-zero"),
-            },
             vague_words: vec![
                 "適切に".to_string(),
                 "必要に応じて".to_string(),
@@ -123,8 +108,6 @@ impl Default for Config {
 #[serde(deny_unknown_fields)]
 struct RawConfig {
     #[serde(default, deserialize_with = "deserialize_nullable")]
-    ir: Option<Option<String>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
     decisions: Option<Option<RawDecisions>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     tests: Option<Option<RawTests>>,
@@ -134,8 +117,6 @@ struct RawConfig {
     mutants: Option<Option<RawMutants>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     surface: Option<Option<RawSurface>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    limits: Option<Option<RawLimits>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     overview: Option<Option<RawOverview>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
@@ -159,9 +140,7 @@ struct RawOverview {
 #[serde(deny_unknown_fields)]
 struct RawDecisions {
     #[serde(default, deserialize_with = "deserialize_nullable")]
-    records: Option<Option<String>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    adr: Option<Option<String>>,
+    documents: Option<Option<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -209,15 +188,6 @@ struct RawSurface {
     unspecified: Option<Option<String>>,
 }
 
-#[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-struct RawLimits {
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    lines: Option<Option<NonZeroU64>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    requirements: Option<Option<NonZeroU64>>,
-}
-
 /// null を Some(None)、値を Some(Some(v))、不在を None にデシリアライズ
 fn deserialize_nullable<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
 where
@@ -230,7 +200,7 @@ where
 
 use serde::Deserialize;
 
-/// キーの値を取り出す。キーが無ければ既定値にし、値が null なら設定の誤りで停止する（REQ-core-014）
+/// キーの値を取り出す。キーが無ければ既定値にし、値が null なら設定の誤りで停止する
 fn non_null_or_default<T>(
     field: Option<Option<T>>,
     key: &str,
@@ -240,7 +210,7 @@ fn non_null_or_default<T>(
 }
 
 /// null チェック付きで、入れ子のキーを (キー不在 → None、値あり → Some(v)) にする。
-/// 値が null なら設定の誤りで停止する（REQ-core-014）。
+/// 値が null なら設定の誤りで停止する。
 fn non_null<T>(field: Option<Option<T>>, key: &str) -> Result<Option<T>, StopReason> {
     match field {
         None => Ok(None),
@@ -253,7 +223,7 @@ fn non_null<T>(field: Option<Option<T>>, key: &str) -> Result<Option<T>, StopRea
 
 /// パスが絶対パスでないことを検証する
 fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
-    // A161: 絶対パスかどうかは先頭の "/" だけで判定する（Windows のドライブ文字は見ない）
+    // 絶対パスかどうかは先頭の "/" だけで判定する（Windows のドライブ文字は見ない）
     if path.starts_with('/') {
         return Err(StopReason::ConfigError(format!(
             "absolute path not allowed for {key}: {path}"
@@ -262,7 +232,7 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
     Ok(())
 }
 
-/// REQ-core-014: glob として読めない要素か "/" で始まる要素があれば設定の誤りで停止する
+/// glob として読めない要素か "/" で始まる要素があれば設定の誤りで停止する
 /// （"tests.files"、"guides.files"、"surface.files"、"overview.files" の glob）
 fn check_globs(patterns: &[String], key: &str) -> Result<(), StopReason> {
     for pattern in patterns {
@@ -286,7 +256,7 @@ pub fn glob_set(patterns: &[String]) -> globset::GlobSet {
     builder.build().expect("validated globs")
 }
 
-/// 中身が空（0バイトか注釈だけ）の YAML か（REQ-core-012 の設定ファイル、REQ-core-148 の等価の一覧）。
+/// 中身が空（0バイトか注釈だけ）の YAML か。
 /// 空行は内容に数えないので、空行と注釈の行だけのファイルは空である。
 /// 1行も無いファイル（0バイト）では `all` が真になる。
 pub fn is_blank_yaml(text: &str) -> bool {
@@ -298,7 +268,7 @@ pub fn is_blank_yaml(text: &str) -> bool {
 
 /// 一覧のファイル（`等価の一覧`と`未記載の面の一覧`）の中身を、最上位の並びの要素として読む。
 /// 空（0バイトか注釈だけ）なら0件。YAML として読めないか最上位が並びでないときは、
-/// 一覧のファイルの相対パス `display` を詳細にして設定の誤りで`停止`する（REQ-core-148、REQ-core-231）
+/// 一覧のファイルの相対パス `display` を詳細にして設定の誤りで`停止`する
 #[expect(
     clippy::wildcard_enum_match_arm,
     reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
@@ -321,7 +291,7 @@ pub(crate) fn read_yaml_sequence(
 }
 
 /// YAML のライブラリの誤りを設定の誤りにする。キーの重複はライブラリの文言と抜粋を出さず、
-/// "duplicate key: キー" の1行にする（REQ-core-014）
+/// "duplicate key: キー" の1行にする
 #[expect(
     clippy::wildcard_enum_match_arm,
     reason = "serde_saphyr::Error is a foreign enum: every other error deliberately keeps the library's own message"
@@ -335,8 +305,8 @@ fn yaml_error(e: &serde_saphyr::Error) -> StopReason {
     }
 }
 
-/// "surface" の鍵を読む。null、絶対パス、glob として読めない要素（REQ-core-014）と、
-/// 鍵の組み合わせの誤り（REQ-core-225）は設定の誤りで停止する
+/// "surface" の鍵を読む。null、絶対パス、glob として読めない要素と、
+/// 鍵の組み合わせの誤りは設定の誤りで停止する
 fn read_surface(raw: RawSurface) -> Result<SurfaceConfig, StopReason> {
     let files = non_null_or_default(raw.files, "surface.files", Vec::new())?;
     check_globs(&files, "surface.files")?;
@@ -348,7 +318,7 @@ fn read_surface(raw: RawSurface) -> Result<SurfaceConfig, StopReason> {
     if let Some(path) = &unspecified {
         check_not_absolute(path, "surface.unspecified")?;
     }
-    // REQ-core-225: 規則だけ、ファイルだけ、規則の無い一覧は、検査しているつもりで何もしない
+    // 規則だけ、ファイルだけ、規則の無い一覧は、検査しているつもりで何もしない
     if rules.is_empty() && !files.is_empty() {
         return Err(StopReason::ConfigError(
             "surface.files is set but surface.rules is empty".to_string(),
@@ -366,7 +336,7 @@ fn read_surface(raw: RawSurface) -> Result<SurfaceConfig, StopReason> {
     }
     Ok(SurfaceConfig {
         files,
-        // REQ-core-110: パスの正規化
+        // パスの正規化
         rules: rules
             .iter()
             .map(|rule| crate::normalize_path(rule))
@@ -378,7 +348,7 @@ fn read_surface(raw: RawSurface) -> Result<SurfaceConfig, StopReason> {
 impl Config {
     /// YAML 文字列から設定を読む
     pub fn parse(yaml: &str) -> Result<Self, StopReason> {
-        // REQ-core-012: 空の設定ファイルは既定値
+        // 空の設定ファイルは既定値
         if is_blank_yaml(yaml) {
             return Ok(Config::default());
         }
@@ -389,10 +359,8 @@ impl Config {
 
     pub(crate) fn validated(&self) -> Result<Self, StopReason> {
         Self::from_raw(RawConfig {
-            ir: Some(Some(self.ir.clone())),
             decisions: Some(Some(RawDecisions {
-                records: Some(Some(self.decisions.records.clone())),
-                adr: Some(Some(self.decisions.adr.clone())),
+                documents: Some(Some(self.decisions.documents.clone())),
             })),
             tests: Some(Some(RawTests {
                 files: Some(Some(self.tests.files.clone())),
@@ -419,10 +387,6 @@ impl Config {
                     toc: Some(Some(overview.toc.clone())),
                 })
             }),
-            limits: Some(Some(RawLimits {
-                lines: Some(Some(self.limits.lines)),
-                requirements: Some(Some(self.limits.requirements)),
-            })),
             vague_words: Some(Some(self.vague_words.clone())),
             languages: Some(Some(self.languages.clone())),
             labels: Some(Some(self.labels.clone())),
@@ -432,31 +396,24 @@ impl Config {
     fn from_raw(raw: RawConfig) -> Result<Self, StopReason> {
         let defaults = Config::default();
 
-        // REQ-core-014: null 値の検出と絶対パスの検出
-        // REQ-core-110: パスの正規化
-        let ir = non_null_or_default(raw.ir, "ir", defaults.ir)?;
-        check_not_absolute(&ir, "ir")?;
-        let ir = crate::normalize_path(&ir);
-
-        // REQ-core-014: "decisions:" 自体が null のときも設定の誤りで停止する
+        // "decisions:" 自体が null のときも設定の誤りで停止する。値は null と絶対パスを止め、
+        // 正規化する（docs/decisions/core/config.md、docs/decisions/core/base-directory.md）
         let decisions = match non_null(raw.decisions, "decisions")? {
             Some(d) => {
-                let records = non_null_or_default(
-                    d.records,
-                    "decisions.records",
-                    defaults.decisions.records,
+                let documents = non_null_or_default(
+                    d.documents,
+                    "decisions.documents",
+                    defaults.decisions.documents,
                 )?;
-                check_not_absolute(&records, "decisions.records")?;
-                let records = crate::normalize_path(&records);
-                let adr = non_null_or_default(d.adr, "decisions.adr", defaults.decisions.adr)?;
-                check_not_absolute(&adr, "decisions.adr")?;
-                let adr = crate::normalize_path(&adr);
-                DecisionsConfig { records, adr }
+                check_not_absolute(&documents, "decisions.documents")?;
+                DecisionsConfig {
+                    documents: crate::normalize_path(&documents),
+                }
             }
             None => defaults.decisions,
         };
 
-        // REQ-core-014: "tests:" と "tests.rust:" 自体、"tests.files"、
+        // "tests:" と "tests.rust:" 自体、"tests.files"、
         // "tests.rust.attributes"、"tests.rust.macros"、"tests.rules" が null のときも停止する
         let tests = match non_null(raw.tests, "tests")? {
             Some(t) => {
@@ -482,10 +439,10 @@ impl Config {
                     check_not_absolute(rule, "tests.rules")?;
                 }
                 TestsConfig {
-                    // REQ-core-015: 一覧は既定を置き換える
+                    // 一覧は既定を置き換える
                     files,
                     rust,
-                    // REQ-core-110: パスの正規化
+                    // パスの正規化
                     rules: rules
                         .iter()
                         .map(|rule| crate::normalize_path(rule))
@@ -495,7 +452,7 @@ impl Config {
             None => defaults.tests,
         };
 
-        // REQ-core-014: "guides:" 自体と "guides.files" が null のときも停止する
+        // "guides:" 自体と "guides.files" が null のときも停止する
         let guides = match non_null(raw.guides, "guides")? {
             Some(g) => {
                 let files = non_null_or_default(g.files, "guides.files", defaults.guides.files)?;
@@ -505,7 +462,7 @@ impl Config {
             None => defaults.guides,
         };
 
-        // REQ-core-014: "mutants:" 自体と "mutants.equivalents" が null のときも停止する
+        // "mutants:" 自体と "mutants.equivalents" が null のときも停止する
         let mutants = match non_null(raw.mutants, "mutants")? {
             Some(m) => {
                 let equivalents = match non_null(m.equivalents, "mutants.equivalents")? {
@@ -520,8 +477,8 @@ impl Config {
             None => defaults.mutants,
         };
 
-        // TBL-core-004: "overview" を書くときは "overview.files" と "overview.toc" が必須。glob と
-        // パスは REQ-core-014 のとおり検査する
+        // "overview" を書くときは "overview.files" と "overview.toc" が必須。glob と
+        // パスは とおり検査する
         let overview = match non_null(raw.overview, "overview")? {
             Some(o) => {
                 let files = non_null(o.files, "overview.files")?.ok_or_else(|| {
@@ -545,24 +502,7 @@ impl Config {
             None => defaults.surface,
         };
 
-        // REQ-core-014: "limits:" 自体が null のときも停止する
-        let limits = match non_null(raw.limits, "limits")? {
-            Some(l) => {
-                let lines = non_null_or_default(l.lines, "limits.lines", defaults.limits.lines)?;
-                let requirements = non_null_or_default(
-                    l.requirements,
-                    "limits.requirements",
-                    defaults.limits.requirements,
-                )?;
-                LimitsConfig {
-                    lines,
-                    requirements,
-                }
-            }
-            None => defaults.limits,
-        };
-
-        // REQ-core-014: "vague_words:" 自体が null のときも停止する
+        // "vague_words:" 自体が null のときも停止する
         let vague_words =
             non_null_or_default(raw.vague_words, "vague_words", defaults.vague_words)?;
         if vague_words.iter().any(|w| w.is_empty()) {
@@ -570,7 +510,7 @@ impl Config {
                 "vague_words contains an empty string".to_string(),
             ));
         }
-        // REQ-core-014: 重複語の検出
+        // 重複語の検出
         {
             let mut seen = std::collections::HashSet::new();
             for word in &vague_words {
@@ -589,27 +529,25 @@ impl Config {
             .map_err(StopReason::ConfigError)?;
 
         Ok(Config {
-            ir,
             decisions,
             tests,
             guides,
             mutants,
             surface,
             overview,
-            limits,
-            // REQ-core-015: 一覧は既定を置き換える
+            // 一覧は既定を置き換える
             vague_words,
             languages,
             labels,
         })
     }
 
-    /// `言語の一覧`。"languages" が無いか空なら "en" だけ（REQ-core-334）
+    /// `言語の一覧`。"languages" が無いか空なら "en" だけ
     pub fn languages(&self) -> Vec<String> {
         language_list(&self.languages)
     }
 
-    /// その言語の`UI の文字`（REQ-core-351、TBL-core-046）
+    /// その言語の`UI の文字`
     pub fn ui_text(&self, tag: &str) -> crate::ui_text::UiText {
         crate::ui_text::UiText::resolve(tag, self.labels.get(tag))
     }
@@ -623,7 +561,7 @@ fn language_list(languages: &[String]) -> Vec<String> {
     }
 }
 
-/// REQ-core-335: 空の文字列、小文字の英字と数字と "-" のほかの文字を含む言語タグ、重なった言語タグ
+/// 空の文字列、小文字の英字と数字と "-" のほかの文字を含む言語タグ、重なった言語タグ
 fn check_languages(languages: &[String]) -> Result<(), StopReason> {
     let mut seen = std::collections::BTreeSet::new();
     for tag in languages {

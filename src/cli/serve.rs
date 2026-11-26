@@ -1,4 +1,4 @@
-//! "kotowari overview serve"（REQ-core-297〜REQ-core-299、REQ-core-356）。全体像の置き場の下のファイルだけを
+//! "kotowari overview serve"。全体像の置き場の下のファイルだけを
 //! 127.0.0.1 で配り、割り込みまで続ける
 
 use super::StopReason;
@@ -6,11 +6,11 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-/// 検査と描画、ポートの確保、書き込みの順に行い、URL を出して割り込みまで配る（REQ-core-297）
+/// 検査と描画、ポートの確保、書き込みの順に行い、URL を出して割り込みまで配る
 pub fn run(project: &kotowari::Project, port: u16) -> Result<u8, StopReason> {
     let prepared = project.overview_prepare()?;
     let cache = prepared.directory();
-    // REQ-core-298: ほかのポートを試さない
+    // ほかのポートを試さない
     let listener = std::net::TcpListener::bind(("127.0.0.1", port))
         .map_err(|error| StopReason::PortError(format!("127.0.0.1:{port}: {error}")))?;
     let server = tiny_http::Server::from_listener(listener, None)
@@ -39,7 +39,7 @@ pub fn run(project: &kotowari::Project, port: u16) -> Result<u8, StopReason> {
 }
 
 /// 要求を受けては答え、割り込みで 0 を返す。割り込みのほかの誤りは受け付けの失敗である。
-/// HTTP のクレートは受け付けに一度失敗すると受け付けを再開しないので、配り続けられない（REQ-core-298）
+/// HTTP のクレートは受け付けに一度失敗すると受け付けを再開しないので、配り続けられない
 fn serve_requests<R>(
     mut next: impl FnMut() -> std::io::Result<R>,
     stopping: &AtomicBool,
@@ -65,7 +65,7 @@ fn respond(cache: &Path, port: u16, request: tiny_http::Request) {
         .find(|header| header.field.equiv("Host"))
         .map(|header| header.value.as_str());
     if !host_allowed(host, port) {
-        // REQ-core-356: 道を調べる前に、本文の無い 403 を返す
+        // 道を調べる前に、本文の無い 403 を返す
         let _ = request.respond(tiny_http::Response::empty(403));
         return;
     }
@@ -85,7 +85,7 @@ fn respond(cache: &Path, port: u16, request: tiny_http::Request) {
     let _ = request.respond(response);
 }
 
-/// Host が手元の名前と配っているポートか。名前の英字の大小は問わない（REQ-core-356）
+/// Host が手元の名前と配っているポートか。名前の英字の大小は問わない
 fn host_allowed(host: Option<&str>, port: u16) -> bool {
     let Some(host) = host else {
         return false;
@@ -94,7 +94,7 @@ fn host_allowed(host: Option<&str>, port: u16) -> bool {
     host == format!("127.0.0.1:{port}") || host == format!("localhost:{port}")
 }
 
-/// ".html" と ".css" の Content-Type（REQ-core-297）
+/// ".html" と ".css" の Content-Type
 fn content_type(path: &Path) -> &'static str {
     match path.extension().and_then(|extension| extension.to_str()) {
         Some("html") => "text/html; charset=utf-8",
@@ -122,7 +122,7 @@ fn decode(path: &str) -> Option<String> {
 }
 
 /// 要求の道を置き場の中のファイルに解く。".." の成分、絶対パス、シンボリックリンクを辿った先が
-/// 置き場の外になるもの、ディレクトリ、無いファイルは None（REQ-core-299）。中身はここで読む
+/// 置き場の外になるもの、ディレクトリ、無いファイルは None。中身はここで読む
 fn resolve(cache: &Path, url: &str) -> Option<(PathBuf, Vec<u8>)> {
     let path = url.split(['?', '#']).next().unwrap_or("");
     let path = decode(path)?;
@@ -152,7 +152,7 @@ fn resolve(cache: &Path, url: &str) -> Option<(PathBuf, Vec<u8>)> {
 
 #[cfg(test)]
 mod tests {
-    // @kotowari[REQ-core-298]
+    // @kotowari[C-core-ovcmd-20]
     #[test]
     fn a_failure_to_accept_while_serving_stops_with_a_port_error() {
         let stopping = AtomicBool::new(false);
@@ -166,7 +166,7 @@ mod tests {
         assert_eq!(detail, "127.0.0.1:4590: too many open files");
     }
 
-    // @kotowari[REQ-core-297]
+    // @kotowari[C-core-ovcmd-18]
     #[test]
     fn an_interrupt_ends_serving_with_exit_code_zero() {
         let stopping = AtomicBool::new(true);
@@ -181,9 +181,9 @@ mod tests {
 
     use super::*;
 
-    // @kotowari[REQ-core-299]
+    // @kotowari[C-core-ovcmd-22]
     #[test]
-    fn req_core_299_paths_that_leave_the_cache_do_not_resolve() {
+    fn paths_that_leave_the_cache_do_not_resolve() {
         let dir = tempfile::tempdir().unwrap();
         let cache = dir.path().join("cache");
         std::fs::create_dir(&cache).unwrap();

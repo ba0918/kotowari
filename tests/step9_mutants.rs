@@ -12,7 +12,7 @@ fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
 }
 
-/// TBL-core-024 の鍵だけを持つ変異の1件
+/// 鍵だけを持つ変異の1件
 fn mutant(file: &str, line: u64, column: u64, name: &str, summary: &str) -> String {
     format!(
         r#"{{"scenario":{{"Mutant":{{"file":{file:?},"name":{name:?},"span":{{"start":{{"line":{line},"column":{column}}}}}}}}},"summary":{summary:?}}}"#
@@ -81,7 +81,7 @@ fn first_stderr_line(output: &std::process::Output) -> String {
         .to_string()
 }
 
-/// 結果の誤りで停止し、詳細が結果のファイルの相対パスで始まることを見る（TBL-core-018、TBL-core-020）
+/// 結果の誤りで停止し、詳細が結果のファイルの相対パスで始まることを見る
 fn assert_results_error(results: &str) {
     let tmp = project(results);
     let output = run_in(tmp.path(), &[]);
@@ -97,44 +97,44 @@ fn assert_results_error(results: &str) {
     );
 }
 
-// --- REQ-core-144: 結果の誤り ---
+// --- 結果の誤り ---
 
-// @kotowari[REQ-core-144, EX-core-207]
+// @kotowari[C-core-mutin-5]
 #[test]
-fn req_144_unknown_outcome_value_stops() {
+fn unknown_outcome_value_stops() {
     assert_results_error(&outcomes(&[
         BASELINE_SUCCESS.to_string(),
         mutant_at("src/a.rs", 3, "replace f with ()", "Flaky"),
     ]));
 }
 
-// @kotowari[REQ-core-144, EX-core-208]
+// @kotowari[C-core-mutin-5]
 #[test]
-fn req_144_failed_baseline_stops() {
+fn failed_baseline_stops() {
     assert_results_error(&outcomes(&[
         r#"{"scenario":"Baseline","summary":"Failure"}"#.to_string(),
         mutant_at("src/a.rs", 3, "replace f with ()", "CaughtMutant"),
     ]));
 }
 
-// @kotowari[REQ-core-144, EX-core-222]
+// @kotowari[C-core-mutin-5]
 #[test]
-fn req_144_broken_json_stops() {
+fn broken_json_stops() {
     assert_results_error("{");
 }
 
-// @kotowari[REQ-core-144, TBL-core-024, EX-core-223]
+// @kotowari[C-core-mutin-5]
 #[test]
-fn req_144_wrong_key_type_stops() {
+fn wrong_key_type_stops() {
     // "span.start.line" が数ではなく文字列
     assert_results_error(&outcomes(&[
         r#"{"scenario":{"Mutant":{"file":"src/a.rs","name":"src/a.rs:3:5: replace f with ()","span":{"start":{"line":"3","column":5}}}},"summary":"MissedMutant"}"#.to_string(),
     ]));
 }
 
-// @kotowari[REQ-core-144, TBL-core-024, EX-core-224]
+// @kotowari[C-core-mutin-5]
 #[test]
-fn req_144_name_without_the_location_prefix_stops() {
+fn name_without_the_location_prefix_stops() {
     assert_results_error(&outcomes(&[mutant(
         "src/a.rs",
         3,
@@ -144,9 +144,9 @@ fn req_144_name_without_the_location_prefix_stops() {
     )]));
 }
 
-// @kotowari[REQ-core-144, EX-core-225]
+// @kotowari[C-core-mutin-5]
 #[test]
-fn req_144_line_zero_stops() {
+fn line_zero_stops() {
     assert_results_error(&outcomes(&[mutant_at(
         "src/a.rs",
         0,
@@ -155,9 +155,9 @@ fn req_144_line_zero_stops() {
     )]));
 }
 
-// @kotowari[REQ-core-144, EX-core-226]
+// @kotowari[C-core-mutin-6]
 #[test]
-fn req_144_path_outside_the_base_stops() {
+fn path_outside_the_base_stops() {
     assert_results_error(&outcomes(&[mutant_at(
         "../x/src/a.rs",
         3,
@@ -166,10 +166,10 @@ fn req_144_path_outside_the_base_stops() {
     )]));
 }
 
-// @kotowari[REQ-core-144, EX-core-227]
+// @kotowari[C-core-mutin-3]
 #[test]
-fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
-    // 基準の実行が無く、TBL-core-024 に挙げていない鍵 "extra" を持つ1件
+fn results_without_baseline_and_with_unknown_keys_are_read() {
+    // 基準の実行が無く、読まない鍵 "extra" を持つ1件
     let entry = r#"{"scenario":{"Mutant":{"file":"src/a.rs","name":"src/a.rs:3:5: replace f with ()","span":{"start":{"line":3,"column":5}},"extra":1}},"summary":"CaughtMutant","extra":1}"#;
     let tmp = project(&outcomes(&[entry.to_string()]));
     let output = run_in(tmp.path(), &[]);
@@ -182,11 +182,11 @@ fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
     assert_eq!(json_of(&output)["mutants"]["caught"], 1);
 }
 
-// --- REQ-core-139、REQ-core-140: 見逃しと時間切れの指摘 ---
+// --- 見逃しと時間切れの指摘 ---
 
-// @kotowari[REQ-core-138, REQ-core-139, TBL-core-024, EX-core-204]
+// @kotowari[C-core-equiv-1, C-core-mutin-1, C-core-mutin-2, C-core-mutants-3]
 #[test]
-fn req_139_survived_mutant_is_an_error() {
+fn survived_mutant_is_an_error() {
     // 等価の一覧の鍵は設定に無い
     let tmp = project(&outcomes(&[
         BASELINE_SUCCESS.to_string(),
@@ -204,9 +204,24 @@ fn req_139_survived_mutant_is_an_error() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-// @kotowari[REQ-core-139, REQ-core-145, EX-core-205]
+// @kotowari[C-core-mutin-4]
 #[test]
-fn req_139_caught_and_unviable_mutants_yield_nothing() {
+fn c_core_mutin_4_a_result_file_written_with_a_leading_dot_is_output_normalized() {
+    let tmp = project(&outcomes(&[
+        BASELINE_SUCCESS.to_string(),
+        mutant_at("./src/a.rs", 3, "replace f with ()", "MissedMutant"),
+    ]));
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    let findings = v["findings"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0]["kind"], "mutant_survived");
+    assert_eq!(findings[0]["path"], "src/a.rs");
+}
+
+// @kotowari[C-core-mutin-2, C-core-mutants-4]
+#[test]
+fn caught_and_unviable_mutants_yield_nothing() {
     let tmp = project(&outcomes(&[
         mutant_at("src/a.rs", 3, "replace f with ()", "CaughtMutant"),
         mutant_at("src/a.rs", 4, "replace g with ()", "Unviable"),
@@ -223,10 +238,10 @@ fn req_139_caught_and_unviable_mutants_yield_nothing() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-140, EX-core-206]
+// @kotowari[C-core-equiv-13, C-core-mutin-2, C-core-mutants-5, C-core-mutants-8]
 #[test]
-fn req_140_timeout_is_a_notice_even_when_listed() {
-    // EX-core-206 の Given: その変異に合う形の正しい1件と、その文面を持つソースを置く
+fn timeout_is_a_notice_even_when_listed() {
+    // その変異に合う形の正しい1件と、その文面を持つソースを置く
     // （SRC_A、CHANGE、valid_entry、project_with_list はこのファイルの後ろで定義している）
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "Timeout")]),
@@ -241,11 +256,11 @@ fn req_140_timeout_is_a_notice_even_when_listed() {
     assert_eq!(findings[0]["severity"], "notice");
     assert_eq!(findings[0]["path"], "src/a.rs");
     assert_eq!(findings[0]["line"], 3);
-    // PROP-core-005: "timeout" は mutant_timeout の指摘の数に等しい。
-    // 一覧に載っていても "equivalent" には数えない（REQ-core-140: 一覧との一致を見ない）
+    // "timeout" は mutant_timeout の指摘の数に等しい。
+    // 一覧に載っていても "equivalent" には数えない（一覧との一致を見ない）
     assert_eq!(v["mutants"]["timeout"], 1);
     assert_eq!(v["mutants"]["equivalent"], 0);
-    // 一覧の1件の文面は今のソースにあるので古くない（REQ-core-142）
+    // 一覧の1件の文面は今のソースにあるので古くない
     assert!(
         findings_of(&v, "equivalent_stale").is_empty(),
         "{findings:?}"
@@ -253,9 +268,9 @@ fn req_140_timeout_is_a_notice_even_when_listed() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-139, PROP-core-005, EX-core-229]
+// @kotowari[C-core-mutants-6, C-core-mutants-8]
 #[test]
-fn req_139_duplicate_mutants_yield_one_finding_each() {
+fn duplicate_mutants_yield_one_finding_each() {
     let one = mutant_at("src/a.rs", 3, "replace f with ()", "MissedMutant");
     let tmp = project(&outcomes(&[one.clone(), one]));
     let output = run_in(tmp.path(), &[]);
@@ -265,11 +280,11 @@ fn req_139_duplicate_mutants_yield_one_finding_each() {
     assert_eq!(v["mutants"]["survived"], 2);
 }
 
-// --- REQ-core-145、REQ-core-146: 集計 ---
+// --- 集計 ---
 
-// @kotowari[REQ-core-145, REQ-core-146, PROP-core-005, EX-core-209]
+// @kotowari[C-core-mutants-9, C-core-mutants-10]
 #[test]
-fn req_145_no_mutants_exits_zero_with_all_zero_counts() {
+fn no_mutants_exits_zero_with_all_zero_counts() {
     let tmp = project(&outcomes(&[BASELINE_SUCCESS.to_string()]));
     let output = run_in(tmp.path(), &["--format", "text"]);
     assert_eq!(
@@ -279,9 +294,9 @@ fn req_145_no_mutants_exits_zero_with_all_zero_counts() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-146, EX-core-230]
+// @kotowari[C-core-mutants-9]
 #[test]
-fn req_146_summary_is_the_last_line_after_findings() {
+fn summary_is_the_last_line_after_findings() {
     let tmp = project(&outcomes(&[mutant_at(
         "src/a.rs",
         3,
@@ -301,22 +316,22 @@ fn req_146_summary_is_the_last_line_after_findings() {
     );
 }
 
-// --- REQ-core-147: 読む範囲 ---
+// --- 読む範囲 ---
 
-// @kotowari[REQ-core-147, EX-core-210]
+// @kotowari[C-core-mutants-1]
 #[test]
-fn req_147_missing_ir_directory_does_not_stop_mutants() {
+fn missing_decisions_directory_does_not_stop_mutants() {
     let tmp = project(&outcomes(&[mutant_at(
         "src/a.rs",
         3,
         "replace f with ()",
         "CaughtMutant",
     )]));
-    // 設定の "ir" の指す先が無い
+    // 設定の決定の文書の置き場の指す先が無い
     write(
         tmp.path(),
         ".kotowari/config.yaml",
-        "ir: docs/no-such-place\n",
+        "decisions:\n  documents: docs/no-such-place\n",
     );
     let output = run_in(tmp.path(), &[]);
     assert_eq!(
@@ -327,9 +342,9 @@ fn req_147_missing_ir_directory_does_not_stop_mutants() {
     );
 }
 
-// @kotowari[REQ-core-147, TBL-core-025, EX-core-231]
+// @kotowari[C-core-mutants-2, C-core-mutants-7]
 #[test]
-fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
+fn unmarked_test_is_not_reported_and_json_has_three_keys() {
     let tmp = project(&outcomes(&[mutant_at(
         "src/a.rs",
         3,
@@ -345,7 +360,7 @@ fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
         "{:?}",
         v["findings"]
     );
-    // REQ-core-147 が定めるのは鍵の集合（3つだけ）で、鍵の順ではない。
+    // 決めてあるのは鍵の集合（3つだけ）で、鍵の順ではない。
     // 並べてから比べるのは、JSON の鍵の順が serde_json の preserve_order の
     // 有無で変わり、同じ workspace の別のクレートの都合で入れ替わるため
     let mut keys: Vec<&str> = v.as_object().unwrap().keys().map(|k| k.as_str()).collect();
@@ -353,11 +368,11 @@ fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
     assert_eq!(keys, ["counts", "findings", "mutants"]);
 }
 
-// --- REQ-core-143、REQ-core-148: 等価の一覧 ---
+// --- 等価の一覧 ---
 
-/// EX-core-211 の場面のソース。3行目が "    if a == b {"
+/// 3行目が "    if a == b {"
 const SRC_A: &str = "fn f() {\n    let x = 1;\n    if a == b {\n    }\n}\n";
-/// EX-core-211 の場面の変更の説明
+/// 場面の変更の説明
 const CHANGE: &str = "replace == with != in f";
 
 /// 等価の一覧の1件（値はすべて引用符でくくる）
@@ -370,7 +385,7 @@ fn entry(fields: &[(&str, &str)]) -> String {
     yaml
 }
 
-/// EX-core-211 の形の正しい1件
+/// 形の正しい1件
 fn valid_entry() -> String {
     entry(&[
         ("file", "src/a.rs"),
@@ -403,7 +418,7 @@ fn findings_of<'a>(v: &'a serde_json::Value, kind: &str) -> Vec<&'a serde_json::
         .collect()
 }
 
-/// EX-core-211 の場面（3行目の見逃しが1件、ソースあり）で一覧を読ませる
+/// 場面（3行目の見逃しが1件、ソースあり）で一覧を読ませる
 fn run_with_list_output(list: &str) -> std::process::Output {
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
@@ -417,9 +432,9 @@ fn run_with_list(list: &str) -> serde_json::Value {
     json_of(&run_with_list_output(list))
 }
 
-// @kotowari[REQ-core-143, EX-core-215]
+// @kotowari[C-core-equiv-14, C-core-equiv-15, C-core-equiv-16]
 #[test]
-fn req_143_blank_why_is_invalid_and_suppresses_nothing() {
+fn blank_why_is_invalid_and_suppresses_nothing() {
     let v = run_with_list(&entry(&[
         ("file", "src/a.rs"),
         ("change", CHANGE),
@@ -437,13 +452,13 @@ fn req_143_blank_why_is_invalid_and_suppresses_nothing() {
     let survived = findings_of(&v, "mutant_survived");
     assert_eq!(survived.len(), 1);
     assert_eq!(survived[0]["line"], 3);
-    // A53: 形の誤った1件に equivalent_stale は出さない
+    // 形の誤った1件に equivalent_stale は出さない
     assert!(findings_of(&v, "equivalent_stale").is_empty());
 }
 
-// @kotowari[REQ-core-143, EX-core-216]
+// @kotowari[C-core-equiv-14]
 #[test]
-fn req_143_class_other_than_equivalent_is_invalid() {
+fn class_other_than_equivalent_is_invalid() {
     let v = run_with_list(&entry(&[
         ("file", "src/a.rs"),
         ("change", CHANGE),
@@ -454,9 +469,9 @@ fn req_143_class_other_than_equivalent_is_invalid() {
     assert_eq!(findings_of(&v, "equivalent_invalid").len(), 1);
 }
 
-// @kotowari[REQ-core-143, EX-core-236]
+// @kotowari[C-core-equiv-14]
 #[test]
-fn req_143_entry_outside_the_base_is_invalid() {
+fn entry_outside_the_base_is_invalid() {
     let v = run_with_list(&entry(&[
         ("file", "../x/src/a.rs"),
         ("change", CHANGE),
@@ -467,9 +482,9 @@ fn req_143_entry_outside_the_base_is_invalid() {
     assert_eq!(findings_of(&v, "equivalent_invalid").len(), 1);
 }
 
-// @kotowari[REQ-core-143, EX-core-220]
+// @kotowari[C-core-equiv-16]
 #[test]
-fn req_143_entry_without_file_has_an_empty_detail_prefix() {
+fn entry_without_file_has_an_empty_detail_prefix() {
     let v = run_with_list(&entry(&[
         ("change", "replace f with ()"),
         ("text", "if a == b {"),
@@ -481,9 +496,9 @@ fn req_143_entry_without_file_has_an_empty_detail_prefix() {
     assert_eq!(invalid[0]["detail"], ": replace f with ()");
 }
 
-// @kotowari[REQ-core-143, EX-core-237]
+// @kotowari[C-core-equiv-17]
 #[test]
-fn req_143_duplicate_invalid_entries_yield_one_finding_each() {
+fn duplicate_invalid_entries_yield_one_finding_each() {
     let one = entry(&[
         ("file", "src/a.rs"),
         ("change", CHANGE),
@@ -495,9 +510,9 @@ fn req_143_duplicate_invalid_entries_yield_one_finding_each() {
     assert_eq!(findings_of(&v, "equivalent_invalid").len(), 2);
 }
 
-// @kotowari[REQ-core-148, EX-core-217]
+// @kotowari[C-core-equiv-2]
 #[test]
-fn req_148_missing_list_file_stops() {
+fn missing_list_file_stops() {
     let tmp = project(&outcomes(&[mutant_at(
         "src/a.rs",
         3,
@@ -519,9 +534,9 @@ fn req_148_missing_list_file_stops() {
     );
 }
 
-// @kotowari[REQ-core-148, EX-core-238]
+// @kotowari[C-core-equiv-1]
 #[test]
-fn req_148_empty_list_file_is_zero_entries() {
+fn empty_list_file_is_zero_entries() {
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
         "",
@@ -535,9 +550,9 @@ fn req_148_empty_list_file_is_zero_entries() {
     );
 }
 
-// @kotowari[REQ-core-148, EX-core-239]
+// @kotowari[C-core-equiv-3]
 #[test]
-fn req_148_list_that_is_not_a_sequence_stops_with_the_list_path() {
+fn list_that_is_not_a_sequence_stops_with_the_list_path() {
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
         "file: src/a.rs\n",
@@ -551,17 +566,15 @@ fn req_148_list_that_is_not_a_sequence_stops_with_the_list_path() {
     );
 }
 
-// @kotowari[REQ-core-148, EX-core-221]
+// @kotowari[C-core-equiv-4]
 #[test]
-fn req_148_check_ignores_a_missing_list_file() {
+fn check_ignores_a_missing_list_file() {
     let tmp = TempDir::new().unwrap();
-    for dir in ["docs/ir", "docs/decision/records", "docs/decision/adr"] {
-        std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
-    }
+    std::fs::create_dir_all(tmp.path().join("docs/decisions")).unwrap();
     write(
         tmp.path(),
         ".kotowari/config.yaml",
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nmutants:\n  equivalents: docs/equivalents.yaml\n",
+        "mutants:\n  equivalents: docs/equivalents.yaml\n",
     );
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_ne!(
@@ -572,11 +585,11 @@ fn req_148_check_ignores_a_missing_list_file() {
     );
 }
 
-// --- REQ-core-141、REQ-core-142: 一覧との一致と、文面の無くなった1件 ---
+// --- 一覧との一致と、文面の無くなった1件 ---
 
-// @kotowari[REQ-core-139, REQ-core-141, REQ-core-145, EX-core-211]
+// @kotowari[C-core-equiv-5, C-core-mutants-8]
 #[test]
-fn req_141_listed_survivor_is_counted_as_equivalent() {
+fn listed_survivor_is_counted_as_equivalent() {
     let output = run_with_list_output(&valid_entry());
     let v = json_of(&output);
     assert!(
@@ -586,7 +599,7 @@ fn req_141_listed_survivor_is_counted_as_equivalent() {
     );
     assert_eq!(v["mutants"]["survived"], 0);
     assert_eq!(v["mutants"]["equivalent"], 1);
-    // 文面が今のソースにある1件は古くない（REQ-core-142）
+    // 文面が今のソースにある1件は古くない
     assert!(
         findings_of(&v, "equivalent_stale").is_empty(),
         "{:?}",
@@ -595,9 +608,9 @@ fn req_141_listed_survivor_is_counted_as_equivalent() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-141, EX-core-212]
+// @kotowari[C-core-equiv-6]
 #[test]
-fn req_141_moved_line_still_matches() {
+fn moved_line_still_matches() {
     // "    if a == b {" が7行目に動き、見逃しの行も 7
     let moved = "fn f() {\n    let a = 1;\n    let b = 2;\n    let c = 3;\n    let d = 4;\n    let e = 5;\n    if a == b {\n    }\n}\n";
     let tmp = project_with_list(
@@ -613,9 +626,9 @@ fn req_141_moved_line_still_matches() {
     );
 }
 
-// @kotowari[REQ-core-141, REQ-core-142, EX-core-213]
+// @kotowari[C-core-equiv-6, C-core-equiv-11]
 #[test]
-fn req_141_rewritten_line_no_longer_matches_and_entry_goes_stale() {
+fn rewritten_line_no_longer_matches_and_entry_goes_stale() {
     // 3行目が "    if a == c {" に変わり、"if a == b {" の行はどこにも無い
     let rewritten = "fn f() {\n    let x = 1;\n    if a == c {\n    }\n}\n";
     let tmp = project_with_list(
@@ -636,9 +649,9 @@ fn req_141_rewritten_line_no_longer_matches_and_entry_goes_stale() {
     assert_eq!(stale[0]["detail"], "src/a.rs: replace == with != in f");
 }
 
-// @kotowari[REQ-core-141, EX-core-214]
+// @kotowari[C-core-equiv-10]
 #[test]
-fn req_141_line_beyond_the_file_does_not_match() {
+fn line_beyond_the_file_does_not_match() {
     // "src/a.rs" は5行で、見逃しは9行目
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 9, CHANGE, "MissedMutant")]),
@@ -653,9 +666,9 @@ fn req_141_line_beyond_the_file_does_not_match() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-// @kotowari[REQ-core-141, EX-core-232]
+// @kotowari[C-core-equiv-9]
 #[test]
-fn req_141_one_entry_matches_every_line_with_the_same_text() {
+fn one_entry_matches_every_line_with_the_same_text() {
     // 3行目と8行目がどちらも "    if a == b {"
     let twice = "fn f() {\n    let x = 1;\n    if a == b {\n    }\n    let y = 2;\n    let z = 3;\n    let w = 4;\n    if a == b {\n    }\n}\n";
     let tmp = project_with_list(
@@ -675,9 +688,9 @@ fn req_141_one_entry_matches_every_line_with_the_same_text() {
     assert_eq!(v["mutants"]["equivalent"], 2);
 }
 
-// @kotowari[REQ-core-141, EX-core-233]
+// @kotowari[C-core-equiv-7]
 #[test]
-fn req_141_entry_for_another_file_does_not_match() {
+fn entry_for_another_file_does_not_match() {
     // "src/b.rs" にも同じ文面の行が同じ行番号であるが、"file" が違うので一致しない
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
@@ -698,9 +711,9 @@ fn req_141_entry_for_another_file_does_not_match() {
     assert_eq!(survived[0]["line"], 3);
 }
 
-// @kotowari[REQ-core-141, EX-core-234]
+// @kotowari[C-core-equiv-8]
 #[test]
-fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
+fn path_spelling_tab_indent_and_crlf_still_match() {
     // 一覧の "file" は "./src/a.rs"、ソースの字下げはタブで行の終わりは "\r\n"
     let tabbed = "fn f() {\r\n\tlet x = 1;\r\n\tif a == b {\r\n\t}\r\n}\r\n";
     let tmp = project_with_list(
@@ -722,10 +735,10 @@ fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
     );
 }
 
-// @kotowari[REQ-core-141, TBL-core-010]
+// @kotowari[C-core-equiv-8]
 #[test]
-fn req_141_lone_cr_ends_a_line_of_the_source() {
-    // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで分けると3行目が見つからない
+fn lone_cr_ends_a_line_of_the_source() {
+    // 行の区切りは単独の "\r" も行の終わりに数える。"\n" だけで分けると3行目が見つからない
     let lone_cr = "fn f() {\r    let x = 1;\r    if a == b {\r    }\r}\r";
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
@@ -741,10 +754,10 @@ fn req_141_lone_cr_ends_a_line_of_the_source() {
     assert_eq!(v["mutants"]["equivalent"], 1);
 }
 
-// @kotowari[REQ-core-111, REQ-core-141]
+// @kotowari[C-core-equiv-5, C-core-input-1]
 #[test]
-fn req_111_source_with_a_bom_still_matches_on_its_first_line() {
-    // REQ-core-111: 読むファイルの先頭の BOM は読み飛ばす。REQ-core-147 はソースを mutants が読むファイルに挙げる。
+fn source_with_a_bom_still_matches_on_its_first_line() {
+    // 読むファイルの先頭の BOM は読み飛ばす。ソースは mutants が読むファイルである。
     // 読み飛ばさないと1行目の文面に BOM が残り、一覧の1件と一致しない
     const CHANGE_ON_LINE_ONE: &str = "replace f with ()";
     let tmp = project_with_list(
@@ -774,9 +787,9 @@ fn req_111_source_with_a_bom_still_matches_on_its_first_line() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-141, REQ-core-142, EX-core-235]
+// @kotowari[C-core-equiv-10, C-core-equiv-12]
 #[test]
-fn req_141_non_utf8_source_does_not_stop() {
+fn non_utf8_source_does_not_stop() {
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
         &valid_entry(),
@@ -790,9 +803,9 @@ fn req_141_non_utf8_source_does_not_stop() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-// @kotowari[REQ-core-142, EX-core-243]
+// @kotowari[C-core-equiv-11]
 #[test]
-fn req_142_stale_entry_detail_keeps_the_written_path() {
+fn stale_entry_detail_keeps_the_written_path() {
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
         &entry(&[
@@ -810,9 +823,9 @@ fn req_142_stale_entry_detail_keeps_the_written_path() {
     assert_eq!(stale[0]["detail"], "./src/a.rs: replace f with ()");
 }
 
-// @kotowari[REQ-core-144, REQ-core-139]
+// @kotowari[C-core-mutin-5, C-core-mutants-3]
 #[test]
-fn req_144_line_one_is_read() {
+fn line_one_is_read() {
     // 1行目の変異は「行が1未満」ではないので停止しない
     let tmp = project(&outcomes(&[mutant_at(
         "src/a.rs",
@@ -833,9 +846,9 @@ fn req_144_line_one_is_read() {
     assert_eq!(survived[0]["line"], 1);
 }
 
-// @kotowari[REQ-core-148]
+// @kotowari[C-core-equiv-1]
 #[test]
-fn req_148_list_of_comments_only_is_zero_entries() {
+fn list_of_comments_only_is_zero_entries() {
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
         "# 今は1件も無い\n# あとで足す\n",
@@ -849,10 +862,10 @@ fn req_148_list_of_comments_only_is_zero_entries() {
     );
 }
 
-// @kotowari[REQ-core-148]
+// @kotowari[C-core-equiv-1]
 #[test]
-fn req_148_blank_lines_between_comments_are_still_empty() {
-    // REQ-core-148 の「空（0バイトか注釈だけ）」は空行を内容に数えない
+fn blank_lines_between_comments_are_still_empty() {
+    // 「空（0バイトか注釈だけ）」は空行を内容に数えない
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
         "# 今は1件も無い\n\n# あとで足す\n",
@@ -866,9 +879,9 @@ fn req_148_blank_lines_between_comments_are_still_empty() {
     );
 }
 
-// @kotowari[REQ-core-143]
+// @kotowari[C-core-equiv-14, C-core-equiv-15]
 #[test]
-fn req_143_entry_with_a_key_outside_the_five_is_invalid() {
+fn entry_with_a_key_outside_the_five_is_invalid() {
     // 鍵は5つだが "why" が無く、代わりに知らない鍵 "note" がある
     let v = run_with_list(&entry(&[
         ("file", "src/a.rs"),

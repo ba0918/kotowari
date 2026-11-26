@@ -1,10 +1,10 @@
-//! 元データの形の検査（REQ-core-281、TBL-core-038）。Markdown としての形は kotowari-markdown-schema の
+//! 元データの形の検査。Markdown としての形は kotowari-markdown-schema の
 //! スキーマで、frontmatter は Markdown の形の外なのでここで検査する
 
 use kotowari_markdown_schema::{Document, Schema, ValidationOptions};
 use serde_json::Value;
 
-/// 形のスキーマ。パッケージの中に置いてコンパイル時に取り込む（TBL-core-038）
+/// 形のスキーマ。パッケージの中に置いてコンパイル時に取り込む
 const SCHEMA: &str = include_str!("../schemas/overview.yaml");
 
 /// 形に合わない所の行（文書全体にかかるものは None）と、kotowari-markdown-schema の指摘の種類の名前
@@ -36,11 +36,14 @@ impl Form {
 }
 
 /// frontmatter の行の違反の detail。kotowari-markdown-schema は frontmatter を検査せず、
-/// 当てはまる種類の名前が無い（TBL-core-038）
+/// 当てはまる種類の名前が無い
 const FRONTMATTER: &str = "frontmatter";
 
-/// frontmatter の "ir" の一覧と、形の違反。一覧は "ir" そのものが1件以上の文字列の一覧のときだけ返し、
-/// ほかの鍵の違反があっても返す（REQ-core-284 の検査を続けるため）
+/// 扱う決定の文書の一覧の鍵（C-core-ovdata-23）
+const DOCUMENTS: &str = "documents";
+
+/// frontmatter の、扱う決定の文書の一覧（鍵 "documents"）と、形の違反。一覧は "documents" そのものが
+/// 1件以上の文字列の一覧のときだけ返し、ほかの鍵の違反があっても返す（一覧の検査を続けるため）
 pub(crate) fn frontmatter(yaml: Option<&str>) -> (Option<Vec<String>>, Vec<FormFinding>) {
     let violation: FormFinding = (None, FRONTMATTER);
     let Some(yaml) = yaml else {
@@ -51,25 +54,25 @@ pub(crate) fn frontmatter(yaml: Option<&str>) -> (Option<Vec<String>>, Vec<FormF
     };
     let mut findings: Vec<FormFinding> = map
         .keys()
-        .filter(|key| key.as_str() != "ir")
+        .filter(|key| key.as_str() != DOCUMENTS)
         .map(|_| violation)
         .collect();
-    let ir = match map.get("ir") {
+    let documents = match map.get(DOCUMENTS) {
         Some(Value::Array(items)) if !items.is_empty() => items
             .iter()
             .map(|item| item.as_str().map(str::to_string))
             .collect::<Option<Vec<_>>>(),
         _ => None,
     };
-    if ir.is_none() {
+    if documents.is_none() {
         findings.push(violation);
     }
-    (ir, findings)
+    (documents, findings)
 }
 
 #[cfg(test)]
 mod tests {
-    // @kotowari[TBL-core-038]
+    // @kotowari[C-core-ovdata-5]
     #[test]
     fn the_embedded_overview_schema_parses() {
         assert!(kotowari_markdown_schema::Schema::parse(super::SCHEMA).is_ok());

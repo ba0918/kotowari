@@ -1,4 +1,4 @@
-//! `直前のコメントの塊`（TBL-core-016、TBL-core-035）
+//! `直前のコメントの塊`
 //!
 //! 言語に依存しない行の規則で、`テスト`の節の最初の行から上へ、コメントだけの行と
 //! 挟んでよい行が空行なしで続く間を塊とする。コメントは tree-sitter の extra の節で見分ける。
@@ -24,7 +24,7 @@ pub struct LineMap<'s> {
     bytes: Vec<ByteClass>,
 }
 
-/// 挟んでよい行になる節の種類（TBL-core-035）
+/// 挟んでよい行になる節の種類
 #[expect(
     clippy::wildcard_enum_match_arm,
     reason = "ast-grep's SupportLang is a foreign enum: the other languages deliberately allow no interleaved lines"
@@ -111,7 +111,7 @@ impl<'s> LineMap<'s> {
                 if marker.ids.is_empty() {
                     invalid.push((line_num, raw.to_string()));
                 } else {
-                    // A152: 同じ ID の印が複数あっても出現ごとに1件数える
+                    // 同じ ID の印が複数あっても出現ごとに1件数える
                     for id in marker.ids {
                         ids.push((id, line_num));
                     }

@@ -1,8 +1,8 @@
-//! `UI の文字`の鍵と英語の文字（TBL-core-046）と、設定からその言語の`UI の文字`を決めること（REQ-core-351）
+//! `UI の文字`の鍵と英語の文字と、設定からその言語の`UI の文字`を決めること
 
 use std::collections::BTreeMap;
 
-/// TBL-core-046 の1行。鍵、数を入れるか、英語の文字
+/// 鍵、数を入れるか、英語の文字
 pub struct Key {
     pub name: &'static str,
     pub counted: bool,
@@ -17,7 +17,7 @@ const fn key(name: &'static str, counted: bool, english: &'static str) -> Key {
     }
 }
 
-/// TBL-core-046 の鍵。英語の文字は kotowari だけが持つ
+/// 英語の文字は kotowari だけが持つ
 pub const KEYS: &[Key] = &[
     key("language_name", false, "English"),
     key("index_link", false, "Overview"),
@@ -25,7 +25,11 @@ pub const KEYS: &[Key] = &[
     key("stale_sections", true, "{n} sections to review"),
     key("open_items", true, "{n} open"),
     key("planned_items", true, "{n} planned"),
-    key("stale_mark", false, "Not reviewed since the IR changed"),
+    key(
+        "stale_mark",
+        false,
+        "Not reviewed since the decisions changed",
+    ),
     key("outline_stale", false, "not reviewed"),
     key("superseded", false, "(superseded)"),
     key("deferred", false, "(deferred)"),
@@ -38,10 +42,10 @@ pub const KEYS: &[Key] = &[
     key("state_dropped", false, "Dropped"),
 ];
 
-/// 英語の言語タグ。この言語だけは "labels" が鍵を欠いてもよい（TBL-core-046）
+/// 英語の言語タグ。この言語だけは "labels" が鍵を欠いてもよい
 pub const ENGLISH: &str = "en";
 
-/// 数を入れる文字の中の数の場所（REQ-core-352）
+/// 数を入れる文字の中の数の場所
 pub const NUMBER: &str = "{n}";
 
 /// 1つの言語の`UI の文字`。鍵から文字列への対応
@@ -49,7 +53,7 @@ pub const NUMBER: &str = "{n}";
 pub struct UiText(BTreeMap<String, String>);
 
 impl UiText {
-    /// 鍵の文字。TBL-core-046 に無い鍵には None
+    /// 鍵の文字。`UI の文字`の鍵の表に無い鍵には None
     pub fn get(&self, key: &str) -> Option<&str> {
         self.0.get(key).map(String::as_str)
     }
@@ -57,7 +61,7 @@ impl UiText {
     pub fn entries(&self) -> &BTreeMap<String, String> {
         &self.0
     }
-    /// "en" は英語の文字に labels を上書きし、ほかの言語は labels そのもの（TBL-core-046）
+    /// "en" は英語の文字に labels を上書きし、ほかの言語は labels そのもの
     pub(crate) fn resolve(tag: &str, labels: Option<&BTreeMap<String, String>>) -> Self {
         let mut text = BTreeMap::new();
         if tag == ENGLISH {
@@ -74,7 +78,7 @@ impl UiText {
     }
 }
 
-/// REQ-core-352: "labels" の誤り。言語の一覧に無い言語タグ、TBL-core-046 に無い鍵、英語でない言語の
+/// "labels" の誤り。言語の一覧に無い言語タグ、`UI の文字`の鍵の表に無い鍵、英語でない言語の
 /// 欠けた鍵、"{n}" をちょうど1つ含まない数を入れる文字
 pub(crate) fn check_labels(
     languages: &[String],

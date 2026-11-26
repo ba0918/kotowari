@@ -1,5 +1,5 @@
-# kotowari 自身の CLI の面（判断の記録 docs/decision/records/2026-09-27-surface-check.md の A27）。
-# 指摘の種類の名前は REQ-core-125 がコードと突き合わせているので、ここでは取り出さない。
+# kotowari 自身の CLI の面。
+# 指摘の種類の名前は skill の参照とコードを突き合わせるテストが見ているので、ここでは取り出さない。
 
 # サブコマンド: 1つ目の位置引数として受けるコマンドの表 COMMANDS の中の文字列
 id: subcommand

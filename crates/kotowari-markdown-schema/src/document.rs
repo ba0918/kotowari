@@ -1,6 +1,7 @@
 //! mdast から正規化した文書の木を作る。検証と抽出の共通の入力。
 
 use crate::ast::parse_mdast;
+use crate::finding::RuleKind;
 use markdown::mdast::Node;
 
 /// 検証・抽出の対象にする文書の木。
@@ -18,18 +19,18 @@ pub struct Document {
     pub(crate) preamble: Vec<Block>,
     /// 深さ2の節
     pub(crate) sections: Vec<Section>,
-    /// 深さ4以上の見出し。節の中かどうかを問わず heading_level_mismatch の対象
-    pub(crate) stray_headings: Vec<Heading>,
     /// 前置部領域（最初の節より前）に出た深さ3の見出しとその内側の行。
     /// 題名より後の見出しは宣言済みの前置部の中の未宣言の構造として、open でも
-    /// undeclared_heading / undeclared_line の対象になる（REQ-schema-003）。題名より前の
+    /// undeclared_heading / undeclared_line の対象になる。題名より前の
     /// 見出しは open では許す
     pub(crate) stray_preamble_headings: Vec<StrayPreambleHeading>,
     /// 文書の生の行。1始まりの行番号で `raw_line` から引く。指摘が指す行の
-    /// 生の文字は組み立て直さずここから取る（REQ-schema-008）
+    /// 生の文字は組み立て直さずここから取る
     pub(crate) lines: Vec<String>,
     /// 文書の先頭の frontmatter が占める行数。無ければ 0。行の読み方はこの次の行から読む
     pub(crate) frontmatter_lines: usize,
+    /// 閉じないフェンスの開きの行。閉じないコードブロックは、それを囲むものの終わりまでを呑む
+    pub(crate) unclosed_fences: Vec<usize>,
 }
 
 impl Document {
@@ -46,7 +47,7 @@ impl Document {
 }
 
 impl Document {
-    /// 最初の節より前の深さ3の見出しを、文書の直下の`項目`として読んだもの（REQ-schema-061）。
+    /// 最初の節より前の深さ3の見出しを、文書の直下の`項目`として読んだもの。
     /// スキーマが文書の直下の項目を宣言したときだけ使う。
     pub(crate) fn preamble_items(&self) -> Vec<Item> {
         self.stray_preamble_headings
@@ -54,6 +55,7 @@ impl Document {
             .map(|stray| {
                 let (id, title, has_id_separator) = split_item_heading(&stray.heading.text);
                 Item {
+                    text: stray.heading.text.clone(),
                     id,
                     title,
                     has_id_separator,
@@ -66,9 +68,9 @@ impl Document {
 }
 
 impl Document {
-    /// 行 `line` の深さ `depth` の見出しに始まる要素の最後の行（REQ-schema-062）。次に現れる
+    /// 行 `line` の深さ `depth` の見出しに始まる要素の最後の行。次に現れる
     /// 同じ深さかそれより浅い見出しの手前の行で、無ければ文書の最後の行。見出しは読み方ごとに
-    /// 組んだ木の見出しなので、コードブロックの中の見出しの形の行は数えない（TBL-schema-011）。
+    /// 組んだ木の見出しなので、コードブロックの中の見出しの形の行は数えない。
     pub(crate) fn end_line(&self, line: usize, depth: u8) -> usize {
         let titles = self.titles.iter().map(|h| (h.line, h.depth));
         let sections = self
@@ -78,8 +80,7 @@ impl Document {
         let strays = self
             .stray_preamble_headings
             .iter()
-            .map(|s| (s.heading.line, s.heading.depth))
-            .chain(self.stray_headings.iter().map(|h| (h.line, h.depth)));
+            .map(|s| (s.heading.line, s.heading.depth));
         titles
             .chain(sections)
             .chain(strays)
@@ -102,7 +103,7 @@ pub struct StrayPreambleHeading {
     pub heading: Heading,
     pub blocks: Vec<Block>,
     /// 題名より前に出たか。題名より前の見出しは open では許し、前置部領域の
-    /// 見出しは宣言済みの前置部の内側の未宣言の構造として open でも誤りになる（REQ-schema-003）
+    /// 見出しは宣言済みの前置部の内側の未宣言の構造として open でも誤りになる
     pub before_title: bool,
 }
 
@@ -114,7 +115,7 @@ pub struct Heading {
 }
 
 /// 文の1行。生の行とその行番号（1始まり）。行ごとの抽出と、指摘が指す行の
-/// 生の文字に使う（TBL-schema-008、REQ-schema-008）。
+/// 生の文字に使う。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawLine {
     pub line: usize,
@@ -138,11 +139,13 @@ pub struct Section {
 
 #[derive(Debug, Clone)]
 pub struct Item {
+    /// 見出しの文字の全体。名前と正規表現の規則はこれで選ぶ
+    pub text: String,
     /// 見出しの ID 部分（先頭から `:` の直前まで）
     pub id: String,
     /// 見出しの ID より後
     pub title: String,
-    /// 見出しに `:` があるか。無いときは invalid_id の対象（TBL-schema-006）
+    /// 見出しに `:` があるか。無いときは invalid_id の対象
     pub has_id_separator: bool,
     pub line: usize,
     pub blocks: Vec<Block>,
@@ -152,47 +155,51 @@ pub struct Item {
 #[derive(Debug, Clone)]
 pub enum Block {
     Field {
-        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）
+        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う
         line_text: String,
         /// マーカーを除いた元の行テキスト（`名前: 値` の原形）。箇条書きとして
-        /// 扱うとき（TBL-schema-007）の pattern はこの元の行に適用する
+        /// 扱うときの pattern はこの元の行に適用する
         text: String,
-        /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
+        /// lead 段落の最後の行。lead 段落が無ければマーカーの行
         lead_end: usize,
+        /// 一覧の項目の最後の行。継続段落と子を含む
+        end: usize,
         name: String,
         value: String,
-        /// フィールド行の子である継続段落の行の範囲。REQ-schema-030 ではフィールド行の一部として扱う
+        /// フィールド行の子である継続段落の行の範囲。フィールド行の一部として扱う
         continuation: Vec<LineSpan>,
-        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
+        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）
         children: Vec<Block>,
         line: usize,
     },
     Bullet {
-        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）
+        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う
         line_text: String,
         text: String,
-        /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
+        /// lead 段落の最後の行。lead 段落が無ければマーカーの行
         lead_end: usize,
-        /// リスト項目の子である継続段落の行の範囲。REQ-schema-030 では箇条書きの一部として扱う
+        /// 一覧の項目の最後の行。継続段落と子を含む
+        end: usize,
+        /// リスト項目の子である継続段落の行の範囲。箇条書きの一部として扱う
         continuation: Vec<LineSpan>,
-        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
+        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）
         children: Vec<Block>,
         line: usize,
     },
-    /// 順序付きリストの項目（`1. ` など）。箇条書きの対象外（TBL-schema-007）。
+    /// 順序付きリストの項目（`1. ` など）。箇条書きの対象外。
     /// 閉じた世界では undeclared_line になる。抽出では値に含めない。
     OrderedList { text: String, line: usize },
     Statement {
         text: String,
         line: usize,
-        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む（TBL-schema-008）
+        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む
         raw_lines: Vec<RawLine>,
     },
     Table {
         header: Vec<String>,
         rows: Vec<Vec<String>>,
         line: usize,
-        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない（TBL-schema-008）
+        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない
         row_lines: Vec<usize>,
     },
     Code {
@@ -200,8 +207,18 @@ pub enum Block {
         value: String,
         line: usize,
     },
-    /// どの規則種別にも当てはまらないブロック（引用、水平線など）
+    /// 文に数えず、指摘にもしないブロック（画像だけの段落、リンクの参照定義、HTML の
+    /// コメントだけのブロックなど）
     Other { line: usize },
+    /// 規則の種類が無く、"open: true" を宣言しないノードの中では undeclared_line になる
+    /// ブロック（段落の読み方の引用、HTML のブロック、水平線）
+    Unruled { rule_kind: RuleKind, line: usize },
+    /// 深さ4以上の見出し。それを含むノードの行で、そのノードを終えない
+    Subheading {
+        text: String,
+        depth: u8,
+        line: usize,
+    },
 }
 
 impl Document {
@@ -216,6 +233,10 @@ impl Document {
         let mut tree = TreeBuilder::default();
         let mut frontmatter_lines = 0;
 
+        let mut unclosed_fences = Vec::new();
+        for child in &root.children {
+            collect_unclosed_fences(child, src, &mut unclosed_fences);
+        }
         for child in root.children {
             let line = child.position().map(|p| p.start.line).unwrap_or(1);
             #[expect(
@@ -233,6 +254,7 @@ impl Document {
         let mut doc = tree.doc;
         doc.lines = lines;
         doc.frontmatter_lines = frontmatter_lines;
+        doc.unclosed_fences = unclosed_fences;
         Ok(doc)
     }
 }
@@ -250,7 +272,7 @@ enum BlockOwner {
 }
 
 /// 見出しとブロックの並びから、題名・前置部・節・項目の木を組み立てる。
-/// 段落の読み方と行の読み方が共有する（TBL-schema-011）。
+/// 段落の読み方と行の読み方が共有する。
 #[derive(Default)]
 pub(crate) struct TreeBuilder {
     doc: Document,
@@ -271,8 +293,7 @@ impl TreeBuilder {
                     depth: 1,
                     line,
                 });
-                // 題名はそれまでの節と項目を終える。要素の範囲（REQ-schema-062）と同じ区切り方にする
-                // （review7-gaps の A3）
+                // 題名はそれまでの節と項目を終える。要素の範囲と同じ区切り方にする
                 self.owner = BlockOwner::Preamble;
             }
             2 => {
@@ -292,6 +313,7 @@ impl TreeBuilder {
                     let section = &mut doc.sections[sec_idx];
                     let (id, title, has_id_separator) = split_item_heading(&text);
                     section.items.push(Item {
+                        text: text.clone(),
                         id,
                         title,
                         has_id_separator,
@@ -304,8 +326,8 @@ impl TreeBuilder {
                     };
                 }
                 BlockOwner::Preamble | BlockOwner::StrayPreambleHeading(_) => {
-                    // 前置部領域の深さ3の見出し。内側の行をここに集める（REQ-schema-003）。
-                    // 題名より前に出たかどうかで open の扱いが変わる（REQ-schema-002）
+                    // 前置部領域の深さ3の見出し。内側の行をここに集める。
+                    // 題名より前に出たかどうかで open の扱いが変わる
                     doc.stray_preamble_headings.push(StrayPreambleHeading {
                         heading: Heading {
                             text,
@@ -319,7 +341,8 @@ impl TreeBuilder {
                         BlockOwner::StrayPreambleHeading(doc.stray_preamble_headings.len() - 1);
                 }
             },
-            depth => doc.stray_headings.push(Heading { text, depth, line }),
+            // 深さ4以上の見出しは、それを含む前置部・節・項目の行として読み、そのノードを終えない
+            depth => self.blocks(vec![Block::Subheading { text, depth, line }]),
         }
     }
 
@@ -361,6 +384,36 @@ fn split_lines(src: &str) -> Vec<String> {
     lines
 }
 
+/// 閉じないフェンスの開きの行を、木の全体（一覧の項目と引用の中を含む）から集める。囲みの
+/// 開き方は Markdown の読み手に任せ（字下げのコードブロックは囲みを持たないので見ない）、閉じたかは、
+/// コードブロックの元の文字の最後の行が、開きと同じ文字の、開き以上の長さの並びだけかで見る。
+fn collect_unclosed_fences(node: &Node, src: &str, out: &mut Vec<usize>) {
+    if let Node::Code(_) = node
+        && let Some(position) = node.position()
+        && let Some(source) = src.get(position.start.offset..position.end.offset)
+    {
+        let fence = source.chars().next().filter(|c| matches!(c, '`' | '~'));
+        let length = fence.map_or(0, |fence| {
+            source.chars().take_while(|&c| c == fence).count()
+        });
+        if let Some(fence) = fence.filter(|_| length >= 3) {
+            let source_lines = split_lines(source.trim_end());
+            let closing = source_lines
+                .last()
+                .map(|last| last.trim_start_matches(['>', ' ', '\t']).trim_end())
+                .filter(|_| source_lines.len() > 1)
+                .unwrap_or_default();
+            let closed = closing.chars().count() >= length && closing.chars().all(|c| c == fence);
+            if !closed {
+                out.push(position.start.line);
+            }
+        }
+    }
+    for child in node.children().into_iter().flatten() {
+        collect_unclosed_fences(child, src, out);
+    }
+}
+
 /// 1始まりの行番号の生の行。範囲の外は空文字列。
 fn raw_line_of(lines: &[String], line: usize) -> String {
     line.checked_sub(1)
@@ -369,7 +422,7 @@ fn raw_line_of(lines: &[String], line: usize) -> String {
         .unwrap_or_default()
 }
 
-/// ノードが覆う行の生の行と行番号（TBL-schema-008、REQ-schema-008）。
+/// ノードが覆う行の生の行と行番号。
 fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
     let Some(position) = node.position() else {
         return Vec::new();
@@ -389,7 +442,7 @@ fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
 fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
     let line = start_line(node);
     match node {
-        // 画像だけの行（例: `![alt](img.png)`）は文の対象外（REQ-schema-032）
+        // 画像だけの行（例: `![alt](img.png)`）は文の対象外
         Node::Paragraph(_) if is_image_only_paragraph(node) => vec![Block::Other { line }],
         Node::Paragraph(_) => {
             vec![Block::Statement {
@@ -401,8 +454,14 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
         Node::List(list) => {
             let mut out = Vec::new();
             for child in &list.children {
-                if let Node::ListItem(item) = child {
-                    out.extend(blocks_from_list_item(item, src, lines, list.ordered, false));
+                match child {
+                    Node::ListItem(item) => {
+                        out.extend(blocks_from_list_item(item, src, lines, list.ordered, false));
+                    }
+                    // Markdown の読み手は、閉じないフェンスで終わった項目の次の項目を、一覧の直下の
+                    // 一覧に入れる。その項目も同じ一覧の行として読む
+                    Node::List(_) => out.extend(blocks_from_node(child, src, lines)),
+                    _ => {}
                 }
             }
             out
@@ -413,8 +472,33 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
             value: code.value.clone(),
             line,
         }],
+        Node::Blockquote(_) => vec![Block::Unruled {
+            rule_kind: RuleKind::BlockQuote,
+            line,
+        }],
+        Node::ThematicBreak(_) => vec![Block::Unruled {
+            rule_kind: RuleKind::ThematicBreak,
+            line,
+        }],
+        Node::Html(html) if !is_only_html_comments(&html.value) => vec![Block::Unruled {
+            rule_kind: RuleKind::Html,
+            line,
+        }],
         _ => vec![Block::Other { line }],
     }
+}
+
+/// HTML のブロックが、空白を挟んだ HTML のコメントだけでできているか。コメントは文書を書く
+/// 人やツールのための書き込みで、文書の中身ではない
+fn is_only_html_comments(html: &str) -> bool {
+    let mut rest = html.trim_start();
+    while let Some(after_open) = rest.strip_prefix("<!--") {
+        let Some(close) = after_open.find("-->") else {
+            return false;
+        };
+        rest = after_open[close + 3..].trim_start();
+    }
+    rest.is_empty()
 }
 
 /// 表のノードを表のブロックにする。`line_offset` はノードの行番号に足す行数で、
@@ -431,7 +515,7 @@ pub(crate) fn table_block_from_node(table: &markdown::mdast::Table, line_offset:
     }
     let mut rows = rows.into_iter();
     let header: Vec<String> = rows.next().unwrap_or_default();
-    // ヘッダより多いセルは捨てる（REQ-schema-033）
+    // ヘッダより多いセルは捨てる
     let rows = rows
         .map(|mut row| {
             row.truncate(header.len());
@@ -443,20 +527,20 @@ pub(crate) fn table_block_from_node(table: &markdown::mdast::Table, line_offset:
         rows,
         line: line_at(table.position.as_ref()) + line_offset,
         // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
-        // 現れないので、残りがデータ行そのものになる（TBL-schema-008）
+        // 現れないので、残りがデータ行そのものになる
         row_lines: row_lines.into_iter().skip(1).collect(),
     }
 }
 
 /// リスト項目を1つ以上のブロックにする。先頭の段落がフィールド行か箇条書きかを
-/// 決め、続く段落（継続段落）は箇条書きの一部にする（REQ-schema-030）。順序付きリストの
-/// 項目は箇条書きの対象外で、閉じた世界では undeclared_line になる（TBL-schema-007）。
-/// 入れ子のリストは親の箇条書きの子ブロックとして保持する（REQ-schema-031）。コードブロック・
+/// 決め、続く段落（継続段落）は箇条書きの一部にする。順序付きリストの
+/// 項目は箇条書きの対象外で、閉じた世界では undeclared_line になる。
+/// 入れ子のリストは親の箇条書きの子ブロックとして保持する。コードブロック・
 /// 表などの子もブロックとして子に残し、閉じた世界の undeclared_line の対象にする。
 /// 先頭がコードブロック・表などで lead の段落が無いとき、後続の段落は文として
-/// 扱う（REQ-schema-030）。文の出現回数・規則（REQ-schema-032）の対象になり、閉じた世界では
-/// undeclared_line になる。ただし画像だけの段落は文に数えない（REQ-schema-032）。`preserve_indent` が真のとき、子の行の元のインデントを
-/// 保ったまま元の行を取る（TBL-schema-008 の「元の行を保った文字列」のため）。
+/// 扱う。文の出現回数・規則の対象になり、閉じた世界では
+/// undeclared_line になる。ただし画像だけの段落は文に数えない。`preserve_indent` が真のとき、子の行の元のインデントを
+/// 保ったまま元の行を取る（「元の行を保った文字列」のため）。
 fn blocks_from_list_item(
     item: &markdown::mdast::ListItem,
     src: &str,
@@ -474,14 +558,14 @@ fn blocks_from_list_item(
         )]
         match child {
             // 先頭の段落だけがフィールド行・箇条書き・順序付き項目の lead になる。
-            // 続く段落は継続段落として lead に付く（REQ-schema-030）。
+            // 続く段落は継続段落として lead に付く。
             Node::Paragraph(_) => {
                 if i == 0 {
                     let text = raw_slice(src, child);
                     let lead_end = child.position().map_or(item_line, |p| p.end.line);
                     let line_text = original_item_line(item, src, preserve_indent);
                     lead_block = Some(if ordered {
-                        // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line（TBL-schema-007）
+                        // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line
                         Block::OrderedList {
                             text,
                             line: item_line,
@@ -500,8 +584,8 @@ fn blocks_from_list_item(
                 } else {
                     // lead が無い項目（先頭がコードブロック・表など）の段落は
                     // 文として扱う。継続段落は lead に付く場合だけだから、この
-                    // 段落はどこにも吸われない（REQ-schema-030）。画像だけの段落は
-                    // blocks_from_node が文の対象外にする（REQ-schema-032）。
+                    // 段落はどこにも吸われない。画像だけの段落は
+                    // blocks_from_node が文の対象外にする。
                     extra.extend(blocks_from_node(child, src, lines));
                 }
             }
@@ -513,16 +597,14 @@ fn blocks_from_list_item(
                     }
                 }
                 match &mut lead_block {
-                    // 入れ子のリストは親の子として保持する（REQ-schema-031）
+                    // 入れ子のリストは親の子として保持する
                     Some(Block::Field { children, .. }) | Some(Block::Bullet { children, .. }) => {
                         children.extend(nested)
                     }
                     _ => extra.extend(nested),
                 }
             }
-            // コードブロック・表などのブロックは捨てず、子のブロックとして残す。
-            // 引用・水平線などは blocks_from_node が Block::Other にして閉じた
-            // 世界でも無視される（REQ-schema-032）。
+            // コードブロック・表・引用などのブロックは捨てず、子のブロックとして残す。
             other => {
                 let blocks = blocks_from_node(other, src, lines);
                 match &mut lead_block {
@@ -535,7 +617,7 @@ fn blocks_from_list_item(
         }
     }
     // 中身の無い項目（"-" や "1." だけの行）も1本として残す。捨てると宣言していない行が
-    // 指摘にならずに消える（REQ-schema-001）
+    // 指摘にならずに消える
     if item.children.is_empty() {
         lead_block = Some(if ordered {
             Block::OrderedList {
@@ -547,6 +629,7 @@ fn blocks_from_list_item(
                 line_text: original_item_line(item, src, preserve_indent),
                 text: String::new(),
                 lead_end: item_line,
+                end: item_line,
                 continuation: Vec::new(),
                 children: Vec::new(),
                 line: item_line,
@@ -554,11 +637,23 @@ fn blocks_from_list_item(
         });
     }
     let mut out = Vec::new();
-    if let Some(lead) = lead_block {
+    if let Some(mut lead) = lead_block {
+        // 一覧の項目の位置は、後ろに続く空行で終わることがある。最後の空でない行を最後の行にする
+        let end = (item_line..=line_at_end(item.position.as_ref()))
+            .rev()
+            .find(|&line| !raw_line_of(lines, line).trim().is_empty())
+            .unwrap_or(item_line);
+        lead.extend_end(end);
         out.push(lead);
     }
     out.extend(extra);
     out
+}
+
+/// 一覧の行の lead 段落を1行につないだ文字。行ごとに前後の空白を除き、改行を空白1つに
+/// 置き換える。箇条書きの正規表現と名前付きキャプチャはこの文字に照らす
+pub(crate) fn joined_lead(lead: &str) -> String {
+    lead.lines().map(str::trim).collect::<Vec<_>>().join(" ")
 }
 
 /// 段落が画像ノードだけで構成されているか。画像だけの行は文として数えない。
@@ -579,8 +674,8 @@ fn is_image(node: &Node) -> bool {
 }
 
 /// リスト項目の元の1行目（マーカーとその直後の空白を含む）。行頭のインデントは
-/// トップレベルの箇条書きとして扱うため取り除く（TBL-schema-008）。子の行は `preserve_indent`
-/// が真で、元のインデントを保ったままの行を取る（TBL-schema-008 の「元の行を保った
+/// トップレベルの箇条書きとして扱うため取り除く。子の行は `preserve_indent`
+/// が真で、元のインデントを保ったままの行を取る（「元の行を保った
 /// 文字列」のため）。行末の空白（ハード改行）は元の行の
 /// 一部として残す
 fn original_item_line(
@@ -624,7 +719,7 @@ fn split_field(text: &str) -> Option<(String, String)> {
 
 impl Block {
     /// 一覧の行1つ。中身が "名前: 値" の形ならフィールド行、そうでなければ箇条書きにする。
-    /// 宣言と一致しないフィールド行を箇条書きとして扱うのは検証と抽出の側（TBL-schema-007）。
+    /// 宣言と一致しないフィールド行を箇条書きとして扱うのは検証と抽出の側。
     /// 継続段落と子は読み進めながら足す
     pub(crate) fn list_line(
         line_text: String,
@@ -637,6 +732,7 @@ impl Block {
                 line_text,
                 text,
                 lead_end,
+                end: lead_end,
                 name,
                 value,
                 continuation: Vec::new(),
@@ -647,6 +743,7 @@ impl Block {
                 line_text,
                 text,
                 lead_end,
+                end: lead_end,
                 continuation: Vec::new(),
                 children: Vec::new(),
                 line,
@@ -654,7 +751,7 @@ impl Block {
         }
     }
 
-    /// ブロックが現れた行番号（1始まり）。導かれる値の `line` と `raw` の抽出に使う（REQ-schema-048）。
+    /// ブロックが現れた行番号（1始まり）。導かれる値の `line` と `raw` の抽出に使う。
     pub fn line(&self) -> usize {
         match self {
             Block::Field { line, .. }
@@ -663,7 +760,16 @@ impl Block {
             | Block::Statement { line, .. }
             | Block::Table { line, .. }
             | Block::Code { line, .. }
-            | Block::Other { line } => *line,
+            | Block::Other { line }
+            | Block::Unruled { line, .. }
+            | Block::Subheading { line, .. } => *line,
+        }
+    }
+
+    /// 一覧の行の最後の行を、`line` まで延ばす。一覧の行でないブロックは変えない。
+    pub(crate) fn extend_end(&mut self, line: usize) {
+        if let Block::Field { end, .. } | Block::Bullet { end, .. } = self {
+            *end = (*end).max(line);
         }
     }
 
@@ -676,7 +782,9 @@ impl Block {
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. } => &[],
+            | Block::Other { .. }
+            | Block::Unruled { .. }
+            | Block::Subheading { .. } => &[],
         }
     }
 }
@@ -691,7 +799,7 @@ fn span_of(node: &Node) -> LineSpan {
 }
 
 /// 項目見出しを ID と題名に分ける。`:` が無ければ全体を ID にし、区切りが
-/// 無いことを返す（TBL-schema-006 の判定に使う）。
+/// 無いことを返す。
 fn split_item_heading(text: &str) -> (String, String, bool) {
     match text.find(':') {
         Some(idx) => (
@@ -718,7 +826,7 @@ pub(crate) fn inline_text(children: &[Node]) -> String {
             Node::Strong(s) => out.push_str(&inline_text(&s.children)),
             Node::Link(l) => out.push_str(&inline_text(&l.children)),
             Node::LinkReference(l) => out.push_str(&inline_text(&l.children)),
-            // GFM の打ち消し線も中の文字を残す（review7-gaps の A2）
+            // GFM の打ち消し線も中の文字を残す
             Node::Delete(d) => out.push_str(&inline_text(&d.children)),
             _ => {}
         }
@@ -744,6 +852,10 @@ fn raw_slice(src: &str, node: &Node) -> String {
     slice_at(src, node.position())
 }
 
+fn line_at_end(position: Option<&markdown::unist::Position>) -> usize {
+    position.map(|p| p.end.line).unwrap_or(1)
+}
+
 fn line_at(position: Option<&markdown::unist::Position>) -> usize {
     position.map(|p| p.start.line).unwrap_or(1)
 }
@@ -751,7 +863,7 @@ fn line_at(position: Option<&markdown::unist::Position>) -> usize {
 fn slice_at(src: &str, position: Option<&markdown::unist::Position>) -> String {
     match position {
         // 複数行にまたがる範囲は、行を改行1つでつなぎ直す。CRLF と単独の CR も
-        // split_lines と同じく1つの行区切りとして扱う（REQ-schema-063）
+        // split_lines と同じく1つの行区切りとして扱う
         Some(pos) => src[pos.start.offset..pos.end.offset]
             .trim()
             .replace("\r\n", "\n")

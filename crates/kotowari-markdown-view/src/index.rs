@@ -1,10 +1,10 @@
-//! 一覧のページ。目次のとおりに入れ子と順番で描き、状態の数を添える（REQ-view-005、REQ-view-016〜018、
-//! REQ-view-021）
+//! 一覧のページ。目次のとおりに入れ子と順番で描き、状態の数を添える（C-view-rendering-8、C-view-navigation-1〜4、
+//! C-view-navigation-8）
 
 use crate::{Block, Document, Frame, Part, TocGroup, TocItem, Ui, html, parts};
 use std::collections::BTreeMap;
 
-/// 名前から文書を引く表。目次の名前のうち文書の無いものは描かない（REQ-view-021）
+/// 名前から文書を引く表。目次の名前のうち文書の無いものは描かない（C-view-navigation-8）
 pub(crate) type Documents<'a> = BTreeMap<&'a str, &'a Document>;
 
 /// 1つの文書か、目次の群の下の文書の、状態の数
@@ -17,7 +17,7 @@ struct Counts {
 }
 
 impl Counts {
-    /// REQ-view-016: 古い節と、lead に続く冒頭と節の中の status の部品の札
+    /// C-view-navigation-1: 古い節と、lead に続く冒頭と節の中の status の部品の札
     fn of(document: &Document) -> Self {
         let in_sections = document.sections.iter().flat_map(|section| {
             section.blocks.iter().filter_map(|block| match block {
@@ -43,10 +43,10 @@ impl Counts {
         self.pages += other.pages;
         self.stale += other.stale;
         self.open += other.open;
-        // 予定は群の見出しに出さない（REQ-view-017）ので足し合わせない
+        // 予定は群の見出しに出さない（C-view-navigation-3）ので足し合わせない
     }
 
-    /// 文書の項目に添える数。どれも 0 なら何も描かない（REQ-view-016）
+    /// 文書の項目に添える数。どれも 0 なら何も描かない（C-view-navigation-1）
     fn card(&self, ui: Ui) -> String {
         let badges = badges(
             ui,
@@ -62,7 +62,7 @@ impl Counts {
         format!("<p class=\"counts\">{badges}</p>")
     }
 
-    /// 目次の群の見出しに添える数。ページの数は常に出す（REQ-view-017）
+    /// 目次の群の見出しに添える数。ページの数は常に出す（C-view-navigation-2）
     fn group(&self, ui: Ui) -> String {
         format!(
             "<span class=\"counts\"><span class=\"count count-pages\">{}</span>{}</span>",
@@ -115,7 +115,7 @@ pub(crate) fn anchor(path: &[usize]) -> String {
     id
 }
 
-/// 一覧のページ（REQ-view-005）
+/// 一覧のページ（C-view-rendering-8）
 pub(crate) fn page(toc: &TocGroup, documents: &Documents, ui: Ui, frame: &Frame) -> String {
     let (items, counts) = items(&toc.items, documents, &mut Vec::new(), ui);
     let mut body = format!(
@@ -147,7 +147,7 @@ fn group_note(group: &TocGroup) -> String {
         .unwrap_or_default()
 }
 
-/// 項目を書かれた順に描き、その下の数を合わせる（REQ-view-017、REQ-view-021）
+/// 項目を書かれた順に描き、その下の数を合わせる（C-view-navigation-2、C-view-navigation-8）
 fn items(
     items: &[TocItem],
     documents: &Documents,
@@ -176,8 +176,8 @@ fn items(
                 path.push(index);
                 let (inner, counts) = self::items(&group.items, documents, path, ui);
                 total.add(counts);
-                // REQ-view-018: 開いた状態で描き、見出しを選ぶと畳める。スクリプトは使わない。
-                // REQ-view-005: 群の説明は見出しの一部なので、畳んでも見える <summary> の中に描く
+                // C-view-navigation-4: 開いた状態で描き、見出しを選ぶと畳める。スクリプトは使わない。
+                // C-view-rendering-8: 群の説明は見出しの一部なので、畳んでも見える <summary> の中に描く
                 out.push_str(&format!(
                     "<li class=\"group\" id=\"{}\"><details open>\n<summary><span class=\"group-title\">{}</span>{}{}</summary>\n{inner}</details></li>\n",
                     anchor(path),
@@ -200,7 +200,7 @@ pub(crate) struct Place<'a> {
 }
 
 /// 目次の名前ごとの位置。目次を書かれた順に深さ優先でたどって、最初に出てくるその名前の項目の位置を
-/// 取る（REQ-view-019）。目次は描画ごとに1度だけたどる
+/// 取る（C-view-navigation-10）。目次は描画ごとに1度だけたどる
 pub(crate) fn places(toc: &TocGroup) -> BTreeMap<&str, Place<'_>> {
     let mut places = BTreeMap::new();
     let mut chain = vec![(toc.title.as_str(), anchor(&[]))];

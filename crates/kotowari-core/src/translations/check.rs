@@ -1,8 +1,8 @@
-//! `対`の`指摘`（REQ-core-338〜REQ-core-349）
+//! `対`の`指摘`
 
 use super::*;
 
-/// `一致の記録`を読んだもの。誤りなら TBL-core-008 の detail
+/// `一致の記録`を読んだもの。誤りなら translation_record_invalid の detail
 pub(super) fn read_record(
     pair: &Pair,
 ) -> Result<std::collections::BTreeMap<String, String>, &'static str> {
@@ -45,7 +45,7 @@ pub(super) fn read_record(
     Ok(record)
 }
 
-/// 欠けた側、`一致の記録`、古い側の`指摘`（REQ-core-338、REQ-core-339、REQ-core-341）
+/// 欠けた側、`一致の記録`、古い側の`指摘`
 pub(super) fn pair_findings(pair: &Pair, context: &Context, findings: &mut Vec<Finding>) {
     let missing = |path: &str, detail: &str| {
         Finding::new(
@@ -92,18 +92,20 @@ pub(super) fn pair_findings(pair: &Pair, context: &Context, findings: &mut Vec<F
     }
 }
 
-/// `対`の文書の種類（TBL-core-044）
-pub(super) fn skeleton_kind(pair: &Pair) -> crate::skeleton::Kind {
+/// 決定の文書の置き場の用語集の`対`か（C-core-docs-20）
+fn is_decision_glossary(pair: &Pair, context: &Context) -> bool {
+    pair.place == Place::Decision && crate::decisions::is_glossary(pair.path(), &context.decisions)
+}
+
+/// `対`の文書の種類
+pub(super) fn skeleton_kind(pair: &Pair, context: &Context) -> crate::skeleton::Kind {
     use crate::skeleton::Kind;
     match pair.place {
-        Place::Ir => match crate::DocKind::of(file_name(pair.path())) {
-            crate::DocKind::Topic => Kind::Topic,
-            crate::DocKind::Glossary => Kind::Glossary,
-            crate::DocKind::Flags => Kind::Flags,
-        },
         Place::Guide => Kind::Guide,
         Place::OverviewData => Kind::OverviewData,
         Place::Toc => Kind::Toc,
+        Place::Decision if is_decision_glossary(pair, context) => Kind::DecisionGlossary,
+        Place::Decision => Kind::Decision,
     }
 }
 
@@ -112,8 +114,8 @@ pub(crate) struct Context {
     pub(super) languages: Vec<String>,
     /// `言語の一覧`の順の、各言語の`UI の文字`の "language_name"
     pub(super) names: Vec<String>,
-    pub(super) records: String,
-    pub(super) adr: String,
+    /// 決定の文書の置き場
+    pub(super) decisions: String,
     pub(super) sides: std::collections::BTreeMap<String, (String, String)>,
 }
 
@@ -144,13 +146,12 @@ impl Context {
         Self {
             languages,
             names,
-            records: config.decisions.records.clone(),
-            adr: config.decisions.adr.clone(),
+            decisions: config.decisions.documents.clone(),
             sides,
         }
     }
 
-    /// その`側`のあるべき`切り替えの行`（REQ-core-346）
+    /// その`側`のあるべき`切り替えの行`
     pub(crate) fn switcher(&self, first: &str, language: &str) -> String {
         self.languages
             .iter()
@@ -168,18 +169,18 @@ impl Context {
     }
 }
 
-/// `切り替えの行`を持つ`対`か（REQ-core-346、`全体像の元データ`と`目次`は持たない）
+/// `切り替えの行`を持つ`対`か（`全体像の元データ`と`目次`は持たない）
 pub(super) fn has_switcher(place: Place) -> bool {
-    matches!(place, Place::Ir | Place::Guide)
+    matches!(place, Place::Guide | Place::Decision)
 }
 
-/// リンクを検査する`対`か（REQ-core-347）
-pub(super) fn has_links(place: Place) -> bool {
-    !matches!(place, Place::Toc)
+/// リンクを検査する`対`か。決定の文書の置き場の用語集は中身を検査しない（C-core-docs-20）
+fn has_links(pair: &Pair, context: &Context) -> bool {
+    !matches!(pair.place, Place::Toc) && !is_decision_glossary(pair, context)
 }
 
 /// 1つの`側`を検査し、`切り替えの行`を空にした文と、リンクを検査する`対`ならその文を
-/// CommonMark と GFM として読んだ木を返す（REQ-core-346〜REQ-core-349）
+/// CommonMark と GFM として読んだ木を返す
 pub(super) fn side_text(
     pair: &Pair,
     side: &Side,
@@ -203,7 +204,7 @@ pub(super) fn side_text(
             }
         }
     }
-    let root = has_links(pair.place)
+    let root = has_links(pair, context)
         .then(|| crate::markdown::parse(&checked).ok())
         .flatten();
     if let Some(root) = &root {
@@ -221,23 +222,14 @@ pub(super) fn side_text(
                     link.destination.clone(),
                 ));
             }
-            let record = |place: &str| crate::sources::is_under_place(&target, place);
-            if record(&context.records) || record(&context.adr) {
-                findings.push(Finding::new(
-                    FindingKind::LinkToRecord,
-                    side.path.clone(),
-                    Some(link.line),
-                    link.destination,
-                ));
-            }
         }
     }
     (checked, root)
 }
 
-/// REQ-core-345: ほかの言語の`側`の`骨組み`が`先頭の言語`の`側`と食い違えば、`側`ごとに1件
+/// ほかの言語の`側`の`骨組み`が`先頭の言語`の`側`と食い違えば、`側`ごとに1件
 pub(super) fn structure_findings(pair: &Pair, context: &Context, findings: &mut Vec<Finding>) {
-    let kind = skeleton_kind(pair);
+    let kind = skeleton_kind(pair, context);
     let skeleton = |side: &Side, findings: &mut Vec<Finding>| {
         let (text, root) = side_text(pair, side, context, findings);
         let mut skeleton = crate::skeleton::skeleton(kind, &text, root.as_ref());

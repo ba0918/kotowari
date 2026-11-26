@@ -1,4 +1,4 @@
-//! 指摘の種類、重大度、指摘と、その並べ方と数え方（TBL-core-005、TBL-core-007）
+//! 指摘の種類、重大度、指摘と、その並べ方と数え方
 
 use std::collections::BTreeMap;
 
@@ -28,76 +28,44 @@ macro_rules! finding_kinds {
 }
 
 finding_kinds! {
-    AlgorithmWithoutDefinition => "algorithm_without_definition",
-    DeferredWithTest => "deferred_with_test",
-    DependsOnDeferred => "depends_on_deferred",
-    DuplicateField => "duplicate_field",
     DuplicateId => "duplicate_id",
-    DuplicateTerm => "duplicate_term",
     EquivalentInvalid => "equivalent_invalid",
     EquivalentStale => "equivalent_stale",
     IdDomainMismatch => "id_domain_mismatch",
-    InvalidGlossaryRow => "invalid_glossary_row",
     InvalidMarker => "invalid_marker",
-    MissingDocument => "missing_document",
-    MissingField => "missing_field",
-    MissingScope => "missing_scope",
-    MissingSource => "missing_source",
-    MissingStatement => "missing_statement",
-    MissingTable => "missing_table",
-    MissingTag => "missing_tag",
     MissingTitle => "missing_title",
     MultipleTitles => "multiple_titles",
     MutantSurvived => "mutant_survived",
     MutantTimeout => "mutant_timeout",
-    RecordFieldMissing => "record_field_missing",
-    RecordFieldUnknown => "record_field_unknown",
-    RequirementWithoutTest => "requirement_without_test",
-    RevisionLinkInvalid => "revision_link_invalid",
-    ScenarioWithoutTest => "scenario_without_test",
-    SourceInvalid => "source_invalid",
     SurfaceUnspecifiedInvalid => "surface_unspecified_invalid",
     SurfaceUnspecifiedStale => "surface_unspecified_stale",
     SurfaceWithoutSpec => "surface_without_spec",
     TestWithoutId => "test_without_id",
-    TooManyLines => "too_many_lines",
-    TooManyRequirements => "too_many_requirements",
-    UnclosedBacktick => "unclosed_backtick",
     UnclosedCodeBlock => "unclosed_code_block",
-    UnknownCodeBlock => "unknown_code_block",
-    UnknownField => "unknown_field",
     UnknownHeading => "unknown_heading",
-    UnknownKind => "unknown_kind",
     UnknownLine => "unknown_line",
-    UnknownTag => "unknown_tag",
-    UnknownTerm => "unknown_term",
     UnparsableFile => "unparsable_file",
-    InvalidGherkinLine => "invalid_gherkin_line",
     InvalidId => "invalid_id",
     InvalidPlan => "invalid_plan",
-    GlossaryInvalid => "glossary_invalid",
-    GlossaryTitleInvalid => "glossary_title_invalid",
     GuideStale => "guide_stale",
     UnresolvedReference => "unresolved_reference",
     VagueWord => "vague_word",
-    VerificationInvalid => "verification_invalid",
-    VerificationMissing => "verification_missing",
-    // 全体像の元データの指摘（TBL-core-008）。core はこの種類を作らず、追加の指摘の群として受け取って並べ、数える
+    // 全体像の元データの指摘。core はこの種類を作らず、追加の指摘の群として受け取って並べ、数える
     OverviewFormInvalid => "overview_form_invalid",
     OverviewPartUnknown => "overview_part_unknown",
     OverviewPartInvalid => "overview_part_invalid",
     OverviewLeadMissing => "overview_lead_missing",
-    OverviewIrMissing => "overview_ir_missing",
-    OverviewIrShared => "overview_ir_shared",
+    OverviewDocumentMissing => "overview_document_missing",
+    OverviewDocumentShared => "overview_document_shared",
     OverviewRefUnresolved => "overview_ref_unresolved",
     OverviewNameConflict => "overview_name_conflict",
-    // 目次の指摘（TBL-core-008）。全体像の元データの指摘と同じく kotowari-overview が作る
+    // 目次の指摘。全体像の元データの指摘と同じく kotowari-overview が作る
     OverviewTocInvalid => "overview_toc_invalid",
     OverviewTocPageMissing => "overview_toc_page_missing",
     OverviewTocPageUnknown => "overview_toc_page_unknown",
     OverviewTocPageDuplicate => "overview_toc_page_duplicate",
     OverviewTocGroupEmpty => "overview_toc_group_empty",
-    // 対の指摘（TBL-core-008）
+    // 対の指摘
     TranslationMissing => "translation_missing",
     TranslationRecordInvalid => "translation_record_invalid",
     TranslationStale => "translation_stale",
@@ -105,72 +73,46 @@ finding_kinds! {
     TranslationSwitcherInvalid => "translation_switcher_invalid",
     LinkLanguageMismatch => "link_language_mismatch",
     LinkToRecord => "link_to_record",
+    // 決定の文書の指摘（docs/decisions/core/decision-documents.md）
+    DecisionStateInvalid => "decision_state_invalid",
+    DecisionSectionMissing => "decision_section_missing",
+    TopicLeadMissing => "topic_lead_missing",
+    ConfirmationWithoutTest => "confirmation_without_test",
+    LinkTargetMissing => "link_target_missing",
 }
 
 impl FindingKind {
     /// 重大度を返す（1か所で管理する）
     pub fn severity(&self) -> &'static str {
         match self {
-            FindingKind::TooManyLines
-            | FindingKind::TooManyRequirements
-            | FindingKind::MutantTimeout
+            FindingKind::MutantTimeout
             | FindingKind::EquivalentStale
             | FindingKind::GuideStale
-            | FindingKind::SurfaceUnspecifiedStale
-            | FindingKind::DeferredWithTest
-            | FindingKind::DependsOnDeferred => "notice",
-            FindingKind::AlgorithmWithoutDefinition
-            | FindingKind::DuplicateField
-            | FindingKind::DuplicateId
-            | FindingKind::DuplicateTerm
+            | FindingKind::SurfaceUnspecifiedStale => "notice",
+            FindingKind::DuplicateId
             | FindingKind::EquivalentInvalid
             | FindingKind::IdDomainMismatch
-            | FindingKind::InvalidGlossaryRow
             | FindingKind::InvalidMarker
-            | FindingKind::MissingDocument
-            | FindingKind::MissingField
-            | FindingKind::MissingScope
-            | FindingKind::MissingSource
-            | FindingKind::MissingStatement
-            | FindingKind::MissingTable
-            | FindingKind::MissingTag
             | FindingKind::MissingTitle
             | FindingKind::MultipleTitles
             | FindingKind::MutantSurvived
-            | FindingKind::RecordFieldMissing
-            | FindingKind::RecordFieldUnknown
-            | FindingKind::RequirementWithoutTest
-            | FindingKind::RevisionLinkInvalid
-            | FindingKind::ScenarioWithoutTest
-            | FindingKind::SourceInvalid
             | FindingKind::SurfaceUnspecifiedInvalid
             | FindingKind::SurfaceWithoutSpec
             | FindingKind::TestWithoutId
-            | FindingKind::UnclosedBacktick
             | FindingKind::UnclosedCodeBlock
-            | FindingKind::UnknownCodeBlock
-            | FindingKind::UnknownField
             | FindingKind::UnknownHeading
-            | FindingKind::UnknownKind
             | FindingKind::UnknownLine
-            | FindingKind::UnknownTag
-            | FindingKind::UnknownTerm
             | FindingKind::UnparsableFile
-            | FindingKind::InvalidGherkinLine
             | FindingKind::InvalidId
             | FindingKind::InvalidPlan
-            | FindingKind::GlossaryInvalid
-            | FindingKind::GlossaryTitleInvalid
             | FindingKind::UnresolvedReference
             | FindingKind::VagueWord
-            | FindingKind::VerificationInvalid
-            | FindingKind::VerificationMissing
             | FindingKind::OverviewFormInvalid
             | FindingKind::OverviewPartUnknown
             | FindingKind::OverviewPartInvalid
             | FindingKind::OverviewLeadMissing
-            | FindingKind::OverviewIrMissing
-            | FindingKind::OverviewIrShared
+            | FindingKind::OverviewDocumentMissing
+            | FindingKind::OverviewDocumentShared
             | FindingKind::OverviewRefUnresolved
             | FindingKind::OverviewNameConflict
             | FindingKind::OverviewTocInvalid
@@ -184,7 +126,12 @@ impl FindingKind {
             | FindingKind::TranslationStructureMismatch
             | FindingKind::TranslationSwitcherInvalid
             | FindingKind::LinkLanguageMismatch
-            | FindingKind::LinkToRecord => "error",
+            | FindingKind::LinkToRecord
+            | FindingKind::DecisionStateInvalid
+            | FindingKind::DecisionSectionMissing
+            | FindingKind::TopicLeadMissing
+            | FindingKind::ConfirmationWithoutTest
+            | FindingKind::LinkTargetMissing => "error",
         }
     }
 }
@@ -257,19 +204,19 @@ impl Finding {
     }
 }
 
-/// REQ-core-024: 指摘を TBL-core-007 の順（path → line → kind → detail）に並べる
+/// 指摘を 順（path → line → kind → detail）に並べる
 pub fn sort_findings(findings: &mut [Finding]) {
     findings.sort_by(|a, b| {
         a.path
             .cmp(&b.path)
-            // TBL-core-007: line は null が先、その後は小さい順（Option の順序が None を先に置く）
+            // line は null が先、その後は小さい順（Option の順序が None を先に置く）
             .then_with(|| a.line.cmp(&b.line))
             .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
             .then_with(|| a.detail.cmp(&b.detail))
     });
 }
 
-/// PROP-core-002: 種類ごとの指摘の数。1件も無い種類は持たない
+/// 種類ごとの指摘の数。1件も無い種類は持たない
 pub fn count_findings(findings: &[Finding]) -> BTreeMap<String, usize> {
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
     for f in findings {

@@ -47,7 +47,7 @@ fn strip_frontmatter(node: &mut Node) {
     }
 }
 
-/// 位置情報を取り除く。REQ-schema-040 は出力に position を含めない。
+/// 位置情報を取り除く。出力に position を含めない。
 fn strip_positions(node: &mut Node) {
     node.position_set(None);
     if let Some(children) = node.children_mut() {
@@ -61,7 +61,7 @@ fn strip_positions(node: &mut Node) {
 mod tests {
     use super::*;
 
-    // @kotowari[REQ-schema-040]
+    // @kotowari[C-schema-extract-44]
     #[test]
     fn ast_json_is_mdast_shape_with_inline_and_no_position() {
         let src = "# 題名\n\n段落と `インライン` と *強調* と **太字**。\n\n- 箇条書き\n";
@@ -86,7 +86,7 @@ mod tests {
         assert!(children[0]["children"][0].get("position").is_none());
     }
 
-    // @kotowari[REQ-schema-040]
+    // @kotowari[C-schema-extract-44]
     #[test]
     fn ast_json_excludes_frontmatter_node() {
         let src = "---\n$schema: ../x.yaml\n---\n# 題名\n";

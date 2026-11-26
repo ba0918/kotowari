@@ -11,15 +11,6 @@ impl StatusReport {
     pub fn documents(&self) -> &crate::status::Documents {
         &self.0.documents
     }
-    pub fn items(&self) -> &crate::status::Items {
-        &self.0.items
-    }
-    pub fn requirements(&self) -> &crate::status::Requirements {
-        &self.0.requirements
-    }
-    pub fn scenarios(&self) -> &crate::status::Scenarios {
-        &self.0.scenarios
-    }
     pub fn tests(&self) -> &crate::status::Tests {
         &self.0.tests
     }
@@ -32,7 +23,15 @@ impl StatusReport {
     pub fn findings(&self) -> &crate::status::Findings {
         &self.0.findings
     }
-    /// 追加の指摘の群の数。渡した順に並ぶ（TBL-core-042）
+    /// 状態ごとの決定の数
+    pub fn decisions(&self) -> &crate::DecisionStates {
+        &self.0.decisions
+    }
+    /// 確認することの行の数（C-core-status-13）
+    pub fn confirmations(&self) -> &crate::ConfirmationCounts {
+        &self.0.confirmations
+    }
+    /// 追加の指摘の群の数。渡した順に並ぶ
     pub fn groups(&self) -> &[GroupTally] {
         &self.0.groups
     }
@@ -53,26 +52,24 @@ impl CheckReport {
     pub fn findings(&self) -> &[crate::Finding] {
         &self.0.findings
     }
+    /// 決定の文書の置き場から読んだものの数
+    pub fn decisions(&self) -> &crate::DecisionTally {
+        &self.0.decisions
+    }
     pub fn tests(&self) -> &BTreeMap<String, crate::TestFileTally> {
         &self.0.tests
-    }
-    pub fn files(&self) -> usize {
-        self.0.files
-    }
-    pub fn lines(&self) -> usize {
-        self.0.lines
     }
     pub fn counts(&self) -> &BTreeMap<String, usize> {
         &self.0.counts
     }
-    /// 追加の指摘の群の数。渡した順に並ぶ（TBL-core-042）
+    /// 追加の指摘の群の数。渡した順に並ぶ
     pub fn groups(&self) -> &[GroupTally] {
         &self.0.groups
     }
     pub fn group(&self, name: &str) -> Option<&GroupTally> {
         find_group(&self.0.groups, name)
     }
-    /// finding が`テスト側の指摘`か（TBL-core-047）。"--allow-test-findings" の終了コードの判断に使う
+    /// finding が`テスト側の指摘`か。"--allow-test-findings" の終了コードの判断に使う
     pub fn is_test_side_finding(&self, finding: &crate::Finding) -> bool {
         self.0.test_side.contains(finding)
     }

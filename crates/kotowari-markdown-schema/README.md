@@ -101,27 +101,41 @@ be deleted at any time, so keep it out of version control:
 
 | Rule | Validates | Can hold |
 |---|---|---|
-| `title` | the `#` heading | a pattern, a named-group capture |
-| `preamble` | everything between the title and the first `##` (or the first `###` when `document.item` is declared) | fields, statements, bullets, a table, a code block |
-| `sections` | `##` headings | fields, statements, bullets, a table, a code block, items |
-| `item` | `### ID: Name` headings, under a section or (as `document.item`) before the first section | fields, statements, bullets, a table, a code block |
+| `title` | the `#` heading | a pattern |
+| `preamble` | everything between the title and the first `##` (or the first `###` when `document.items` is declared) | fields, statements, bullets, a table, a code block |
+| `sections` | `##` headings selected by `name` (one name or a list) or `pattern` | fields, statements, bullets, a table, a code block, `items` |
+| `items` | a list of rules for `###` headings, under a section or (as `document.items`) before the first section. A rule selects by `name` or `pattern`; the last rule may have neither, and then takes every remaining `### ID: Name` heading | fields, statements, bullets, a table, a code block |
 | `field` | `- Name: value` lines | a pattern, an enum, a separator, a condition |
 | `statement` | prose paragraphs | a pattern, an enum, a condition |
 | `bullets` | list lines that are not fields | a pattern, nested children |
+| `subheading` | `####` and deeper headings, as lines of the preamble, section or item that holds them | a pattern (no `extract`) |
 | `table` | Markdown tables | an expected header, or none |
 | `codeblock` | fenced blocks | a language, per-line patterns |
 
 Every rule takes an occurrence count (`required`, `repeat: { min, max }`) and an `extract`.
 A rule can be made conditional on another field's value with `when: { field: X, eq: Y }`.
 
+A section or item rule selects headings by `name` — one name, or a list of spellings such as
+`name: [Open, 未決]` — or by `pattern`, a regular expression searched in the heading text
+(`pattern: ""` takes every heading). A heading belongs to the first rule, in declared order,
+that selects it. In `items`, the last rule may have neither: it takes every remaining heading,
+and only its headings must have the `ID: Name` form.
+
 Validation is **closed-world** by default: a heading or a line the schema never declared is an
 error. `open: true` in the schema, or `--open` on the command line, relaxes that for undeclared
-structures — but never for a missing requirement or a violated pattern.
+structures — but never for a missing requirement or a violated pattern, and never inside a
+declared node. A preamble, a section, an item or a bullet's `children` that should hold free
+content declares `open: true` itself: it then accepts blocks it has no rule for, while its own
+rules keep every constraint. A `####` or deeper heading is an error unless its node declares
+`subheading`, even in an open node. A fence that is never closed is `unclosed_codeblock`,
+whatever the schema.
 
 `reading` at the top of the schema chooses how the lines under a heading are read. The default,
 `reading: paragraph`, reads them as CommonMark does: consecutive lines form one statement, a line
-right after a list line belongs to that line, and block quotes, horizontal rules, HTML and
-image-only lines are not statements. `reading: line` reads every line on its own: each line that
+right after a list line belongs to that line, and a bullet's pattern sees its first paragraph
+joined into one line. Block quotes, horizontal rules and HTML blocks are not statements, and are
+errors in a node that does not declare `open: true`; image-only lines, link reference
+definitions and HTML comments are ignored. `reading: line` reads every line on its own: each line that
 is not a heading, a list line, part of a table or part of a fenced code block is one statement,
 including a quote, HTML, a `---` or `===` line, and a line indented after a blank line.
 Headings (CommonMark ATX headings: up to three leading spaces, one to six `#`, then a space or
@@ -136,20 +150,20 @@ a heading in the document does not change the JSON your code reads — you only 
 An item can come back as an object, with the line numbers your own diagnostics need:
 
 ```yaml
-item:
-  id: "REQ-\\d{3,}"
-  repeat: { min: 0 }
-  extract:
-    path: requirements
-    of: { id: id, line: line }
-  fields:
-    - name: Kind
-      extract: kind
-    - name: Source
-      separator: ","
-      extract: sources
-  statement:
-    extract: text
+items:
+  - id: "REQ-\\d{3,}"
+    repeat: { min: 0 }
+    extract:
+      path: requirements
+      of: { id: id, line: line }
+    fields:
+      - name: Kind
+        extract: kind
+      - name: Source
+        separator: ","
+        extract: sources
+    statement:
+      extract: text
 ```
 
 ```json
@@ -163,10 +177,22 @@ A node that declares `value` or `of` comes back as an object per element, with t
 value under the `value` key and the derived values under the `of` keys. A table is split into one
 element per data row, a bullet list into one per line and a code block into one per block. A
 statement is split into one element per line only when it declares `of`; with `value` alone it
-stays a single string wrapped in one object. The five derived values are `line`, `id`, `name`,
-`raw` (the raw line, with its original indentation and trailing spaces) and `end`. `end`, for
-items and sections only, is the line before the next heading at the same depth or shallower
-(or the document's last line), trailing blank lines included:
+stays a single string wrapped in one object. The five derived values are `line`, `id` (items),
+`name` (items and sections: the heading), `raw` (the raw line, with its original indentation and
+trailing spaces) and `end`. `end`, for items and sections, is the line before the next heading at
+the same depth or shallower (or the document's last line), trailing blank lines included; for a
+bullet it is the last line of its list item. On the title and on bullets, a key of `of` can also
+take `{ group: <name> }`, the text that named capture of the node's pattern captured:
+
+```yaml
+bullets:
+  pattern: "^(?P<id>C-[0-9]+) (?P<text>.*)$"
+  extract:
+    path: rows
+    of: { id: { group: id }, text: { group: text }, line: line, end: end }
+```
+
+A table's rows work the same way:
 
 ```yaml
 table:
@@ -214,9 +240,11 @@ kotowari-mds --version
 `check --format json` reports each finding as
 `{kind, severity, path, line, node, text, rule_kind, detail}`.
 `line` points at the offending node, or at the node that should have contained a missing one;
-`node` is the declared name of that node, for sections and field lines; `text` is the raw line
-`line` points at. `rule_kind` names the kind of rule the node belongs to — one of `section`,
-`item`, `field`, `bullets`, `ordered_list`, `statement`, `table`, `codeblock` — and appears on
+`node` is the declared name of that node, for field lines and for sections and items selected by
+`name` (the first name of the list); `text` is the raw line `line` points at. `rule_kind` names
+the kind of rule the node belongs to — one of `section`, `item`, `field`, `bullets`,
+`ordered_list`, `statement`, `table`, `codeblock`, `block_quote`, `html`, `thematic_break`,
+`subheading` — and appears on
 `undeclared_line`, which reports how the line was read, and on `repeat_min_not_met` and
 `repeat_max_exceeded`, which report what was counted. Keys that do not apply are left out.
 
@@ -224,7 +252,7 @@ kotowari-mds --version
 
 The library holds the schema language, validation and extraction, with no CLI dependencies.
 Reading files and fetching URLs stays with the caller. The entry points promised to dependent
-crates are listed in `docs/ir/schema/library.md` at the repository root. Public input and result
+crates are listed in `docs/decisions/schema/library.md` at the repository root. Public input and result
 types are compatibility-managed contracts; implementation modules remain private.
 
 ```rust
@@ -241,8 +269,9 @@ let values = partial.values();
 
 ## Specification
 
-`docs/ir/schema/` at the repository root is the specification. It is normalised so that it can
-be checked mechanically, and every requirement there is linked to the tests that cover it.
+`docs/decisions/schema/` at the repository root is the specification: one decision document
+per topic, in English with a Japanese side. Every row to confirm there is linked to the tests
+that cover it.
 
 ## License
 

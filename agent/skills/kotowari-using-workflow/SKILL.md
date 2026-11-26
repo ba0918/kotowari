@@ -1,6 +1,6 @@
 ---
 name: kotowari-using-workflow
-description: "Entry decider beside the kotowari workflow: decides which skill a new request starts from — direct editing, iterate, brainstorm, cycle, adopt, or investigate — and how much of the workflow runs. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
+description: "Entry decider beside the kotowari workflow: decides which skill a new request starts from — direct editing, iterate, brainstorm, cycle, adopt, or investigate — and how much of the workflow runs. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
 ---
 
 # Using the workflow
@@ -59,7 +59,7 @@ cannot be enumerated. A fifth needs a real incident behind it.
 | A small task | kotowari-iterate |
 | A medium-or-larger change with no specification, no grounds to judge by, or one that reads two ways | kotowari-brainstorm |
 | A medium-or-larger change with a specification | kotowari-cycle |
-| Bringing an existing specification or existing code into the IR, or not knowing whether the IR matches the implementation | kotowari-adopt |
+| Bringing an existing specification or existing code into the decision documents, or not knowing whether the decision documents match the implementation | kotowari-adopt |
 | A defect whose cause is unknown, or a question needing reading or searching | kotowari-investigate |
 
 The kotowari-adopt row is chosen by the kind of request, not by the stations the line named, and
@@ -68,7 +68,7 @@ even when the line added no station. The other rows below the first fire only fo
 named. A small task is kotowari-iterate's own
 definition; an unreadable impact or a specification decision makes a change medium or larger. A
 request to change a specification goes to kotowari-brainstorm with its path, not the cycle row;
-re-sorting a topic's existing IR against its implementation, without deciding changes, is
+re-sorting a topic's existing decisions against its implementation, without deciding changes, is
 kotowari-adopt. A bare "fix it" leaves the person the path of this session fixing it directly. "Make
 the error message clearer" with no wording given reads two ways: kotowari-brainstorm, not a small
 task. A defect sent to kotowari-investigate continues from its report's recommended next action,
@@ -83,12 +83,13 @@ The measure decides this, not the line above, so it is not a station the line ad
 
 Save `HEAD` as the base before the first edit, then commit the edits; the range is that saved
 base to the current `HEAD`.
-If the hook stops that commit on an IR-side finding, keep the change uncommitted as the hook-stop
+If the hook stops that commit on a finding in a decision document, keep the change uncommitted as the hook-stop
 rule in kotowari-cycle's `references/editing-contract.md` (**Fixer only**) says. The phase reads the
 blocked change as part of its range (kotowari-cycle's `references/consistency-phase.md`,
 **Inputs**), and the edits are committed after the phase's last run.
-The counterpart is the IR store path with no ID file (the items in range are those the diff touches
-or its marks carry), or, for a topic with no IR, the approved specification document or the request.
+The counterpart is the place of the decision documents with no file of decisions (the decisions in
+range are those whose text the diff touches and the decisions they link to), or, for a topic with no
+specification, the approved specification document or the request when there is none.
 This session owns the findings file using cycle's **Judgment stays here**, **Stopping inside the
 loop** and **Endings**; when ending 3's clauses enter the premise step, run kotowari-cycle's
 `references/premise-step.md` with this session in the fixer's role. Report the phase's results as cycle's **Terminal report** requires,
@@ -96,7 +97,7 @@ including skipped-run reasons and unresolved defaults with the word that reverse
 
 ## Exceptions
 
-Work with an approved specification or in-progress records is not rewound; it enters from where
-it left off, and its skill's resume rules own the records. "Implement it" with an approved
+Work with an approved specification or a run in progress is not rewound; it enters from where
+it left off, and its skill's resume rules own the findings file. "Implement it" with an approved
 specification is kotowari-cycle — implementing by hand there is a counter-example. A skill outside the table fires
 on its own description.

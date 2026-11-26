@@ -443,9 +443,9 @@ mod tests {
         format!("https://{user}:{password}@example.com/ir.yaml")
     }
 
-    // @kotowari[EX-schema-067, TBL-schema-003]
+    // @kotowari[C-schema-resolve-10]
     #[test]
-    fn ex_schema_067_a_fetch_past_the_time_limit_stops() {
+    fn a_fetch_past_the_time_limit_stops() {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         let (release, wait) = std::sync::mpsc::channel();
@@ -465,13 +465,13 @@ mod tests {
         assert!(stop.detail().contains("timeout"), "{}", stop.detail());
     }
 
-    // @kotowari[TBL-schema-003]
+    // @kotowari[C-schema-resolve-10]
     #[test]
     fn the_cli_limits_a_schema_fetch_to_ten_seconds() {
         assert_eq!(SCHEMA_FETCH_TIMEOUT, Duration::from_secs(10));
     }
 
-    // @kotowari[REQ-schema-052]
+    // @kotowari[C-schema-resolve-12]
     #[test]
     fn userinfo_in_a_url_is_hidden_before_it_reaches_a_message() {
         let url = url_with_userinfo("example-user", "example-password");
@@ -479,7 +479,7 @@ mod tests {
         assert!(!redact_userinfo(&url).contains("example-password"));
     }
 
-    // @kotowari[REQ-schema-052]
+    // @kotowari[C-schema-resolve-12]
     #[test]
     fn a_url_without_userinfo_is_left_alone() {
         assert_eq!(
@@ -488,7 +488,7 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-schema-052]
+    // @kotowari[C-schema-resolve-12]
     #[test]
     fn an_at_sign_in_the_path_is_not_mistaken_for_userinfo() {
         assert_eq!(

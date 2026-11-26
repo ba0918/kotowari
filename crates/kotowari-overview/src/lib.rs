@@ -1,8 +1,8 @@
 //! 全体像の元データを検査し、参照の表と古い節を求めて描画の入力を作る。
 //!
-//! 仕様は `docs/ir/core/overview-data.md` と `docs/ir/core/overview-commands.md` にある。
+//! 仕様は `docs/decisions/core/overview-data.md` と `docs/decisions/core/overview-commands.md` にある。
 //! このクレートはファイル、ネットワーク、環境変数に触れない。元データの文字列と、kotowari-core で
-//! 読み込み済みの IR と判断の記録だけから計算する（REQ-core-287）。
+//! 読み込み済みの決定の文書だけから計算する。
 #![deny(clippy::print_stdout, clippy::print_stderr)]
 
 mod document;
@@ -11,7 +11,7 @@ mod parts;
 mod references;
 mod toc;
 
-use kotowari_core::{DocKind, Finding, FindingGroup, FindingKind, ReadModel, SourceText};
+use kotowari_core::{Finding, FindingGroup, FindingKind, ReadModel, SourceText};
 pub use kotowari_markdown_view::Page;
 use kotowari_markdown_view::{
     Block, Document, OtherLanguage, Part, Reference, RenderInput, Section,
@@ -19,7 +19,7 @@ use kotowari_markdown_view::{
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
-/// check と status の結果に加える追加の指摘の群の名前（REQ-core-288）
+/// check と status の結果に加える追加の指摘の群の名前
 pub const GROUP: &str = "overview";
 
 /// 全体像の元データを検査した結果
@@ -33,7 +33,7 @@ pub struct Overview {
 }
 
 impl Overview {
-    /// 元データの指摘。REQ-core-024 の順に並ぶ
+    /// 元データの指摘。順に並ぶ
     pub fn findings(&self) -> &[Finding] {
         &self.findings
     }
@@ -56,9 +56,9 @@ impl Overview {
     pub fn render_input(&self) -> &RenderInput {
         &self.inputs[0].1
     }
-    /// 誤りが無ければ描画のエンジンが返すページの並び、あれば誤りの件数（REQ-core-294）。
+    /// 誤りが無ければ描画のエンジンが返すページの並び、あれば誤りの件数。
     /// `先頭の言語`のページは置き場の直下に、ほかの言語のページは "<言語タグ>/" の下に同じ名前で
-    /// 置く（REQ-core-353）
+    /// 置く
     pub fn pages(&self) -> Result<Vec<Page>, usize> {
         match self.errors() {
             0 => Ok(self
@@ -76,13 +76,13 @@ impl Overview {
             errors => Err(errors),
         }
     }
-    /// core の検査に渡す "overview" の群（REQ-core-290）
+    /// core の検査に渡す "overview" の群
     pub fn into_group(self) -> FindingGroup {
         FindingGroup::new(GROUP, self.files, self.marks, self.findings)
     }
 }
 
-/// `先頭の言語`でない1つの言語の、`全体像の元データ`と`目次`と`IR`の`側`（REQ-core-343、REQ-core-354）
+/// `先頭の言語`でない1つの言語の、`全体像の元データ`と`目次`と決定の文書の`側`（C-core-ovlang-11）
 #[derive(Debug, Default)]
 pub struct Translation {
     /// 言語タグ
@@ -91,8 +91,8 @@ pub struct Translation {
     pub files: Vec<SourceText>,
     /// その言語の`目次`の`側`。無ければ None
     pub toc: Option<SourceText>,
-    /// その言語の`IR`の`側`の文書。参照の本文をここから取る
-    pub ir: Vec<kotowari_core::ir::IrDocument>,
+    /// その言語の、決定の文書の`側`（path はその`側`のパス）。参照の本文をここから取る
+    pub decisions: Vec<kotowari_core::ParsedDecisionDocument>,
 }
 
 /// 元データと目次を検査する。files と toc の path は基準のディレクトリからの相対パスである
@@ -101,9 +101,9 @@ pub fn inspect(read: &ReadModel, files: &[SourceText], toc: &SourceText) -> Over
 }
 
 /// files と toc を`先頭の言語`の`側`とし、translations をほかの言語の`側`として検査する。
-/// `全体像の元データ`の形、`部品`、lead、参照、`ガイドの印`と`目次`の形はどの`側`にも、扱う IR の文書、
-/// ページの名前の重なり、`目次`との照合は`先頭の言語`の`側`だけに行う（REQ-core-343）。
-/// 描画の入力は言語ごとに作る（REQ-core-353〜REQ-core-355）
+/// `全体像の元データ`の形、`部品`、lead、参照、`ガイドの印`と`目次`の形はどの`側`にも、扱う決定の文書、
+/// ページの名前の重なり、`目次`との照合は`先頭の言語`の`側`だけに行う。
+/// 描画の入力は言語ごとに作る
 pub fn inspect_translations(
     read: &ReadModel,
     files: &[SourceText],
@@ -128,7 +128,7 @@ pub fn inspect_translations(
             .iter()
             .filter_map(|file| inspection.file(file, false))
             .map(|mut document| {
-                // ページの名前は`先頭の言語`の`側`の名前と同じにする（REQ-core-293）
+                // ページの名前は`先頭の言語`の`側`の名前と同じにする
                 if let Some(name) = document.name.strip_suffix(&suffix) {
                     document.name = name.to_string();
                 }
@@ -186,7 +186,8 @@ pub fn inspect_translations(
         let Some(index) = languages.index(&translation.language) else {
             continue;
         };
-        let resolver = references::Resolver::for_language(read, &translation.ir);
+        let resolver =
+            references::Resolver::for_language(read, &translation.language, &translation.decisions);
         let references = references_of(&documents, &resolver);
         inputs.push((
             format!("{}/", translation.language),
@@ -206,7 +207,7 @@ pub fn inspect_translations(
     }
 }
 
-/// `言語の一覧`と各言語の`UI の文字`（REQ-core-351、REQ-core-355）
+/// `言語の一覧`と各言語の`UI の文字`
 struct Languages {
     tags: Vec<String>,
     ui: Vec<BTreeMap<String, String>>,
@@ -259,7 +260,7 @@ impl Languages {
     }
 }
 
-/// 文書の部品の中の参照の、参照の表（REQ-core-354）
+/// 文書の部品の中の参照の、参照の表
 fn references_of(documents: &[Document], resolver: &references::Resolver) -> Vec<Reference> {
     let mut keys = Vec::new();
     for document in documents {
@@ -299,10 +300,10 @@ struct Inspection<'a> {
     form: form::Form,
     parts: parts::Parts,
     resolver: references::Resolver<'a>,
-    guides: kotowari_core::guides::GuideReader<'a>,
-    /// 基準のディレクトリからの相対パスで読んだ IR の話題ごとの文書
+    guides: kotowari_core::guides::GuideReader,
+    /// 基準のディレクトリからの相対パスで読んだ決定の文書（`先頭の言語`の`側`の話題の文書）
     topics: BTreeSet<String>,
-    /// 話題ごとの文書と、それを "ir" に最初に書いた元データ
+    /// 決定の文書と、それを一覧に最初に書いた元データ
     owners: BTreeMap<String, String>,
     names: BTreeSet<String>,
     findings: Vec<Finding>,
@@ -313,12 +314,10 @@ struct Inspection<'a> {
 
 impl<'a> Inspection<'a> {
     fn new(read: &'a ReadModel) -> Self {
-        let place = kotowari_core::normalize_path(&read.config().ir);
         let topics = read
-            .documents()
+            .decision_documents()
             .iter()
-            .filter(|document| document.kind() == DocKind::Topic)
-            .map(|document| kotowari_core::join_display_path(&place, document.relative_path()))
+            .map(|document| document.path().to_string())
             .collect();
         Self {
             form: form::Form::new(),
@@ -341,24 +340,24 @@ impl<'a> Inspection<'a> {
     }
 
     /// 1つの元データを検査し、描ける文書を返す。first でなければ`先頭の言語`でない言語の`側`で、
-    /// 扱う IR の文書とページの名前の重なりを検査しない（REQ-core-343）
+    /// 扱う決定の文書とページの名前の重なりを検査しない
     fn file(&mut self, file: &SourceText, first: bool) -> Option<Document> {
         let (path, text) = (file.path(), file.text());
         let name = file_name(path);
         let stem = stem(name).to_string();
-        // REQ-core-305: パスのバイト順で2つ目以降の重なりと、"index" と "style"
+        // パスのバイト順で2つ目以降の重なりと、"index" と "style"
         if first && (stem == "index" || stem == "style" || !self.names.insert(stem.clone())) {
             self.error(FindingKind::OverviewNameConflict, path, None, stem.clone());
         }
         let raw = document::parse(text);
-        let (ir, mut form) = form::frontmatter(raw.frontmatter.as_deref());
+        let (listed, mut form) = form::frontmatter(raw.frontmatter.as_deref());
         form.extend(self.form.markdown(text));
         for (line, detail) in form {
             self.error(FindingKind::OverviewFormInvalid, path, line, detail.into());
         }
         if first {
-            for entry in ir.unwrap_or_default() {
-                self.ir_entry(path, &entry);
+            for entry in listed.unwrap_or_default() {
+                self.document_entry(path, &entry);
             }
         }
         if raw.lead.is_none() {
@@ -402,16 +401,21 @@ impl<'a> Inspection<'a> {
         })
     }
 
-    /// REQ-core-284: "ir" の1件が話題ごとの文書か、ほかの元データの "ir" に無いか
-    fn ir_entry(&mut self, path: &str, entry: &str) {
+    /// 一覧の1件が読んだ決定の文書か（C-core-lang-7）、ほかの元データの一覧に無いか（C-core-ovdata-12）
+    fn document_entry(&mut self, path: &str, entry: &str) {
         let document = kotowari_core::normalize_path(entry);
         if !self.topics.contains(&document) {
-            self.error(FindingKind::OverviewIrMissing, path, None, entry.into());
+            self.error(
+                FindingKind::OverviewDocumentMissing,
+                path,
+                None,
+                entry.into(),
+            );
             return;
         }
         match self.owners.get(&document) {
             Some(owner) if owner != path => {
-                self.error(FindingKind::OverviewIrShared, path, None, document);
+                self.error(FindingKind::OverviewDocumentShared, path, None, document);
             }
             Some(_) => {}
             None => {
@@ -420,7 +424,7 @@ impl<'a> Inspection<'a> {
         }
     }
 
-    /// REQ-core-282、REQ-core-285: 部品の中身と参照。スキーマに合えば値を返す
+    /// 部品の中身と参照。スキーマに合えば値を返す
     fn part(&mut self, path: &str, part: &document::RawPart) -> Option<Value> {
         let line = Some(part.line);
         match self.parts.check(&part.kind, &part.content) {
@@ -467,7 +471,7 @@ impl<'a> Inspection<'a> {
     }
 }
 
-/// 描画のエンジンに渡す節。古い節は guide_stale を受けるガイドの印を中に持つ節（REQ-core-292）
+/// 描画のエンジンに渡す節。古い節は guide_stale を受けるガイドの印を中に持つ節
 fn sections(
     raw: &document::RawDocument,
     values: &[Option<Value>],

@@ -13,9 +13,7 @@ fn source(identity: &str, path: &str, text: &str) -> NativeSourceText {
 fn inputs(config: Config) -> RepositoryReadInputs {
     RepositoryReadInputs {
         config,
-        ir: vec![],
-        records: vec![],
-        adr: vec![],
+        decisions: vec![],
         tests: vec![],
     }
 }
@@ -32,24 +30,32 @@ fn test(identity: &str, path: &str, text: &str) -> NativeTestAnalysis {
     }
 }
 
-// @kotowari[REQ-core-315, EX-core-490]
+// @kotowari[C-core-libpaths-9]
 #[test]
 fn repeated_native_source_is_rejected_within_a_group() {
     let mut input = inputs(Config::default());
     input.config.tests.files.clear();
-    input.ir = vec![
-        source("docs/ir/topic.md", "topic.md", "# Topic\n"),
-        source("docs/ir/topic.md", "topic.md", "# Topic\n"),
+    input.decisions = vec![
+        source(
+            "docs/decisions/topic.md",
+            "docs/decisions/topic.md",
+            "# Topic\n",
+        ),
+        source(
+            "docs/decisions/topic.md",
+            "docs/decisions/topic.md",
+            "# Topic\n",
+        ),
     ];
     assert!(ReadModel::build_repository(input).is_err());
 }
 
-// @kotowari[REQ-core-315]
+// @kotowari[C-core-libpaths-9]
 #[test]
 fn native_source_without_an_identity_is_rejected() {
     let mut input = inputs(Config::default());
     input.config.tests.files.clear();
-    input.ir = vec![source("", "topic.md", "# Topic\n")];
+    input.decisions = vec![source("", "docs/decisions/topic.md", "# Topic\n")];
     let Err(error) = ReadModel::build_repository(input) else {
         panic!("a native source needs its identity");
     };
@@ -61,18 +67,22 @@ fn native_source_without_an_identity_is_rejected() {
     );
 }
 
-// @kotowari[REQ-core-315, EX-core-490]
+// @kotowari[C-core-libpaths-10]
 #[test]
 fn native_original_text_is_retained_across_read_and_check() {
     let mut input = inputs(Config::default());
     input.config.tests.files.clear();
-    input.config.guides.files = vec!["docs/ir/**".into()];
-    input.ir = vec![source("docs/ir/topic.md", "topic.md", "# Topic\n")];
+    input.config.guides.files = vec!["docs/decisions/**".into()];
+    input.decisions = vec![source(
+        "docs/decisions/topic.md",
+        "docs/decisions/topic.md",
+        "# Topic\n",
+    )];
     let read = ReadModel::build_repository(input).unwrap();
     assert!(
         read.inspect_repository(RepositoryCheckInputs {
             guides: Some(vec![source(
-                "docs/ir/topic.md",
+                "docs/decisions/topic.md",
                 "different-display.md",
                 "different"
             )]),
@@ -82,7 +92,7 @@ fn native_original_text_is_retained_across_read_and_check() {
     );
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[C-core-libinputs-3]
 #[test]
 fn native_disabled_tests_do_not_contribute_stale_facts() {
     let mut input = inputs(Config::default());
@@ -95,7 +105,7 @@ fn native_disabled_tests_do_not_contribute_stale_facts() {
     assert!(inspection.check().tests().is_empty());
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[C-core-libinputs-3]
 #[test]
 fn native_disabled_unspecified_list_does_not_hide_a_surface() {
     let mut input = inputs(Config::default());
@@ -138,7 +148,7 @@ fn native_disabled_unspecified_list_does_not_hide_a_surface() {
     );
 }
 
-// @kotowari[REQ-core-315, REQ-core-313, EX-core-490, EX-core-485]
+// @kotowari[C-core-libpaths-9]
 #[test]
 fn native_display_collisions_do_not_merge_original_files() {
     let mut input = inputs(Config::default());
@@ -163,31 +173,7 @@ fn native_display_collisions_do_not_merge_original_files() {
     assert_eq!(inspection.check().guides().files(), 2);
 }
 
-// @kotowari[REQ-core-311, REQ-core-315, REQ-core-317, EX-core-483, EX-core-491]
-#[test]
-fn native_read_preparation_retains_the_configured_ir_and_disabled_tests() {
-    let mut config = Config {
-        ir: "specifications".into(),
-        ..Config::default()
-    };
-    config.tests.files.clear();
-    config.guides.files = vec!["notes/**".into()];
-    let mut preparation = kotowari_core::RepositoryReadPreparation::new(config).unwrap();
-    assert_eq!(preparation.config().ir, "specifications");
-    assert!(preparation.config().tests.files.is_empty());
-    assert_eq!(preparation.config().guides.files, ["notes/**"]);
-    preparation.push_ir(source("specifications/topic.md", "topic.md", "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Retained\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: Inspect.\n\nStatement.\n")).unwrap();
-    let read = preparation.finish(vec![], vec![], vec![]).unwrap();
-    assert_eq!(
-        read.query("REQ-001").unwrap().items()[0]
-            .item()
-            .location()
-            .0,
-        "specifications/topic.md"
-    );
-}
-
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[C-core-libinputs-1, C-core-libinputs-2]
 #[test]
 fn native_inspection_cannot_finish_without_its_required_guides() {
     let read = || {
@@ -203,7 +189,7 @@ fn native_inspection_cannot_finish_without_its_required_guides() {
     assert_eq!(preparation.finish().unwrap().check().guides().files(), 0);
 }
 
-// @kotowari[REQ-core-315, EX-core-490]
+// @kotowari[C-core-libpaths-9]
 #[test]
 fn repeated_original_test_identity_cannot_be_evaded_by_display_spelling() {
     let mut input = inputs(Config::default());
@@ -214,7 +200,7 @@ fn repeated_original_test_identity_cannot_be_evaded_by_display_spelling() {
     assert!(ReadModel::build_repository(input).is_err());
 }
 
-// @kotowari[REQ-core-199, REQ-core-315]
+// @kotowari[C-core-guides-9, C-core-libinputs-6]
 #[test]
 fn a_guide_path_that_is_also_a_test_file_stops_the_native_inspection() {
     let mut config = Config::default();

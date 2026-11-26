@@ -78,8 +78,8 @@ fn findings_of(schema: &Schema, source: &str) -> Vec<(String, Option<usize>, Str
 }
 
 proptest! {
-    /// REQ-schema-028: 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
-    // @kotowari[REQ-schema-028]
+    /// 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
+    // @kotowari[C-schema-block-2]
     #[test]
     fn markers_do_not_change_how_list_lines_are_read(
         names in line_names(),
@@ -110,8 +110,8 @@ proptest! {
 }
 
 proptest! {
-    /// REQ-schema-028: マーカーを1行ごとに混ぜても、すべて "-" のときと読み分けは変わらない。
-    // @kotowari[REQ-schema-028]
+    /// マーカーを1行ごとに混ぜても、すべて "-" のときと読み分けは変わらない。
+    // @kotowari[C-schema-block-2]
     #[test]
     fn mixed_markers_read_the_same_as_hyphens(
         names in line_names(),
@@ -165,8 +165,8 @@ fn every_leaf_is_a_string(value: &Value) -> bool {
 }
 
 proptest! {
-    /// REQ-schema-037: 数や日付に見える値でも、抽出した値は文字列のままである。
-    // @kotowari[REQ-schema-037]
+    /// 数や日付に見える値でも、抽出した値は文字列のままである。
+    // @kotowari[C-schema-extract-1]
     #[test]
     fn extracted_leaves_are_always_strings(
         values in proptest::collection::vec("[0-9A-Za-z.:+-]{1,12}", 1..6),
@@ -188,5 +188,122 @@ proptest! {
             every_leaf_is_a_string(&extracted),
             "文字列でない葉があった: {extracted}"
         );
+    }
+}
+
+/// 開いた世界と閉じた世界で読み比べるスキーマ。題名、前置部、節を宣言する
+const WORLD_SCHEMA: &str = r#"
+document:
+  title:
+    pattern: "^題名"
+    extract: title
+  preamble:
+    fields:
+      - name: 状態
+        required: false
+        pattern: "^ok"
+        extract: status
+  sections:
+    - name: 記録
+      fields:
+        - name: 値
+          pattern: "^ok"
+          extract: value
+        - name: 並び
+          required: false
+          separator: ","
+          extract: list
+      statement:
+        required: false
+        extract: body
+"#;
+
+/// 文書を組む断片。宣言したもの、宣言していないもの、出現回数と形に反するものを混ぜる
+const WORLD_PIECES: [&str; 12] = [
+    "# 題名",
+    "# 別の題名",
+    "## 記録",
+    "## 雑記",
+    "### 小見出し",
+    "- 状態: ok",
+    "- 値: ok",
+    "- 値: ng",
+    "- 並び: a,b",
+    "- 備考: x",
+    "本文。",
+    "| 列 |\n|---|\n| c |",
+];
+
+fn world_document(pieces: &[usize]) -> String {
+    pieces
+        .iter()
+        .map(|i| WORLD_PIECES[*i])
+        .collect::<Vec<_>>()
+        .join("\n\n")
+        + "\n"
+}
+
+/// 指摘の (種類, 行, 詳細) ごとの数
+fn finding_counts(
+    schema: &Schema,
+    document: &Document,
+    relax: bool,
+) -> std::collections::BTreeMap<(String, Option<usize>, String), usize> {
+    let mut counts = std::collections::BTreeMap::new();
+    for f in validate(schema, document, relax) {
+        *counts
+            .entry((format!("{:?}", f.kind()), f.line(), f.detail().to_owned()))
+            .or_insert(0) += 1;
+    }
+    counts
+}
+
+proptest! {
+    /// 開いた世界の指摘は、同じ文書を閉じた世界で検査した指摘にすべて含まれる。
+    // @kotowari[C-schema-closed-5]
+    #[test]
+    fn open_world_findings_are_contained_in_closed_world_findings(
+        pieces in proptest::collection::vec(0usize..WORLD_PIECES.len(), 0..10),
+    ) {
+        let schema = parse_schema(WORLD_SCHEMA).unwrap();
+        let document = Document::parse(&world_document(&pieces)).unwrap();
+        let open = finding_counts(&schema, &document, true);
+        let closed = finding_counts(&schema, &document, false);
+        for (finding, count) in &open {
+            prop_assert!(
+                closed.get(finding).is_some_and(|c| c >= count),
+                "開いた世界だけの指摘 {:?}: open {:?} closed {:?}",
+                finding,
+                open,
+                closed
+            );
+        }
+        // 生成した入力が緩める判定を踏んでいることを確かめる（空振りする性質テストにしない）
+        if pieces.contains(&3) {
+            prop_assert!(
+                open.values().sum::<usize>() < closed.values().sum::<usize>(),
+                "宣言していない節があるのに閉じた世界の指摘が増えなかった: {:?}",
+                pieces
+            );
+        }
+    }
+}
+
+proptest! {
+    /// 抽出の結果は、スキーマの "open" が真でも偽でも等しい。
+    // @kotowari[C-schema-extract-43]
+    #[test]
+    fn extraction_is_the_same_whether_the_schema_is_open_or_closed(
+        pieces in proptest::collection::vec(0usize..WORLD_PIECES.len(), 0..10),
+    ) {
+        let closed = parse_schema(&format!("open: false\n{WORLD_SCHEMA}")).unwrap();
+        let open = parse_schema(&format!("open: true\n{WORLD_SCHEMA}")).unwrap();
+        let document = Document::parse(&world_document(&pieces)).unwrap();
+        let closed_values = extract_values(&closed, &document);
+        prop_assert_eq!(&extract_values(&open, &document), &closed_values);
+        // 生成した入力が抽出を踏んでいることを確かめる
+        if pieces.contains(&0) {
+            prop_assert!(closed_values.get("title").is_some(), "{}", closed_values);
+        }
     }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # ビルドしたバイナリを、README とライセンスと、依存のライセンス文の一覧と一緒に、配布用の tar.gz と
-# sha256 に固める（判断の記録 docs/decision/records/2026-09-26-release-flow.md の A7）。dist/ の下に書く。
+# sha256 に固める。dist/ の下に書く。
 # 依存のライセンス文の一覧は scripts/third-party-licenses.sh が作るので、cargo-about が要る。
 #
 #   package-release.sh <製品> <版> <ターゲット> <パッケージ> <バイナリの名前> <README>

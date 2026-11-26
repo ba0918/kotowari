@@ -1,14 +1,14 @@
-//! 目次の検査（REQ-core-327〜REQ-core-331）と、描画のエンジンに渡す目次（REQ-core-332）
+//! 目次の検査と、描画のエンジンに渡す目次
 
 use kotowari_core::FindingKind;
 use kotowari_markdown_view::{TocGroup, TocItem};
 use serde_json::Value;
 use std::collections::BTreeSet;
 
-/// 形のスキーマ。パッケージの中に置いてコンパイル時に取り込む（TBL-core-043）
+/// 形のスキーマ。パッケージの中に置いてコンパイル時に取り込む
 const SCHEMA: &str = include_str!("../schemas/toc.json");
 
-/// 目次の検査の結果。指摘はどれも "line" が null で、種類と detail だけを持つ（REQ-core-027）
+/// 目次の検査の結果。指摘はどれも "line" が null で、種類と detail だけを持つ
 pub(crate) struct Checked {
     pub(crate) findings: Vec<(FindingKind, String)>,
     /// 形が正しければ書かれたままの目次
@@ -35,7 +35,7 @@ pub(crate) fn check(text: &str, names: &BTreeSet<String>) -> Checked {
         findings: Vec::new(),
     };
     let toc = comparison.group(&value, "");
-    // REQ-core-328: 目次のどこにも無い名前
+    // 目次のどこにも無い名前
     let missing: Vec<String> = names
         .iter()
         .filter(|name| !comparison.seen.contains(*name))
@@ -52,7 +52,7 @@ pub(crate) fn check(text: &str, names: &BTreeSet<String>) -> Checked {
     }
 }
 
-/// REQ-core-327: YAML として読み、スキーマに合えば値を、合わなければ合わなかった場所の並びを返す
+/// YAML として読み、スキーマに合えば値を、合わなければ合わなかった場所の並びを返す
 fn form(text: &str) -> Result<Value, Vec<String>> {
     let value = if text.trim().is_empty() {
         Value::Null
@@ -94,7 +94,7 @@ impl Comparison<'_> {
             .cloned()
             .unwrap_or_default();
         if items.is_empty() {
-            // REQ-core-330: いちばん外側は "(root)"
+            // いちばん外側は "(root)"
             let place = if pointer.is_empty() {
                 "(root)"
             } else {
@@ -128,7 +128,7 @@ impl Comparison<'_> {
         }
     }
 
-    /// REQ-core-329: 元データの無い名前は出てくるたびに、ある名前は2つ目以降に
+    /// 元データの無い名前は出てくるたびに、ある名前は2つ目以降に
     fn name(&mut self, name: &str, pointer: String) {
         if !self.names.contains(name) {
             self.findings
@@ -142,7 +142,7 @@ impl Comparison<'_> {
 
 #[cfg(test)]
 mod tests {
-    // @kotowari[TBL-core-043]
+    // @kotowari[C-core-ovtoc-7]
     #[test]
     fn the_embedded_toc_schema_compiles() {
         let schema: serde_json::Value = serde_json::from_str(super::SCHEMA).unwrap();

@@ -1,8 +1,8 @@
-//! 1つの元データを、frontmatter、題名、冒頭のブロック、節と部品に分ける（REQ-core-281、TBL-core-038）
+//! 1つの元データを、frontmatter、題名、冒頭のブロック、節と部品に分ける
 
 use markdown::mdast::Node;
 
-/// 情報文字列が "view" と1つ以上の空白と種類の名前であるフェンスのコードブロック（REQ-core-282）
+/// 情報文字列が "view" と1つ以上の空白と種類の名前であるフェンスのコードブロック
 #[derive(Debug, Clone)]
 pub(crate) struct RawPart {
     pub(crate) kind: String,
@@ -20,7 +20,7 @@ pub(crate) enum RawBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct RawSection {
-    /// HTML のコメントを除いた見出しの文字（REQ-core-292）
+    /// HTML のコメントを除いた見出しの文字
     pub(crate) heading: String,
     pub(crate) line: usize,
     pub(crate) blocks: Vec<RawBlock>,
@@ -31,9 +31,9 @@ pub(crate) struct RawDocument {
     /// 文書の先頭の YAML の frontmatter の中身
     pub(crate) frontmatter: Option<String>,
     pub(crate) title: Option<String>,
-    /// 題名の後で最初の、HTML のコメントでも空行でもないブロックが lead の部品なら、その添字（REQ-core-283）
+    /// 題名の後で最初の、HTML のコメントでも空行でもないブロックが lead の部品なら、その添字
     pub(crate) lead: Option<usize>,
-    /// 題名の後、最初の "## " より前の、lead でない部品の添字（REQ-view-006）
+    /// 題名の後、最初の "## " より前の、lead でない部品の添字（C-view-rendering-10）
     pub(crate) preamble: Vec<usize>,
     pub(crate) parts: Vec<RawPart>,
     pub(crate) sections: Vec<RawSection>,

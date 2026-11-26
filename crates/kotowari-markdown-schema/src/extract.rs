@@ -1,9 +1,11 @@
 //! スキーマの `extract` に沿って値を組み立てる。
 
-use crate::document::{Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection};
+use crate::document::{
+    Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection, joined_lead,
+};
 use crate::schema::{
-    Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
-    is_declared_field, item_internals_declare_extract,
+    Bullets, Children, CodeBlock, Extract, Field, OfKind, Pattern, Schema, Statement, Table,
+    is_declared_field, item_internals_declare_extract, select_item, select_section,
 };
 use serde_json::{Map, Value};
 
@@ -30,14 +32,14 @@ pub fn extract_values(schema: &Schema, document: &Document) -> Value {
         );
         extract_codeblock(preamble.codeblock.as_ref(), &blocks, document, &mut root);
     }
-    for def in &schema.document.sections {
-        extract_section(def, document, &mut root);
+    for index in 0..schema.document.sections.len() {
+        extract_section(&schema.document.sections, index, document, &mut root);
     }
-    if let Some(item) = &schema.document.item {
-        // 文書の直下の項目（REQ-schema-061）
+    if !schema.document.items.is_empty() {
+        // 文書の直下の項目
         let items = document.preamble_items();
         let items: Vec<&DocItem> = items.iter().collect();
-        extract_items(item, &items, document, &mut root);
+        extract_item_rules(&schema.document.items, &items, document, &mut root);
     }
     Value::Object(root)
 }
@@ -68,39 +70,32 @@ fn extract_title(schema: &Schema, document: &Document, root: &mut Map<String, Va
     let Some(heading) = document.titles.first() else {
         return;
     };
-    // 名前付きキャプチャを宣言した題名の要素の値は、題名の文字ではなく
-    // pattern が捕まえた部分である（REQ-schema-048）
-    let value = match extract.group() {
-        Some(group) => {
-            let Some(captured) = title
-                .pattern
-                .as_ref()
-                .and_then(|p| p.captures(&heading.text))
-                .and_then(|caps| caps.name(group).map(|m| m.as_str().to_string()))
-            else {
-                return;
-            };
-            Value::String(captured)
-        }
-        None => Value::String(heading.text.clone()),
+    // 名前付きキャプチャを宣言しても、題名の要素の値は題名の文字のまま
+    let got = Derived {
+        captures: captures_of(extract, title.pattern.as_ref(), &heading.text),
+        ..Derived::at(heading.line)
     };
-    let element = element_value(extract, document, value, &Derived::at(heading.line));
+    let element = element_value(extract, document, Value::String(heading.text.clone()), &got);
     place(root, extract.path(), element);
 }
 
+/// `index` の節の規則が選んだ節を抽出する。見出しは、宣言した順で最初に選ぶ規則のものになる
+/// （検査と同じ選び方）。
 fn extract_section(
-    def: &crate::schema::Section,
+    rules: &[crate::schema::Section],
+    index: usize,
     document: &Document,
     root: &mut Map<String, Value>,
 ) {
+    let def = &rules[index];
     let occurrences: Vec<&DocSection> = document
         .sections
         .iter()
-        .filter(|s| s.name == def.name)
+        .filter(|s| select_section(rules, &s.name) == Some(index))
         .collect();
 
     if let Some(extract) = &def.extract {
-        // 節は要素に分けない。繰り返すときは配置パスの直下に段ができる（TBL-schema-008、PROP-schema-004）
+        // 節は要素に分けない。繰り返すときは配置パスの直下に段ができる
         let elements: Vec<Value> = occurrences
             .iter()
             .map(|s| {
@@ -110,6 +105,7 @@ fn extract_section(
                     Value::String(section_body(s, def, document)),
                     &Derived {
                         end: Some(document.end_line(s.line, 2)),
+                        name: Some(s.name.clone()),
                         ..Derived::at(s.line)
                     },
                 )
@@ -122,7 +118,7 @@ fn extract_section(
     extract_fields(&def.fields, &blocks, document, root);
     extract_statement(def.statement.as_ref(), &blocks, document, root);
     extract_bullets(&def.fields, def.bullets.as_ref(), &blocks, document, root);
-    // select は節の出現ごとに選ぶ。検査も出現ごとに選ぶので、両者が同じ表を指す（REQ-schema-059）
+    // select は節の出現ごとに選ぶ。検査も出現ごとに選ぶので、両者が同じ表を指す
     let per_occurrence: Vec<Vec<&Block>> = occurrences
         .iter()
         .map(|s| s.blocks.iter().collect())
@@ -131,9 +127,24 @@ fn extract_section(
     extract_table(def.table.as_ref(), &groups, document, root);
     extract_codeblock(def.codeblock.as_ref(), &blocks, document, root);
 
-    if let Some(item) = &def.item {
-        let items: Vec<&DocItem> = occurrences.iter().flat_map(|s| s.items.iter()).collect();
-        extract_items(item, &items, document, root);
+    let items: Vec<&DocItem> = occurrences.iter().flat_map(|s| s.items.iter()).collect();
+    extract_item_rules(&def.items, &items, document, root);
+}
+
+/// 項目の規則ごとに、その規則が選んだ項目を抽出する。選び方は検査と同じ。
+fn extract_item_rules(
+    rules: &[crate::schema::Item],
+    items: &[&DocItem],
+    document: &Document,
+    root: &mut Map<String, Value>,
+) {
+    for (index, rule) in rules.iter().enumerate() {
+        let selected: Vec<&DocItem> = items
+            .iter()
+            .copied()
+            .filter(|item| select_item(rules, &item.text) == Some(index))
+            .collect();
+        extract_items(rule, &selected, document, root);
     }
 }
 
@@ -148,11 +159,11 @@ fn extract_items(
         return;
     };
     if items.is_empty() {
-        // 0件のときはキーを省略する（REQ-schema-038）
+        // 0件のときはキーを省略する
         return;
     }
     // 内部が extract を宣言したか、項目が value か of を宣言していれば
-    // 項目ごとのオブジェクトにする（REQ-schema-047）
+    // 項目ごとのオブジェクトにする
     let as_object =
         item_internals_declare_extract(item) || extract.has_of() || extract.value().is_some();
     let one = |i: &DocItem| {
@@ -183,7 +194,7 @@ fn extract_fields(
                 .copied()
                 .filter(|b| matches!(b, Block::Field { name, .. } if name == &field.name))
                 .collect();
-            // フィールド行は要素に分けない。繰り返すときは配置パスの直下に段ができる（TBL-schema-008、PROP-schema-004）
+            // フィールド行は要素に分けない。繰り返すときは配置パスの直下に段ができる
             let elements: Vec<Value> = occurrences
                 .iter()
                 .map(|b| {
@@ -201,7 +212,7 @@ fn extract_fields(
 }
 
 /// フィールド行の要素の値。名前の後から始まる lead 段落の値に、継続段落を元の行のまま
-/// 付ける（REQ-schema-030、REQ-schema-063）。
+/// 付ける。
 fn field_single(field: &Field, block: &Block, doc: &Document) -> Value {
     let Block::Field {
         value,
@@ -226,9 +237,9 @@ fn field_single(field: &Field, block: &Block, doc: &Document) -> Value {
         doc,
     );
     match field.effective_separator() {
-        // 区切った要素は配列にする（REQ-schema-045）。要素は前後の空白を取り除いて抽出し、
+        // 区切った要素は配列にする。要素は前後の空白を取り除いて抽出し、
         // 空の要素は空文字列として残す。分割は継続段落を含めない値だけを対象にし、
-        // 継続段落は末尾の要素に付ける（REQ-schema-046）
+        // 継続段落は末尾の要素に付ける
         Some(sep) => {
             let mut elements: Vec<String> =
                 value.split(sep).map(|s| s.trim().to_string()).collect();
@@ -259,11 +270,11 @@ fn extract_statement(
         .filter(|b| matches!(b, Block::Statement { .. }))
         .collect();
     if statements.is_empty() {
-        // 0件のときはキーを省略する（REQ-schema-038）
+        // 0件のときはキーを省略する
         return;
     }
     if extract.has_of() {
-        // 導かれる値を宣言したときは行が要素の単位になる（TBL-schema-008）。空行で区切って
+        // 導かれる値を宣言したときは行が要素の単位になる。空行で区切って
         // 続く段落も同じ並びに入り、出現回数の宣言では入れ子にしない
         let elements: Vec<Value> = statements
             .iter()
@@ -274,7 +285,9 @@ fn extract_statement(
                 | Block::OrderedList { .. }
                 | Block::Table { .. }
                 | Block::Code { .. }
-                | Block::Other { .. } => &[],
+                | Block::Other { .. }
+                | Block::Unruled { .. }
+                | Block::Subheading { .. } => &[],
             })
             .map(|raw| {
                 element_value(
@@ -289,7 +302,7 @@ fn extract_statement(
         return;
     }
     // 導かれる値を宣言しない文は行に分けない。繰り返すときは配置パスの
-    // 直下に段ができる（TBL-schema-008、PROP-schema-004）
+    // 直下に段ができる
     if statement.repeat.is_some() {
         let elements: Vec<Value> = statements
             .iter()
@@ -312,7 +325,7 @@ fn extract_statement(
 }
 
 /// 文の1行の要素の値。前後の空白を取り除いた行の文字にする。字下げと
-/// 末尾の空白を含む行そのままは導かれる値の `raw` で取る（REQ-schema-048）。
+/// 末尾の空白を含む行そのままは導かれる値の `raw` で取る。
 fn statement_line_text(raw: &RawLine) -> String {
     raw.text.trim().to_string()
 }
@@ -328,9 +341,9 @@ fn extract_bullets(
         return;
     };
     // 子フィールドの抽出は箇条書きの下からだけ行う。宣言済みフィールド行の下は
-    // 未宣言の構造（REQ-schema-003）で、そこにある子フィールド名の行を拾うと正当な子
+    // 未宣言の構造で、そこにある子フィールド名の行を拾うと正当な子
     // フィールドの値を覆い隠す。宣言された名前と一致しない `- 名前: 値` 行は
-    // 箇条書きとして扱う（TBL-schema-007）。
+    // 箇条書きとして扱う。
     let bullet_blocks: Vec<&Block> = blocks
         .iter()
         .copied()
@@ -338,14 +351,14 @@ fn extract_bullets(
         .collect();
     let Some(extract) = &bullets.extract else {
         // 子フィールドの抽出は、親の抽出が無くても子フィールド自身の extract に
-        // 沿って行う（A15）
+        // 沿って行う
         if let Some(children) = &bullets.children {
             extract_child_fields(children, &bullet_blocks, doc, root);
         }
         return;
     };
     // 箇条書きは行が要素の単位。要素の値は元のマーカー行（元のマーカーを保つ）と
-    // 子の箇条書きの行をそのままのインデントで含めた文字列（REQ-schema-031、TBL-schema-008）
+    // 子の箇条書きの行をそのままのインデントで含めた文字列
     let elements: Vec<Value> = bullet_blocks
         .iter()
         .copied()
@@ -357,23 +370,23 @@ fn extract_bullets(
                     list_item_pieces(b, bullets.children.as_ref(), doc),
                     doc,
                 )),
-                &Derived::at(b.line()),
+                &bullet_derived(b, extract, bullets),
             )
         })
         .collect();
     if elements.is_empty() {
-        // 0件のときはキーを省略する（REQ-schema-038）
+        // 0件のときはキーを省略する
         return;
     }
     place(root, extract.path(), Value::Array(elements));
-    // 子フィールドは自身の extract を持てば、その配置パスに値を出す（A15）
+    // 子フィールドは自身の extract を持てば、その配置パスに値を出す
     if let Some(children) = &bullets.children {
         extract_child_fields(children, &bullet_blocks, doc, root);
     }
 }
 
 /// 子フィールドの抽出。`children.fields` で宣言された子フィールドのうち、自身の
-/// `extract` を持つものをその配置パスに置く（REQ-schema-031、REQ-schema-036）。さらに深い入れ子の
+/// `extract` を持つものをその配置パスに置く。さらに深い入れ子の
 /// 子フィールドは、子の箇条書きの `children` の宣言に沿って再帰する。
 fn extract_child_fields(
     children: &Children,
@@ -384,7 +397,7 @@ fn extract_child_fields(
     let child_blocks: Vec<&Block> = blocks.iter().flat_map(|b| b.children().iter()).collect();
     extract_fields(&children.fields, &child_blocks, doc, root);
     // 子の箇条書きの下の children に再帰する。子の箇条書きは Bullet か、この
-    // レベルの宣言と一致しない `- 名前: 値` 行（箇条書きとして扱う行）である（TBL-schema-007）
+    // レベルの宣言と一致しない `- 名前: 値` 行（箇条書きとして扱う行）である
     if let Some(child_bullets) = children.bullets.as_deref()
         && let Some(grandchildren) = &child_bullets.children
     {
@@ -401,14 +414,14 @@ fn is_bullet_under(fields: &[Field], block: &Block) -> bool {
         || matches!(block, Block::Field { name, .. } if !is_declared_field(fields, name))
 }
 
-/// 値の1つの部分。元の文書の行の範囲と、その範囲から取った文字（REQ-schema-063）。
+/// 値の1つの部分。元の文書の行の範囲と、その範囲から取った文字。
 struct Piece {
     span: LineSpan,
     text: String,
 }
 
 /// 部分を元の文書の順に並べてつなぐ。間に元の文書で空行があれば空行1つ、無ければ
-/// 改行1つでつなぎ、含めない部分の行は抜く。値の末尾の空白と空行は除く（REQ-schema-063）。
+/// 改行1つでつなぎ、含めない部分の行は抜く。値の末尾の空白と空行は除く。
 fn render(pieces: impl IntoIterator<Item = Piece>, doc: &Document) -> String {
     let mut pieces: Vec<Piece> = pieces.into_iter().collect();
     pieces.sort_by_key(|p| p.span.first);
@@ -445,7 +458,7 @@ fn continuation_pieces<'a>(
 }
 
 /// 文の段落を1つの部分にする。段落の最初の空白でない文字から始め、2行目からは元の行のまま
-/// （REQ-schema-063）。
+/// 。
 fn statement_piece(block: &Block) -> Option<Piece> {
     let Block::Statement { raw_lines, .. } = block else {
         return None;
@@ -466,9 +479,9 @@ fn statement_piece(block: &Block) -> Option<Piece> {
 }
 
 /// 一覧の行（箇条書きか、箇条書きとして扱うフィールド行）の部分。マーカーの行から lead 段落の
-/// 終わりまでと継続段落を元の行のまま取り、子の箇条書きの部分を加える（REQ-schema-031、
-/// REQ-schema-063、TBL-schema-008）。`children` の宣言でフィールド行として宣言された子と、
-/// 表・コードブロックなどの子は含めない（A12）。`children` が無ければ子の一覧の行はすべて含める。
+/// 終わりまでと継続段落を元の行のまま取り、子の箇条書きの部分を加える。
+/// `children` の宣言でフィールド行として宣言された子と、
+/// 表・コードブロックなどの子は含めない。`children` が無ければ子の一覧の行はすべて含める。
 fn list_item_pieces(block: &Block, children: Option<&Children>, doc: &Document) -> Vec<Piece> {
     let mut pieces = own_pieces(block, doc);
     let declared = children.map_or(&[][..], |c| c.fields.as_slice());
@@ -486,7 +499,9 @@ fn list_item_pieces(block: &Block, children: Option<&Children>, doc: &Document) 
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. } => {}
+            | Block::Other { .. }
+            | Block::Unruled { .. }
+            | Block::Subheading { .. } => {}
         }
     }
     pieces
@@ -539,7 +554,7 @@ fn extract_table(
     let Some(extract) = &table.extract else {
         return;
     };
-    // select で選ばれなかった表は抽出しない（REQ-schema-059）。選ぶのはノードの出現ごと
+    // select で選ばれなかった表は抽出しない。選ぶのはノードの出現ごと
     let tables: Vec<&Block> = groups
         .iter()
         .flat_map(|blocks| {
@@ -551,16 +566,16 @@ fn extract_table(
         })
         .collect();
     if tables.is_empty() {
-        // 0件のときはキーを省略する（REQ-schema-038）
+        // 0件のときはキーを省略する
         return;
     }
-    // 表はデータ行が要素の単位（TBL-schema-008）
+    // 表はデータ行が要素の単位
     let per_table: Vec<Vec<Value>> = tables
         .iter()
         .map(|b| table_rows(b, table.header.as_deref(), extract, doc))
         .collect();
     let value = if table.repeat.is_some() && declares_element_object(extract) {
-        // 繰り返す表は配置パスの直下に表ごとの段を作る（TBL-schema-008）
+        // 繰り返す表は配置パスの直下に表ごとの段を作る
         Value::Array(per_table.into_iter().map(Value::Array).collect())
     } else {
         // 複数の表は現れた順に1つの配列へ連結する
@@ -598,7 +613,7 @@ fn table_rows(
 }
 
 /// 表の1行の要素の値。鍵はスキーマが宣言した `header` の名前で、宣言が
-/// 無ければ列の位置（配列）にする。文書のヘッダ行の文字は鍵に使わない（TBL-schema-008）。
+/// 無ければ列の位置（配列）にする。文書のヘッダ行の文字は鍵に使わない。
 /// 宣言した名前の数を正とし、文書の列が足りなければその鍵を省き、
 /// 多ければ余りを捨てる。
 fn row_value(header: Option<&[String]>, row: &[String]) -> Value {
@@ -629,7 +644,7 @@ fn extract_codeblock(
         .copied()
         .filter(|b| matches!(b, Block::Code { .. }))
         .collect();
-    // コードブロックはブロックが要素の単位で、行はフェンスの開始行（TBL-schema-008）
+    // コードブロックはブロックが要素の単位で、行はフェンスの開始行
     let elements: Vec<Value> = codes
         .iter()
         .map(|b| {
@@ -640,7 +655,9 @@ fn extract_codeblock(
                 | Block::OrderedList { .. }
                 | Block::Statement { .. }
                 | Block::Table { .. }
-                | Block::Other { .. } => Value::Null,
+                | Block::Other { .. }
+                | Block::Unruled { .. }
+                | Block::Subheading { .. } => Value::Null,
             };
             element_value(extract, doc, value, &Derived::at(b.line()))
         })
@@ -659,7 +676,7 @@ fn section_body(section: &DocSection, def: &crate::schema::Section, doc: &Docume
 }
 
 /// 項目をオブジェクトに組み立てる。内部のノードの抽出は項目オブジェクトの中の
-/// 相対パスへ置き、項目自身の `of` を添えた書式も同じオブジェクトの中へ置く（REQ-schema-047）。
+/// 相対パスへ置き、項目自身の `of` を添えた書式も同じオブジェクトの中へ置く。
 fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -> Value {
     let mut object = Map::new();
     let blocks: Vec<&Block> = item.blocks.iter().collect();
@@ -681,11 +698,18 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
     extract_codeblock(item_rule.codeblock.as_ref(), &blocks, doc, &mut object);
     if let Some(extract) = &item_rule.extract {
         // path は項目オブジェクトそのものの置き場なので、ここでは置かない
+        // ID の規則の項目は ":" の前を ID、後を名前にし、名前と正規表現の規則の項目は
+        // 見出しの全体を名前にして ID を持たない
+        let (id, name) = match item_rule.selector() {
+            None => (Some(item.id.clone()), item.title.clone()),
+            Some(_) => (None, item.text.clone()),
+        };
         let got = Derived {
             line: Some(item.line),
-            id: Some(item.id.clone()),
-            name: Some(item.title.clone()),
+            id,
+            name: Some(name),
             end: Some(doc.end_line(item.line, 3)),
+            captures: Vec::new(),
         };
         if let Some(key) = extract.value() {
             place(
@@ -703,9 +727,11 @@ fn item_value(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -
     Value::String(item_value_text(item, item_rule, doc))
 }
 
-/// 項目の要素の値。見出しと本文をつないだ文字列（TBL-schema-008）。
+/// 項目の要素の値。見出しと本文をつないだ文字列。
 fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -> String {
-    let heading = if item.title.is_empty() {
+    let heading = if item_rule.selector().is_some() {
+        item.text.clone()
+    } else if item.title.is_empty() {
         item.id.clone()
     } else {
         format!("{}: {}", item.id, item.title)
@@ -725,8 +751,8 @@ fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item, doc: &Docume
 }
 
 /// 本文を組み立てる。文と箇条書き（必要ならフィールド行も）を含み、
-/// 表・コードブロック・項目は含めない。含めた部分は REQ-schema-063 のとおりにつなぐ。
-/// 宣言された名前と一致しない `- 名前: 値` 行は箇条書きとして本文に含める（TBL-schema-007）。
+/// 表・コードブロック・項目は含めない。含めた部分は
+/// 宣言された名前と一致しない `- 名前: 値` 行は箇条書きとして本文に含める。
 fn body_from_blocks(
     blocks: &[Block],
     fields: &[Field],
@@ -748,19 +774,51 @@ fn body_from_blocks(
         | Block::OrderedList { .. }
         | Block::Table { .. }
         | Block::Code { .. }
-        | Block::Other { .. } => Vec::new(),
+        | Block::Other { .. }
+        | Block::Unruled { .. }
+        | Block::Subheading { .. } => Vec::new(),
     });
     render(pieces, doc)
 }
 
-/// 1つの要素の導かれる値の材料（REQ-schema-048）。
+/// 1つの要素の導かれる値の材料。
 #[derive(Default)]
 struct Derived {
     line: Option<usize>,
     id: Option<String>,
     name: Option<String>,
-    /// 要素の最後の行。項目と節だけが持つ（REQ-schema-062）
+    /// 要素の最後の行。項目と節と箇条書きが持つ
     end: Option<usize>,
+    /// `of` に書いた名前付きキャプチャのうち、照合に加わったものの名前と捕まえた文字
+    captures: Vec<(String, String)>,
+}
+
+/// 箇条書きの要素の導かれる値の材料。名前付きキャプチャは、lead 段落を1行につないだ文字に
+/// 箇条書きの正規表現を照らして取る（検査と同じ文字）。
+fn bullet_derived(block: &Block, extract: &Extract, bullets: &Bullets) -> Derived {
+    let (Block::Bullet { text, end, .. } | Block::Field { text, end, .. }) = block else {
+        return Derived::at(block.line());
+    };
+    Derived {
+        end: Some(*end),
+        captures: captures_of(extract, bullets.pattern.as_ref(), &joined_lead(text)),
+        ..Derived::at(block.line())
+    }
+}
+
+/// `of` に書いた名前付きキャプチャの捕まえた文字。照合に加わらなかったキャプチャは含めない。
+fn captures_of(extract: &Extract, pattern: Option<&Pattern>, text: &str) -> Vec<(String, String)> {
+    let Some(captures) = pattern.and_then(|p| p.captures(text)) else {
+        return Vec::new();
+    };
+    extract
+        .groups()
+        .filter_map(|name| {
+            captures
+                .name(name)
+                .map(|m| (name.to_string(), m.as_str().to_string()))
+        })
+        .collect()
 }
 
 impl Derived {
@@ -774,12 +832,12 @@ impl Derived {
 }
 
 /// ノードが要素オブジェクトを作る宣言をしているか。`value` も導かれる値も
-/// 宣言していなければ、要素そのものが値になる（TBL-schema-008）。
+/// 宣言していなければ、要素そのものが値になる。
 fn declares_element_object(extract: &Extract) -> bool {
     extract.value().is_some() || extract.has_of()
 }
 
-/// 1つの要素を、宣言に応じて素の値か要素オブジェクトにする（TBL-schema-008、REQ-schema-048）。
+/// 1つの要素を、宣言に応じて素の値か要素オブジェクトにする。
 fn element_value(extract: &Extract, doc: &Document, value: Value, got: &Derived) -> Value {
     if !declares_element_object(extract) {
         return value;
@@ -793,8 +851,8 @@ fn element_value(extract: &Extract, doc: &Document, value: Value, got: &Derived)
 }
 
 /// 要素に分けないノードの出現を置く。繰り返すノードは配置パスの直下に
-/// 段を作り、繰り返さないノードは最初の出現だけを置く（PROP-schema-004）。0件のときは
-/// キーを省略する（REQ-schema-038）。
+/// 段を作り、繰り返さないノードは最初の出現だけを置く。0件のときは
+/// キーを省略する。
 fn place_occurrences(
     root: &mut Map<String, Value>,
     extract: &Extract,
@@ -812,7 +870,7 @@ fn place_occurrences(
     place(root, extract.path(), value);
 }
 
-/// 宣言された導かれる値を、その鍵へ置く。`raw` は文書の生の行から取る（REQ-schema-048）。
+/// 宣言された導かれる値を、その鍵へ置く。`raw` は文書の生の行から取る。
 fn place_derived(map: &mut Map<String, Value>, extract: &Extract, doc: &Document, got: &Derived) {
     for (key, kind) in extract.of() {
         let value = match kind {
@@ -824,6 +882,11 @@ fn place_derived(map: &mut Map<String, Value>, extract: &Extract, doc: &Document
             OfKind::Id => got.id.clone().map(Value::String),
             OfKind::Name => got.name.clone().map(Value::String),
             OfKind::End => got.end.map(Value::from),
+            OfKind::Group(name) => got
+                .captures
+                .iter()
+                .find(|(captured, _)| captured == name)
+                .map(|(_, text)| Value::String(text.clone())),
         };
         if let Some(value) = value {
             place(map, key, value);
@@ -851,5 +914,7 @@ fn place(root: &mut Map<String, Value>, path: &str, value: Value) {
     current.insert((*last).to_string(), value);
 }
 
+#[cfg(test)]
+mod group_tests;
 #[cfg(test)]
 mod tests;

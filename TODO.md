@@ -1,7 +1,7 @@
 # TODO
 
-kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記録。解決したものはこのファイルから落とし、仕様（`docs/ir/`）・判断の記録（`docs/decision/records/`）へ移す。
-仕様の参照は IR の ID で書く（mds の散文の仕様 `mds.md` の R 番号は、仕様を IR に移したときに廃止した）。
+kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記録。解決したものはこのファイルから落とし、仕様（決定の文書、`docs/decisions/`）へ移す。
+仕様の参照は決定の文書の見出しか確認することの ID で書く。
 
 分類:
 - **判断待ち**: 仕様の解釈が割れるもの、または人が決めていないもの。人が決めたら仕様と実装を直す
@@ -19,7 +19,7 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 記録のみ
 
-なし。2026-10-06 までの各件の判断は [docs/decision/records/2026-10-06-todo-zero.md](docs/decision/records/2026-10-06-todo-zero.md) にある。
+なし。2026-10-06 までの各件の判断は [docs/frozen/decision/records/2026-10-06-todo-zero.md](docs/frozen/decision/records/2026-10-06-todo-zero.md) にある。
 
 ## 参考
 

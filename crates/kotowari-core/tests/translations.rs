@@ -1,8 +1,8 @@
-//! 言語の一覧、UI の文字、対の読み方（docs/ir/core/translation-pairs.md、docs/ir/core/overview-languages.md）
+//! 言語の一覧、UI の文字、対の読み方（docs/decisions/core/translation-pairs.md、docs/decisions/core/overview-languages.md）
 
 use crate::config::Config;
 
-/// TBL-core-046 の鍵と英語の文字
+/// 鍵と英語の文字
 const ENGLISH: [(&str, &str); 17] = [
     ("language_name", "English"),
     ("index_link", "Overview"),
@@ -10,7 +10,7 @@ const ENGLISH: [(&str, &str); 17] = [
     ("stale_sections", "{n} sections to review"),
     ("open_items", "{n} open"),
     ("planned_items", "{n} planned"),
-    ("stale_mark", "Not reviewed since the IR changed"),
+    ("stale_mark", "Not reviewed since the decisions changed"),
     ("outline_stale", "not reviewed"),
     ("superseded", "(superseded)"),
     ("deferred", "(deferred)"),
@@ -33,9 +33,9 @@ fn complete_labels(tag: &str, prefix: &str) -> String {
     out
 }
 
-// @kotowari[REQ-core-351, TBL-core-046]
+// @kotowari[C-core-ovlang-6, C-core-ovlang-7]
 #[test]
-fn req_core_351_english_is_the_built_in_text_with_overrides_and_others_are_the_labels() {
+fn english_is_the_built_in_text_with_overrides_and_others_are_the_labels() {
     let yaml = format!(
         "languages: [ja, en]\nlabels:\n  en:\n    pages: \"{{n}} docs\"\n{}",
         complete_labels("ja", "J")
@@ -54,13 +54,16 @@ fn req_core_351_english_is_the_built_in_text_with_overrides_and_others_are_the_l
     assert_eq!(japanese.get("unknown"), None);
 }
 
-// @kotowari[REQ-core-334]
+// @kotowari[C-core-pairs-2]
 #[test]
-fn req_core_334_the_language_list_is_the_languages_key_and_english_when_absent_or_empty() {
+fn the_language_list_is_the_languages_key_and_english_when_absent_or_empty() {
     let ja = complete_labels("ja", "J");
     let config = Config::parse(&format!("languages: [ja, en]\nlabels:\n{ja}")).unwrap();
     assert_eq!(config.languages(), ["ja", "en"]);
-    assert_eq!(Config::parse("ir: docs/ir\n").unwrap().languages(), ["en"]);
+    assert_eq!(
+        Config::parse("tests:\n  files: []\n").unwrap().languages(),
+        ["en"]
+    );
     assert_eq!(
         Config::parse("languages: []\n").unwrap().languages(),
         ["en"]
@@ -69,9 +72,9 @@ fn req_core_334_the_language_list_is_the_languages_key_and_english_when_absent_o
     assert_eq!(config.validated().unwrap(), config);
 }
 
-// @kotowari[REQ-core-335]
+// @kotowari[C-core-pairs-3]
 #[test]
-fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
+fn an_empty_malformed_or_repeated_tag_stops() {
     let ja = complete_labels("ja", "J");
     for list in [
         "[ja, \"\"]",
@@ -98,9 +101,9 @@ fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
     );
 }
 
-// @kotowari[REQ-core-335, REQ-core-352]
+// @kotowari[C-core-pairs-3]
 #[test]
-fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
+fn invalid_tags_stop_even_with_complete_labels() {
     for tag in ["\"\"", "en_us", "\"e n\""] {
         let yaml = format!("languages: [{tag}]\nlabels:\n{}", complete_labels(tag, "X"));
         assert!(
@@ -110,59 +113,23 @@ fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
     }
 }
 
-// @kotowari[TBL-core-044]
+// @kotowari[C-core-pairstruct-2]
 #[test]
-fn tbl_core_044_table_cells_preserve_escaped_pipes_and_source_boundaries() {
+fn table_cells_preserve_escaped_pipes_and_source_boundaries() {
     let bordered = "| A | B |\n|---|---|\n| a | b |\n";
     let unbordered = "A | B\n---|---\nx | y\n";
-    for kind in [Kind::Topic, Kind::Guide, Kind::OverviewData] {
+    for kind in [Kind::Guide, Kind::OverviewData] {
         assert_eq!(mismatch(kind, bordered, unbordered), None);
         assert_eq!(
             mismatch(kind, bordered, "A | B | C\n---|---|---\nx | y | z\n"),
             Some(("table", Some(1)))
         );
     }
-    let glossary = "| Term | Meaning | Source |\n|---|---|---|\n| a | b | r.md#A1 |\n";
-    assert_eq!(
-        mismatch(
-            Kind::Glossary,
-            glossary,
-            &glossary.replace("| a | b |", "a | b |")
-        ),
-        None
-    );
-    assert_eq!(
-        mismatch(
-            Kind::Glossary,
-            glossary,
-            &glossary.replace("| r.md", "|r.md")
-        ),
-        None
-    );
-    for source in [r"r.md#A1\|", r"r.md#A1\\", r"r.md#A1\\\|"] {
-        let with_border =
-            format!("| Term | Meaning | Source |\n|---|---|---|\n| a | b | {source}|\n");
-        let without_border =
-            format!("| Term | Meaning | Source |\n|---|---|---|\n| x | y | {source}\n");
-        assert_eq!(
-            mismatch(Kind::Glossary, &with_border, &without_border),
-            None,
-            "{source}"
-        );
-        assert_eq!(
-            mismatch(
-                Kind::Glossary,
-                &with_border,
-                &without_border.replace("A1", "A2")
-            ),
-            Some(("glossary", Some(3)))
-        );
-    }
 }
 
-// @kotowari[REQ-core-345, TBL-core-044]
+// @kotowari[C-core-pairstruct-2]
 #[test]
-fn req_core_345_absent_headings_have_no_line_but_changed_headings_have_their_line() {
+fn absent_headings_have_no_line_but_changed_headings_have_their_line() {
     let first = "# Guide\n\n## One\n\n### Two\n\n#### Three\n";
     assert_eq!(
         mismatch(Kind::Guide, first, "# Guide\n\n### Two\n\n#### Three\n"),
@@ -182,9 +149,9 @@ fn req_core_345_absent_headings_have_no_line_but_changed_headings_have_their_lin
     );
 }
 
-// @kotowari[TBL-core-044, TBL-core-045]
+// @kotowari[C-core-pairstruct-3]
 #[test]
-fn tbl_core_045_overview_sentences_translate_but_keys_values_and_lengths_remain() {
+fn overview_sentences_translate_but_keys_values_and_lengths_remain() {
     for (kind, yaml, sentence_fields) in [
         (
             "cards",
@@ -248,9 +215,9 @@ fn tbl_core_045_overview_sentences_translate_but_keys_values_and_lengths_remain(
     }
 }
 
-// @kotowari[REQ-core-352]
+// @kotowari[C-core-ovlang-9, C-core-ovlang-10, C-core-ovlang-13]
 #[test]
-fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
+fn unknown_keys_and_a_doubled_number_placeholder_stop() {
     let ja = complete_labels("ja", "J");
     // labels.ja は完全なので、止まる理由はそれぞれの誤りだけ
     assert!(
@@ -274,9 +241,9 @@ fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
     }
 }
 
-// @kotowari[REQ-core-340]
+// @kotowari[C-core-pairs-9]
 #[test]
-fn req_core_340_the_blob_hash_is_the_git_blob_hash() {
+fn the_blob_hash_is_the_git_blob_hash() {
     assert_eq!(
         crate::translations::blob_hash(b"a\n"),
         "78981922613b2afb6025042ff6bd878ac1994e85"
@@ -307,107 +274,11 @@ fn assert_parts(
     }
 }
 
-const TOPIC: &str = "# T\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n\n## Decision tables\n\n### TBL-001: Table\n\n- source: r.md#A1\n\n| a | b |\n|---|---|\n| REQ-001 | x |\n\n```text\ncode\n```\n\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001\nScenario: s\n  Given g\n  Then t\n```\n";
+const GUIDE: &str = "# Guide\n\nText.\n\n<!-- @kotowari[docs/decisions/a.md#use:0123abcd] -->\n\n## Use\n\n```sh\nkotowari check\n```\n\n| a | b |\n|---|---|\n| c | d |\n";
 
-// @kotowari[TBL-core-044]
+// @kotowari[C-core-pairstruct-1, C-core-pairstruct-2]
 #[test]
-fn tbl_core_044_topic_documents_compare_headings_fields_tables_gherkin_and_code() {
-    let sentences = TOPIC
-        .replace("# T\n", "# Title\n")
-        .replace("Scope.", "Another scope.")
-        .replace("REQ-001: Name", "REQ-001: Other name")
-        .replace("Body.", "Other body.")
-        .replace("| x |", "| y |")
-        .replace("Scenario: s", "Scenario: other")
-        .replace("Given g", "Given other");
-    assert_parts(
-        Kind::Topic,
-        TOPIC,
-        &sentences,
-        &[
-            (
-                &TOPIC.replace("### TBL-001", "### TBL-002"),
-                "heading",
-                Some(18),
-            ),
-            (
-                &TOPIC.replace("## Examples", "### Examples"),
-                "heading",
-                Some(30),
-            ),
-            (
-                &TOPIC.replace("- kind: ubiquitous", "- kind: event_driven"),
-                "field",
-                Some(9),
-            ),
-            (&TOPIC.replace("- how_to_verify: read\n", ""), "field", None),
-            (
-                &TOPIC.replace("| REQ-001 | x |", "| REQ-002 | x |"),
-                "table",
-                Some(24),
-            ),
-            (
-                &TOPIC.replace("| REQ-001 | x |", "| REQ-001 | x | z |"),
-                "table",
-                Some(24),
-            ),
-            (
-                &TOPIC.replace("@about=REQ-001\n", "@about=REQ-002\n"),
-                "gherkin",
-                Some(33),
-            ),
-            (&TOPIC.replace("  Then t", "  And t"), "gherkin", Some(36)),
-            (&TOPIC.replace("\ncode\n", "\nother\n"), "code", Some(26)),
-        ],
-    );
-}
-
-const GLOSSARY: &str = "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| a | m | r.md#A1 |\n| b | n | r.md#A2 |\n";
-
-// @kotowari[TBL-core-044]
-#[test]
-fn tbl_core_044_glossaries_compare_the_rows_and_their_sources() {
-    // GFM の "\|" はセルの中の文字で、列を分けない
-    let sentences = GLOSSARY.replace("| a | m |", "| x | y \\| z |");
-    assert_parts(
-        Kind::Glossary,
-        GLOSSARY,
-        &sentences,
-        &[
-            (&GLOSSARY.replace("r.md#A2", "r.md#A3"), "glossary", Some(6)),
-            (
-                &GLOSSARY.replace("| b | n | r.md#A2 |\n", ""),
-                "glossary",
-                None,
-            ),
-        ],
-    );
-}
-
-const FLAGS: &str = "# Flags\n\nScope.\n\n## Flags\n\n### FLAG-001: Name\n\n- kind: gap\n- related: REQ-001\n- source: r.md#A1\n\nBody.\n";
-
-// @kotowari[TBL-core-044]
-#[test]
-fn tbl_core_044_flag_records_compare_ids_and_fields() {
-    let sentences = FLAGS
-        .replace("Body.", "Other.")
-        .replace(": Name", ": Other");
-    assert_parts(
-        Kind::Flags,
-        FLAGS,
-        &sentences,
-        &[
-            (&FLAGS.replace("FLAG-001", "FLAG-002"), "flag", Some(7)),
-            (&FLAGS.replace("REQ-001", "REQ-002"), "flag", Some(10)),
-        ],
-    );
-}
-
-const GUIDE: &str = "# Guide\n\nText.\n\n<!-- @kotowari[REQ-001:0123abcd] -->\n\n## Use\n\n```sh\nkotowari check\n```\n\n| a | b |\n|---|---|\n| c | d |\n";
-
-// @kotowari[TBL-core-044]
-#[test]
-fn tbl_core_044_guides_compare_headings_marks_code_and_tables() {
+fn guides_compare_headings_marks_code_and_tables() {
     let sentences = GUIDE
         .replace("Text.", "Other text.")
         .replace("## Use", "## Usage")
@@ -434,11 +305,11 @@ fn tbl_core_044_guides_compare_headings_marks_code_and_tables() {
     );
 }
 
-const OVERVIEW_DATA: &str = "---\nir:\n  - docs/ir/a.md\n---\n\n# Title\n\n```view lead\nconclusion: c\npoints:\n  - p\n```\n\n<!-- @kotowari[REQ-001:0123abcd] -->\n\n## Section\n\n```view steps\nitems:\n  - title: t\n    body: b\n    refs: [REQ-001]\n```\n\n| a |\n|---|\n| b |\n";
+const OVERVIEW_DATA: &str = "---\ndocuments:\n  - docs/decisions/a.md\n---\n\n# Title\n\n```view lead\nconclusion: c\npoints:\n  - p\n```\n\n<!-- @kotowari[docs/decisions/a.md#use:0123abcd] -->\n\n## Section\n\n```view steps\nitems:\n  - title: t\n    body: b\n    refs: [REQ-001]\n```\n\n| a |\n|---|\n| b |\n";
 
-// @kotowari[TBL-core-044, TBL-core-045]
+// @kotowari[C-core-pairstruct-3]
 #[test]
-fn tbl_core_044_overview_data_compares_frontmatter_headings_parts_marks_and_tables() {
+fn overview_data_compares_frontmatter_headings_parts_marks_and_tables() {
     let sentences = OVERVIEW_DATA
         .replace("# Title\n", "# Other\n")
         .replace("conclusion: c", "conclusion: other")
@@ -453,7 +324,7 @@ fn tbl_core_044_overview_data_compares_frontmatter_headings_parts_marks_and_tabl
         &sentences,
         &[
             (
-                &OVERVIEW_DATA.replace("docs/ir/a.md", "docs/ir/b.md"),
+                &OVERVIEW_DATA.replace("docs/decisions/a.md", "docs/decisions/b.md"),
                 "frontmatter",
                 Some(1),
             ),
@@ -493,9 +364,9 @@ fn tbl_core_044_overview_data_compares_frontmatter_headings_parts_marks_and_tabl
 
 const CONTENTS: &str = "title: T\nnote: N\nitems:\n  - a\n  - title: G\n    items:\n      - b\n";
 
-// @kotowari[TBL-core-044]
+// @kotowari[C-core-pairstruct-4]
 #[test]
-fn tbl_core_044_contents_compare_nesting_names_and_whether_a_note_is_present() {
+fn contents_compare_nesting_names_and_whether_a_note_is_present() {
     let sentences = CONTENTS
         .replace("title: T", "title: U")
         .replace("note: N", "note: M");
@@ -557,7 +428,7 @@ fn ja_en() -> (Config, Vec<String>) {
     (config, languages)
 }
 
-// @kotowari[REQ-core-344, REQ-core-345, REQ-core-347, TBL-core-044]
+// @kotowari[C-core-pairstruct-5]
 #[test]
 fn reference_links_preserve_the_order_of_their_resolved_destinations() {
     use crate::translations::{Pairs, Place};
@@ -587,7 +458,7 @@ fn reference_links_preserve_the_order_of_their_resolved_destinations() {
     }
 }
 
-// @kotowari[REQ-core-347, REQ-core-348]
+// @kotowari[C-core-pairstruct-11]
 #[test]
 fn reference_links_and_images_are_checked_at_the_usage_and_definition_lines() {
     use crate::translations::{Pairs, Place};
@@ -626,9 +497,9 @@ fn lines_of(findings: &[crate::Finding], kind: &str) -> Vec<Option<usize>> {
         .collect()
 }
 
-// @kotowari[REQ-core-027, TBL-core-019]
+// @kotowari[C-core-forder-4]
 #[test]
-fn req_core_027_lines_of_the_pair_findings() {
+fn lines_of_the_pair_findings() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();
@@ -677,7 +548,6 @@ fn req_core_027_lines_of_the_pair_findings() {
         lines_of(&findings, "translation_structure_mismatch"),
         [Some(5)]
     );
-    assert_eq!(lines_of(&findings, "link_to_record"), [Some(7)]);
     // d.md の3行目は切り替えの行と同じでないので、そのリンクも検査する
     assert_eq!(
         lines_of(&findings, "link_language_mismatch"),
@@ -685,9 +555,9 @@ fn req_core_027_lines_of_the_pair_findings() {
     );
 }
 
-// @kotowari[TBL-core-044]
+// @kotowari[C-core-pairstruct-5]
 #[test]
-fn tbl_core_044_link_parts_compare_destinations_read_as_the_first_language_side() {
+fn link_parts_compare_destinations_read_as_the_first_language_side() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     for place in [Place::Guide, Place::OverviewData] {
@@ -725,9 +595,9 @@ fn tbl_core_044_link_parts_compare_destinations_read_as_the_first_language_side(
     }
 }
 
-// @kotowari[TBL-core-044]
+// @kotowari[C-core-pairstruct-9]
 #[test]
-fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
+fn the_switcher_line_is_not_in_the_skeleton() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();
@@ -762,9 +632,9 @@ fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
     );
 }
 
-// @kotowari[REQ-core-346, TBL-core-044]
+// @kotowari[C-core-pairstruct-6]
 #[test]
-fn req_core_346_a_switcher_at_end_of_file_needs_no_final_newline() {
+fn a_switcher_at_end_of_file_needs_no_final_newline() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();
@@ -787,88 +657,9 @@ fn req_core_346_a_switcher_at_end_of_file_needs_no_final_newline() {
     }
 }
 
-// @kotowari[REQ-core-346]
+// @kotowari[C-core-pairstruct-5, C-core-pairstruct-11]
 #[test]
-fn req_core_346_three_language_switchers_do_not_count_as_document_scope() {
-    use crate::{CheckInputs, Inspection, SourceText, translations::Place};
-    let config = Config::parse(&format!(
-        "languages: [ja, en, fr]\nlabels:\n{}{}",
-        complete_labels("ja", "J"),
-        complete_labels("fr", "F")
-    ))
-    .unwrap();
-    let texts = [
-        (
-            "docs/ir/a.md",
-            "# Topic\n\nJlanguage_name | [English](a.en.md) | [Flanguage_name](a.fr.md)\n\nScope.\n",
-        ),
-        (
-            "docs/ir/a.en.md",
-            "# Topic\n\n[Jlanguage_name](a.md) | English | [Flanguage_name](a.fr.md)\n\nScope.\n",
-        ),
-        (
-            "docs/ir/a.fr.md",
-            "# Topic\n\n[Jlanguage_name](a.md) | [English](a.en.md) | Flanguage_name\n\nScope.\n",
-        ),
-    ];
-    for omit_scope in [false, true] {
-        let mut inputs = CheckInputs::default();
-        inputs.read.config = config.clone();
-        inputs.read.config.tests.files.clear();
-        let first = if omit_scope {
-            texts[0].1.replace("Scope.", "")
-        } else {
-            texts[0].1.to_string()
-        };
-        inputs.read.ir = Some(vec![SourceText::new(texts[0].0, &first).unwrap()]);
-        inputs.read.records = Some(vec![]);
-        inputs.read.adr = Some(vec![]);
-        inputs
-            .translations
-            .insert(pair_of(Place::Ir, texts[0].0, &config.languages(), &texts));
-        let inspection = Inspection::build(inputs).unwrap();
-        let lines = lines_of(inspection.check().findings(), "missing_scope");
-        let expected = if omit_scope { vec![None] } else { vec![] };
-        assert_eq!(lines, expected, "{:?}", inspection.check().findings());
-    }
-}
-
-// @kotowari[REQ-core-346, REQ-core-111]
-#[test]
-fn req_core_346_a_switcher_after_a_byte_order_mark_does_not_count_as_document_scope() {
-    // 先頭の BOM は読み飛ばす。メモリの入口で BOM 付きの本文を渡しても、題名と切り替えの行を見つける
-    use crate::{CheckInputs, Inspection, SourceText, translations::Place};
-    let (config, languages) = ja_en();
-    let texts = [
-        (
-            "docs/ir/a.md",
-            "\u{FEFF}# Topic\n\nJlanguage_name | [English](a.en.md)\n",
-        ),
-        (
-            "docs/ir/a.en.md",
-            "# Topic\n\n[Jlanguage_name](a.md) | English\n",
-        ),
-    ];
-    let mut inputs = CheckInputs::default();
-    inputs.read.config = config.clone();
-    inputs.read.config.tests.files.clear();
-    inputs.read.ir = Some(vec![SourceText::new(texts[0].0, texts[0].1).unwrap()]);
-    inputs.read.records = Some(vec![]);
-    inputs.read.adr = Some(vec![]);
-    inputs
-        .translations
-        .insert(pair_of(Place::Ir, texts[0].0, &languages, &texts));
-    let inspection = Inspection::build(inputs).unwrap();
-    let findings = inspection.check().findings();
-    assert_eq!(lines_of(findings, "missing_scope"), [None], "{findings:?}");
-    for kind in ["translation_switcher_invalid", "link_language_mismatch"] {
-        assert!(lines_of(findings, kind).is_empty(), "{findings:?}");
-    }
-}
-
-// @kotowari[REQ-core-347, REQ-core-348, REQ-core-349, TBL-core-044]
-#[test]
-fn req_core_347_inline_images_have_checked_and_compared_destinations() {
+fn inline_images_have_checked_and_compared_destinations() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();
@@ -892,52 +683,96 @@ fn req_core_347_inline_images_have_checked_and_compared_destinations() {
     ));
     let findings = pairs.findings(&config);
     assert_eq!(lines_of(&findings, "link_language_mismatch"), [Some(3)]);
-    assert_eq!(lines_of(&findings, "link_to_record"), [Some(5)]);
     assert_eq!(
         lines_of(&findings, "translation_structure_mismatch"),
         [None]
     );
 }
 
-// @kotowari[REQ-core-347]
-#[test]
-fn req_core_347_toc_titles_are_not_scanned_as_markdown_links() {
-    use crate::translations::{Pairs, Place};
-    let (config, languages) = ja_en();
-    let mut pairs = Pairs::default();
-    let text = "title: \"[r](../docs/decision/records/r.md)\"\nitems: [a]\n";
-    pairs.insert(pair_of(
-        Place::Toc,
-        "g/toc.yaml",
-        &languages,
-        &[("g/toc.yaml", text), ("g/toc.en.yaml", text)],
-    ));
-    assert!(lines_of(&pairs.findings(&config), "link_to_record").is_empty());
+/// 決定の文書の1つの決定。state は状態の行、row は確認することの1行
+fn decision_document(state: &str, section: &str, row: &str) -> String {
+    format!(
+        "# T\n\nLead.\n\n## D\n\n{state}\n\n### {section}\n\nText.\n\n### Confirmations\n\n- {row}\n"
+    )
 }
 
-// @kotowari[REQ-core-347, REQ-core-349]
+// @kotowari[C-core-lang-4]
 #[test]
-fn req_core_347_a_colon_in_a_relative_link_query_is_not_a_uri_scheme() {
+fn a_decision_skeleton_compares_headings_states_and_rows_but_not_words() {
+    let first = decision_document("Status: proposed", "Problem", "C-a-1 Shown");
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("状態: 提案", "問題", "C-a-1 出る")
+                .replace("### Confirmations", "### 確認すること")
+        ),
+        None
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("Status: implemented", "Problem", "C-a-1 Shown")
+        ),
+        Some(("state", Some(7)))
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("Status: proposed", "Background", "C-a-1 Shown")
+        ),
+        Some(("heading", Some(9)))
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("Status: proposed", "Problem", "C-a-1 (by reading) Shown")
+        ),
+        Some(("confirmation", Some(15)))
+    );
+    assert_eq!(mismatch(Kind::DecisionGlossary, &first, "# Other\n"), None);
+}
+
+// @kotowari[C-core-ovlang-11]
+#[test]
+fn decision_side_documents_leave_out_glossaries_and_sides_without_a_first_side() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
+    let decision = "# 挨拶\n\n挨拶の仕方を決める。\n\n## 挨拶する\n\n状態: 提案\n\n\
+                    ### 問題\n\n困っていた。\n\n### 決めたこと\n\nこうする。\n";
+    let english = "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n\
+                   ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n";
     let mut pairs = Pairs::default();
     pairs.insert(pair_of(
-        Place::Guide,
-        "a.md",
+        Place::Decision,
+        "docs/decisions/greet/greet.md",
         &languages,
         &[
-            ("a.md", "# A\n\n[r](docs/decision/records/r.md?mode=a:b)\n"),
-            ("a.en.md", "# A\n"),
+            ("docs/decisions/greet/greet.md", decision),
+            ("docs/decisions/greet/greet.en.md", english),
         ],
     ));
-    let findings = pairs.findings(&config);
-    assert_eq!(lines_of(&findings, "link_to_record"), [Some(3)]);
-    assert_eq!(
-        findings
-            .iter()
-            .find(|finding| finding.kind() == "link_to_record")
-            .unwrap()
-            .detail(),
-        "docs/decision/records/r.md?mode=a:b"
-    );
+    // 用語集は両側があっても入れない
+    pairs.insert(pair_of(
+        Place::Decision,
+        "docs/decisions/greet/CONTEXT.md",
+        &languages,
+        &[
+            ("docs/decisions/greet/CONTEXT.md", "# 用語集\n"),
+            ("docs/decisions/greet/CONTEXT.en.md", "# Glossary\n"),
+        ],
+    ));
+    // `先頭の言語`の`側`が無い`対`の、ほかの言語の`側`も入れない
+    pairs.insert(pair_of(
+        Place::Decision,
+        "docs/decisions/greet/wave.md",
+        &languages,
+        &[("docs/decisions/greet/wave.en.md", english)],
+    ));
+    let documents = crate::translations::decision_side_documents(&pairs, &config, "en").unwrap();
+    let paths: Vec<&str> = documents.iter().map(|document| document.path()).collect();
+    assert_eq!(paths, ["docs/decisions/greet/greet.en.md"]);
 }

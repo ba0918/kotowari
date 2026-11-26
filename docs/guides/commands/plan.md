@@ -7,7 +7,7 @@ Use it when you have written a plan and want to check its form.
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari plan [--format json|text] <計画書のファイル>
@@ -18,7 +18,7 @@ Options may appear before the command or after the file.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd, REQ-core-021:ccedd28b] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -28,10 +28,10 @@ Options may appear before the command or after the file.
 
 ## What it reads
 
-<!-- @kotowari[REQ-core-196:283ed4cd, REQ-core-191:162de9ae, EX-core-359:67cce6be, EX-core-345:bdb6abae] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/plan.md#kotowari-plan-checks-the-form-of-a-plan-against-the-schema-bundled-in-the-binary:8c47a326] -->
 
 `plan` reads only the plan file you pass.
-It does not read the configuration file, the IR, decision records or test files.
+It does not read the configuration file, the decision documents or test files.
 So `plan` does not stop even if the configuration file is broken.
 
 The rules for the form (the schema) are compiled into the binary; no schema file is read at run time.
@@ -40,7 +40,7 @@ Pointing at a schema with `$schema` in the frontmatter has no effect, and causes
 
 ## The form of a plan
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-337:5f0d07c9] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f] -->
 
 A plan is read line by line, and has no errors only when it has the following form.
 
@@ -76,7 +76,7 @@ A complete example is in [Example](#example).
 
 ### Plan-wide sections
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-339:c1d921ec, EX-core-353:6b1ad7b6, EX-core-348:33e00663] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
 What may and may not go under the sections other than `## Steps`:
 
@@ -89,7 +89,7 @@ What may and may not go under the sections other than `## Steps`:
 
 ### Steps
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-340:bd7dd866] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
 The rules for the `## Steps` section:
 
@@ -103,22 +103,22 @@ The rules for the `## Steps` section:
 
 ### What is not checked
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-341:274e4805] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#the-order-of-sections-the-step-numbers-and-the-names-in-step-headings-are-not-checked:172d9d8f] -->
 
 The following are not checked:
 
 - The order of the sections
 - Whether step numbers are consecutive, or whether two steps share a number
 - The name after the `:` in a step heading
-- The contents of the fields (whether requirement IDs exist, whether `Done when` is an observable condition, and so on)
+- The contents of the fields (whether the decisions and confirmation rows named exist, whether `Done when` is an observable condition, and so on)
 
-Use `kotowari query` to confirm that requirement IDs exist.
+Use `kotowari query` to confirm that the decisions and rows exist.
 
 ## Output
 
 ### text
 
-<!-- @kotowari[REQ-core-193:ee3eed54, REQ-core-207:1f5ede36, REQ-core-025:58025379, EX-core-381:a4b8c124, EX-core-382:a36d81e7] -->
+<!-- @kotowari[docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c, docs/decisions/core/plan.md#the-output-of-kotowari-plan-uses-the-same-finding-keys-as-check-and-the-json-has-only-findings-and-counts:b227d6e0, docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 Prints one finding per line in the form `path:line [error] invalid_plan detail`, and nothing else.
 When there are no findings, nothing is printed (there is no tally line).
@@ -145,10 +145,10 @@ Tell what is wrong from the first half of the detail (the schema side's kind).
 
 ### JSON
 
-<!-- @kotowari[REQ-core-194:beb92c09, EX-core-346:ecaa0604] -->
+<!-- @kotowari[docs/decisions/core/plan.md#the-output-of-kotowari-plan-uses-the-same-finding-keys-as-check-and-the-json-has-only-findings-and-counts:b227d6e0] -->
 
 The top level has exactly two keys: `findings` and `counts`.
-The `files`, `lines`, `tests` and `guides` keys of `check` are not present.
+The `tests`, `guides`, `overview` and `decisions` keys of `check` are not present.
 
 | Key | Type | Description |
 |---|---|---|
@@ -157,7 +157,7 @@ The `files`, `lines`, `tests` and `guides` keys of `check` are not present.
 
 ## Exit codes
 
-<!-- @kotowari[TBL-core-002:36817bf5, REQ-core-193:ee3eed54] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c] -->
 
 | Code | Meaning |
 |---|---|
@@ -175,7 +175,7 @@ On a stop, nothing is written to standard output and the reason is written on th
 
 ## Example
 
-<!-- @kotowari[EX-core-332:680b57dc, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-348:33e00663] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c] -->
 
 A plan in the correct form.
 
@@ -188,11 +188,10 @@ A person who runs `wordcount check <path>` sees each word used more than the con
 
 ## Specification
 
-The IR is in `docs/ir/`. This plan covers:
+The decision documents are in `docs/decisions/`. This plan covers:
 
-- `docs/ir/core/count.md#REQ-core-010`, `#REQ-core-011`
-- `docs/ir/core/output.md#REQ-core-020`
-- Examples: EX-core-030, EX-core-031
+- `docs/decisions/core/count.md#a-word-used-more-than-the-limit-is-reported-with-the-line-of-its-first-use` (rows C-core-count-1, C-core-count-2)
+- `docs/decisions/core/report.md#each-word-over-the-limit-is-printed-on-one-line-and-the-exit-code-is-1` (row C-core-report-1)
 
 ## Approach and why
 
@@ -211,10 +210,10 @@ S1 before S2: S2 prints what S1 counts.
 
 ## Verification map
 
-| Step | Requirements | Examples |
+| Step | Decisions | Confirmation rows |
 |---|---|---|
-| S1 | REQ-core-010, REQ-core-011 | EX-core-030 |
-| S2 | REQ-core-020 | EX-core-031 |
+| S1 | count.md | C-core-count-1, C-core-count-2 |
+| S2 | report.md | C-core-report-1 |
 
 ## Left to the implementer
 
@@ -233,31 +232,31 @@ cargo test --workspace
 
 ## Out of scope
 
-- Stemming or case folding beyond what REQ-core-011 states
+- Stemming or case folding beyond what C-core-count-2 states
 
 ## Steps
 
 ### S1: count the words of one document
 
 - Purpose: count each word of a document and remember the line of its first use
-- Specification: `docs/ir/core/count.md#REQ-core-010`, `docs/ir/core/count.md#REQ-core-011`
+- Specification: `docs/decisions/core/count.md#a-word-used-more-than-the-limit-is-reported-with-the-line-of-its-first-use`
 - Prerequisites: none
 - May change: `src/count.rs`, `tests/count.rs`
 - Done when: counting a document with "a" three times and the limit 2 returns "a" with the line of its first use, and a document within the limit returns nothing
-- Shown by: test — EX-core-030, one test per rule of REQ-core-011
+- Shown by: test — C-core-count-1, C-core-count-2, one test per row
 - Left to the implementer: none
-- Stop and hand back if: REQ-core-011 and EX-core-030 disagree on what counts as a word
+- Stop and hand back if: C-core-count-1 and C-core-count-2 disagree on what counts as a word
 
 ### S2: print the words over the limit
 
 - Purpose: wire the count into `wordcount check` and print one line per word over the limit
-- Specification: `docs/ir/core/output.md#REQ-core-020`
+- Specification: `docs/decisions/core/report.md#each-word-over-the-limit-is-printed-on-one-line-and-the-exit-code-is-1`
 - Prerequisites: S1
 - May change: `src/main.rs`, `tests/count.rs`
-- Done when: `wordcount check a.md` prints `a.md:3 a` for EX-core-031 and exits with 1, and exits with 0 when nothing is over the limit
-- Shown by: test — EX-core-031
+- Done when: `wordcount check a.md` prints `a.md:3 a` as C-core-report-1 states and exits with 1, and exits with 0 when nothing is over the limit
+- Shown by: test — C-core-report-1
 - Left to the implementer: none
-- Stop and hand back if: the exit code for a document with no words is not decided by REQ-core-020
+- Stop and hand back if: the exit code for a document with no words is not decided in report.md
 ````
 
 ```console
@@ -331,7 +330,7 @@ $ kotowari plan docs/plans/broken.md | jq .
 
 ### Wrapping a field value onto two lines gives `undeclared_line`
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-340:bd7dd866] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
 A plan is read line by line, so a continuation line of a field value does not become part of the field.
 It is an error as a line that is not allowed under a step.
@@ -339,23 +338,23 @@ Write each value on one line, including any commands.
 
 ```console
 $ kotowari plan docs/plans/wrapped.md --format text
-docs/plans/wrapped.md:28 [error] invalid_plan undeclared_line: undeclared ordered list "S1 before S2: S2 prints what S1 counts."
-docs/plans/wrapped.md:66 [error] invalid_plan undeclared_line: undeclared statement "one test per rule of REQ-core-011"
+docs/plans/wrapped.md:27 [error] invalid_plan undeclared_line: undeclared ordered list "S1 before S2: S2 prints what S1 counts."
+docs/plans/wrapped.md:65 [error] invalid_plan undeclared_line: undeclared statement "one test per row"
 ```
 
-(Line 66 is `one test per rule of REQ-core-011`, indented and continued on the line after `- Shown by: test — EX-core-030,`.)
+(Line 65 is `one test per row`, indented and continued on the line after `- Shown by: test — C-core-count-1, C-core-count-2,`.)
 
 ### A numbered list becomes `undeclared ordered list`
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-353:6b1ad7b6] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
-Numbered lists are not allowed in the plan-wide sections (line 28 in the example above is `1. S1 before S2: ...`).
+Numbered lists are not allowed in the plan-wide sections (line 27 in the example above is `1. S1 before S2: ...`).
 Rewrite it as a `-` bullet list or as sentences.
 To express an order, write it as sentences in `## Step order and prerequisites`.
 
 ### `argument error: unexpected option for plan: --config`
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, EX-core-343:af29bce2] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955] -->
 
 `plan` does not read the configuration, so it does not accept `--config`.
 If you passed it, remove it.
@@ -367,7 +366,7 @@ argument error: unexpected option for plan: --config
 
 ### `argument error: plan expects exactly one plan file path`
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, EX-core-342:7e4f1631, EX-core-357:d71d499d] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955] -->
 
 You can pass only one plan at a time.
 To check several, run the command once for each.
@@ -381,7 +380,7 @@ argument error: plan expects exactly one plan file path, got 2
 
 ### `unreadable file: ...`
 
-<!-- @kotowari[REQ-core-197:2fbfa51a, EX-core-344:9b05eb1b] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955] -->
 
 The path is read relative to the current directory,
 not relative to the base directory (the directory that contains `.kotowari/`).
@@ -401,7 +400,7 @@ docs/plans/broken.md:52 [error] invalid_plan undeclared_heading: undeclared sect
 
 ## Related
 
-- Specification: [Checking plans (the plan IR)](../../ir/core/plan.md), [Arguments](../../ir/core/cli.md#REQ-core-190)
+- Specification: [Checking plans](../../decisions/core/plan.md), [Arguments](../../decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants)
 - Common format and stops: [cli.md](../cli.md)
 - The list of finding kinds: [findings.md](../findings.md)
-- Confirming requirement IDs: [kotowari query](query.md)
+- Confirming decisions and rows: [kotowari query](query.md)

@@ -1,5 +1,5 @@
-# 同梱の問い合わせ: TypeScript、Tsx、JavaScript（TBL-core-032）
-# "language:" の行は読み込むときに言語ごとに足し、3つの言語に同じ中身を付ける（REQ-core-182）
+# 同梱の問い合わせ: TypeScript、Tsx、JavaScript（docs/decisions/core/test-queries.md）
+# "language:" の行は読み込むときに言語ごとに足し、3つの言語に同じ中身を付ける
 id: kotowari-ts-js-test
 utils:
   # "it"、"test"、またはそれに "." と名前が1つ以上続く式（"it.only"、"it.only.each"）。

@@ -6,38 +6,38 @@
 
 ## クレートを選ぶ
 
-<!-- @kotowari[REQ-core-306:713197d2, REQ-core-308:667de7a9, TBL-core-040:4f46993e] -->
+<!-- @kotowari[docs/decisions/core/library-crates.md#packages-are-split-by-purpose-and-users-choose-a-package-by-purpose:9a903158, docs/decisions/core/library-crates.md#the-judgement-of-test-correspondence-receives-the-found-tests-and-markers-and-does-not-analyse-sources:66da2e57] -->
 
 リポジトリの操作には`kotowari`、メモリだけの計算には`kotowari-core`を使います。
-`kotowari-source-analysis`は文字列からテストや面を発見し、元の文字列と診断を含むcoreの型を返します。ファイル取得やIRとの対応づけは行いません。
+`kotowari-source-analysis`は文字列からテストや面を発見し、元の文字列と診断を含むcoreの型を返します。ファイル取得や決定の文書との対応づけは行いません。
 `kotowari-overview`はメモリ上の全体像の元データを検査し、参照の表・古い節・描画の入力を作ります。`kotowari-markdown-view`は描画の入力から全体像のページをメモリ上に作り、workspaceのほかのパッケージに依存しません。
 スキーマの計算には`kotowari-markdown-schema`、取得には`kotowari-markdown-schema-io`を使います。
 CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。全体像を配る`serve`は`kotowari-cli`にあり、ライブラリにはありません。
 
 ## 読込みと結果の寿命
 
-<!-- @kotowari[REQ-core-310:ba432526, REQ-core-316:f465729a, TBL-core-041:cd11e1e1] -->
+<!-- @kotowari[docs/decisions/core/library-api.md#another-rust-application-calls-kotowaris-operations-as-methods-of-project-with-typed-inputs:c11cbaab, docs/decisions/core/library-inputs.md#already-read-results-can-be-reused-and-do-not-change-until-explicitly-read-again:109328a9] -->
 
 `Project::new(ProjectOptions::new(absolute_start))`で開始点を明示します。
 `check`、`list`、`query`、`status`、`plan`、`mutants`は型付きの結果を返します。`check`と`status`は全体像の元データの指摘と`overview`の群を含みます。
 `overview_prepare`は全体像の元データを検査して描画し、ファイルを書きません。返った結果の`write()`で`.kotowari/cache/overview/`の下へ書きます。`overview_build`はこの2つを続けて行い、書いたファイル・消したファイルの一覧と書かなかったファイルの数を返します。`AsyncProject`にも同じ2つがあります。
 完了した指摘は結果の`findings()`で読み、読めないファイルや設定の誤りは`Error`と`ErrorKind`で区別します。
 `read()`と`inspect()`の結果は保持して再利用でき、後からファイルが変わっても自動更新されません。読み直す場合はProjectを再度呼びます。
-`plan`や`mutants`はIRを読みません。
+`plan`や`mutants`は決定の文書を読みません。
 
 ## メモリ入力とパス
 
-<!-- @kotowari[REQ-core-314:baa022e4, REQ-core-315:6a916b03, REQ-core-322:dedf846a, REQ-core-323:77b70fdf] -->
+<!-- @kotowari[docs/decisions/core/library-inputs.md#a-public-entry-point-is-provided-that-parses-the-string-of-a-decision-document-and-returns-read-only-the-decisions-and-confirmations-obtained:6c063685, docs/decisions/core/library-inputs.md#if-a-required-input-group-is-not-provided-inputmissing-is-returned-and-an-empty-group-is-checked-by-the-ordinary-rules:c81b1826, docs/decisions/core/library-paths.md#in-memory-input-is-received-as-pairs-of-content-and-logical-path-and-no-file-is-looked-for:93ddcc73, docs/decisions/core/library-paths.md#the-entry-points-that-read-files-receive-the-working-start-location-and-resolve-from-it-by-the-same-rules-as-the-existing-cli:2fb622cf] -->
 
 `SourceText`は相対の論理パスと元の文字列を保持します。区切りやドット成分を正規化し、絶対パスと空のパスを拒否します。入力群の構築では同一群の重複も拒否します。親相対パスは使えます。
 別の有効な入力群で同じパスを使う場合、文字列も一致させます。
 入力の`None`は未提供、`Some(vec![])`は提供したが空、という意味です。設定で有効な群は必須で、無効な群は無視します。
-`ir::parse`は不正・欠落したIDを持つ項目も、得られた位置や指摘とともに返します。CLIの一覧対象とは異なります。
+`kotowari-core`の`parse_decision_document`は、1つの決定の文書の文字と論理パスだけを受け取り、その決定と確認することを元の文書の行とともに返します。形の誤りのある文書でも、得られたものを形の誤りの指摘とともに返します。ほかの入力の群は要りません。
 ProjectとSchemaLoaderの開始点、Loaderのキャッシュ基準は絶対パスです。構築後に呼出側のカレントディレクトリが変わっても解決基準は変わりません。
 
 ## スキーマと値の抽出
 
-<!-- @kotowari[REQ-schema-068:a2ca7ddc, REQ-schema-069:61fa2bf9, REQ-schema-070:ff5208d1] -->
+<!-- @kotowari[docs/decisions/schema/library-extraction.md#a-schema-is-returned-only-after-it-passes-semantic-validation-and-a-parsed-schema-can-be-reused:ae534266, docs/decisions/schema/library-extraction.md#the-normal-entry-point-for-value-extraction-returns-values-only-from-a-document-with-no-violation:9379fe8e, docs/decisions/schema/library-extraction.md#validation-in-the-library-does-not-cancel-the-schemas-open:142c086d] -->
 
 `Schema::parse`で構文と意味を検証し、`Document::parse`の結果と再利用します。
 `extract_validated`は成功した値だけを返します。指摘があっても値を読む場合は`extract_partial`で値と指摘を両方確認します。
@@ -47,7 +47,7 @@ SchemaLoaderの`load`はスキーマと文書の組を返し、再度取得せ�
 
 ## Tokioから待つ
 
-<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:e186fe7a, REQ-core-321:5a28ec39, REQ-schema-075:a82f0403] -->
+<!-- @kotowari[docs/decisions/core/library-async.md#the-high-level-operations-can-be-awaited-from-tokio-through-a-tokio-feature-disabled-by-default:c8aac0f2, docs/decisions/core/library-async.md#the-number-of-concurrent-executions-is-limited-per-asynchronous-entry-point-object-and-clones-share-execution-slots:15c39651, docs/decisions/core/library-async.md#stopping-waiting-does-not-stop-processing-that-has-started-and-it-holds-its-execution-slot-until-it-finishes:1608454e, docs/decisions/core/library-async.md#awaiting-outside-a-runtime-or-a-runtime-that-stops-returns-a-failure-whose-kind-can-be-told-apart-without-panicking:91b15c91, docs/decisions/schema/library-io.md#a-call-that-selects-the-tokio-feature-also-gets-the-same-results-as-the-synchronous-one:3539145a] -->
 
 高水準の2ライブラリで、既定で無効な`tokio` featureを有効にすると`AsyncProject`と`AsyncSchemaLoader`を使えます。
 呼出側のTokioランタイムで待ち、内部ランタイムは作りません。ランタイム不在やタスクの失敗も型で返します。

@@ -1,13 +1,13 @@
-//! Markdown の文章の塊を HTML にする（REQ-view-007）
+//! Markdown の文章の塊を HTML にする（C-view-rendering-11）
 
 use markdown::mdast::Node;
 
 fn parse_options() -> markdown::ParseOptions {
     markdown::ParseOptions {
         constructs: markdown::Constructs {
-            // 画像はページの外から読み込ませる（REQ-view-010）ので、"![...](...)" はリンクとして読む
+            // 画像はページの外から読み込ませることになるので、"![...](...)" はリンクとして読む
             label_start_image: false,
-            // 脚注は描くと UI の文字に無い英語の見出しと戻りリンクの文字が入る（REQ-view-027）ので読まない。
+            // 脚注は描くと UI の文字に無い英語の見出しと戻りリンクの文字が入る（C-view-languages-3）ので読まない。
             // 定義を読まなければ "[^1]" は脚注の呼び出しにならないので、切るのは定義だけでよい
             gfm_footnote_definition: false,
             ..markdown::Constructs::gfm()

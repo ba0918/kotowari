@@ -1,17 +1,17 @@
-//! 全体像のページを書く置き場（REQ-core-293、REQ-core-296、REQ-core-324、REQ-core-353）
+//! 全体像のページを書く置き場
 
 use crate::{Error, OverviewBuild, Page};
 use std::path::Path;
 
-/// 置き場。`基準のディレクトリ`の下に固定し、設定で変えられない（REQ-core-296）
+/// 置き場。`基準のディレクトリ`の下に固定し、設定で変えられない
 pub(crate) const CACHE: &str = ".kotowari/cache/overview";
 
 /// `基準のディレクトリ`の ".kotowari/cache/overview/" の下へ書く。同じ名前で同じバイト列の
-/// ファイルは書かず、今回返さなかったファイルを消す（REQ-core-293）
+/// ファイルは書かず、今回返さなかったファイルを消す
 pub(crate) fn write(base: &Path, pages: &[Page]) -> Result<OverviewBuild, Error> {
     let cache = base.join(CACHE);
     let write_error = |path: &str, error| Error::cache(&format!("{CACHE}/{path}"), Some(error));
-    // REQ-core-324: 置き場かその上がリンクかディレクトリでなければ、何も書かず消さずに止める
+    // 置き場かその上がリンクかディレクトリでなければ、何も書かず消さずに止める
     let mut place = String::new();
     for component in CACHE.split('/') {
         if !place.is_empty() {
@@ -22,7 +22,7 @@ pub(crate) fn write(base: &Path, pages: &[Page]) -> Result<OverviewBuild, Error>
             break;
         }
     }
-    // REQ-core-353: ほかの言語のページを書く "<言語タグ>/" も、1つも書く前に確かめる
+    // ほかの言語のページを書く "<言語タグ>/" も、1つも書く前に確かめる
     let directories: std::collections::BTreeSet<&str> = pages
         .iter()
         .filter_map(|page| page.name.rsplit_once('/').map(|(directory, _)| directory))
@@ -35,12 +35,12 @@ pub(crate) fn write(base: &Path, pages: &[Page]) -> Result<OverviewBuild, Error>
     let mut build = OverviewBuild::default();
     for page in pages {
         let path = cache.join(&page.name);
-        // REQ-core-353: ほかの言語のページは "<言語タグ>/" の下に書く。置き場は上で確かめてある
+        // ほかの言語のページは "<言語タグ>/" の下に書く。置き場は上で確かめてある
         if let Some((directory, _)) = page.name.rsplit_once('/') {
             std::fs::create_dir_all(cache.join(directory))
                 .map_err(|error| Error::cache(&format!("{CACHE}/{directory}"), Some(error)))?;
         }
-        // シンボリックリンクを辿って置き場の外に書かないよう、リンクは消してからファイルを書く（REQ-core-296）
+        // シンボリックリンクを辿って置き場の外に書かないよう、リンクは消してからファイルを書く
         let link = std::fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink());
         if link {
             std::fs::remove_file(&path).map_err(|error| write_error(&page.name, error))?;
@@ -66,7 +66,7 @@ pub(crate) fn write(base: &Path, pages: &[Page]) -> Result<OverviewBuild, Error>
 }
 
 /// `基準のディレクトリ`からの相対パスの place がディレクトリなら true、無ければ false。
-/// ほかのもの（シンボリックリンクを含む）か、調べられなければ置き場の誤り（REQ-core-324）
+/// ほかのもの（シンボリックリンクを含む）か、調べられなければ置き場の誤り
 fn directory_or_absent(base: &Path, place: &str) -> Result<bool, Error> {
     match std::fs::symlink_metadata(base.join(place)) {
         Ok(meta) if meta.file_type().is_dir() => Ok(true),

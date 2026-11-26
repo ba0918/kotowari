@@ -52,7 +52,7 @@ its error output, not as paths that were hit.
 
 A project lists in `.kotowari/confirm-paths` the definitions of its checks: CI, hooks, the scripts
 that run checks, and the configuration of mutation tests, of static analysis and of tool versions.
-The places of the specification and of decision records are not listed. A repository that holds
+The place of the decision documents is not listed. A repository that holds
 the source of this skill text lists that source's path too.
 
 Judge the line again each time cycle adds commits to the branch, always over the whole diff: a hit
@@ -60,25 +60,22 @@ that a later change takes out of the diff is no longer a hit.
 
 ## When a person confirms
 
-Of the runs that converged, a person confirms the merge in these three cases only:
+Of the runs that converged, a person confirms the merge in these two cases only:
 
 - the line is hit;
 - a finding is still open as `human_judgment`, whatever raised it (the consistency phase or a
-  review);
-- the consistency phase revised an approved requirement after showing by a contradiction or a
-  reproduction that it was wrong: a `consistency` finding in the findings file whose claim starts
-  with `revised <ID>`. The phase finishes its work all the same; only the request to merge is
-  withheld.
+  review). A collision of intent the consistency phase wrote under `## 未決` is one of these.
 
 In each case cycle creates the pull request, does not ask for it to be merged, leaves it open, and
 shows the person where it is and what caused the stop: the paths that were hit (or, when the
-procedure of the line failed, that failure with its error output), the open findings, or the
-revised requirements. It shows this as soon as the pull request is created, before the watch, and
-adds no summary of the change. A concretisation the consistency phase added to the specification
-or a decision record after approval is not a reason to stop.
+procedure of the line failed, that failure with its error output), or the open findings with the
+items under `## 未決` they wrote. It shows this as soon as the pull request is created, before the
+watch, and adds no summary of the change. A detail the implementer or the consistency phase
+decided, and a sentence of a decision document corrected to the facts without changing the
+direction decided, are not reasons to stop: they are lines of the pull request body.
 
-When the implementer returns that an approved requirement has to be changed or deleted, that is
-ending 4: a person comes in and nothing is merged. An operation that cannot be undone (a release,
+When the implementer hands back a collision of intent, that is ending 4: a person comes in and
+nothing is merged. An operation that cannot be undone (a release,
 publishing, a tag, a deletion of something outside the local machine) stays with the person under
 the existing stop rules.
 
@@ -88,7 +85,11 @@ the existing stop rules.
 2. Push the branch (`git push -u origin <branch>`) and, when there is none yet, create the pull
    request against the merge target
    (`gh pr create --base <target> --head <branch> --title <one line> --body-file <file>`). The
-   body is the decision lines of cycle's **Terminal report** and no summary of the change. A pull
+   body is the decision lines of cycle's **Terminal report** and no summary of the change: the
+   details and readings the implementer and the fixer decided, the sentences of decision documents
+   corrected to the facts, and the reasons for the consistency phase's fixes, each with what, why
+   and the evidence. When later commits add lines, update the body
+   (`gh pr edit <pr> --body-file <file>`). A pull
    request already there may have been pointed elsewhere since: step 5 reads where it points.
 3. Confirm whether the merge target requires checks, by branch protection
    (`gh api repos/{owner}/{repo}/branches/<target> --jq '.protection.required_status_checks.contexts'`)

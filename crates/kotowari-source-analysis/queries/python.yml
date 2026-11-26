@@ -1,4 +1,4 @@
-# 同梱の問い合わせ: Python（TBL-core-033）
+# 同梱の問い合わせ: Python（docs/decisions/core/test-queries.md）
 # 名前が "test" で始まる、ファイルの最上位の関数とクラスの中のメソッド。関数の中の関数は数えない。
 # デコレータは decorated_definition の中で関数の節の外にある
 id: kotowari-python-test

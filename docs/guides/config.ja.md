@@ -2,21 +2,19 @@
 
 [English](config.md) | 日本語
 
-kotowari が読む場所（IR、判断の記録、テスト、ガイド、面のファイル、全体像の元データ）と、検査に使う値を書く YAML のファイルです。
+kotowari が読む場所（決定の文書、テスト、ガイド、面のファイル、全体像の元データ）と、検査に使う値を書く YAML のファイルです。
 ファイルが無ければ既定の値で動くので、既定から変えたいキーだけを書きます。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:4a231543, TBL-core-004:3b95b98e] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/config.md#configuration-keys-are-read-in-nested-form:362c94cc, docs/decisions/core/config.md#the-location-of-decision-documents-is-pointed-at-by-decisionsdocuments-with-docsdecisions-as-the-default-and-the-keys-for-the-locations-of-the-old-form-are-removed:4a2eacb8, docs/decisions/core/config.md#the-keys-for-the-limits-on-line-count-and-number-of-requirements-limitslines-and-limitsrequirements-are-removed:cc3f8709] -->
 
 すべてのキーを既定の値で書くと次のようになります。
-キーは入れ子の形で書きます（`decisions:` の下に `records:`）。
+キーは入れ子の形で書きます（`decisions:` の下に `documents:`）。
 
 ```yaml
-ir: docs/ir
 decisions:
-  records: docs/decision/records
-  adr: docs/decision/adr
+  documents: docs/decisions
 tests:
   files:
     - "src/**/*.rs"
@@ -42,9 +40,6 @@ surface:
 #   ja:
 #     language_name: 日本語
 #     pages: "{n} ページ"
-limits:
-  lines: 200
-  requirements: 10
 vague_words: [適切に, 必要に応じて, 通常は, など]
 ```
 
@@ -54,13 +49,11 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 
 ## キーの一覧
 
-<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/overview-toc.md#how-the-index-is-bundled-and-ordered-is-written-in-the-one-table-of-contents-file-that-overviewtoc-points-at:0883f676, docs/decisions/core/config.md#the-location-of-decision-documents-is-pointed-at-by-decisionsdocuments-with-docsdecisions-as-the-default-and-the-keys-for-the-locations-of-the-old-form-are-removed:4a2eacb8, docs/decisions/core/config.md#the-keys-for-the-limits-on-line-count-and-number-of-requirements-limitslines-and-limitsrequirements-are-removed:cc3f8709] -->
 
 | キー | 値の型 | 既定 | 説明 |
 |---|---|---|---|
-| `ir` | パス（文字列） | `docs/ir` | IR の置き場のディレクトリ |
-| `decisions.records` | パス（文字列） | `docs/decision/records` | 判断の記録の置き場のディレクトリ。その下のファイルの決定を出典に指せる |
-| `decisions.adr` | パス（文字列） | `docs/decision/adr` | ADR の置き場のディレクトリ |
+| `decisions.documents` | パス（文字列） | `docs/decisions` | 決定の文書の置き場のディレクトリ（[決定の文書を書く](decision-documents.ja.md)） |
 | `tests.files` | glob の一覧 | `src/**/*.rs`、`tests/**/*.rs` | テストのファイルの置き場 |
 | `tests.rust.attributes` | 属性のパスの一覧 | 空 | `#[test]` のほかにテストと数える Rust の属性（例 `kani::proof`） |
 | `tests.rust.macros` | マクロの名前の一覧 | 空 | 中の関数をテストと数える Rust のマクロ。`!` を除いて書く（例 `proptest`） |
@@ -72,40 +65,38 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 | `surface.unspecified` | パス（文字列） | 無し | 未記載の面の一覧のファイル。無ければ一覧は0件 |
 | `overview.files` | glob の一覧 | `overview` の省略可。記載時は必須 | 全体像の元データの置き場。`overview` が無ければ全体像の元データを読まず、`overview build` と `serve` は止まる |
 | `overview.toc` | パス（文字列） | `overview` の省略可。記載時は必須 | 全体像の目次のファイル。一覧のページの入れ子と順番を決める。`overview` があれば `check`、`status`、`overview build`、`overview serve` が読み、指す先が無いか読めなければ止まる |
-| `limits.lines` | 正の整数 | `200` | IR の文書の行数の上限。超えると `too_many_lines` の注意 |
-| `limits.requirements` | 正の整数 | `10` | 1つの文書の要求の数の上限。超えると `too_many_requirements` の注意 |
-| `vague_words` | 語の一覧 | `適切に`、`必要に応じて`、`通常は`、`など` | 曖昧語。IR の文に含まれると `vague_word` の誤り |
-| `languages` | 言語タグの一覧 | 無し（英語 `en` だけ） | 言語の一覧。最初の言語が接尾辞の無いファイルの言語。2つ以上なら IR、ガイド、全体像の元データ、目次を言語ごとの対で持つ（[言語と対](#言語と対--languages-と-labels)） |
+| `vague_words` | 語の一覧 | `適切に`、`必要に応じて`、`通常は`、`など` | 曖昧語。決定の決めたことか確認することに含まれると `vague_word` の誤り |
+| `languages` | 言語タグの一覧 | 無し（英語 `en` だけ） | 言語の一覧。最初の言語が接尾辞の無いファイルの言語。2つ以上なら決定の文書、ガイド、全体像の元データ、目次を言語ごとの対で持つ（[言語と対](#言語と対--languages-と-labels)） |
 | `labels` | 言語タグから、UI の文字の鍵から文字列への対応 | 無し（英語の文字は kotowari が持つ） | 言語ごとの UI の文字。英語でない言語はすべての鍵を書く |
 
 パスはすべて基準のディレクトリからの相対パスで書きます（[基準のディレクトリ](#基準のディレクトリ)）。
-全部の定義は [config の IR](../ir/core/config.ja.md) の TBL-core-004 にあります。
+ほかのキーは書けません。古い形のキー `ir`、`decisions.records`、`decisions.adr`、`limits.lines`、`limits.requirements` も、知らないキーと同じく設定の誤りで止まります。
+全部の定義は [設定の決定](../decisions/core/config.ja.md) にあります。
 
 ## 言語と対 — `languages` と `labels`
 
-<!-- @kotowari[REQ-core-334:c2dc1692, REQ-core-335:b51997f0, REQ-core-336:03710aae, REQ-core-337:40375497, REQ-core-339:81c3b742, REQ-core-351:bfccf5f2, REQ-core-352:7b5a3a7f, TBL-core-046:105022e3] -->
+<!-- @kotowari[docs/decisions/core/translation-pairs.md#the-language-list-is-decided-by-the-configurations-languages:5f3acf76, docs/decisions/core/translation-pairs.md#if-a-language-tag-has-the-wrong-form-or-is-duplicated-it-stops:a295d74f, docs/decisions/core/translation-pairs.md#guides-overview-source-data-and-the-table-of-contents-have-a-side-for-every-language-of-the-language-list:a581e9d7, docs/decisions/core/translation-pairs.md#the-sides-of-a-pair-are-told-apart-by-file-names-and-configuration-only:3c4056af, docs/decisions/core/translation-pairs.md#the-agreement-record-holds-the-blob-hash-of-each-side-as-of-the-last-time-they-were-confirmed-to-have-the-same-content:f29e5af9, docs/decisions/core/overview-languages.md#kotowari-holds-the-english-ui-strings-and-other-languages-are-written-in-the-configurations-labels:5ea9a22b, docs/decisions/core/overview-languages.md#if-the-ui-string-configuration-is-missing-something-or-a-number-is-placed-wrongly-it-stops-with-a-configuration-error:0777130f] -->
 
 `languages` は言語タグの並びです（例 `[ja, en]`）。
 言語タグは小文字の英字、数字、`-` だけからなり、空の文字列、ほかの文字を含む言語タグ、同じ言語タグの2回目は設定の誤りで止まります。
 鍵が無いか空の一覧なら英語 `en` だけとみなします。
 最初の言語を「先頭の言語」と呼び、そのファイルは接尾辞の無い名前（`foo.md`）を持ちます。
 
-言語が2つ以上のとき、IR の置き場の文書（`CONTEXT.md` と `FLAGS.md` を含む）、ガイド、全体像の元データ、目次を、言語ごとのファイルの組（対）として読みます。
-判断の記録と ADR の置き場のファイルは対にしません。
+言語が2つ以上のとき、決定の文書（各群の用語集 `CONTEXT.md` を含む）、ガイド、全体像の元データ、目次を、言語ごとのファイルの組（対）として読みます。
 
 - ほかの言語のファイルは同じディレクトリに、拡張子の前に言語タグを入れた名前で置きます（`foo.en.md`、`toc.en.yaml`）。`guides.files` や `overview.files` の glob に当たるかを問わず、名前で探します
 - 先頭の言語の言語タグの付いた `foo.ja.md` や、一覧に無い言語の `foo.fr.md` は、ただの文書 `foo.ja.md` として読みます
 - 先頭の言語のファイルの横に一致の記録 `foo.i18n.yaml` を置きます。中身は各言語のファイル名（ディレクトリを除く）を鍵、最後に同じ内容だと確かめたときのそのファイルの git の blob hash（`git hash-object` と同じ40文字の16進の小文字）を値にした対応表です。値は `kotowari list` の `translations` から写します（[list](commands/list.ja.md)）
-- 欠けた側、一致の記録の誤り、記録と違う hash、文以外の骨組みの食い違い、切り替えの行の誤り、ほかの言語の側や判断の記録へのリンクは、それぞれ誤りになります（[指摘](findings.ja.md)）
+- 欠けた側、一致の記録の誤り、記録と違う hash、文以外の骨組みの食い違い、切り替えの行の誤り、ほかの言語の側へのリンク、決定の文書から `docs/frozen/` へのリンクは、それぞれ誤りになります（[指摘](findings.ja.md)）
 
 ```yaml
-# docs/ir/a.i18n.yaml（値は kotowari list の translations から写す。ここでは例）
+# docs/decisions/shop/a.i18n.yaml（値は kotowari list の translations から写す。ここでは例）
 a.md: 78981922613b2afb6025042ff6bd878ac1994e85
 a.en.md: 0c3b7c0b5b2f3a4d1e8f6a9b2c4d5e6f7a8b9c0d
 ```
 
 `labels` は言語ごとの UI の文字です。
-UI の文字は、全体像のページと切り替えの行に kotowari が書く、元データにも IR にも無い文字です。
+UI の文字は、全体像のページと切り替えの行に kotowari が書く、元データにも決定の文書にも無い文字です。
 英語 `en` の UI の文字は kotowari が持ち、`labels.en` に書いた鍵だけを置き換えます。
 英語でない言語は、`labels.<言語タグ>` に次のすべての鍵を書きます。
 欠けた鍵、知らない鍵、`languages` に無い言語タグ、数を入れる鍵で `{n}` をちょうど1つ含まない値は設定の誤りで止まります。
@@ -119,7 +110,7 @@ UI の文字は、全体像のページと切り替えの行に kotowari が書�
 | `stale_sections` | 一覧の古い節の数 | はい | `{n} sections to review` |
 | `open_items` | 一覧の札が `open` の項目の数 | はい | `{n} open` |
 | `planned_items` | 一覧の札が `planned` の項目の数 | はい | `{n} planned` |
-| `stale_mark` | 古い節の見出しの近くの印 | いいえ | `Not reviewed since the IR changed` |
+| `stale_mark` | 古い節の見出しの近くの印 | いいえ | `Not reviewed since the decisions changed` |
 | `outline_stale` | アウトラインの古い節の印 | いいえ | `not reviewed` |
 | `superseded` | 置き換え済みの参照の印 | いいえ | `(superseded)` |
 | `deferred` | 後回しの参照の印 | いいえ | `(deferred)` |
@@ -128,7 +119,7 @@ UI の文字は、全体像のページと切り替えの行に kotowari が書�
 
 ## 設定ファイルの場所
 
-<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c, REQ-core-020:2b67aa66] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | 指定 | 読むファイル |
 |---|---|
@@ -149,9 +140,9 @@ $ echo $?
 
 ## 基準のディレクトリ
 
-<!-- @kotowari[REQ-core-009:6b5a71a4, TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-010:5217a2ba] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba, docs/decisions/core/base-directory.md#paths-in-configuration-values-and-the-path-of-the-output-are-relative-to-the-base-directory:712ec2ff] -->
 
-設定の値のパス、出典のパス、出力の `path` は、すべて基準のディレクトリからの相対パスです。
+設定の値のパスと出力の `path` は、すべて基準のディレクトリからの相対パスです。
 基準のディレクトリは次の順で決まります。
 
 | 順 | 条件 | 基準のディレクトリ |
@@ -167,26 +158,26 @@ $ echo $?
 ```console
 $ cd tests
 $ kotowari list --format text
-REQ-001 unit 会員の割引 docs/ir/discount.md:7 tests=1
+docs/decisions/shop/discount.md#members-get-10-off-their-orders - Members get 10% off their orders docs/decisions/shop/discount.md:5 tests=0
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
   tests/discount.rs:1 member_gets_ten_percent_off
-REQ-002 unit 会員でない注文 docs/ir/discount.md:15 tests=1
+docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted - Orders of non-members are not discounted docs/decisions/shop/discount.md:21 tests=0
+C-shop-discount-2 - A guest's order of 1000 is priced at 1000 docs/decisions/shop/discount.md:35 tests=1
   tests/discount.rs:5 non_member_pays_full_price
-EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
-  tests/discount.rs:1 member_gets_ten_percent_off
 ```
 
 ### パスの書き方
 
-<!-- @kotowari[REQ-core-110:04555fb0, REQ-core-010:5217a2ba] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#paths-in-configuration-values-are-normalized-before-comparing-and-before-output:a1dd7f03, docs/decisions/core/base-directory.md#paths-in-configuration-values-and-the-path-of-the-output-are-relative-to-the-base-directory:712ec2ff] -->
 
 設定の値のパスは、比べる前と出力の前に正規化されます。
 末尾の `/` と先頭の `./` を除き、`//` と `/./` を1つの `/` に畳み、`\` を `/` に直し、`a/..` を畳みます。
-そのため `./docs/ir/` と `docs/ir` は同じ置き場です。
+そのため `./docs/decisions/` と `docs/decisions` は同じ置き場です。
 先頭が `/` の絶対パスは書けません（[設定の誤り](#設定の誤り)）。
 
 ## ファイルが無いとき、空のとき
 
-<!-- @kotowari[REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 | 状態 | 動き |
 |---|---|
@@ -196,7 +187,7 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
 
 ## 一覧のキー
 
-<!-- @kotowari[REQ-core-015:44b9e418, REQ-core-016:cca736db] -->
+<!-- @kotowari[docs/decisions/core/config.md#a-list-key-accepts-only-a-list-the-list-written-replaces-the-default-and-an-empty-list-is-a-list-with-no-elements:7c2ef13f] -->
 
 一覧のキー（`tests.files`、`guides.files`、`vague_words` など）には一覧だけを書きます。
 書いた一覧は既定の一覧に足されるのではなく、**置き換え**ます。
@@ -211,7 +202,7 @@ tests:
 
 ## glob の読み方
 
-<!-- @kotowari[REQ-core-019:10278003, REQ-core-079:589c548b] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-glob--is-read-recursively-and-hidden-directories-are-entered-only-when-named-by-a-path-component:6f67f22b, docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7] -->
 
 `tests.files`、`guides.files`、`surface.files`、`overview.files` の glob は次のように読みます。
 
@@ -231,26 +222,28 @@ tests:
 
 ## キーごとの補足
 
-### `ir`、`decisions.records`、`decisions.adr`
+### `decisions.documents`
 
-<!-- @kotowari[REQ-core-018:6ea3e08f] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46, docs/decisions/core/config.md#the-location-of-decision-documents-is-pointed-at-by-decisionsdocuments-with-docsdecisions-as-the-default-and-the-keys-for-the-locations-of-the-old-form-are-removed:4a2eacb8] -->
 
 `kotowari check` は、指す先が無い、ディレクトリでない、読めないときに、読めないファイルを理由に止まります。
 
 ```console
 $ cat .kotowari/config.yaml
-ir: docs/nothing
+decisions:
+  documents: docs/nothing
 $ kotowari check --format text
 unreadable file: docs/nothing: No such file or directory (os error 2)
 $ echo $?
 2
 ```
 
-置き場があって中に文書が無いだけなら、止まらずに検査します。
+置き場があって中に文書が無いだけなら、止まらずに検査し、テストの検査も行います。
+古い形の `ir`、`decisions.records`、`decisions.adr` はもうキーではありません。`decisions.documents` だけを書きます。
 
 ### `tests.rust.attributes` と `tests.rust.macros`
 
-<!-- @kotowari[TBL-core-017:aff9f804, EX-core-017:d7ca524e, EX-core-018:0b4c0d06] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868] -->
 
 | キー | 書き方 | 一致の仕方 |
 |---|---|---|
@@ -262,7 +255,7 @@ $ echo $?
 
 ### `tests.rules`
 
-<!-- @kotowari[REQ-core-121:6502b5d5, REQ-core-186:cfb141ec, REQ-core-187:a464f692, REQ-core-188:e1781d9c] -->
+<!-- @kotowari[docs/decisions/core/query-rules.md#queries-are-added-with-testsrules-in-the-configuration-and-the-bundled-queries-cannot-be-removed:ec930518, docs/decisions/core/query-rules.md#a-rule-file-is-read-as-an-ast-grep-rule-yaml-as-it-is:10835ba2, docs/decisions/core/query-rules.md#the-files-and-ignores-of-a-rule-are-honoured-with-the-same-reading-as-ast-grep:12882344, docs/decisions/core/query-rules.md#the-fix-message-severity-note-and-metadata-of-a-rule-are-not-used:701450c7] -->
 
 同梱の問い合わせで見つからない形のテストを、ast-grep のルールで足します。
 並べたパスは基準のディレクトリからの相対パスで、glob は使えません。
@@ -300,7 +293,7 @@ rule:
 `tests/discount.bench.ts`:
 
 ```ts
-// @kotowari[REQ-001]
+// @kotowari[C-shop-discount-1]
 bench('member discount is fast', () => {});
 
 bench('non-member is fast', () => {});
@@ -316,20 +309,20 @@ tests/discount.bench.ts:4 [error] test_without_id non-member is fast
 
 ### `guides.files`
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 ガイドの置き場です。書き方は [ガイドを書く](writing-guides.ja.md) を見てください。
 
 - 鍵が無いか空の一覧なら、ガイドを1つも読みません。
 - ガイドを読むのは `kotowari check` と `kotowari status` だけです。
 - 1つのファイルが `guides.files` と `tests.files` の両方に当たると、設定の誤りで止まります（[つまずき](#ガイドとテストの置き場が重なって止まる)）。
-- IR や判断の記録の置き場と重なるのはかまいません。そのファイルはガイドとしても読まれます。
+- 決定の文書の置き場と重なるのはかまいません。そのファイルはガイドとしても読まれます。
 
 ### `surface.files`、`surface.rules`、`surface.unspecified`
 
-<!-- @kotowari[REQ-core-224:f13b971e, REQ-core-225:be4cdd0b, REQ-core-229:7909d808] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surface-rules-and-surface-files-are-read-with-the-same-construction-as-testsrules-and-testsfiles:77fb35de, docs/decisions/core/surface.md#when-the-surface-configuration-keys-are-not-all-present-every-command-that-reads-the-configuration-stops:ab3a2fa6, docs/decisions/core/surface.md#only-check-and-status-read-surfaces:77268ec4] -->
 
-コードから利用者に見える面（CLI のサブコマンドやフラグ、設定の鍵など）を取り出し、IR に書かれているかを確かめる検査の設定です。
+コードから利用者に見える面（CLI のサブコマンドやフラグ、設定の鍵など）を取り出し、決定に引用されているかを確かめる検査の設定です。
 使い方は [面の検査](surface.ja.md) を見てください。
 
 - `surface.files` の glob の読み方と走査は `tests.files` と同じです。読むのは面の規則の言語のファイルだけで、それが読めないか UTF-8 でないときの停止はテストのファイルと同じです。ほかのファイルは読まないので、`src/**` のように広く書いて画像などに当たっても止まりません。
@@ -347,38 +340,35 @@ config error: .kotowari/config.yaml: surface.rules is set but surface.files is e
 
 ### `mutants.equivalents`
 
-<!-- @kotowari[REQ-core-148:9dc7ec0a] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#judgments-of-equivalence-are-placed-in-the-yaml-list-that-mutantsequivalents-in-the-configuration-points-at:820edb3b] -->
 
 等価の一覧のファイルを指します。読むのは `kotowari mutants` だけです。
 `kotowari check` は値の形（文字列か、絶対パスでないか）を確かめるだけで、ファイルの有無は見ません。
 一覧の書き方は [kotowari mutants](commands/mutants.ja.md) を見てください。
 
-### `limits.lines`、`limits.requirements`、`vague_words`
+### `vague_words`
 
-<!-- @kotowari[REQ-core-038:170fdd3e, REQ-core-039:f3d75ba1, REQ-core-066:79261ab9] -->
+<!-- @kotowari[docs/decisions/core/ir-document.md#the-line-count-and-requirement-count-limit-notices-too_many_lines-and-too_many_requirements-are-removed:776e616c, docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b] -->
 
-| キー | 超えた・当たったときの指摘 | 重さ |
-|---|---|---|
-| `limits.lines` | `too_many_lines`（IR の文書の行数） | 注意 |
-| `limits.requirements` | `too_many_requirements`（話題ごとの文書の要求の数） | 注意 |
-| `vague_words` | `vague_word`（検査の対象の行に語が部分一致で含まれる） | 誤り |
+決定の決めたことか確認することの節の行に、`vague_words` の語が部分一致で含まれると、その行に `vague_word` の誤りが出ます。対ではどの側も見ます。
+問題と見送った案、コードブロック、二重引用符の中は見ません。
+文書の行数や決定の数の上限はありません。
 
 ```console
 $ cat .kotowari/config.yaml
-limits:
-  lines: 20
-vague_words: [割引]
+vague_words: [priced]
 $ kotowari check --format text
-docs/ir/discount.md:- [notice] too_many_lines 31
-docs/ir/discount.md:13 [error] vague_word 割引
-docs/ir/discount.md:21 [error] vague_word 割引
+docs/decisions/shop/discount.md:15 [error] vague_word priced
+docs/decisions/shop/discount.md:19 [error] vague_word priced
+docs/decisions/shop/discount.md:31 [error] vague_word priced
+docs/decisions/shop/discount.md:35 [error] vague_word priced
 $ echo $?
 1
 ```
 
 ## 設定の誤り
 
-<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:34f4b3ee, TBL-core-004:3b95b98e, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-configuration-file-cannot-be-read-as-yaml-or-its-keys-and-values-do-not-follow-the-rules-kotowari-stops-with-a-configuration-error:586c1e39, docs/decisions/core/surface.md#when-the-surface-configuration-keys-are-not-all-present-every-command-that-reads-the-configuration-stops:ab3a2fa6, docs/decisions/core/overview-data.md#if-the-overview-source-data-overlaps-the-location-of-guides-or-tests-it-stops-with-a-configuration-error:297c8b21, docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/overview-toc.md#if-the-table-of-contents-file-is-also-in-the-location-of-source-data-guides-or-tests-it-stops-with-a-configuration-error:2c8a72ee, docs/decisions/core/translation-pairs.md#if-a-language-tag-has-the-wrong-form-or-is-duplicated-it-stops:a295d74f, docs/decisions/core/overview-languages.md#if-the-ui-string-configuration-is-missing-something-or-a-number-is-placed-wrongly-it-stops-with-a-configuration-error:0777130f] -->
 
 次のどれかがあると、kotowari は検査を行わずに止まります（終了コード 2）。
 標準エラーの1行目は `config error: ` で始まり、設定ファイルのパスと理由が続きます。
@@ -386,13 +376,13 @@ $ echo $?
 
 | 場面 | 例 |
 |---|---|
-| YAML として読めない | `ir: [` |
-| 知らないキー | `limit:`（正しくは `limits:`） |
-| 同じキーの2回目 | `ir:` を2行 |
-| 値が null のキー | `ir:` だけの行 |
+| YAML として読めない | `guides: [` |
+| 知らないキー | `test:`（正しくは `tests:`） |
+| 古い形のキー | `ir:`、`decisions.records`、`decisions.adr`、`limits.lines`、`limits.requirements`（知らないキーとして読む） |
+| 同じキーの2回目 | `guides:` を2行 |
+| 値が null のキー | `guides:` だけの行 |
 | 型の違う値 | `files: "tests/**/*"`（一覧でなく文字列） |
-| 負の数、0 | `lines: 0` |
-| 絶対パス（先頭が `/`） | `ir: /docs/ir` |
+| 絶対パス（先頭が `/`） | `documents: /docs/decisions` |
 | `vague_words` の空の文字列、同じ語の2回目 | `vague_words: [""]` |
 | `tests.files`、`guides.files`、`surface.files`、`overview.files` の glob として読めない要素 | `files: ["tests/[a"]` |
 | `surface.files` と `surface.rules` の片方だけ、または `surface.rules` の無い `surface.unspecified` | [`surface.*`](#surfacefilessurfacerulessurfaceunspecified) |
@@ -409,16 +399,17 @@ $ echo $?
 
 ```console
 $ cat .kotowari/config.yaml
-ir:
+guides:
 $ kotowari check --format text
-config error: .kotowari/config.yaml: null value for key: ir
+config error: .kotowari/config.yaml: null value for key: guides
 ```
 
 ```console
 $ cat .kotowari/config.yaml
-ir: /docs/ir
+decisions:
+  documents: /docs/decisions
 $ kotowari check --format text
-config error: .kotowari/config.yaml: absolute path not allowed for ir: /docs/ir
+config error: .kotowari/config.yaml: absolute path not allowed for decisions.documents: /docs/decisions
 ```
 
 ```console
@@ -431,18 +422,20 @@ config error: .kotowari/config.yaml: invalid glob pattern: tests/[a
 
 ```console
 $ cat .kotowari/config.yaml
-ir: docs/ir
-ir: docs/ir
+guides:
+  files: ["guides/*.md"]
+guides:
+  files: ["guides/*.md"]
 $ kotowari check --format text
-config error: .kotowari/config.yaml: duplicate key: ir
+config error: .kotowari/config.yaml: duplicate key: guides
 ```
 
 同じキーの2回目は、そのキーの名前だけを1行で示します。
-YAML の読み方に関わるほかの誤り（知らないキー、型の違い、0）は、行と列の付いた説明が続きます（[つまずき](#知らないキーで止まる)）。
+YAML の読み方に関わるほかの誤り（知らないキー、型の違い）は、行と列の付いた説明が続きます（[つまずき](#知らないキーで止まる)）。
 
 ### `tests.rules` のファイルの誤り
 
-<!-- @kotowari[REQ-core-189:5b4f081a, EX-core-315:92402027, EX-core-378:e7924545, EX-core-379:8e774593] -->
+<!-- @kotowari[docs/decisions/core/query-rules.md#if-a-rule-file-has-an-error-it-stops-as-a-configuration-error:b29a5e1d] -->
 
 次のときも設定の誤りで止まります。
 
@@ -475,32 +468,29 @@ config error: invalid rule in tests.rules: rules/c.yml: unknown language: cobol
 
 ### 知らないキーで止まる
 
-<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-configuration-file-cannot-be-read-as-yaml-or-its-keys-and-values-do-not-follow-the-rules-kotowari-stops-with-a-configuration-error:586c1e39] -->
 
 ```console
 $ cat .kotowari/config.yaml
-ir: docs/ir
-limit:
-  lines: 100
+tests:
+  file: ["tests/**/*.rs"]
 $ kotowari check --format text
-config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
- --> <input>:2:1
+config error: .kotowari/config.yaml: error: line 2 column 3: unknown field `file`, expected one of files, rust, rules
+ --> <input>:2:3
   |
-1 | ir: docs/ir
-2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
-3 |   lines: 100
-  |
+1 | tests:
+2 |   file: ["tests/**/*.rs"]
+  |   ^ unknown field `file`, expected one of files, rust, rules
 $ echo $?
 2
 ```
 
-キーの綴りの誤りです。`expected one of` の後に最上位で書けるキーが並びます。
-入れ子のキー（`decisions.records`）を `decisions.records:` と1行に書いた場合も、知らないキーになります。
+キーの綴りの誤りです。`expected one of` の後に、その階層で書けるキーが並びます。
+入れ子のキー（`decisions.documents`）を `decisions.documents:` と1行に書いた場合も、知らないキーになります。
 
 ### テストを足した glob で、元のテストが読まれなくなった
 
-<!-- @kotowari[REQ-core-015:44b9e418] -->
+<!-- @kotowari[docs/decisions/core/config.md#a-list-key-accepts-only-a-list-the-list-written-replaces-the-default-and-an-empty-list-is-a-list-with-no-elements:7c2ef13f] -->
 
 `tests.files` を書くと既定の `src/**/*.rs` と `tests/**/*.rs` は消えます。
 元の置き場も読ませたいなら、一覧にすべて並べます。
@@ -510,9 +500,8 @@ $ cat .kotowari/config.yaml
 tests:
   files: ["spec/**/*.rs"]
 $ kotowari check --format text
-docs/ir/discount.md:7 [error] requirement_without_test REQ-001
-docs/ir/discount.md:15 [error] requirement_without_test REQ-002
-docs/ir/discount.md:26 [error] scenario_without_test EX-001
+docs/decisions/shop/discount.md:19 [error] confirmation_without_test C-shop-discount-1
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
 $ kotowari status --format text | grep '^tests'
 tests marks=0
 ```
@@ -522,7 +511,7 @@ tests marks=0
 
 ### ガイドとテストの置き場が重なって止まる
 
-<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 ```console
 $ cat .kotowari/config.yaml
@@ -542,14 +531,14 @@ $ echo $?
 
 ### `kotowari.toml` が読まれない
 
-<!-- @kotowari[REQ-core-020:2b67aa66] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 設定は `.kotowari/config.yaml` だけです。
 直下の `kotowari.toml` は、中身に誤りがあっても読まれず、既定の値で検査されます。
 
 ## 関連
 
-- 仕様: [config の IR](../ir/core/config.ja.md)、[基準のディレクトリの IR](../ir/core/base-directory.ja.md)、[設定で足す問い合わせの IR](../ir/core/query-rules.ja.md)
+- 仕様: [設定](../decisions/core/config.ja.md)、[基準のディレクトリ](../decisions/core/base-directory.ja.md)、[設定で足す問い合わせ](../decisions/core/query-rules.ja.md)
 - 全コマンド共通の書式、終了コード、停止: [CLI](cli.ja.md)
 - テストの見つけ方と印: [テストに印を付ける](marks.ja.md)
 - ガイドの置き場と印: [ガイドを書く](writing-guides.ja.md)

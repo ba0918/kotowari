@@ -1,6 +1,6 @@
 //! スキル kotowari の references に写した本体の値が、本体のコードと一致することの検査
-//! （REQ-core-125、REQ-core-126。REQ-core-127 は src/cli/tests.rs）。
-//! 突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
+//! （コマンドの一覧は src/cli/tests.rs）。
+//! 突き合わせる相手は本体のコードが持つ値で、決定の文書の表ではない。
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -80,11 +80,11 @@ fn only_yaml_block(markdown: &str) -> String {
     blocks.pop().unwrap()
 }
 
-// --- REQ-core-125: 指摘の種類の一致 ---
+// --- 指摘の種類の一致 ---
 
-// @kotowari[REQ-core-125]
+// @kotowari[C-core-skillref-1, C-core-skillref-4]
 #[test]
-fn req_125_findings_reference_kinds_match_the_code() {
+fn findings_reference_kinds_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "Kind");
     let in_code: BTreeSet<String> = kotowari_core::FindingKind::ALL
         .iter()
@@ -96,26 +96,22 @@ fn req_125_findings_reference_kinds_match_the_code() {
     );
 }
 
-// --- REQ-core-126: 既定の一致 ---
+// --- 既定の一致 ---
 
-// @kotowari[REQ-core-126]
+// @kotowari[C-core-skillref-3]
 #[test]
-fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
+fn config_reference_setup_yaml_parses_to_the_defaults() {
     let yaml = only_yaml_block(&read_reference("config.md"));
-    // 不在の鍵は既定で埋まるので、既定のある11個の鍵の経路が YAML に書かれていることを先に見る（TBL-core-004）
+    // 不在の鍵は既定で埋まるので、既定のある鍵の経路が YAML に書かれていることを先に見る
     let tree: serde_json::Value = serde_saphyr::from_str(&yaml)
         .unwrap_or_else(|e| panic!("the setup YAML should be readable as a tree: {e}"));
     for path in [
-        "ir",
-        "decisions.records",
-        "decisions.adr",
+        "decisions.documents",
         "tests.files",
         "tests.rust.attributes",
         "tests.rust.macros",
         "tests.rules",
         "guides.files",
-        "limits.lines",
-        "limits.requirements",
         "vague_words",
     ] {
         let mut node = &tree;
@@ -134,6 +130,6 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
     );
 }
 
-// --- REQ-core-127: 停止の文言の一致 ---
+// --- 停止の文言の一致 ---
 // 停止の文言は core、kotowari ライブラリ、CLI の3か所に持つので、3つを読めるバイナリの単体テスト
 // （src/cli/tests.rs）で突き合わせる

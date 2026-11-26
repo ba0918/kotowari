@@ -6,38 +6,38 @@ This page explains how to use specification checks and Markdown value extraction
 
 ## Choosing a crate
 
-<!-- @kotowari[REQ-core-306:713197d2, REQ-core-308:667de7a9, TBL-core-040:4f46993e] -->
+<!-- @kotowari[docs/decisions/core/library-crates.md#packages-are-split-by-purpose-and-users-choose-a-package-by-purpose:9a903158, docs/decisions/core/library-crates.md#the-judgement-of-test-correspondence-receives-the-found-tests-and-markers-and-does-not-analyse-sources:66da2e57] -->
 
 Use `kotowari` for operations on a repository, and `kotowari-core` for in-memory computation only.
-`kotowari-source-analysis` discovers tests and surfaces from strings and returns core types that include the original strings and diagnostics. It does not fetch files or match them against the IR.
+`kotowari-source-analysis` discovers tests and surfaces from strings and returns core types that include the original strings and diagnostics. It does not fetch files or match them against the decision documents.
 `kotowari-overview` checks in-memory overview data and builds the reference table, the stale sections and the rendering input. `kotowari-markdown-view` builds overview pages in memory from the rendering input, and depends on no other package in the workspace.
 Use `kotowari-markdown-schema` for schema computation and `kotowari-markdown-schema-io` for loading.
 The CLI packages are `kotowari-cli` and `kotowari-mds`. `serve`, which serves the overview, lives in `kotowari-cli`, not in the libraries.
 
 ## Loading and the lifetime of results
 
-<!-- @kotowari[REQ-core-310:ba432526, REQ-core-316:f465729a, TBL-core-041:cd11e1e1] -->
+<!-- @kotowari[docs/decisions/core/library-api.md#another-rust-application-calls-kotowaris-operations-as-methods-of-project-with-typed-inputs:c11cbaab, docs/decisions/core/library-inputs.md#already-read-results-can-be-reused-and-do-not-change-until-explicitly-read-again:109328a9] -->
 
 State the starting point explicitly with `Project::new(ProjectOptions::new(absolute_start))`.
 `check`, `list`, `query`, `status`, `plan` and `mutants` return typed results. `check` and `status` include the findings on overview data and the `overview` group.
 `overview_prepare` checks and renders the overview data without writing files. `write()` on the returned result writes under `.kotowari/cache/overview/`. `overview_build` does both in sequence and returns the lists of files written and files removed, and the number of files not written. `AsyncProject` has the same two.
 Read the findings of a completed run with `findings()` on the result; unreadable files and configuration errors are told apart by `Error` and `ErrorKind`.
 The results of `read()` and `inspect()` can be kept and reused, and are not updated automatically when files change later. To read again, call Project again.
-`plan` and `mutants` do not read the IR.
+`plan` and `mutants` do not read the decision documents.
 
 ## In-memory input and paths
 
-<!-- @kotowari[REQ-core-314:baa022e4, REQ-core-315:6a916b03, REQ-core-322:dedf846a, REQ-core-323:77b70fdf] -->
+<!-- @kotowari[docs/decisions/core/library-inputs.md#a-public-entry-point-is-provided-that-parses-the-string-of-a-decision-document-and-returns-read-only-the-decisions-and-confirmations-obtained:6c063685, docs/decisions/core/library-inputs.md#if-a-required-input-group-is-not-provided-inputmissing-is-returned-and-an-empty-group-is-checked-by-the-ordinary-rules:c81b1826, docs/decisions/core/library-paths.md#in-memory-input-is-received-as-pairs-of-content-and-logical-path-and-no-file-is-looked-for:93ddcc73, docs/decisions/core/library-paths.md#the-entry-points-that-read-files-receive-the-working-start-location-and-resolve-from-it-by-the-same-rules-as-the-existing-cli:2fb622cf] -->
 
 `SourceText` holds a relative logical path and the original string. It normalizes separators and dot components, and rejects absolute and empty paths. Building an input group also rejects duplicates within the same group. Parent-relative paths are allowed.
 When the same path is used in another enabled input group, the strings must match too.
 `None` for an input means not provided, and `Some(vec![])` means provided but empty. Groups enabled in the configuration are required, and disabled groups are ignored.
-`ir::parse` also returns items with invalid or missing IDs, together with the positions and findings it obtained. This differs from what the CLI lists.
+`parse_decision_document` in `kotowari-core` takes only the string of one decision document with its logical path, and returns its decisions and confirmations with their lines in the original document. For a document with form errors it also returns what it obtained, together with the findings on the form errors. It needs no other input group.
 The starting points of Project and SchemaLoader, and the Loader's cache base, are absolute paths. If the caller's current directory changes after construction, the resolution base does not change.
 
 ## Schemas and value extraction
 
-<!-- @kotowari[REQ-schema-068:a2ca7ddc, REQ-schema-069:61fa2bf9, REQ-schema-070:ff5208d1] -->
+<!-- @kotowari[docs/decisions/schema/library-extraction.md#a-schema-is-returned-only-after-it-passes-semantic-validation-and-a-parsed-schema-can-be-reused:ae534266, docs/decisions/schema/library-extraction.md#the-normal-entry-point-for-value-extraction-returns-values-only-from-a-document-with-no-violation:9379fe8e, docs/decisions/schema/library-extraction.md#validation-in-the-library-does-not-cancel-the-schemas-open:142c086d] -->
 
 `Schema::parse` validates syntax and meaning, and the result is reused with the result of `Document::parse`.
 `extract_validated` returns values only on success. To read values even when there are findings, use `extract_partial` and look at both the values and the findings.
@@ -47,7 +47,7 @@ SchemaLoader's `load` returns the schema and document as a pair, so you can vali
 
 ## Awaiting from Tokio
 
-<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:e186fe7a, REQ-core-321:5a28ec39, REQ-schema-075:a82f0403] -->
+<!-- @kotowari[docs/decisions/core/library-async.md#the-high-level-operations-can-be-awaited-from-tokio-through-a-tokio-feature-disabled-by-default:c8aac0f2, docs/decisions/core/library-async.md#the-number-of-concurrent-executions-is-limited-per-asynchronous-entry-point-object-and-clones-share-execution-slots:15c39651, docs/decisions/core/library-async.md#stopping-waiting-does-not-stop-processing-that-has-started-and-it-holds-its-execution-slot-until-it-finishes:1608454e, docs/decisions/core/library-async.md#awaiting-outside-a-runtime-or-a-runtime-that-stops-returns-a-failure-whose-kind-can-be-told-apart-without-panicking:91b15c91, docs/decisions/schema/library-io.md#a-call-that-selects-the-tokio-feature-also-gets-the-same-results-as-the-synchronous-one:3539145a] -->
 
 In the two high-level libraries, enabling the `tokio` feature (disabled by default) gives you `AsyncProject` and `AsyncSchemaLoader`.
 They await on the caller's Tokio runtime and create no internal runtime. A missing runtime and task failures are also returned as types.

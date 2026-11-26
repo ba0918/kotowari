@@ -1,4 +1,4 @@
-//! 取得した入力を core に渡す公開の型（TBL-core-042）
+//! 取得した入力を core に渡す公開の型
 
 use super::*;
 
@@ -36,8 +36,7 @@ impl SourceText {
 }
 
 /// Lossless enumeration identity is not the lossy display/rule path.
-/// Text is what the producer actually acquired, including any legacy read-path conversion.
-/// IR display paths are relative to the configured IR place; other paths are project-relative.
+/// Text is what the producer actually acquired. Paths are project-relative.
 #[derive(Debug, Clone)]
 pub struct NativeSourceText {
     pub(super) identity: PathBuf,
@@ -108,9 +107,8 @@ pub(super) fn input_stop(error: crate::StopReason) -> InputError {
 #[derive(Debug, Clone, Default)]
 pub struct ReadInputs {
     pub config: crate::config::Config,
-    pub ir: Option<Vec<SourceText>>,
-    pub records: Option<Vec<SourceText>>,
-    pub adr: Option<Vec<SourceText>>,
+    /// 決定の文書。パスは`基準のディレクトリ`からの相対
+    pub decisions: Option<Vec<SourceText>>,
     pub tests: Option<Vec<TestAnalysis>>,
 }
 
@@ -149,13 +147,13 @@ pub struct CheckInputs {
     pub guides: Option<Vec<SourceText>>,
     pub surface: Option<Vec<SurfaceAnalysis>>,
     pub unspecified: Option<Vec<SourceText>>,
-    /// 追加の指摘の群。渡したものだけを加える（TBL-core-042）
+    /// 追加の指摘の群。渡したものだけを加える
     pub groups: Vec<FindingGroup>,
-    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
+    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む
     pub translations: crate::translations::Pairs,
 }
 
-/// 名前を付けた追加の指摘の群（TBL-core-042）。core は群の意味を知らず、指摘をほかの指摘と
+/// 名前を付けた追加の指摘の群。core は群の意味を知らず、指摘をほかの指摘と
 /// 合わせて並べて数え、名前と数を結果に持たせるだけである
 #[derive(Debug, Clone)]
 pub struct FindingGroup {
@@ -213,9 +211,7 @@ pub(super) fn find_group<'a>(groups: &'a [GroupTally], name: &str) -> Option<&'a
 
 pub struct RepositoryReadInputs {
     pub config: crate::config::Config,
-    pub ir: Vec<NativeSourceText>,
-    pub records: Vec<NativeSourceText>,
-    pub adr: Vec<NativeSourceText>,
+    pub decisions: Vec<NativeSourceText>,
     pub tests: Vec<NativeTestAnalysis>,
 }
 
@@ -224,6 +220,6 @@ pub struct RepositoryCheckInputs {
     pub guides: Option<Vec<NativeSourceText>>,
     pub surface: Option<Vec<NativeSurfaceAnalysis>>,
     pub unspecified: Option<Vec<NativeSourceText>>,
-    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
+    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む
     pub translations: crate::translations::Pairs,
 }

@@ -50,13 +50,13 @@ section anchors. These browser checks supplement `check.py`.
 
 ## Content boundary
 
-Latest product release: `kotowari-v0.5.0`. Guide, README and API guide links target the
-v0.5.0 tag; the guides are English with Japanese pairs.
+Latest product release: `kotowari-v0.8.0`. Guide, README and API guide links target the
+v0.8.0 tag; the guides are English with Japanese pairs.
 
-Sources: README, CHANGELOG, PROJECT, `docs/ir/core/{sources,coverage,test-discovery,
-test-queries,overview-commands,library-api}.md`, `docs/guides/commands/{check,query,status}.md`,
+Sources: README, CHANGELOG, PROJECT, `docs/decisions/core/{decision-documents,confirmations,coverage,
+test-discovery,test-queries,overview-commands,library-api}.md`, `docs/guides/commands/{check,query,status}.md`,
 `docs/guides/{marks,public-crate-api}.md`, `src/cli.rs`, and tests.
-README's Rust-only sentence is stale: the IR, guides, implementation rules and v0.1.0
+README's Rust-only sentence is stale: the decision documents, guides, implementation rules and v0.1.0
 changelog describe the additional bundled languages. The LP follows those sources.
 The command guide clarifies that exit 0 permits notices; the LP does not claim otherwise.
 

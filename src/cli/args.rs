@@ -1,4 +1,4 @@
-//! 引数の解析（REQ-core-001、REQ-core-002、REQ-core-004、REQ-core-107）
+//! 引数の解析
 use super::StopReason;
 use kotowari::Tool;
 use std::path::PathBuf;
@@ -31,7 +31,7 @@ pub enum Cli {
     Check {
         format: Format,
         config_path: Option<PathBuf>,
-        /// テスト側の指摘を終了コードに数えない（REQ-core-357）
+        /// テスト側の指摘を終了コードに数えない
         allow_test_findings: bool,
     },
     /// 項目とテストの一覧を出す
@@ -57,17 +57,17 @@ pub enum Cli {
         format: Format,
         config_path: Option<PathBuf>,
     },
-    /// 全体像を ".kotowari/cache/overview/" の下に書く（REQ-core-293）
+    /// 全体像を ".kotowari/cache/overview/" の下に書く
     OverviewBuild {
         format: Format,
         config_path: Option<PathBuf>,
     },
-    /// 全体像を書いて手元で配る（REQ-core-297）
+    /// 全体像を書いて手元で配る
     OverviewServe {
         port: u16,
         config_path: Option<PathBuf>,
     },
-    /// 計画書の形を検査する（REQ-core-190）
+    /// 計画書の形を検査する
     Plan {
         format: Format,
         /// 計画書のファイルのパス。カレントディレクトリからの相対
@@ -79,15 +79,15 @@ pub enum Cli {
     Version,
 }
 
-/// REQ-core-001: 1つ目の位置引数として受けるコマンド
+/// 1つ目の位置引数として受けるコマンド
 const COMMANDS: [&str; 7] = [
     "check", "list", "mutants", "overview", "plan", "query", "status",
 ];
 
-/// serve の既定のポート（REQ-core-297）
+/// serve の既定のポート
 pub(super) const DEFAULT_PORT: u16 = 4590;
 
-/// REQ-core-304: "--port" の値は1から65535までの10進の整数
+/// "--port" の値は1から65535までの10進の整数
 fn parse_port(value: &str) -> Result<u16, StopReason> {
     let invalid = || StopReason::ArgumentError(format!("invalid port: {value}"));
     if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
@@ -99,9 +99,9 @@ fn parse_port(value: &str) -> Result<u16, StopReason> {
     }
 }
 
-/// 引数を解析する（REQ-core-002, REQ-core-004, REQ-core-107, REQ-core-149, REQ-core-157, REQ-core-190）
+/// 引数を解析する
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
-    // REQ-core-107: --help か --version があればほかの引数を見ない
+    // --help か --version があればほかの引数を見ない
     for arg in args {
         if arg == "--help" {
             return Ok(Cli::Help);
@@ -151,7 +151,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             };
             *slot = Some(value.clone());
         } else if command.is_none() {
-            // REQ-core-001: 1つ目の位置引数は check、list、mutants、plan、query、status のどれか
+            // 1つ目の位置引数は check、list、mutants、plan、query、status のどれか
             if COMMANDS.contains(&arg.as_str()) {
                 command = Some(arg.clone());
             } else {
@@ -170,27 +170,27 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     };
     let config_path = config.map(PathBuf::from);
 
-    // REQ-core-004: "--port" は "overview serve" だけが受ける
+    // "--port" は "overview serve" だけが受ける
     let serve = command == "overview" && positionals.first().map(String::as_str) == Some("serve");
     if port.is_some() && !serve {
         return Err(StopReason::ArgumentError(format!(
             "unexpected option for {command}: --port"
         )));
     }
-    // REQ-core-004: "--allow-test-findings" は "check" だけが受ける
+    // "--allow-test-findings" は "check" だけが受ける
     if allow_test_findings && command != "check" {
         return Err(StopReason::ArgumentError(format!(
             "unexpected option for {command}: --allow-test-findings"
         )));
     }
-    // REQ-core-190: plan は設定を読まないので "--config" を受けない。指す先を見る前に止める
+    // plan は設定を読まないので "--config" を受けない。指す先を見る前に止める
     if command == "plan" && config_path.is_some() {
         return Err(StopReason::ArgumentError(
             "unexpected option for plan: --config".to_string(),
         ));
     }
 
-    // REQ-core-004: "overview serve" は "--format" を受けない
+    // "overview serve" は "--format" を受けない
     if serve && format_str.is_some() {
         return Err(StopReason::ArgumentError(
             "unexpected option for overview serve: --format".to_string(),
@@ -199,16 +199,16 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     let format = Format::parse(format_str.as_deref().unwrap_or("json"))
         .map_err(StopReason::ArgumentError)?;
 
-    // REQ-core-152、REQ-core-158、REQ-core-163: list、query、status は check と同じ条件で、
+    // list、query、status は check と同じ条件で、
     // 同じ理由と文言で停止する
     if command != "mutants" {
-        // REQ-core-004: "mutants" でないコマンドに付けた "--tool"
+        // "mutants" でないコマンドに付けた "--tool"
         if tool.is_some() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected option for {command}: --tool"
             )));
         }
-        // REQ-core-304: "overview" の後の位置引数は "build" か "serve" のちょうど1つ
+        // "overview" の後の位置引数は "build" か "serve" のちょうど1つ
         if command == "overview" {
             return match positionals.as_slice() {
                 [sub] if sub == "build" => Ok(Cli::OverviewBuild {
@@ -225,7 +225,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 ))),
             };
         }
-        // REQ-core-190: "plan" の位置引数は計画書のファイルのパスがちょうど1つ
+        // "plan" の位置引数は計画書のファイルのパスがちょうど1つ
         if command == "plan" {
             let [path] = positionals.as_slice() else {
                 return Err(StopReason::ArgumentError(format!(
@@ -238,7 +238,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 path: PathBuf::from(path),
             });
         }
-        // REQ-core-157: "query" の位置引数は ID がちょうど1つ
+        // "query" の位置引数は ID がちょうど1つ
         if command == "query" {
             let [id] = positionals.as_slice() else {
                 return Err(StopReason::ArgumentError(format!(
@@ -246,8 +246,9 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                     positionals.len()
                 )));
             };
-            // REQ-core-124: ID の形でない位置引数
-            if !kotowari::is_valid_id(id) {
+            // 受けるのは確認することの ID（C-core-confirm-5）と、ガイドの印が指す決定の行き先
+            // （C-core-lang-5）だけ
+            if !kotowari::is_confirmation_id(id) && !kotowari::is_decision_target(id) {
                 return Err(StopReason::ArgumentError(format!("not an id: {id}")));
             }
             return Ok(Cli::Query {
@@ -256,7 +257,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 id: id.clone(),
             });
         }
-        // REQ-core-004: "check"、"list"、"status" の後の位置引数
+        // "check"、"list"、"status" の後の位置引数
         if let Some(extra) = positionals.first() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected argument: {extra}"
@@ -279,7 +280,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         });
     }
 
-    // REQ-core-149: "--tool" は必須で、値は知っている道具の名前だけ
+    // "--tool" は必須で、値は知っている道具の名前だけ
     let Some(tool) = tool else {
         return Err(StopReason::ArgumentError(
             "mutants requires the option: --tool".to_string(),
@@ -287,7 +288,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     };
     let tool = parse_tool(&tool).map_err(StopReason::ArgumentError)?;
 
-    // REQ-core-149: "mutants" の後の位置引数は結果のファイルのパスがちょうど1つ
+    // "mutants" の後の位置引数は結果のファイルのパスがちょうど1つ
     let [results] = positionals.as_slice() else {
         return Err(StopReason::ArgumentError(format!(
             "mutants expects exactly one result file path, got {}",

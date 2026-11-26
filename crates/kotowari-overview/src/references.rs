@@ -1,200 +1,117 @@
-//! 参照を解き、参照の表の1件を作る（REQ-core-285、REQ-core-291、TBL-core-039）
+//! 参照を解き、参照の表の1件を作る（C-core-ovcmd-13、C-core-ovcmd-14、C-core-ovcmd-29、
+//! C-core-ovlang-11）。参照が指すのは決定の見出し（"<文書のパス>#<見出しの行き先の名前>"）か、
+//! 確認することの ID と決定の行き先だけを解く
 
-use kotowari_core::ir::Item;
-use kotowari_core::sources::SourceTarget;
-use kotowari_core::{ListItem, ReadModel};
+use kotowari_core::{ParsedDecision, ParsedDecisionDocument, ReadModel};
 use kotowari_markdown_view::{Reference, ReferenceState};
 use std::collections::BTreeMap;
 
-/// `ID` から、REQ-core-032 の1つ目の`項目`か`シナリオ`と、`後回し`かどうか
+/// 参照の行き先。`先頭の言語`の`側`の決定の文書の位置
+struct Target {
+    document: usize,
+    decision: usize,
+    /// 確認することの ID を指す参照なら、その ID
+    row: Option<String>,
+}
+
 pub(crate) struct Resolver<'a> {
-    read: &'a ReadModel,
-    items: BTreeMap<&'a str, &'a Item>,
-    deferred: BTreeMap<String, bool>,
-    /// 判断の記録、ADR、判断の記録でない Markdown を指す参照に本文を付けるか。`先頭の言語`のページだけ
-    /// 付ける（REQ-core-354）
-    source_bodies: bool,
+    /// `先頭の言語`の`側`の決定の文書。参照はこの側の見出しの名前と ID で解く
+    first: Vec<ParsedDecisionDocument>,
+    /// 本文を取る`側`。`先頭の言語`のページなら None で、first から取る。ほかの言語のページなら、
+    /// その言語の`側`の文書を`先頭の言語`の`側`のパスから引く
+    side: Option<BTreeMap<String, &'a ParsedDecisionDocument>>,
 }
 
 impl<'a> Resolver<'a> {
-    pub(crate) fn new(read: &'a ReadModel) -> Self {
-        Self::with_documents(read, read.documents(), true)
+    pub(crate) fn new(read: &ReadModel) -> Self {
+        Self {
+            first: read.decision_documents(),
+            side: None,
+        }
     }
 
-    /// `先頭の言語`でない言語のページの参照。`IR`の本文はその言語の`側`の文書から取る（REQ-core-354）
+    /// `先頭の言語`でない言語のページの参照。本文はその言語の`側`の同じ決定から取る。`対`の`骨組み`が
+    /// 同じなので、同じ決定は文書の中の同じ位置にある
     pub(crate) fn for_language(
-        read: &'a ReadModel,
-        documents: &'a [kotowari_core::ir::IrDocument],
+        read: &ReadModel,
+        language: &str,
+        documents: &'a [ParsedDecisionDocument],
     ) -> Self {
-        Self::with_documents(read, documents, false)
+        let suffix = format!(".{language}.md");
+        let side = documents
+            .iter()
+            .filter_map(|document| {
+                let first = document.path().strip_suffix(&suffix)?;
+                Some((format!("{first}.md"), document))
+            })
+            .collect();
+        Self {
+            first: read.decision_documents(),
+            side: Some(side),
+        }
     }
 
-    fn with_documents(
-        read: &'a ReadModel,
-        documents: &'a [kotowari_core::ir::IrDocument],
-        source_bodies: bool,
-    ) -> Self {
-        let mut items = BTreeMap::new();
-        // 文書はパスのバイト順、文書の中の項目は行の順に並んでいる
-        for document in documents {
-            for item in document.items() {
-                if let Some(id) = item.id()
-                    && !matches!(item, Item::GlossaryTerm { .. })
-                {
-                    items.entry(id).or_insert(item);
+    fn target(&self, key: &str) -> Option<Target> {
+        for (document, parsed) in self.first.iter().enumerate() {
+            for (decision, found) in parsed.decisions().iter().enumerate() {
+                let heading = key
+                    .strip_prefix(parsed.path())
+                    .and_then(|rest| rest.strip_prefix('#'))
+                    .is_some_and(|anchor| anchor == found.anchor());
+                let row = found.confirmations().iter().any(|row| row.id() == key)
+                    && kotowari_core::is_confirmation_id(key);
+                if heading || row {
+                    return Some(Target {
+                        document,
+                        decision,
+                        row: row.then(|| key.to_string()),
+                    });
                 }
             }
-        }
-        let mut deferred = BTreeMap::new();
-        for item in read.list().items() {
-            let flag = match item {
-                ListItem::Requirement(item) => item.deferred(),
-                ListItem::Scenario(item) => item.deferred(),
-                ListItem::WithExamples(item) => item.deferred(),
-                ListItem::Flag(item) => item.deferred(),
-            };
-            deferred.entry(item.id().to_string()).or_insert(flag);
-        }
-        Self {
-            read,
-            items,
-            deferred,
-            source_bodies,
-        }
-    }
-
-    /// 参照の表の1件。参照が解けなければ None（REQ-core-285）
-    pub(crate) fn resolve(&self, key: &str) -> Option<Reference> {
-        if kotowari_core::ir::is_valid_id(key) {
-            return self.item(key);
-        }
-        if key.contains('#') {
-            return self.read.source_target(key).map(|target| {
-                let mut reference = source(key, target);
-                if !self.source_bodies {
-                    reference.body = None;
-                }
-                reference
-            });
         }
         None
     }
 
-    fn item(&self, id: &str) -> Option<Reference> {
-        let item = self.items.get(id)?;
-        let deferred = self.deferred.get(id).copied().unwrap_or(false);
-        let lines = |lines: &[(usize, String)]| {
-            lines
-                .iter()
-                .map(|(_, line)| line.as_str())
-                .collect::<Vec<_>>()
-                .join("\n")
+    /// 本文を取る決定。ほかの言語の`側`が無いか、その位置に決定が無ければ None
+    fn body_decision(&self, target: &Target) -> Option<&ParsedDecision> {
+        let first = &self.first[target.document];
+        let document = match &self.side {
+            None => first,
+            Some(side) => side.get(first.path())?,
         };
-        let (body, may_defer) = match item {
-            Item::Requirement {
-                kind,
-                name,
-                definitions,
-                statements,
-                ..
-            } => {
-                if kind.as_deref() == Some("algorithm") {
-                    (format!("{name}\n{}", definitions.join(", ")), true)
-                } else {
-                    (lines(statements), true)
-                }
-            }
-            Item::DecisionTable { name, .. } => (name.clone(), false),
-            Item::Property { statements, .. } => (lines(statements), false),
-            Item::Scenario {
-                scenario_text,
-                steps,
-                ..
-            } => {
-                let mut body = vec![scenario_text.as_str()];
-                body.extend(steps.iter().map(|(_, step)| step.as_str()));
-                (body.join("\n"), true)
-            }
-            Item::FlagEntry { body, .. } => (lines(body), false),
-            Item::GlossaryTerm { .. } => return None,
+        document.decisions().get(target.decision)
+    }
+
+    /// 参照の表の1件。参照が解けなければ None（C-core-lang-8）
+    pub(crate) fn resolve(&self, key: &str) -> Option<Reference> {
+        let target = self.target(key)?;
+        let decision = &self.first[target.document].decisions()[target.decision];
+        // 提案の決定とその行は後回し、実装済みは今のもの。置き換え済みは作らない（C-core-ovcmd-29）
+        let state = if decision.state() == Some("proposed") {
+            ReferenceState::Deferred
+        } else {
+            ReferenceState::Current
+        };
+        let shown = self.body_decision(&target);
+        let (label, body) = match &target.row {
+            Some(id) => (
+                id.clone(),
+                shown
+                    .and_then(|shown| shown.confirmations().iter().find(|row| row.id() == id))
+                    .map(|row| row.lines().join("\n")),
+            ),
+            None => (
+                shown
+                    .map_or(decision.heading(), ParsedDecision::heading)
+                    .to_string(),
+                shown.map(|shown| shown.lines().join("\n")),
+            ),
         };
         Some(Reference {
-            key: id.to_string(),
-            label: id.to_string(),
-            body: Some(body),
-            state: if may_defer && deferred {
-                ReferenceState::Deferred
-            } else {
-                ReferenceState::Current
-            },
+            key: key.to_string(),
+            label,
+            body,
+            state,
         })
-    }
-}
-
-/// パスの最後の成分から ".md" を除いたもの
-fn stem(path: &str) -> &str {
-    let name = path.rsplit('/').next().unwrap_or(path);
-    name.strip_suffix(".md").unwrap_or(name)
-}
-
-/// 先頭の "YYYY-MM-DD-" を除く
-fn without_date(name: &str) -> &str {
-    let bytes = name.as_bytes();
-    let is_date = bytes.len() > 11
-        && bytes[..10]
-            .iter()
-            .enumerate()
-            .all(|(index, byte)| match index {
-                4 | 7 => *byte == b'-',
-                _ => byte.is_ascii_digit(),
-            })
-        && bytes[10] == b'-';
-    if is_date { &name[11..] } else { name }
-}
-
-fn source(key: &str, target: SourceTarget) -> Reference {
-    match target {
-        SourceTarget::Decision {
-            path,
-            number,
-            text,
-            superseded,
-        } => Reference {
-            key: key.to_string(),
-            label: format!("{} {number}", without_date(stem(&path))),
-            body: Some(text),
-            state: if superseded {
-                ReferenceState::Superseded
-            } else {
-                ReferenceState::Current
-            },
-        },
-        SourceTarget::Heading {
-            path,
-            heading,
-            lines,
-        } => Reference {
-            key: key.to_string(),
-            label: format!("{} {heading}", stem(&path)),
-            body: Some(lines.join("\n")),
-            state: ReferenceState::Current,
-        },
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // @kotowari[TBL-core-039]
-    #[test]
-    fn decision_labels_drop_the_leading_date_and_the_extension() {
-        assert_eq!(
-            without_date(stem("docs/r/2026-10-02-whole-picture.md")),
-            "whole-picture"
-        );
-        assert_eq!(without_date(stem("docs/r/records.md")), "records");
-        assert_eq!(without_date(stem("2026-10-02.md")), "2026-10-02");
-        assert_eq!(without_date(stem("2026-1x-02-a.md")), "2026-1x-02-a");
     }
 }

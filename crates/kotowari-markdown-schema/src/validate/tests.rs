@@ -33,7 +33,7 @@ fn ok_body() -> &'static str {
     "# ADR-0001: 印\n\n- 状態: 承認済み\n\n## 状況\n\n背景。\n\n## 決定\n\n判断。\n"
 }
 
-// @kotowari[REQ-schema-022, EX-schema-010]
+// @kotowari[C-schema-doc-5]
 #[test]
 fn multiple_titles_is_found() {
     let doc = "# ADR-0001: a\n\n# ADR-0002: b\n\n## 状況\n\n背景。\n\n## 決定\n\n判断。\n";
@@ -41,7 +41,7 @@ fn multiple_titles_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::MultipleTitles));
 }
 
-// @kotowari[REQ-schema-022]
+// @kotowari[C-schema-doc-6]
 #[test]
 fn title_pattern_mismatch_is_found() {
     let doc = "# テストの印\n\n- 状態: 承認済み\n\n## 状況\n\n背景。\n\n## 決定\n\n判断。\n";
@@ -49,7 +49,7 @@ fn title_pattern_mismatch_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::TitlePatternMismatch));
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-024]
+// @kotowari[C-schema-closed-1, C-schema-lang-14]
 #[test]
 fn undeclared_heading_is_found() {
     let doc = "# ADR-0001: a\n\n## 状況\n\n背景。\n\n## 決定\n\n判断。\n\n## 補足\n\n余計な節。\n";
@@ -57,7 +57,7 @@ fn undeclared_heading_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredHeading));
 }
 
-// @kotowari[REQ-schema-001]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn undeclared_line_is_found() {
     let doc = "# ADR-0001: a\n\n## 状況\n\n- 宣言外の箇条書き\n\n## 決定\n\n判断。\n";
@@ -65,7 +65,7 @@ fn undeclared_line_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-030]
+// @kotowari[C-schema-block-15]
 #[test]
 fn continuation_paragraph_is_part_of_the_bullet_not_undeclared() {
     let schema =
@@ -75,7 +75,7 @@ fn continuation_paragraph_is_part_of_the_bullet_not_undeclared() {
     assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-030, REQ-schema-032]
+// @kotowari[C-schema-block-15]
 #[test]
 fn continuation_paragraph_does_not_count_as_statement() {
     let schema = "document:\n  sections:\n    - name: 理由\n      statement:\n        required: true\n      bullets:\n        repeat: { min: 0 }\n";
@@ -84,36 +84,46 @@ fn continuation_paragraph_does_not_count_as_statement() {
     assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
 }
 
-// @kotowari[REQ-schema-054]
+// @kotowari[C-schema-block-32]
 #[test]
-fn bullet_pattern_is_matched_only_on_the_marker_line_not_on_a_lazy_continuation_line() {
-    // 段落の読み方では遅延継続の行も lead 段落に入るが、照合はマーカーの行だけに当てる。
-    // 行の読み方と同じ結果になる
-    let schema = |reading: &str| {
+fn bullet_pattern_is_matched_against_the_lead_paragraph_joined_into_one_line() {
+    let schema = |pattern: &str| {
         format!(
-            "reading: {reading}\ndocument:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: {{ min: 0 }}\n        pattern: \"^親$\"\n"
+            "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: {{ min: 0 }}\n        pattern: \"{pattern}\"\n"
         )
     };
-    let doc = "## 理由\n\n- 親\n続き\n";
-    for reading in ["paragraph", "line"] {
-        let findings = validate_src(&schema(reading), doc, true);
-        assert!(
-            !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "{reading}: {findings:?}"
-        );
-    }
-    let findings = validate_src(&schema("paragraph"), "## 理由\n\n- 子\n続き\n", true);
+    let doc = "## 理由\n\n- a b\n  c\n";
+    assert!(validate_src(&schema("^a b c$"), doc, false).is_empty());
+    let findings = validate_src(&schema("^a b$"), doc, false);
     let mismatch = findings
         .iter()
         .find(|f| f.kind == FindingKind::BulletPatternMismatch)
-        .expect("マーカーの行が pattern に合わなければ指摘する");
+        .expect("つないだ文字が pattern に合わなければ指摘する");
+    assert_eq!(mismatch.line, Some(3));
     assert!(
-        mismatch.detail.contains("bullet \"子\" does"),
+        mismatch.detail.contains("bullet \"a b c\" does"),
         "{mismatch:?}"
     );
 }
 
-// @kotowari[REQ-schema-030]
+// @kotowari[C-schema-block-32, C-schema-block-9]
+#[test]
+fn bullet_pattern_when_reading_by_line_sees_only_the_marker_line() {
+    let schema = "reading: line\ndocument:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n        pattern: \"^親$\"\n      statement: { repeat: { min: 0 } }\n";
+    let findings = validate_src(schema, "## 理由\n\n- 親\n続き\n", false);
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+// @kotowari[C-schema-block-33]
+#[test]
+fn bullet_pattern_does_not_see_continuation_paragraphs_or_child_lists() {
+    let schema = "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n        pattern: \"^a$\"\n        children: { open: true }\n";
+    let doc = "## 理由\n\n- a\n\n  b\n\n  - c\n";
+    let findings = validate_src(schema, doc, false);
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+// @kotowari[C-schema-block-7]
 #[test]
 fn bullet_pattern_is_not_applied_to_continuation_paragraphs() {
     let schema = "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n        pattern: \"^親\"\n";
@@ -122,7 +132,7 @@ fn bullet_pattern_is_not_applied_to_continuation_paragraphs() {
     assert!(!kinds(&findings).contains(&FindingKind::BulletPatternMismatch));
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-031]
+// @kotowari[C-schema-block-20, C-schema-closed-1]
 #[test]
 fn code_block_child_of_list_item_is_undeclared_in_closed_world() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -139,7 +149,7 @@ fn code_block_child_of_list_item_is_undeclared_in_closed_world() {
     );
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-031]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn code_block_as_first_child_of_list_item_is_undeclared_in_closed_world() {
     let schema =
@@ -153,7 +163,7 @@ fn code_block_as_first_child_of_list_item_is_undeclared_in_closed_world() {
     );
 }
 
-// @kotowari[TBL-schema-011]
+// @kotowari[C-schema-block-14]
 #[test]
 fn a_fence_opened_on_a_list_marker_line_closes_at_its_closing_line_in_both_readings() {
     // フェンスで囲んだブロックは字下げの深さに依らずどちらの読み方でもコードブロック。
@@ -178,7 +188,7 @@ fn a_fence_opened_on_a_list_marker_line_closes_at_its_closing_line_in_both_readi
     }
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-031]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn table_as_first_child_of_list_item_is_undeclared_in_closed_world() {
     let schema =
@@ -192,7 +202,7 @@ fn table_as_first_child_of_list_item_is_undeclared_in_closed_world() {
     );
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-031]
+// @kotowari[C-schema-block-20, C-schema-closed-1]
 #[test]
 fn table_child_of_list_item_is_undeclared_in_closed_world() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -209,7 +219,7 @@ fn table_child_of_list_item_is_undeclared_in_closed_world() {
     );
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-032]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn paragraph_after_code_block_lead_is_undeclared_line_in_closed_world() {
     let schema = "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n      codeblock:\n        required: false\n        lang: python\n";
@@ -222,7 +232,7 @@ fn paragraph_after_code_block_lead_is_undeclared_line_in_closed_world() {
     );
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-032]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn paragraph_after_table_lead_is_undeclared_line_in_closed_world() {
     let schema = "document:\n  sections:\n    - name: 理由\n      table:\n        required: false\n        header: [a, b]\n      bullets:\n        repeat: { min: 0 }\n";
@@ -235,7 +245,7 @@ fn paragraph_after_table_lead_is_undeclared_line_in_closed_world() {
     );
 }
 
-// @kotowari[REQ-schema-032]
+// @kotowari[C-schema-block-16]
 #[test]
 fn paragraph_after_code_block_lead_counts_as_a_statement() {
     let schema = "document:\n  sections:\n    - name: 状況\n      statement:\n        required: true\n      codeblock:\n        required: false\n        lang: python\n      bullets:\n        repeat: { min: 0 }\n";
@@ -248,7 +258,7 @@ fn paragraph_after_code_block_lead_counts_as_a_statement() {
     );
 }
 
-// @kotowari[REQ-schema-032]
+// @kotowari[C-schema-block-6]
 #[test]
 fn paragraph_after_code_block_lead_is_subject_to_statement_pattern() {
     let schema = "document:\n  sections:\n    - name: 状況\n      statement:\n        pattern: \"^状況\"\n      codeblock:\n        required: false\n        lang: python\n      bullets:\n        repeat: { min: 0 }\n";
@@ -261,7 +271,7 @@ fn paragraph_after_code_block_lead_is_subject_to_statement_pattern() {
     );
 }
 
-// @kotowari[REQ-schema-032]
+// @kotowari[C-schema-block-16]
 #[test]
 fn image_only_paragraph_after_code_block_lead_is_not_a_statement() {
     let schema = "document:\n  sections:\n    - name: 状況\n      statement:\n        required: true\n      codeblock:\n        required: false\n        lang: python\n      bullets:\n        repeat: { min: 0 }\n";
@@ -269,32 +279,32 @@ fn image_only_paragraph_after_code_block_lead_is_not_a_statement() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::MissingStatement),
-        "先頭がコードブロックのリスト項目の画像だけの段落は文に数えない（REQ-schema-032）: {:?}",
+        "先頭がコードブロックのリスト項目の画像だけの段落は文に数えない: {:?}",
         kinds(&findings)
     );
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "先頭がコードブロックのリスト項目の画像だけの段落は undeclared_line にしない（REQ-schema-032）: {:?}",
+        "先頭がコードブロックのリスト項目の画像だけの段落は undeclared_line にしない: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[C-schema-block-21]
 #[test]
 fn nested_list_items_are_not_counted_as_top_level_bullets() {
-    // 親の bullets の本数はトップレベルの親だけを数え、子は数えない（REQ-schema-031）。
+    // 親の bullets の本数はトップレベルの親だけを数え、子は数えない。
     let schema =
         "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 2 }\n";
     let doc = "## 理由\n\n- 親\n  - 子\n";
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::RepeatMinNotMet),
-        "子は親の本数に数えず、min: 2 が満たされない（REQ-schema-031）: {:?}",
+        "子は親の本数に数えず、min: 2 が満たされない: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-9]
 #[test]
 fn two_top_level_bullets_satisfy_min_two() {
     let schema =
@@ -308,7 +318,7 @@ fn two_top_level_bullets_satisfy_min_two() {
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[C-schema-block-21]
 #[test]
 fn declared_child_field_passes() {
     let schema = r#"
@@ -325,13 +335,13 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言された子フィールドは通る（REQ-schema-031）: {:?}",
+        "宣言された子フィールドは通る: {:?}",
         kinds(&findings)
     );
     assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredField));
 }
 
-// @kotowari[REQ-schema-028, REQ-schema-031]
+// @kotowari[C-schema-block-20, C-schema-block-21]
 #[test]
 fn undeclared_child_field_name_is_a_bullet_and_undeclared_without_rule() {
     let schema = r#"
@@ -348,12 +358,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "一致しない `- 名前: 値` は箇条書きとして扱い、children.bullets が無いので undeclared_line（TBL-schema-007、REQ-schema-031）: {:?}",
+        "一致しない `- 名前: 値` は箇条書きとして扱い、children.bullets が無いので undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[C-schema-block-20]
 #[test]
 fn child_list_without_children_rule_is_undeclared_line() {
     let schema =
@@ -362,16 +372,16 @@ fn child_list_without_children_rule_is_undeclared_line() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "親が children を持たないのに子リストがある場合は undeclared_line（REQ-schema-001）: {:?}",
+        "親が children を持たないのに子リストがある場合は undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[C-schema-block-20]
 #[test]
 fn child_list_under_declared_field_is_undeclared_line() {
     // フィールド行は children 宣言を持たない。宣言済みフィールド行の下の
-    // 子リストは、閉じた世界では undeclared_line（REQ-schema-001）。
+    // 子リストは、閉じた世界では undeclared_line。
     let schema = r#"
 document:
   sections:
@@ -385,16 +395,16 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みフィールド行の下の子リストは undeclared_line（REQ-schema-001）: {:?}",
+        "宣言済みフィールド行の下の子リストは undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[C-schema-block-20]
 #[test]
 fn child_list_under_declared_child_field_is_undeclared_line() {
     // 子フィールド（children.fields の宣言）も children 宣言を持たない。
-    // その下の子リストは undeclared_line（REQ-schema-001）。
+    // その下の子リストは undeclared_line。
     let schema = r#"
 document:
   sections:
@@ -409,12 +419,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みの子フィールド行の下の子リストは undeclared_line（REQ-schema-001）: {:?}",
+        "宣言済みの子フィールド行の下の子リストは undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-031, REQ-schema-028]
+// @kotowari[C-schema-block-21]
 #[test]
 fn a_child_line_with_an_undeclared_name_is_checked_as_a_child_bullet() {
     let schema = r#"
@@ -437,11 +447,11 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-021]
+// @kotowari[C-schema-lang-13]
 #[test]
 fn child_bullet_when_references_a_sibling_field() {
     // children.bullets の when は、同じ children ノードの下の兄弟の
-    // children.fields を参照する（REQ-schema-021）。when が真のときだけ pattern が効く。
+    // children.fields を参照する。when が真のときだけ pattern が効く。
     let schema = r#"
 document:
   sections:
@@ -460,15 +470,15 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "children.bullets の when は兄弟の children.fields を参照する（REQ-schema-021）: {:?}",
+        "children.bullets の when は兄弟の children.fields を参照する: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-020, REQ-schema-031]
+// @kotowari[C-schema-block-20]
 #[test]
 fn children_are_validated_when_parent_bullets_when_is_true() {
-    // 親の bullets の when が真のとき、子は children の宣言に照合する（REQ-schema-031）。
+    // 親の bullets の when が真のとき、子は children の宣言に照合する。
     let schema = r#"
 document:
   sections:
@@ -486,16 +496,16 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "when が真のとき子の未宣言行は undeclared_line（REQ-schema-031）: {:?}",
+        "when が真のとき子の未宣言行は undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-020, REQ-schema-031]
+// @kotowari[C-schema-block-20, C-schema-lang-12]
 #[test]
 fn children_are_validated_when_parent_bullets_when_is_false() {
-    // 親の bullets の when は required / pattern / enum にだけ効く（REQ-schema-020）。
-    // children の照合（REQ-schema-031）は when の真偽に関わらず実行する。
+    // 親の bullets の when は required / pattern / enum にだけ効く。
+    // children の照合は when の真偽に関わらず実行する。
     let schema = r#"
 document:
   sections:
@@ -513,12 +523,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "親の bullets の when が偽でも子は children の宣言に照合する（REQ-schema-031）: {:?}",
+        "親の bullets の when が偽でも子は children の宣言に照合する: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[C-schema-block-21]
 #[test]
 fn recursive_children_bullets_match() {
     let schema = r#"
@@ -540,12 +550,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "再帰的な children.bullets に照合する（REQ-schema-031）: {:?}",
+        "再帰的な children.bullets に照合する: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[C-schema-block-21]
 #[test]
 fn recursive_children_bullets_pattern_is_enforced() {
     let schema = r#"
@@ -567,12 +577,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "子の子の箇条書きにも children.bullets の pattern を適用する（REQ-schema-031）: {:?}",
+        "子の子の箇条書きにも children.bullets の pattern を適用する: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-019, REQ-schema-031]
+// @kotowari[C-schema-block-21, C-schema-lang-9]
 #[test]
 fn child_bullets_are_counted_by_children_rule_not_parent_repeat() {
     let schema = r#"
@@ -588,18 +598,18 @@ document:
     let ok = validate_src(schema, "## 理由\n\n- 親\n  - 子1\n  - 子2\n", false);
     assert!(
         !kinds(&ok).contains(&FindingKind::RepeatMinNotMet),
-        "親1本・子2本で両方満たす（REQ-schema-019、REQ-schema-031）: {:?}",
+        "親1本・子2本で両方満たす: {:?}",
         kinds(&ok)
     );
     let short = validate_src(schema, "## 理由\n\n- 親\n  - 子1\n", false);
     assert!(
         kinds(&short).contains(&FindingKind::RepeatMinNotMet),
-        "子が1本しか無ければ children.bullets の min を満たさない（REQ-schema-019、REQ-schema-031）: {:?}",
+        "子が1本しか無ければ children.bullets の min を満たさない: {:?}",
         kinds(&short)
     );
 }
 
-// @kotowari[REQ-schema-003, REQ-schema-031]
+// @kotowari[C-schema-block-20, C-schema-closed-3]
 #[test]
 fn undeclared_child_is_undeclared_even_when_open() {
     let schema = r#"
@@ -617,12 +627,12 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みの構造の中の未宣言の子は open でも undeclared_line（REQ-schema-003）: {:?}",
+        "宣言済みの構造の中の未宣言の子は open でも undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-029, REQ-schema-031]
+// @kotowari[C-schema-block-4, C-schema-block-21]
 #[test]
 fn declared_child_field_pattern_is_enforced() {
     let schema = r#"
@@ -640,12 +650,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::FieldPatternMismatch),
-        "子フィールドの pattern は値に適用する（REQ-schema-029）: {:?}",
+        "子フィールドの pattern は値に適用する: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-004, REQ-schema-031]
+// @kotowari[C-schema-block-21]
 #[test]
 fn missing_required_child_field_is_found() {
     let schema = r#"
@@ -662,12 +672,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::MissingRequiredField),
-        "宣言された子フィールドが無ければ missing_required_field（REQ-schema-004、REQ-schema-031）: {:?}",
+        "宣言された子フィールドが無ければ missing_required_field: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-031]
+// @kotowari[C-schema-block-20, C-schema-closed-1]
 #[test]
 fn nested_list_items_are_each_reported_in_closed_world() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -680,7 +690,7 @@ fn nested_list_items_are_each_reported_in_closed_world() {
     assert_eq!(undeclared, 2);
 }
 
-// @kotowari[REQ-schema-028]
+// @kotowari[C-schema-block-3]
 #[test]
 fn ordered_list_is_not_a_bullet_and_is_undeclared_in_closed_world() {
     let schema =
@@ -689,12 +699,12 @@ fn ordered_list_is_not_a_bullet_and_is_undeclared_in_closed_world() {
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "順序付きリストは箇条書きの対象外なので pattern を適用しない（TBL-schema-007）"
+        "順序付きリストは箇条書きの対象外なので pattern を適用しない"
     );
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-028]
+// @kotowari[C-schema-block-3]
 #[test]
 fn ordered_list_does_not_satisfy_required_bullets() {
     let schema =
@@ -704,7 +714,7 @@ fn ordered_list_does_not_satisfy_required_bullets() {
     assert!(kinds(&findings).contains(&FindingKind::MissingBullets));
 }
 
-// @kotowari[REQ-schema-030]
+// @kotowari[C-schema-block-15]
 #[test]
 fn field_continuation_is_part_of_the_field_not_undeclared_or_statement() {
     let schema = "document:\n  preamble:\n    fields:\n      - name: 状態\n    statement:\n      required: true\n";
@@ -713,11 +723,11 @@ fn field_continuation_is_part_of_the_field_not_undeclared_or_statement() {
     assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "継続段落はフィールド行の一部で undeclared_line にしない（REQ-schema-030）"
+        "継続段落はフィールド行の一部で undeclared_line にしない"
     );
 }
 
-// @kotowari[REQ-schema-004, REQ-schema-024]
+// @kotowari[C-schema-lang-14]
 #[test]
 fn missing_required_section_is_found() {
     let doc = "# ADR-0001: a\n\n- 状態: 承認済み\n\n## 状況\n\n背景。\n";
@@ -725,7 +735,7 @@ fn missing_required_section_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::MissingRequiredSection));
 }
 
-// @kotowari[REQ-schema-026]
+// @kotowari[C-schema-doc-20]
 #[test]
 fn heading_level_mismatch_is_found() {
     let doc = "# ADR-0001: a\n\n## 状況\n\n#### 深すぎ\n\n## 決定\n\n判断。\n";
@@ -733,15 +743,15 @@ fn heading_level_mismatch_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::HeadingLevelMismatch));
 }
 
-// @kotowari[REQ-schema-025, EX-schema-009]
+// @kotowari[C-schema-doc-23]
 #[test]
 fn invalid_item_id_is_found() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         statement:
           required: false
 "#;
@@ -750,7 +760,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::InvalidId));
 }
 
-// @kotowari[REQ-schema-028]
+// @kotowari[C-schema-block-1]
 #[test]
 fn declared_field_line_passes() {
     let findings = validate_src(SCHEMA, ok_body(), false);
@@ -758,7 +768,7 @@ fn declared_field_line_passes() {
     assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredField));
 }
 
-// @kotowari[REQ-schema-028, EX-schema-011]
+// @kotowari[C-schema-block-1]
 #[test]
 fn undeclared_field_name_line_counts_as_a_bullet() {
     let schema =
@@ -769,15 +779,15 @@ fn undeclared_field_name_line_counts_as_a_bullet() {
     let ks = kinds(&findings);
     assert!(
         !ks.contains(&FindingKind::UndeclaredLine),
-        "未宣言の名前の `- 名前: 値` 行は箇条書きとして扱う（TBL-schema-007）: {ks:?}"
+        "未宣言の名前の `- 名前: 値` 行は箇条書きとして扱う: {ks:?}"
     );
     assert!(
         !ks.contains(&FindingKind::RepeatMinNotMet),
-        "箇条書きとして本数に数える（TBL-schema-007）: {ks:?}"
+        "箇条書きとして本数に数える: {ks:?}"
     );
 }
 
-// @kotowari[REQ-schema-028]
+// @kotowari[C-schema-block-1]
 #[test]
 fn undeclared_field_name_line_is_subject_to_bullet_pattern() {
     let schema = "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n        pattern: \"^A134\"\n";
@@ -786,11 +796,11 @@ fn undeclared_field_name_line_is_subject_to_bullet_pattern() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "箇条書きとして pattern を適用する（TBL-schema-007）"
+        "箇条書きとして pattern を適用する"
     );
 }
 
-// @kotowari[REQ-schema-028]
+// @kotowari[C-schema-block-1, C-schema-block-7]
 #[test]
 fn undeclared_field_name_line_matches_bullet_pattern_on_original_text() {
     let schema = "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n        pattern: \"^名前:値$\"\n";
@@ -803,7 +813,7 @@ fn undeclared_field_name_line_matches_bullet_pattern_on_original_text() {
     );
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-028]
+// @kotowari[C-schema-block-1, C-schema-closed-1]
 #[test]
 fn undeclared_field_name_line_is_undeclared_when_no_bullets_declared() {
     let schema =
@@ -814,7 +824,7 @@ fn undeclared_field_name_line_is_undeclared_when_no_bullets_declared() {
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-002, REQ-schema-004]
+// @kotowari[C-schema-closed-2, C-schema-closed-4]
 #[test]
 fn open_allows_undeclared_heading_and_line_but_not_missing_required() {
     let schema = r#"
@@ -838,7 +848,7 @@ document:
     assert!(ks.contains(&FindingKind::MissingRequiredSection));
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-022]
+// @kotowari[C-schema-closed-1, C-schema-doc-4]
 #[test]
 fn title_without_rule_is_undeclared_heading_in_closed_world() {
     let schema =
@@ -848,7 +858,7 @@ fn title_without_rule_is_undeclared_heading_in_closed_world() {
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredHeading));
 }
 
-// @kotowari[REQ-schema-002]
+// @kotowari[C-schema-closed-2]
 #[test]
 fn title_without_rule_is_allowed_when_open() {
     let schema =
@@ -858,7 +868,7 @@ fn title_without_rule_is_allowed_when_open() {
     assert!(!kinds(&findings).contains(&FindingKind::UndeclaredHeading));
 }
 
-// @kotowari[REQ-schema-001]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn undeclared_section_lines_are_flagged_in_closed_world() {
     let schema =
@@ -884,7 +894,7 @@ fn undeclared_section_lines_are_flagged_in_closed_world() {
     );
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-023]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn undeclared_preamble_lines_are_flagged_in_closed_world() {
     let schema =
@@ -894,7 +904,7 @@ fn undeclared_preamble_lines_are_flagged_in_closed_world() {
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-002, REQ-schema-023]
+// @kotowari[C-schema-closed-2]
 #[test]
 fn undeclared_preamble_lines_are_allowed_when_open() {
     let schema =
@@ -904,7 +914,7 @@ fn undeclared_preamble_lines_are_allowed_when_open() {
     assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-002]
+// @kotowari[C-schema-closed-2]
 #[test]
 fn undeclared_section_lines_are_allowed_when_open() {
     let schema =
@@ -915,7 +925,7 @@ fn undeclared_section_lines_are_allowed_when_open() {
     assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-003, REQ-schema-027]
+// @kotowari[C-schema-closed-3, C-schema-doc-13]
 #[test]
 fn undeclared_item_inside_declared_section_is_flagged_even_when_open() {
     let schema = r#"
@@ -931,7 +941,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// @kotowari[REQ-schema-003, REQ-schema-023]
+// @kotowari[C-schema-closed-3, C-schema-doc-15]
 #[test]
 fn stray_heading_in_declared_preamble_is_undeclared_even_when_open() {
     let schema = r#"
@@ -944,12 +954,12 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-        "宣言済みの前置部の中の ### 見出しは open でも undeclared_heading（REQ-schema-003）: {:?}",
+        "宣言済みの前置部の中の ### 見出しは open でも undeclared_heading: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-003, REQ-schema-023]
+// @kotowari[C-schema-closed-3, C-schema-doc-15]
 #[test]
 fn stray_heading_lines_in_declared_preamble_are_undeclared_even_when_open() {
     let schema = r#"
@@ -962,12 +972,12 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みの前置部の中の見出しの内側の行は open でも undeclared_line（REQ-schema-003）: {:?}",
+        "宣言済みの前置部の中の見出しの内側の行は open でも undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-002]
+// @kotowari[C-schema-closed-2]
 #[test]
 fn stray_heading_before_title_is_allowed_when_open() {
     let schema = r#"
@@ -980,17 +990,17 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-        "題名より前の見出しは open では許す（REQ-schema-002）: {:?}",
+        "題名より前の見出しは open では許す: {:?}",
         kinds(&findings)
     );
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "題名より前の見出しの内側の行も open では許す（REQ-schema-002）: {:?}",
+        "題名より前の見出しの内側の行も open では許す: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-001]
+// @kotowari[C-schema-closed-1]
 #[test]
 fn stray_heading_before_title_is_undeclared_in_closed_world() {
     let schema = r#"
@@ -1003,17 +1013,17 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-        "題名より前の見出しは閉じた世界で undeclared_heading（REQ-schema-001）: {:?}",
+        "題名より前の見出しは閉じた世界で undeclared_heading: {:?}",
         kinds(&findings)
     );
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "題名より前の見出しの内側の行は閉じた世界で undeclared_line（REQ-schema-001）: {:?}",
+        "題名より前の見出しの内側の行は閉じた世界で undeclared_line: {:?}",
         kinds(&findings)
     );
 }
 
-// @kotowari[REQ-schema-003, EX-schema-002]
+// @kotowari[C-schema-closed-3]
 #[test]
 fn undeclared_line_in_declared_section_is_flagged_even_when_open() {
     let schema = r#"
@@ -1028,9 +1038,9 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// ---- 行の規則（TBL-schema-007、REQ-schema-029〜REQ-schema-034） ----
+// ---- 行の規則 ----
 
-// @kotowari[REQ-schema-004]
+// @kotowari[C-schema-lang-7]
 #[test]
 fn missing_required_field_is_found() {
     let schema = "document:\n  preamble:\n    fields:\n      - name: 状態\n";
@@ -1039,7 +1049,7 @@ fn missing_required_field_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::MissingRequiredField));
 }
 
-// @kotowari[REQ-schema-029]
+// @kotowari[C-schema-block-4]
 #[test]
 fn field_pattern_mismatch_is_found() {
     let schema = r#"
@@ -1054,7 +1064,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::FieldPatternMismatch));
 }
 
-// @kotowari[REQ-schema-029]
+// @kotowari[C-schema-block-4]
 #[test]
 fn field_enum_invalid_is_found() {
     let schema = r#"
@@ -1069,7 +1079,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::FieldEnumInvalid));
 }
 
-// @kotowari[REQ-schema-029]
+// @kotowari[C-schema-block-5]
 #[test]
 fn separator_splits_value_before_enum_check() {
     let schema = r#"
@@ -1085,7 +1095,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::FieldEnumInvalid));
 }
 
-// @kotowari[REQ-schema-029]
+// @kotowari[C-schema-block-5]
 #[test]
 fn separator_elements_are_trimmed_before_enum_check() {
     let schema = r#"
@@ -1101,7 +1111,7 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::FieldEnumInvalid));
 }
 
-// @kotowari[REQ-schema-004, REQ-schema-032]
+// @kotowari[C-schema-lang-7]
 #[test]
 fn missing_statement_is_found() {
     let schema = "document:\n  sections:\n    - name: 状況\n      statement: {}\n";
@@ -1110,7 +1120,7 @@ fn missing_statement_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
 }
 
-// @kotowari[REQ-schema-054]
+// @kotowari[C-schema-block-6]
 #[test]
 fn statement_pattern_mismatch_is_found() {
     let schema = r#"
@@ -1125,7 +1135,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::StatementPatternMismatch));
 }
 
-// @kotowari[REQ-schema-054]
+// @kotowari[C-schema-block-6]
 #[test]
 fn statement_enum_invalid_is_found() {
     let schema = r#"
@@ -1140,7 +1150,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::StatementEnumInvalid));
 }
 
-// @kotowari[REQ-schema-004, REQ-schema-019]
+// @kotowari[C-schema-lang-7]
 #[test]
 fn missing_bullets_is_found() {
     let schema = "document:\n  sections:\n    - name: 理由\n      bullets: {}\n";
@@ -1149,7 +1159,7 @@ fn missing_bullets_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::MissingBullets));
 }
 
-// @kotowari[REQ-schema-054]
+// @kotowari[C-schema-block-7]
 #[test]
 fn bullet_pattern_mismatch_is_found() {
     let schema = r#"
@@ -1164,7 +1174,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::BulletPatternMismatch));
 }
 
-// @kotowari[REQ-schema-033]
+// @kotowari[C-schema-lang-7]
 #[test]
 fn missing_table_is_found() {
     let schema = r#"
@@ -1179,7 +1189,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::MissingTable));
 }
 
-// @kotowari[REQ-schema-033]
+// @kotowari[C-schema-block-24]
 #[test]
 fn table_header_mismatch_is_found() {
     let schema = r#"
@@ -1194,7 +1204,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::TableHeaderMismatch));
 }
 
-// @kotowari[REQ-schema-034]
+// @kotowari[C-schema-lang-7]
 #[test]
 fn missing_codeblock_is_found() {
     let schema = r#"
@@ -1209,7 +1219,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::MissingCodeblock));
 }
 
-// @kotowari[REQ-schema-034]
+// @kotowari[C-schema-block-29]
 #[test]
 fn codeblock_lang_mismatch_is_found() {
     let schema = r#"
@@ -1224,7 +1234,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::CodeblockLangMismatch));
 }
 
-// @kotowari[REQ-schema-034]
+// @kotowari[C-schema-block-30]
 #[test]
 fn codeblock_line_mismatch_is_found() {
     let schema = r#"
@@ -1240,7 +1250,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::CodeblockLineMismatch));
 }
 
-// @kotowari[REQ-schema-034]
+// @kotowari[C-schema-block-30]
 #[test]
 fn codeblock_line_matching_keeps_trailing_whitespace() {
     let schema = r#"
@@ -1257,7 +1267,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::CodeblockLineMismatch));
 }
 
-// @kotowari[REQ-schema-034]
+// @kotowari[C-schema-block-30]
 #[test]
 fn codeblock_line_matching_trims_leading_whitespace_and_skips_blank_lines() {
     let schema = r#"
@@ -1273,17 +1283,7 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::CodeblockLineMismatch));
 }
 
-// @kotowari[REQ-schema-032]
-#[test]
-fn blockquote_and_thematic_break_lines_are_ignored_in_closed_world() {
-    let schema =
-        "document:\n  sections:\n    - name: 状況\n      statement:\n        required: false\n";
-    let doc = "## 状況\n\n> 引用\n\n---\n\n本文。\n";
-    let findings = validate_src(schema, doc, false);
-    assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
-}
-
-// @kotowari[REQ-schema-032]
+// @kotowari[C-schema-block-16]
 #[test]
 fn image_only_line_is_not_counted_as_statement() {
     let schema =
@@ -1294,9 +1294,9 @@ fn image_only_line_is_not_counted_as_statement() {
     assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// ---- 出現回数・条件付き規則・並び順（REQ-schema-019、REQ-schema-020、REQ-schema-041） ----
+// ---- 出現回数・条件付き規則・並び順 ----
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-9]
 #[test]
 fn repeat_min_not_met_for_section_is_found() {
     let schema = r#"
@@ -1310,15 +1310,15 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::RepeatMinNotMet));
 }
 
-// @kotowari[REQ-schema-056]
+// @kotowari[C-schema-doc-18]
 #[test]
 fn missing_required_item_is_reported_as_repeat_min_not_met() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3}"
+      items:
+      - id: "REQ-\\d{3}"
         repeat: { min: 1 }
 "#;
     let doc = "## 要求\n";
@@ -1329,7 +1329,7 @@ document:
     assert!(!ks.contains(&FindingKind::MissingRequiredSection));
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-9]
 #[test]
 fn repeat_min_not_met_for_field_is_found() {
     let schema = r#"
@@ -1344,7 +1344,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::RepeatMinNotMet));
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-8]
 #[test]
 fn repeat_max_exceeded_for_optional_section_is_found() {
     let schema = r#"
@@ -1360,7 +1360,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::RepeatMaxExceeded));
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-9]
 #[test]
 fn repeat_max_exceeded_for_field_is_found() {
     let schema = r#"
@@ -1375,7 +1375,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::RepeatMaxExceeded));
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-9]
 #[test]
 fn repeat_with_max_only_omits_min_as_zero() {
     let schema =
@@ -1385,15 +1385,15 @@ fn repeat_with_max_only_omits_min_as_zero() {
     assert!(!kinds(&findings).contains(&FindingKind::RepeatMinNotMet));
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-7]
 #[test]
 fn item_with_no_repeat_requires_exactly_one() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         statement:
           required: false
 "#;
@@ -1402,15 +1402,15 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::RepeatMinNotMet));
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-9]
 #[test]
 fn item_repeat_max_exceeded_is_found() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat: { max: 1 }
         statement:
           required: false
@@ -1420,15 +1420,15 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::RepeatMaxExceeded));
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[C-schema-lang-8]
 #[test]
 fn item_with_required_false_is_optional() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         required: false
         statement:
           required: false
@@ -1439,15 +1439,15 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredSection));
 }
 
-// @kotowari[REQ-schema-025, EX-schema-009]
+// @kotowari[C-schema-doc-23]
 #[test]
 fn item_heading_without_colon_is_invalid_id() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        statement:
+      items:
+      - statement:
           required: false
 "#;
     let doc = "## 要求\n\n### REQ-001\n\n本文。\n";
@@ -1455,7 +1455,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::InvalidId));
 }
 
-// @kotowari[REQ-schema-041]
+// @kotowari[C-schema-block-8]
 #[test]
 fn a_repeated_field_in_a_row_is_still_in_declared_order() {
     let schema = r#"
@@ -1477,7 +1477,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-041]
+// @kotowari[C-schema-block-8]
 #[test]
 fn fields_in_declared_order_pass() {
     let schema = r#"
@@ -1494,7 +1494,7 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::FieldOrderMismatch));
 }
 
-// @kotowari[REQ-schema-020, EX-schema-007]
+// @kotowari[C-schema-lang-12]
 #[test]
 fn when_eq_true_requires_the_field() {
     let schema = r#"
@@ -1511,7 +1511,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::MissingRequiredField));
 }
 
-// @kotowari[REQ-schema-020]
+// @kotowari[C-schema-lang-12]
 #[test]
 fn when_eq_false_skips_the_requirement() {
     let schema = r#"
@@ -1528,7 +1528,7 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredField));
 }
 
-// @kotowari[REQ-schema-021]
+// @kotowari[C-schema-lang-13]
 #[test]
 fn when_with_missing_reference_makes_eq_false() {
     let schema = r#"
@@ -1544,7 +1544,7 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredField));
 }
 
-// @kotowari[REQ-schema-021]
+// @kotowari[C-schema-lang-13]
 #[test]
 fn when_with_missing_reference_makes_ne_true() {
     let schema = r#"
@@ -1560,7 +1560,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::MissingRequiredField));
 }
 
-// @kotowari[REQ-schema-021]
+// @kotowari[C-schema-lang-13]
 #[test]
 fn when_eq_is_false_when_reference_name_is_undeclared() {
     let schema = r#"
@@ -1578,7 +1578,7 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::MissingStatement));
 }
 
-// @kotowari[REQ-schema-021]
+// @kotowari[C-schema-lang-13]
 #[test]
 fn when_ne_is_true_when_reference_name_is_undeclared() {
     let schema = r#"
@@ -1596,15 +1596,15 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
 }
 
-// @kotowari[REQ-schema-033]
+// @kotowari[C-schema-block-31]
 #[test]
 fn table_declared_on_an_item_is_not_undeclared() {
     let schema = r#"
 document:
   sections:
     - name: 決定表
-      item:
-        id: "TBL-\\d{3,}"
+      items:
+      - id: "TBL-\\d{3,}"
         repeat: { min: 0 }
         table:
           header: [用語, 意味]
@@ -1613,19 +1613,19 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "項目に宣言した表は undeclared_line にしない（TBL-schema-004）"
+        "項目に宣言した表は undeclared_line にしない"
     );
 }
 
-// @kotowari[REQ-schema-033]
+// @kotowari[C-schema-block-31]
 #[test]
 fn table_header_mismatch_on_an_item_is_found() {
     let schema = r#"
 document:
   sections:
     - name: 決定表
-      item:
-        id: "TBL-\\d{3,}"
+      items:
+      - id: "TBL-\\d{3,}"
         repeat: { min: 0 }
         table:
           header: [用語, 意味]
@@ -1634,19 +1634,19 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::TableHeaderMismatch),
-        "項目の表のヘッダ不一致は table_header_mismatch にする（TBL-schema-004、REQ-schema-033）"
+        "項目の表のヘッダ不一致は table_header_mismatch にする"
     );
 }
 
-// @kotowari[REQ-schema-034]
+// @kotowari[C-schema-block-31]
 #[test]
 fn code_block_declared_on_an_item_is_not_undeclared() {
     let schema = r#"
 document:
   sections:
     - name: 具体例
-      item:
-        id: "EX-\\d{3,}"
+      items:
+      - id: "EX-\\d{3,}"
         repeat: { min: 0 }
         codeblock:
           lang: gherkin
@@ -1655,11 +1655,11 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "項目に宣言したコードブロックは undeclared_line にしない（TBL-schema-004）"
+        "項目に宣言したコードブロックは undeclared_line にしない"
     );
 }
 
-// @kotowari[REQ-schema-033, EX-schema-012]
+// @kotowari[C-schema-block-23]
 #[test]
 fn table_without_declared_header_accepts_any_header() {
     let schema = "document:\n  sections:\n    - name: 決定表\n      table: {}\n";
@@ -1667,11 +1667,11 @@ fn table_without_declared_header_accepts_any_header() {
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::TableHeaderMismatch),
-        "header を宣言しないときはヘッダと列数を検査しない（REQ-schema-033）"
+        "header を宣言しないときはヘッダと列数を検査しない"
     );
 }
 
-// @kotowari[REQ-schema-033]
+// @kotowari[C-schema-block-23]
 #[test]
 fn table_without_declared_header_is_still_required() {
     let schema = "document:\n  sections:\n    - name: 決定表\n      table: {}\n";
@@ -1679,11 +1679,11 @@ fn table_without_declared_header_is_still_required() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::MissingTable),
-        "header を宣言しなくても表の有無は検査する（REQ-schema-033）"
+        "header を宣言しなくても表の有無は検査する"
     );
 }
 
-// @kotowari[REQ-schema-023, REQ-schema-033]
+// @kotowari[C-schema-doc-8]
 #[test]
 fn table_declared_on_the_preamble_is_not_undeclared() {
     let schema = "document:\n  preamble:\n    table:\n      header: [用語, 意味]\n";
@@ -1695,7 +1695,7 @@ fn table_declared_on_the_preamble_is_not_undeclared() {
     );
 }
 
-// @kotowari[REQ-schema-023, REQ-schema-034]
+// @kotowari[C-schema-doc-8]
 #[test]
 fn code_block_declared_on_the_preamble_is_not_undeclared() {
     let schema = "document:\n  preamble:\n    codeblock:\n      lang: gherkin\n";
@@ -1710,8 +1710,8 @@ const ITEM_SCHEMA: &str = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d+"
+      items:
+      - id: "REQ-\\d+"
         repeat: { min: 0 }
         fields:
           - name: 種類
@@ -1723,7 +1723,7 @@ fn only(findings: &[Finding], kind: FindingKind) -> &Finding {
     found[0]
 }
 
-// @kotowari[REQ-schema-008]
+// @kotowari[C-schema-cli-9, C-schema-cli-11, C-schema-cli-12]
 #[test]
 fn missing_required_field_points_at_the_item_heading_with_the_field_name() {
     let doc = "## 要求\n\n### REQ-001: 名前\n";
@@ -1734,7 +1734,7 @@ fn missing_required_field_points_at_the_item_heading_with_the_field_name() {
     assert_eq!(finding.raw.as_deref(), Some("### REQ-001: 名前"));
 }
 
-// @kotowari[REQ-schema-008]
+// @kotowari[C-schema-cli-9, C-schema-cli-11, C-schema-cli-12]
 #[test]
 fn a_field_line_declared_twice_points_at_the_second_line() {
     let schema = "document:\n  preamble:\n    fields:\n      - name: 状態\n";
@@ -1746,7 +1746,7 @@ fn a_field_line_declared_twice_points_at_the_second_line() {
     assert_eq!(finding.raw.as_deref(), Some("- 状態: b"));
 }
 
-// @kotowari[REQ-schema-008, REQ-schema-033]
+// @kotowari[C-schema-block-25, C-schema-cli-9, C-schema-cli-11, C-schema-cli-12]
 #[test]
 fn a_table_row_with_the_wrong_column_count_points_at_that_row() {
     let schema =
@@ -1759,7 +1759,7 @@ fn a_table_row_with_the_wrong_column_count_points_at_that_row() {
     assert_eq!(finding.node, None, "表は宣言上の名前を持たない");
 }
 
-// @kotowari[REQ-schema-033]
+// @kotowari[C-schema-block-26]
 #[test]
 fn rows_are_counted_against_the_documents_header_not_the_declared_one() {
     let schema =
@@ -1774,7 +1774,7 @@ fn rows_are_counted_against_the_documents_header_not_the_declared_one() {
     );
 }
 
-// @kotowari[REQ-schema-022, REQ-schema-008]
+// @kotowari[C-schema-cli-10, C-schema-cli-11, C-schema-cli-12, C-schema-doc-3]
 #[test]
 fn missing_title_has_neither_a_line_nor_a_node_name() {
     let doc = "## 状況\n\n背景。\n\n## 決定\n\n判断。\n";
@@ -1785,7 +1785,7 @@ fn missing_title_has_neither_a_line_nor_a_node_name() {
     assert_eq!(finding.raw, None);
 }
 
-// @kotowari[REQ-schema-008]
+// @kotowari[C-schema-cli-9, C-schema-cli-12]
 #[test]
 fn invalid_id_carries_the_raw_heading_line() {
     let doc = "## 要求\n\n### REQ-BAD: `名前`\n\n- 種類: x\n";
@@ -1799,7 +1799,7 @@ fn invalid_id_carries_the_raw_heading_line() {
     );
 }
 
-// @kotowari[REQ-schema-008]
+// @kotowari[C-schema-cli-10, C-schema-cli-11]
 #[test]
 fn missing_required_section_carries_the_section_name() {
     let schema =
@@ -1811,7 +1811,7 @@ fn missing_required_section_carries_the_section_name() {
     assert_eq!(finding.line, None, "文書そのものには含むノードの行が無い");
 }
 
-// @kotowari[REQ-schema-041, REQ-schema-008]
+// @kotowari[C-schema-block-8, C-schema-cli-9, C-schema-cli-11, C-schema-cli-12]
 #[test]
 fn field_order_mismatch_carries_the_name_of_the_field_out_of_order() {
     let schema = "document:\n  sections:\n    - name: 要求\n      ordered: true\n      fields:\n        - name: 種類\n        - name: 定義\n";
@@ -1823,7 +1823,7 @@ fn field_order_mismatch_carries_the_name_of_the_field_out_of_order() {
     assert_eq!(finding.raw.as_deref(), Some("- 種類: algorithm"));
 }
 
-// @kotowari[REQ-schema-055]
+// @kotowari[C-schema-closed-6]
 #[test]
 fn undeclared_field_line_carries_the_field_rule_kind() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -1833,7 +1833,7 @@ fn undeclared_field_line_carries_the_field_rule_kind() {
     assert_eq!(finding.rule_kind, Some(RuleKind::Field));
 }
 
-// @kotowari[REQ-schema-055]
+// @kotowari[C-schema-closed-6]
 #[test]
 fn undeclared_bullet_carries_the_bullets_rule_kind() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -1843,7 +1843,7 @@ fn undeclared_bullet_carries_the_bullets_rule_kind() {
     assert_eq!(finding.rule_kind, Some(RuleKind::Bullets));
 }
 
-// @kotowari[REQ-schema-001]
+// @kotowari[C-schema-closed-1, C-schema-closed-6]
 #[test]
 fn an_empty_bullet_item_is_an_undeclared_line() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -1855,7 +1855,7 @@ fn an_empty_bullet_item_is_an_undeclared_line() {
     assert_eq!(finding.raw.as_deref(), Some("-"));
 }
 
-// @kotowari[REQ-schema-001]
+// @kotowari[C-schema-closed-1, C-schema-closed-6]
 #[test]
 fn an_empty_ordered_list_item_is_an_undeclared_line() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -1866,7 +1866,7 @@ fn an_empty_ordered_list_item_is_an_undeclared_line() {
     assert_eq!(finding.line, Some(3));
 }
 
-// @kotowari[REQ-schema-055]
+// @kotowari[C-schema-closed-6]
 #[test]
 fn undeclared_table_carries_the_table_rule_kind() {
     let schema = "document:\n  sections:\n    - name: 理由\n";
@@ -1876,7 +1876,7 @@ fn undeclared_table_carries_the_table_rule_kind() {
     assert_eq!(finding.rule_kind, Some(RuleKind::Table));
 }
 
-// @kotowari[REQ-schema-057]
+// @kotowari[C-schema-cli-13]
 #[test]
 fn repeat_min_not_met_carries_the_counted_rule_kind() {
     let schema =

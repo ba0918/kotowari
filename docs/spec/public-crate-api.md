@@ -1,7 +1,7 @@
 # 公開クレート再構成の設計案
 
 今回は公開しない。既存CLIの動作を保ち、Rustアプリからも機能を使える構成へ移すための仕様案である。
-この文書は構成と利用手順を説明する資料であり、仕様の正本はリンク先のIR、採用理由は[決定記録](../decision/records/2026-10-03-public-crate-api.md)にある。
+この文書は構成と利用手順を説明する資料であり、仕様の正本はリンク先のIR、採用理由は[決定記録](../frozen/decision/records/2026-10-03-public-crate-api.md)にある。
 コード例は提案APIの利用順を示す。現在のコードではまだコンパイルできず、実装時に外部利用のコンパイルテストへ移す。
 
 ## 何を使えばよいか
@@ -16,7 +16,7 @@
 | コマンドとして使いたい | `kotowari-cli`、`kotowari-mds` | 実行コマンド名は従来どおり |
 
 ライブラリの通常の入口は用途ごとに選ぶ。内部の型を使うためだけに追加のクレートを指定する必要はなく、入口で必要な型を再公開する。
-[クレート境界の仕様](../ir/core/library-crates.md)
+[クレート境界の仕様](../decisions/core/library-crates.md)
 
 ## 依存方向
 
@@ -62,7 +62,7 @@ let detail = read.query("REQ-core-001")?;
 壊れたガイドのために従来の`list`が失敗する、といった互換性の破壊を避ける。
 計画書と変異結果の検査には、従来どおりIRを要求しない。
 
-[操作と失敗の仕様](../ir/core/library-api.md) / [入力と寿命の仕様](../ir/core/library-inputs.md)
+[操作と失敗の仕様](../decisions/core/library-api.md) / [入力と寿命の仕様](../decisions/core/library-inputs.md)
 
 ## メモリ上の入力
 
@@ -73,11 +73,11 @@ CLIの一覧に載せられない項目を、解析結果から捨てない。
 必須の入力群が未提供なら`InputMissing`を返す。テスト情報を提供済みの空集合として渡した場合は、通常の「テストがない」指摘を返す。
 ライブラリは渡されていないファイルを勝手に探しにいかない。
 出典には判断の記録以外の通常Markdownも含める。テスト・面の情報は発見結果だけでなく、解析時の指摘と対象ファイルの情報を保持する。
-入力群ごとの必須条件は[入力表](../ir/core/library-inputs.md#TBL-core-042)に定め、未申告の個別ファイルがないことは呼び出し側が保証する。
+入力群ごとの必須条件は[入力表](../decisions/core/library-inputs.md)に定め、未申告の個別ファイルがないことは呼び出し側が保証する。
 
 論理パスはプロジェクト基準からの相対パスとする。IRの置き場が`docs/ir`なら、`docs/ir/core/example.md`のように渡す。
 正規化後に同じパスが同じ入力群へ重複した場合は拒否する。I/O入口の作業開始位置は絶対パスを受け、後からプロセスの現在位置を変更しても基準は変わらない。
-[パスの仕様](../ir/core/library-paths.md)
+[パスの仕様](../decisions/core/library-paths.md)
 
 ## Markdownを検証して抽出する
 
@@ -102,7 +102,7 @@ let partial = extract_partial(&schema, &document, &options);
 既存CLIの`values`と`ast --schema`は部分抽出の値を使うため、文書の違反だけで新しく失敗することはない。
 ファイル・URL取得には`SchemaLoader`を使い、取得・キャッシュの規則をCLIと共用する。
 
-[純粋な入口](../ir/schema/library.md) / [検証と抽出](../ir/schema/library-extraction.md) / [I/O](../ir/schema/library-io.md)
+[純粋な入口](../decisions/schema/library.ja.md) / [検証と抽出](../decisions/schema/library-extraction.ja.md) / [I/O](../decisions/schema/library-io.ja.md)
 
 ## Tokioから呼ぶ
 
@@ -121,7 +121,7 @@ let report = runner.check().await?;
 実行枠を待つ間にキャンセルした仕事は投入しない。投入後は待機をやめても完了まで枠を保持する。
 開始済みの処理を止める機能は今回提供しないため、待機をやめた後にもGit実行やキャッシュ書込みが続く場合がある。
 
-[非同期APIの仕様](../ir/core/library-async.md)
+[非同期APIの仕様](../decisions/core/library-async.md)
 
 ## 実装計画へ引き継ぐ条件
 

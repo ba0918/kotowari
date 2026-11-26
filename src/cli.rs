@@ -16,11 +16,11 @@ mod tests;
 pub enum StopReason {
     ArgumentError(String),
     UnreadableFile(String),
-    /// serve がポートを使えない（REQ-core-298）
+    /// serve がポートを使えない
     PortError(String),
     Library(kotowari::Error),
 }
-/// ポートの誤りの文言（TBL-core-018）。serve を持つ CLI だけが出す
+/// ポートの誤りの文言。serve を持つ CLI だけが出す
 const PORT_ERROR: &str = "port error";
 impl StopReason {
     /// core とライブラリに無い、CLI の停止の文言のすべて
@@ -45,19 +45,19 @@ impl From<kotowari::Error> for StopReason {
         }
     }
 }
-/// カレントディレクトリを取得する（A160/TBL-core-001/TBL-core-020）
+/// カレントディレクトリを取得する
 fn current_dir() -> Result<PathBuf, StopReason> {
     std::env::current_dir()
         .map_err(|e| StopReason::UnreadableFile(format!("current directory: {e}")))
 }
 
-/// 停止する（REQ-core-005: 標準出力に何も出さず、理由を標準エラーに出し、終了コードは2）
+/// 停止する（標準出力に何も出さず、理由を標準エラーに出し、終了コードは2）
 fn stop(reason: &StopReason) -> u8 {
     eprintln!("{reason}");
     2
 }
 
-/// コマンドを実行し、終了コードを返す（TBL-core-002）
+/// コマンドを実行し、終了コードを返す
 pub fn run(args: &[String]) -> u8 {
     let cli = match parse_args(args) {
         Ok(cli) => cli,
@@ -65,7 +65,7 @@ pub fn run(args: &[String]) -> u8 {
     };
 
     match cli {
-        // REQ-core-107: 検査を行わず、使い方か版を出して終了コード0
+        // 検査を行わず、使い方か版を出して終了コード0
         Cli::Help => {
             print_help();
             0
@@ -83,7 +83,7 @@ pub fn run(args: &[String]) -> u8 {
             print_check(&result, format);
             Ok(check_exit_code(&result, allow_test_findings))
         }),
-        // REQ-core-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
+        // check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::List {
             format,
             config_path,
@@ -92,7 +92,7 @@ pub fn run(args: &[String]) -> u8 {
             print_list(&result, format);
             Ok(0)
         }),
-        // REQ-core-156: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
+        // check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::Query {
             format,
             config_path,
@@ -102,14 +102,14 @@ pub fn run(args: &[String]) -> u8 {
             print_query(&result, format);
             Ok(0)
         }),
-        // REQ-core-162: check と同じ検査を走らせ、指摘は出さず集計だけを出す
+        // check と同じ検査を走らせ、指摘は出さず集計だけを出す
         Cli::Status {
             format,
             config_path,
         } => with_cwd(|cwd| {
             let result = project(cwd, config_path.as_deref())?.status()?;
             print_status(&result, format);
-            // REQ-core-165: complete なら 0、そうでなければ 1
+            // complete なら 0、そうでなければ 1
             Ok(u8::from(!result.complete()))
         }),
         Cli::Mutants {
@@ -123,7 +123,7 @@ pub fn run(args: &[String]) -> u8 {
             print_mutants(&result, format);
             Ok(exit_code_for(result.findings()))
         }),
-        // REQ-core-293、REQ-core-295: 書き終えたら書いたファイルと消したファイルを出す
+        // 書き終えたら書いたファイルと消したファイルを出す
         Cli::OverviewBuild {
             format,
             config_path,
@@ -132,11 +132,11 @@ pub fn run(args: &[String]) -> u8 {
             print_overview_build(&result, format);
             Ok(0)
         }),
-        // REQ-core-297: 検査、ポートの確保、書き込みの順に行い、割り込みで終了コード0
+        // 検査、ポートの確保、書き込みの順に行い、割り込みで終了コード0
         Cli::OverviewServe { port, config_path } => {
             with_cwd(|cwd| serve::run(&project(cwd, config_path.as_deref())?, port))
         }
-        // REQ-core-196: 設定を読まず、計画書のファイルだけを読む
+        // 設定を読まず、計画書のファイルだけを読む
         Cli::Plan { format, path } => with_cwd(|cwd| {
             let result = project(cwd, None)?.plan(&path)?;
             print_plan(&result, format);
@@ -154,7 +154,7 @@ fn with_cwd(command: impl FnOnce(&Path) -> Result<u8, StopReason>) -> u8 {
     }
 }
 
-/// TBL-core-002: 誤りが1件以上あれば1、無ければ0
+/// 誤りが1件以上あれば1、無ければ0
 fn exit_code_for(findings: &[Finding]) -> u8 {
     if findings.iter().any(|f| f.severity() == "error") {
         1
@@ -163,7 +163,7 @@ fn exit_code_for(findings: &[Finding]) -> u8 {
     }
 }
 
-/// TBL-core-002: "--allow-test-findings" があれば`テスト側の指摘`でない誤りだけを数える（REQ-core-357）
+/// "--allow-test-findings" があれば`テスト側の指摘`でない誤りだけを数える
 fn check_exit_code(result: &CheckReport, allow_test_findings: bool) -> u8 {
     if !allow_test_findings {
         return exit_code_for(result.findings());
@@ -176,13 +176,13 @@ fn check_exit_code(result: &CheckReport, allow_test_findings: bool) -> u8 {
     )
 }
 
-/// "kotowari check" の結果を出す（TBL-core-005, REQ-core-025, REQ-core-026）
+/// "kotowari check" の結果を出す
 fn print_check(result: &CheckReport, format: Format) {
     match format {
         Format::Json => println!("{}", output::check(result)),
         Format::Text => {
             print_findings_as_text(result.findings());
-            // REQ-core-228: 指摘の行の後の最後の1行。指摘が0件でも出す
+            // 指摘の行の後の最後の1行。指摘が0件でも出す
             if let Some(surface) = result.surface() {
                 println!("surface: unspecified={}", surface.unspecified());
             }
@@ -190,7 +190,7 @@ fn print_check(result: &CheckReport, format: Format) {
     }
 }
 
-/// "kotowari list" の一覧を出す（REQ-core-155）
+/// "kotowari list" の一覧を出す
 fn print_list(result: &ReadList, format: Format) {
     match format {
         Format::Json => println!("{}", output::list(result)),
@@ -198,7 +198,7 @@ fn print_list(result: &ReadList, format: Format) {
     }
 }
 
-/// "kotowari query" の1件を出す（REQ-core-161）
+/// "kotowari query" の1件を出す
 fn print_query(result: &QueryReport, format: Format) {
     match format {
         Format::Json => println!("{}", output::query(result)),
@@ -206,7 +206,7 @@ fn print_query(result: &QueryReport, format: Format) {
     }
 }
 
-/// "kotowari status" の集計を出す（REQ-core-166）
+/// "kotowari status" の集計を出す
 fn print_status(result: &StatusReport, format: Format) {
     match format {
         Format::Json => println!("{}", output::status(result)),
@@ -214,19 +214,19 @@ fn print_status(result: &StatusReport, format: Format) {
     }
 }
 
-/// "kotowari mutants" の結果を出す（TBL-core-025, REQ-core-146）
+/// "kotowari mutants" の結果を出す
 fn print_mutants(result: &MutantsReport, format: Format) {
     match format {
         Format::Json => println!("{}", output::mutants(result)),
         Format::Text => {
             print_findings_as_text(result.findings());
-            // REQ-core-146: 指摘の行の後の最後の1行。指摘が0件でも出す
+            // 指摘の行の後の最後の1行。指摘が0件でも出す
             println!("{}", result.mutants().summary_line());
         }
     }
 }
 
-/// "kotowari overview build" の結果を出す（REQ-core-295）
+/// "kotowari overview build" の結果を出す
 fn print_overview_build(result: &kotowari::OverviewBuild, format: Format) {
     match format {
         Format::Json => println!("{}", output::overview_build(result)),
@@ -241,7 +241,7 @@ fn print_overview_build(result: &kotowari::OverviewBuild, format: Format) {
     }
 }
 
-/// "kotowari plan" の結果を出す（REQ-core-194、REQ-core-025）
+/// "kotowari plan" の結果を出す
 fn print_plan(result: &PlanReport, format: Format) {
     match format {
         Format::Json => println!("{}", output::plan(result)),
@@ -249,7 +249,7 @@ fn print_plan(result: &PlanReport, format: Format) {
     }
 }
 
-/// REQ-core-025, REQ-core-026: 1つの指摘を1行で出し、"line" が null なら "-" と書く
+/// 1つの指摘を1行で出し、"line" が null なら "-" と書く
 fn print_findings_as_text(findings: &[Finding]) {
     for f in findings {
         let line = f.line().map_or("-".to_string(), |l| l.to_string());
@@ -264,8 +264,8 @@ fn print_findings_as_text(findings: &[Finding]) {
     }
 }
 
-/// 改行を "\\n" と "\\r" の2文字で書き、1つの指摘が1行に収まるようにする（REQ-core-025、
-/// review5-gaps の A2）。ファイル名は改行を含みうる
+/// 改行を "\\n" と "\\r" の2文字で書き、1つの指摘が1行に収まるようにする。
+/// ファイル名は改行を含みうる
 fn one_line(text: &str) -> String {
     text.replace('\r', "\\r").replace('\n', "\\n")
 }
@@ -274,13 +274,15 @@ fn print_help() {
     println!("Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]");
     println!();
     println!("Commands:");
-    println!("  check      Check IR documents and test markers");
-    println!("  list       List IR items and the tests marked for them");
+    println!("  check      Check decision documents and test markers");
+    println!("  list       List decisions, confirmation rows and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
     println!("  overview   build: write the overview pages; serve: write and show them locally");
     println!("  plan       Check the form of one plan file against the bundled schema");
-    println!("  query      Show one item or scenario with its body and back references");
-    println!("  status     Summarise the IR and tell whether it is complete");
+    println!(
+        "  query      Show one decision or confirmation row with its body and back references"
+    );
+    println!("  status     Summarise the decision documents and tell whether they are complete");
     println!();
     println!("Options:");
     println!("  --format <FORMAT>      Output format: json (default) or text");

@@ -28,7 +28,7 @@ impl Pattern {
         &self.source
     }
 
-    /// 指定の名前の名前付きキャプチャを含むか。Capture 形の抽出が使う（REQ-schema-048）。
+    /// 指定の名前の名前付きキャプチャを含むか。Capture 形の抽出が使う。
     pub fn has_capture_group(&self, name: &str) -> bool {
         self.compiled.capture_names().flatten().any(|n| n == name)
     }
@@ -45,7 +45,7 @@ impl<'de> Deserialize<'de> for Pattern {
     }
 }
 
-/// スキーマを読めなかった理由。TBL-schema-009 の「スキーマが形に合わない」に相当する。
+/// スキーマを読めなかった理由。「スキーマが形に合わない」に相当する。
 #[derive(Debug)]
 pub struct SchemaError(pub String);
 
@@ -57,7 +57,7 @@ impl std::fmt::Display for SchemaError {
 
 impl std::error::Error for SchemaError {}
 
-/// スキーマ言語の最上位（REQ-schema-016）。
+/// スキーマ言語の最上位。
 ///
 /// Construction and mutation cannot bypass semantic validation.
 ///
@@ -80,9 +80,9 @@ impl std::error::Error for SchemaError {}
 pub struct Schema {
     /// 型の名前。`ast --schema` の `type` に使う
     pub(crate) name: Option<String>,
-    /// 閉じた世界を緩めるか（REQ-schema-002）
+    /// 閉じた世界を緩めるか
     pub(crate) open: bool,
-    /// 見出しの下の行の読み方（REQ-schema-060）。書かないときは段落で読む
+    /// 見出しの下の行の読み方。書かないときは段落で読む
     pub(crate) reading: Reading,
     /// 文書の構造の木
     pub(crate) document: Document,
@@ -113,7 +113,7 @@ impl Schema {
     }
 }
 
-/// 見出しと前置部の下の行の読み方（REQ-schema-060、TBL-schema-011）。
+/// 見出しと前置部の下の行の読み方。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Reading {
@@ -124,7 +124,7 @@ pub enum Reading {
     Line,
 }
 
-/// `document` の下の規則種別（TBL-schema-004）。
+/// `document` の下の規則種別。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Document {
@@ -132,11 +132,13 @@ pub struct Document {
     pub preamble: Option<Preamble>,
     #[serde(default)]
     pub sections: Vec<Section>,
-    /// 節を挟まずに文書の直下に置く項目（REQ-schema-016、REQ-schema-061）
-    pub item: Option<Item>,
+    /// 節を挟まずに文書の直下に置く項目の規則の一覧。
+    /// 空なら宣言していない
+    #[serde(default)]
+    pub items: Vec<Item>,
 }
 
-/// 題名（TBL-schema-004、REQ-schema-022）。
+/// 題名。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Title {
@@ -144,7 +146,7 @@ pub struct Title {
     pub extract: Option<Extract>,
 }
 
-/// 前置部（TBL-schema-004、REQ-schema-023）。
+/// 前置部。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Preamble {
@@ -154,53 +156,185 @@ pub struct Preamble {
     pub bullets: Option<Bullets>,
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
-    /// フィールド行の並び順を強制する（REQ-schema-041）
+    /// 深さ4以上の見出しの規則
+    pub subheading: Option<Subheading>,
+    /// フィールド行の並び順を強制する
     #[serde(default)]
     pub ordered: bool,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
-/// 節（TBL-schema-004、REQ-schema-024）。
+/// 節と項目の規則が選ぶ見出しの名前。1つの文字列か、文字列の一覧で書く。
+#[derive(Debug, Clone)]
+pub struct Names(Vec<String>);
+
+impl Names {
+    /// 一覧の最初の名前。指摘のノードの名前に使う
+    pub fn first(&self) -> &str {
+        self.0.first().map_or("", String::as_str)
+    }
+
+    /// 宣言した順の名前。
+    pub fn all(&self) -> &[String] {
+        &self.0
+    }
+
+    /// 見出しの文字がどれかの名前と等しいか。
+    pub fn contains(&self, text: &str) -> bool {
+        self.0.iter().any(|name| name == text)
+    }
+}
+
+impl<'de> Deserialize<'de> for Names {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum OneOrMany {
+            One(String),
+            Many(Vec<String>),
+        }
+        let names = match OneOrMany::deserialize(d)? {
+            OneOrMany::One(name) => vec![name],
+            OneOrMany::Many(names) => names,
+        };
+        if names.is_empty() {
+            return Err(D::Error::custom("name must hold at least one name"));
+        }
+        Ok(Names(names))
+    }
+}
+
+/// 規則が見出しを選ぶ手段。名前の一覧か、見出しの文字の中を探す正規表現。
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum Selector<'a> {
+    Names(&'a Names),
+    Pattern(&'a Pattern),
+}
+
+impl<'a> Selector<'a> {
+    /// 見出しの文字を選ぶか。
+    pub(crate) fn selects(self, text: &str) -> bool {
+        match self {
+            Selector::Names(names) => names.contains(text),
+            Selector::Pattern(pattern) => pattern.is_match(text),
+        }
+    }
+
+    /// 指摘が持つノードの名前。名前の一覧の規則だけが、一覧の最初の名前を持つ
+    pub(crate) fn node_name(self) -> Option<&'a str> {
+        match self {
+            Selector::Names(names) => Some(names.first()),
+            Selector::Pattern(_) => None,
+        }
+    }
+
+    /// 指摘の詳細の中で規則を指す言い回し。正規表現の規則は正規表現を示す
+    pub(crate) fn describe(self, node: &str) -> String {
+        match self {
+            Selector::Names(names) => format!("{node} \"{}\"", names.first()),
+            Selector::Pattern(pattern) => format!("{node} matching \"{}\"", pattern.source()),
+        }
+    }
+}
+
+impl Section {
+    /// 見出しを選ぶ手段。スキーマの読み込みが、"name" と "pattern" のちょうど一方を保証する
+    pub(crate) fn selector(&self) -> Selector<'_> {
+        match (&self.name, &self.pattern) {
+            (Some(names), _) => Selector::Names(names),
+            (None, Some(pattern)) => Selector::Pattern(pattern),
+            (None, None) => unreachable!("check::validate_section が選び方の宣言を保証する"),
+        }
+    }
+}
+
+impl Item {
+    /// 見出しを選ぶ手段。"name" も "pattern" も持たない ID の規則は None で、ほかの規則が
+    /// 選ばなかった見出しをすべて選ぶ
+    pub(crate) fn selector(&self) -> Option<Selector<'_>> {
+        match (&self.name, &self.pattern) {
+            (Some(names), _) => Some(Selector::Names(names)),
+            (None, Some(pattern)) => Some(Selector::Pattern(pattern)),
+            (None, None) => None,
+        }
+    }
+}
+
+/// 見出しの文字を、宣言した順で最初に選ぶ項目の規則の位置。
+pub(crate) fn select_item(rules: &[Item], text: &str) -> Option<usize> {
+    rules.iter().position(|rule| {
+        rule.selector()
+            .is_none_or(|selector| selector.selects(text))
+    })
+}
+
+/// 見出しの文字を、宣言した順で最初に選ぶ節の規則の位置。
+pub(crate) fn select_section(rules: &[Section], text: &str) -> Option<usize> {
+    rules.iter().position(|rule| rule.selector().selects(text))
+}
+
+/// 節。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Section {
-    /// 見出しの文字列
-    pub name: String,
+    /// 見出しの文字と等しいかで選ぶ名前の一覧
+    pub name: Option<Names>,
+    /// 見出しの文字の中を探して選ぶ正規表現。"" はすべての見出しに合う
+    pub pattern: Option<Pattern>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub statement: Option<Statement>,
     #[serde(default)]
     pub fields: Vec<Field>,
-    /// フィールド行の並び順を強制する（REQ-schema-041）
+    /// フィールド行の並び順を強制する
     #[serde(default)]
     pub ordered: bool,
     pub bullets: Option<Bullets>,
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
-    pub item: Option<Item>,
+    /// 深さ4以上の見出しの規則
+    pub subheading: Option<Subheading>,
+    /// 項目の規則の一覧。空なら項目を宣言していない
+    #[serde(default)]
+    pub items: Vec<Item>,
     pub extract: Option<Extract>,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
-/// 項目（TBL-schema-004、REQ-schema-025）。
+/// 項目。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Item {
-    /// 見出しの ID 部分の正規表現
+    /// 見出しの文字と等しいかで選ぶ名前の一覧
+    pub name: Option<Names>,
+    /// 見出しの文字の中を探して選ぶ正規表現
+    pub pattern: Option<Pattern>,
+    /// ID の規則（"name" も "pattern" も持たない規則）の、見出しの ID 部分の正規表現
     pub id: Option<Pattern>,
     #[serde(default)]
     pub fields: Vec<Field>,
-    /// フィールド行の並び順を強制する（REQ-schema-041）
+    /// フィールド行の並び順を強制する
     #[serde(default)]
     pub ordered: bool,
     pub statement: Option<Statement>,
     pub bullets: Option<Bullets>,
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
+    /// 深さ4以上の見出しの規則
+    pub subheading: Option<Subheading>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub extract: Option<Extract>,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
-/// フィールド行（TBL-schema-004、REQ-schema-029）。
+/// フィールド行。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Field {
@@ -228,12 +362,12 @@ impl Field {
     }
 }
 
-/// スキーマが宣言したフィールド行の名前と一致するか。TBL-schema-007 のフィールド行判定。
+/// スキーマが宣言したフィールド行の名前と一致するか。
 pub(crate) fn is_declared_field(fields: &[Field], name: &str) -> bool {
     fields.iter().any(|f| f.name == name)
 }
 
-/// 文（TBL-schema-004、REQ-schema-032）。
+/// 文。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Statement {
@@ -246,7 +380,7 @@ pub struct Statement {
     pub extract: Option<Extract>,
 }
 
-/// 箇条書きの子の規則（REQ-schema-031）。
+/// 箇条書きの子の規則。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Children {
@@ -254,9 +388,12 @@ pub struct Children {
     pub fields: Vec<Field>,
     /// 再帰的に `children` を持つことができる（任意の深さ）
     pub bullets: Option<Box<Bullets>>,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
-/// 箇条書き（TBL-schema-004、TBL-schema-007）。
+/// 箇条書き。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Bullets {
@@ -269,13 +406,23 @@ pub struct Bullets {
     pub children: Option<Children>,
 }
 
-/// 表（TBL-schema-004、REQ-schema-033）。
+/// 深さ4以上の見出しの規則。見出しの行を数えて照らす規則で、下の行を持つノードではない。
+/// 抽出は宣言できない。
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Subheading {
+    pub required: Option<bool>,
+    pub repeat: Option<Repeat>,
+    pub pattern: Option<Pattern>,
+}
+
+/// 表。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Table {
-    /// ヘッダのセル列。宣言しないときはヘッダと列数を検査しない（REQ-schema-033）
+    /// ヘッダのセル列。宣言しないときはヘッダと列数を検査しない
     pub header: Option<Vec<String>>,
-    /// 同じノードの中の表のうち、どれをこの規則の表にするか（REQ-schema-059）。
+    /// 同じノードの中の表のうち、どれをこの規則の表にするか。
     /// 書かないときはすべての表がこの規則の表になる
     pub select: Option<Select>,
     pub required: Option<bool>,
@@ -283,7 +430,7 @@ pub struct Table {
     pub extract: Option<Extract>,
 }
 
-/// 表の規則の `select`（REQ-schema-059）。
+/// 表の規則の `select`。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Select {
@@ -293,7 +440,7 @@ pub enum Select {
 
 impl Table {
     /// `blocks` の表のうち、この規則の表にするものの開始行。`select` を書かない
-    /// 規則はすべての表を受けるので None を返す（REQ-schema-059）。
+    /// 規則はすべての表を受けるので None を返す。
     pub(crate) fn selected_line<'a>(
         &self,
         blocks: impl IntoIterator<Item = &'a Block>,
@@ -309,7 +456,9 @@ impl Table {
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. } => None,
+            | Block::Other { .. }
+            | Block::Unruled { .. }
+            | Block::Subheading { .. } => None,
         }))
     }
 }
@@ -333,7 +482,7 @@ impl Selection {
     }
 }
 
-/// コードブロック（TBL-schema-004、REQ-schema-034）。
+/// コードブロック。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CodeBlock {
@@ -345,7 +494,7 @@ pub struct CodeBlock {
     pub extract: Option<Extract>,
 }
 
-/// 出現回数（REQ-schema-019、TBL-schema-005）。
+/// 出現回数。
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Repeat {
@@ -364,7 +513,7 @@ impl Repeat {
     }
 }
 
-/// 条件付き規則（REQ-schema-020）。
+/// 条件付き規則。
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct When {
@@ -384,9 +533,8 @@ impl When {
     }
 }
 
-/// `of` が選ぶ、ノードから導かれる値の種類（REQ-schema-048）。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "lowercase")]
+/// `of` が選ぶ、ノードから導かれる値の種類。
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OfKind {
     /// ノードまたは要素が現れた行番号（1始まりの数値）
     Line,
@@ -396,25 +544,76 @@ pub enum OfKind {
     Name,
     /// 生の行。字下げと末尾の空白を含み、組み立て直さない
     Raw,
-    /// 項目と節の最後の行（1始まりの数値。REQ-schema-062）
+    /// 項目と節の最後の行、箇条書きの一覧の項目の最後の行（1始まりの数値）
     End,
+    /// ノードの正規表現のこの名前付きキャプチャが捕まえた文字。`{ group: <名前> }` と書く
+    Group(String),
+}
+
+/// `of` の値に書く語。
+const OF_WORDS: &[&str] = &["line", "id", "name", "raw", "end"];
+
+impl<'de> Deserialize<'de> for OfKind {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        d.deserialize_any(OfKindVisitor)
+    }
+}
+
+struct OfKindVisitor;
+
+impl<'de> serde::de::Visitor<'de> for OfKindVisitor {
+    type Value = OfKind;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("one of the words line, id, name, raw, end, or { group: <name> }")
+    }
+
+    fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<OfKind, E> {
+        match v {
+            "line" => Ok(OfKind::Line),
+            "id" => Ok(OfKind::Id),
+            "name" => Ok(OfKind::Name),
+            "raw" => Ok(OfKind::Raw),
+            "end" => Ok(OfKind::End),
+            other => Err(E::unknown_variant(other, OF_WORDS)),
+        }
+    }
+
+    fn visit_map<M: serde::de::MapAccess<'de>>(self, mut map: M) -> Result<OfKind, M::Error> {
+        let mut captured: Option<String> = None;
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                // 同じ鍵の2つ目は、YAML を読む側が重複した鍵として先に止める
+                "group" => captured = Some(map.next_value()?),
+                other => {
+                    return Err(M::Error::custom(format!(
+                        "unknown key \"{other}\" in a derived value; accepted: \"group\""
+                    )));
+                }
+            }
+        }
+        captured
+            .map(OfKind::Group)
+            .ok_or_else(|| M::Error::custom("a derived value mapping requires \"group\""))
+    }
 }
 
 impl OfKind {
     /// スキーマに書く語。
-    fn word(self) -> &'static str {
+    pub(crate) fn word(&self) -> &'static str {
         match self {
             OfKind::Line => "line",
             OfKind::Id => "id",
             OfKind::Name => "name",
             OfKind::Raw => "raw",
             OfKind::End => "end",
+            OfKind::Group(_) => "group",
         }
     }
 }
 
 /// 1つのノードが宣言した抽出規則。YAML では `配置パス`だけの略記か、
-/// `path`・`value`・`of`・`group` を持つ入れ子の写像を受ける（REQ-schema-048）。
+/// `path`・`value`・`of` を持つ入れ子の写像を受ける。
 #[derive(Debug, Clone)]
 pub struct Extract {
     /// 出力の置き場。必ず1つ
@@ -424,8 +623,6 @@ pub struct Extract {
     /// 要素ごとの導かれる値。鍵は要素オブジェクトの中の配置パス。
     /// 宣言された順に持つ（出力の鍵の順がこの順になる）
     of: Vec<(String, OfKind)>,
-    /// 題名の正規表現の名前付きキャプチャの名前
-    group: Option<String>,
 }
 
 impl Extract {
@@ -444,9 +641,12 @@ impl Extract {
         &self.of
     }
 
-    /// 題名の名前付きキャプチャの名前。
-    pub fn group(&self) -> Option<&str> {
-        self.group.as_deref()
+    /// `of` に書いた名前付きキャプチャの名前。宣言された順。
+    pub(crate) fn groups(&self) -> impl Iterator<Item = &str> {
+        self.of.iter().filter_map(|(_, kind)| match kind {
+            OfKind::Group(name) => Some(name.as_str()),
+            OfKind::Line | OfKind::Id | OfKind::Name | OfKind::Raw | OfKind::End => None,
+        })
     }
 
     /// 導かれる値を1つでも宣言しているか。
@@ -476,7 +676,6 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
             path: v.to_string(),
             value: None,
             of: Vec::new(),
-            group: None,
         })
     }
 
@@ -484,7 +683,6 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
         let mut path: Option<String> = None;
         let mut value: Option<String> = None;
         let mut of: Option<Vec<(String, OfKind)>> = None;
-        let mut group: Option<String> = None;
         while let Some(key) = map.next_key::<String>()? {
             let duplicate = |k: &str| M::Error::custom(format!("extract has \"{k}\" twice"));
             match key.as_str() {
@@ -507,37 +705,30 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
                     of = Some(map.next_value::<OfEntries>()?.0);
                 }
                 "group" => {
-                    if group.is_some() {
-                        return Err(duplicate("group"));
-                    }
-                    group = Some(map.next_value()?);
+                    return Err(M::Error::custom(
+                        "\"group\" is written in \"of\", as { <key>: { group: <name> } }",
+                    ));
                 }
                 other => {
                     return Err(M::Error::custom(format!("unknown extract key \"{other}\"")));
                 }
             }
         }
-        // 配置パスは必ず1つ。無い宣言は schema_invalid の停止になる（REQ-schema-048）
+        // 配置パスは必ず1つ。無い宣言は schema_invalid の停止になる
         let Some(path) = path else {
             return Err(M::Error::custom("extract requires \"path\""));
         };
         check_placement_path(&path).map_err(M::Error::custom)?;
-        // value と of の鍵も要素オブジェクトの中の配置パス（REQ-schema-048、TBL-schema-009）
+        // value と of の鍵も要素オブジェクトの中の配置パス
         let of = of.unwrap_or_default();
         for relative in value.iter().chain(of.iter().map(|(key, _)| key)) {
             check_placement_path(relative).map_err(M::Error::custom)?;
         }
-        Ok(Extract {
-            path,
-            value,
-            of,
-            group,
-        })
+        Ok(Extract { path, value, of })
     }
 }
 
-/// 配置パスのドットで区切った名前のどれかが空なら誤りにする（REQ-schema-036、
-/// 2026-09-24-review4-gaps の A5）。空の名前は空文字列の JSON の鍵になってしまう
+/// 配置パスのドットで区切った名前のどれかが空なら誤りにする。空の名前は空文字列の JSON の鍵になってしまう
 fn check_placement_path(path: &str) -> Result<(), String> {
     if path.split('.').any(str::is_empty) {
         return Err(format!("placement path \"{path}\" has an empty name"));
@@ -546,7 +737,7 @@ fn check_placement_path(path: &str) -> Result<(), String> {
 }
 
 /// `of` の `{ 鍵: 語 }` の対応。宣言された順を保つ。同じ鍵を2度書いても
-/// 黙って上書きせず、そのまま持って TBL-schema-009 の鍵の重複の判定に回す。
+/// 黙って上書きせず、そのまま持って
 struct OfEntries(Vec<(String, OfKind)>);
 
 impl<'de> Deserialize<'de> for OfEntries {
@@ -576,7 +767,7 @@ impl<'de> serde::de::Visitor<'de> for OfEntriesVisitor {
 
 /// スキーマ YAML を型付きのモデルに読み、形の違反を `SchemaError` にする。
 pub fn parse_schema(yaml: &str) -> Result<Schema, SchemaError> {
-    // 型や語が違うときに問題の欄の名前を説明に入れるため、読みながら欄の道筋を控える（REQ-schema-065）。
+    // 型や語が違うときに問題の欄の名前を説明に入れるため、読みながら欄の道筋を控える。
     // 停止は説明の1行目だけを出すので、欄の名前は複数行になる serde-saphyr の説明より前に置く
     let mut track = serde_path_to_error::Track::new();
     let parsed = serde_saphyr::with_deserializer_from_str(yaml, |de| {
@@ -597,13 +788,12 @@ pub fn parse_schema(yaml: &str) -> Result<Schema, SchemaError> {
 }
 
 /// 項目の内部のノードが1つでも `extract` を宣言しているか。宣言していれば
-/// 項目の抽出はオブジェクトの形になる（REQ-schema-047）。
+/// 項目の抽出はオブジェクトの形になる。
 pub(crate) fn item_internals_declare_extract(item: &Item) -> bool {
     !item_internal_extract_paths(item).is_empty()
 }
 
 /// 項目の内部のノードが宣言した配置パス。項目オブジェクトの中の相対パスで、
-/// TBL-schema-009 の鍵の重複の判定にも使う。
 fn item_internal_extract_paths(item: &Item) -> Vec<String> {
     let mut paths: Vec<String> = Vec::new();
     let mut push = |extract: Option<&Extract>| {

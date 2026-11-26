@@ -39,7 +39,7 @@ pub fn discover_tests(
 }
 
 /// 最初の行が同じ`テスト`が2つ以上あるとき、印はその行で最初に始まる`テスト`にだけ結び付ける
-/// （TBL-core-016）。tests は節の始まる位置の順に並んでいる
+/// 。tests は節の始まる位置の順に並んでいる
 fn unbind_later_tests_on_the_same_line(tests: Vec<(usize, DiscoveredTest)>) -> Vec<DiscoveredTest> {
     let mut previous_line = None;
     tests
@@ -55,12 +55,12 @@ fn unbind_later_tests_on_the_same_line(tests: Vec<(usize, DiscoveredTest)>) -> V
         .collect()
 }
 
-/// 行の全体の文字から前後の空白を除いたもの（REQ-core-086 の名前が null のときの detail）
+/// 行の全体の文字から前後の空白を除いたもの（名前が null のときの detail）
 fn line_text(content: &str, line: usize) -> String {
     content.lines().nth(line).unwrap_or("").trim().to_string()
 }
 
-/// "tests.rust.macros" のマクロを探し、中身を Rust の項目として読み直す（TBL-core-017）
+/// "tests.rust.macros" のマクロを探し、中身を Rust の項目として読み直す
 fn discover_macro_tests(
     node: &RustNode<'_>,
     source: &str,
@@ -115,7 +115,7 @@ fn reparse_macro_body(
     let byte_offset = body.range().start + usize::from(delimited.is_some());
     let line_offset = source[..byte_offset].matches('\n').count();
 
-    // REQ-core-083: 読み直したときの構文の誤りは unparsable_file にせず、読めた関数を数える
+    // 読み直したときの構文の誤りは unparsable_file にせず、読めた関数を数える
     let Ok(inner_root) = ast_grep_core::AstGrep::try_new(inner, SupportLang::Rust) else {
         return;
     };
@@ -150,7 +150,7 @@ fn collect_macro_functions(
             continue;
         };
         let first_line = child.start_pos().line();
-        // A26: マクロの外と同じ行の規則で結び付ける。中身の最初の行はマクロの開き括弧と同じ行なので、
+        // マクロの外と同じ行の規則で結び付ける。中身の最初の行はマクロの開き括弧と同じ行なので、
         // その上の行はマクロの外にあり、ファイルの行で塊を探す
         let (marker_ids, invalid_markers) = if first_line == 0 {
             lines.markers_before(line_offset)
@@ -167,7 +167,7 @@ fn collect_macro_functions(
             )
         };
         let test = DiscoveredTest {
-            // A38: 名前は関数の名前
+            // 名前は関数の名前
             name: Some(name_node.text().to_string()),
             first_line_text: line_text(inner, first_line),
             file_path: file_rel.to_string(),
@@ -179,7 +179,7 @@ fn collect_macro_functions(
     }
 }
 
-/// 単独の "\r" を "\n" に置き換える。TBL-core-010 は単独の "\r" も行の終わりに数えるが、
+/// 単独の "\r" を "\n" に置き換える。行の区切りは単独の "\r" も行の終わりに数えるが、
 /// `str::lines()` も tree-sitter の行も "\n" でしか行を分けない。どちらも1バイトなので、
 /// 置き換えてもバイトの位置は変わらない
 pub(crate) fn lone_cr_to_lf(content: &str) -> String {

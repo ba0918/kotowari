@@ -1,8 +1,8 @@
-//! 描画の入力のうち、言語タグと UI の文字（REQ-view-001、TBL-view-002）
+//! 描画の入力のうち、言語タグと UI の文字（C-view-rendering-1、C-view-languages-3）
 
 use kotowari_markdown_view::RenderInput;
 
-/// 言語タグ "ja" と、TBL-view-002 のすべての鍵に日本語の文字を持つ入力。ほかは空
+/// 言語タグ "ja" と、UI の文字のすべての鍵に日本語の文字を持つ入力。ほかは空
 pub fn japanese() -> RenderInput {
     let ui = [
         ("language_name", "日本語"),
@@ -11,7 +11,7 @@ pub fn japanese() -> RenderInput {
         ("stale_sections", "見直していない節 {n}"),
         ("open_items", "未決 {n}"),
         ("planned_items", "予定 {n}"),
-        ("stale_mark", "IR が変わった後、まだ見直していない節"),
+        ("stale_mark", "決定が変わった後、まだ見直していない節"),
         ("outline_stale", "見直していない"),
         ("superseded", "（置き換え済み）"),
         ("deferred", "（後回し）"),

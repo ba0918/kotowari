@@ -1,4 +1,2 @@
-ir: docs/ir
 decisions:
-  records: docs/decision/records
-  adr: docs/decision/adr
+  documents: docs/decisions

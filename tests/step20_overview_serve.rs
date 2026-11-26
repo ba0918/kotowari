@@ -1,4 +1,4 @@
-//! "kotowari overview serve"（docs/ir/core/overview-commands.md の REQ-core-297〜REQ-core-299）。
+//! "kotowari overview serve"（docs/decisions/core/overview-commands.md）。
 //! サーバは URL の1行を読んでから要求を送り、時間を待たない
 #![expect(
     clippy::unwrap_used,
@@ -11,7 +11,8 @@ use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use tempfile::TempDir;
 
-const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
+/// 全体像の元データが扱う決定の文書
+const DECISION: &str = "# CLI\n\nDecides the commands.\n\n## Run\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun.\n";
 
 fn write(tmp: &Path, rel: &str, content: &str) {
     let path = tmp.join(rel);
@@ -21,19 +22,14 @@ fn write(tmp: &Path, rel: &str, content: &str) {
 
 fn make_project(config: &str, lead: bool) -> TempDir {
     let tmp = TempDir::new().unwrap();
-    for dir in [".kotowari", "docs/decision/adr"] {
+    for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
     }
-    write(tmp.path(), "docs/ir/cli.md", IR);
-    write(
-        tmp.path(),
-        "docs/decision/records/r.md",
-        "# R\n\n## Context\n\nc\n\n## Agreements\n\n- A1 決めた\n  - why: w\n",
-    );
+    write(tmp.path(), "docs/decisions/cli.md", DECISION);
     write(
         tmp.path(),
         ".kotowari/config.yaml",
-        &format!("tests:\n  files: []\n{config}"),
+        &format!("tests:\n  files: []\ndecisions:\n  documents: docs/decisions\n{config}"),
     );
     let lead = if lead {
         "```view lead\nconclusion: 結論\n```\n"
@@ -43,7 +39,9 @@ fn make_project(config: &str, lead: bool) -> TempDir {
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
-        &format!("---\nir:\n  - docs/ir/cli.md\n---\n\n# A\n\n{lead}\n## 節\n\n文。\n"),
+        &format!(
+            "---\ndocuments:\n  - docs/decisions/cli.md\n---\n\n# A\n\n{lead}\n## 節\n\n文。\n"
+        ),
     );
     write(
         tmp.path(),
@@ -157,10 +155,10 @@ fn content_type(head: &str) -> Option<String> {
     })
 }
 
-// @kotowari[EX-core-478, REQ-core-297, REQ-core-299, REQ-core-294, REQ-core-296]
+// @kotowari[C-core-ovcmd-16, C-core-ovcmd-18, C-core-ovcmd-21]
 #[cfg(unix)]
 #[test]
-fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interrupt() {
+fn serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interrupt() {
     let tmp = make_project(OVERVIEW, true);
     let (mut server, mut stdout, line, port) = serve(tmp.path());
     assert_eq!(line, format!("http://127.0.0.1:{port}/\n"));
@@ -196,10 +194,10 @@ fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interr
     assert_eq!(rest, "", "nothing is written per request");
 }
 
-// @kotowari[REQ-core-299]
+// @kotowari[C-core-ovcmd-22]
 #[cfg(unix)]
 #[test]
-fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() {
+fn links_out_of_the_cache_directories_and_absolute_paths_are_404() {
     let tmp = make_project(OVERVIEW, true);
     let (mut server, _stdout, _, port) = serve(tmp.path());
     let cache = tmp.path().join(".kotowari/cache/overview");
@@ -226,10 +224,10 @@ fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() 
     assert_eq!(server.0.wait().unwrap().code(), Some(0));
 }
 
-// @kotowari[REQ-core-299, REQ-core-297]
+// @kotowari[C-core-ovcmd-16]
 #[cfg(unix)]
 #[test]
-fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache() {
+fn a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache() {
     let tmp = make_project(OVERVIEW, true);
     let data = tmp.path().join(".kotowari/overview");
     std::fs::rename(data.join("a.md"), data.join("変更 a.md")).unwrap();
@@ -276,9 +274,9 @@ fn stopped(tmp: &Path, port: u16) -> (Option<i32>, String, String) {
     )
 }
 
-// @kotowari[EX-core-479, REQ-core-298, TBL-core-001, TBL-core-018, TBL-core-020]
+// @kotowari[C-core-clienv-7, C-core-ovcmd-19, C-core-ovcmd-28]
 #[test]
-fn ex_core_479_a_port_in_use_stops_with_a_port_error() {
+fn a_port_in_use_stops_with_a_port_error() {
     let tmp = make_project(OVERVIEW, true);
     let occupied = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = occupied.local_addr().unwrap().port();
@@ -292,9 +290,9 @@ fn ex_core_479_a_port_in_use_stops_with_a_port_error() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-294, REQ-core-297]
+// @kotowari[C-core-ovcmd-9, C-core-ovcmd-27]
 #[test]
-fn req_core_294_serve_on_data_with_errors_stops_before_binding() {
+fn serve_on_data_with_errors_stops_before_binding() {
     let tmp = make_project(OVERVIEW, false);
     // ポートが使用中でも、元データの誤りを先に報告する
     let occupied = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -309,9 +307,9 @@ fn req_core_294_serve_on_data_with_errors_stops_before_binding() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-279]
+// @kotowari[C-core-ovdata-2]
 #[test]
-fn req_core_279_serve_without_the_overview_key_is_a_config_error() {
+fn serve_without_the_overview_key_is_a_config_error() {
     let tmp = make_project("", true);
     // 使用中のポートを渡す。検査を飛ばす誤りがあっても、配り始めずにすぐ止まる
     let occupied = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -324,9 +322,9 @@ fn req_core_279_serve_without_the_overview_key_is_a_config_error() {
     );
 }
 
-// @kotowari[REQ-core-280]
+// @kotowari[C-core-ovdata-3]
 #[test]
-fn req_core_280_serve_stops_on_an_overlap_with_the_guides() {
+fn serve_stops_on_an_overlap_with_the_guides() {
     let tmp = make_project(
         "overview:\n  files: ['notes/*.md']\n  toc: .kotowari/toc.yaml\nguides:\n  files: ['notes/*.md']\n",
         true,
@@ -348,9 +346,9 @@ fn req_core_280_serve_stops_on_an_overlap_with_the_guides() {
     );
 }
 
-// @kotowari[REQ-core-294, REQ-core-328]
+// @kotowari[C-core-ovtoc-11]
 #[test]
-fn req_core_294_serve_on_toc_errors_stops_before_binding() {
+fn serve_on_toc_errors_stops_before_binding() {
     let tmp = make_project(OVERVIEW, true);
     write(
         tmp.path(),
@@ -369,10 +367,10 @@ fn req_core_294_serve_on_toc_errors_stops_before_binding() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[EX-core-543, REQ-core-356]
+// @kotowari[C-core-ovcmd-23]
 #[cfg(unix)]
 #[test]
-fn ex_core_543_serve_answers_only_local_hosts() {
+fn serve_answers_only_local_hosts() {
     let tmp = make_project(OVERVIEW, true);
     let (mut server, mut stdout, _, port) = serve(tmp.path());
     let index = std::fs::read(tmp.path().join(".kotowari/cache/overview/index.html")).unwrap();

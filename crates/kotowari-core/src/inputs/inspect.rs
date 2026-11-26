@@ -47,7 +47,7 @@ impl CheckPreparation {
             self.guides = crate::guides::check_entries(
                 entries(files),
                 &self.read.discovered.files,
-                &self.read.docs,
+                &self.read.decisions,
                 &mut self.findings,
             )?;
         }
@@ -61,7 +61,7 @@ impl CheckPreparation {
         if self.read.policy.surface() {
             self.surface = Some(crate::surface::check_entries(
                 files.iter().map(|file| &file.analysis),
-                &self.read.docs,
+                &self.read.decisions,
                 entries(unspecified),
                 &mut self.findings,
             )?);
@@ -71,26 +71,9 @@ impl CheckPreparation {
     pub(super) fn finish(mut self) -> Result<Inspection, crate::StopReason> {
         self.findings
             .extend(self.translations.findings(self.read.config()));
-        // REQ-core-342: ほかの言語の`側`の文の検査と、"files" と "lines" に数えるすべての`側`
-        let sides = crate::translations::ir_sides(&self.translations, self.read.config())?;
-        let (mut side_files, mut side_lines) = (0, 0);
-        for documents in sides.values() {
-            crate::translations::side_findings(
-                documents,
-                &self.read.docs,
-                self.read.config(),
-                &mut self.findings,
-            );
-            side_files += documents.len();
-            side_lines += documents
-                .iter()
-                .map(|document| document.line_count)
-                .sum::<usize>();
-        }
         crate::sort_findings(&mut self.findings);
         let mut status = crate::status::build(
-            &self.read.docs,
-            &self.read.config().ir,
+            &self.read.decisions,
             &self.read.discovered.markers,
             self.read.discovered.tally.clone(),
             self.guides,
@@ -98,18 +81,8 @@ impl CheckPreparation {
             &self.findings,
         );
         status.groups = self.groups.clone();
-        status.documents.files += side_files;
-        status.documents.lines += side_lines;
         let status = StatusReport(status);
         let check = CheckReport(crate::CheckResult {
-            files: self.read.docs.len() + side_files,
-            lines: self
-                .read
-                .docs
-                .iter()
-                .map(|doc| doc.line_count)
-                .sum::<usize>()
-                + side_lines,
             counts: crate::count_findings(&self.findings),
             findings: self.findings,
             tests: self.read.discovered.tally.clone(),
@@ -117,6 +90,7 @@ impl CheckPreparation {
             surface: self.surface.map(|tally| crate::surface::Unlisted {
                 unspecified: tally.unspecified,
             }),
+            decisions: self.read.decision_tally,
             groups: self.groups,
             test_side: crate::test_side::TestSideFiles::new(
                 &self.read.discovered.files,
@@ -213,13 +187,13 @@ impl RepositoryInspectionPreparation {
         self.phase = InspectionPhase::Complete;
         Ok(())
     }
-    /// 追加の指摘の群を加える（TBL-core-042）。どの段の間でも加えられる
+    /// 追加の指摘の群を加える。どの段の間でも加えられる
     pub fn group(&mut self, group: FindingGroup) -> Result<(), crate::StopReason> {
         self.inner
             .group(group)
             .map_err(|error| native_error(&error))
     }
-    /// `対`を加える。同じ`先頭の言語`の`側`の`対`は1つにする（REQ-core-337）。どの段の間でも加えられる
+    /// `対`を加える。同じ`先頭の言語`の`側`の`対`は1つにする。どの段の間でも加えられる
     pub fn translations(&mut self, pairs: crate::translations::Pairs) {
         self.inner.translations(pairs);
     }

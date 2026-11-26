@@ -1,5 +1,5 @@
 //! 全体像の元データの読み込みと検査を check、status、list、query から見る
-//! （docs/ir/core/overview-data.md、docs/ir/core/overview-output.md）
+//! （docs/decisions/core/overview-data.md、docs/decisions/core/overview-output.md）
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -8,23 +8,21 @@
 use std::path::Path;
 use tempfile::TempDir;
 
-const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
+/// 全体像の元データが扱う決定の文書
+const DECISION: &str = "# CLI\n\nDecides the commands.\n\n## Run\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun.\n";
 
-/// 誤りの無い IR と判断の記録と、`config` を設定に持つプロジェクト
+/// 誤りの無い決定の文書と、`config` を設定に持つプロジェクト
 fn make_project(tmp: &Path, config: &str) {
-    for dir in [".kotowari", "docs/decision/adr", "tests"] {
+    for dir in [".kotowari", "docs/decisions", "tests"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
-    write(tmp, "docs/ir/cli.md", IR);
-    write(
-        tmp,
-        "docs/decision/records/r.md",
-        "# R\n\n## Context\n\nc\n\n## Agreements\n\n- A1 決めた\n  - why: w\n",
-    );
+    write(tmp, "docs/decisions/cli.md", DECISION);
     write(
         tmp,
         ".kotowari/config.yaml",
-        &format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{config}"),
+        &format!(
+            "tests:\n  files:\n    - \"tests/**/*.rs\"\ndecisions:\n  documents: docs/decisions\n{config}"
+        ),
     );
 }
 
@@ -58,13 +56,13 @@ const OVERVIEW: &str =
 /// 正しい全体像の元データ
 fn valid(title: &str) -> String {
     format!(
-        "---\nir:\n  - docs/ir/cli.md\n---\n\n# {title}\n\n```view lead\nconclusion: 結論\n```\n\n## 節\n\n文。\n"
+        "---\ndocuments:\n  - docs/decisions/cli.md\n---\n\n# {title}\n\n```view lead\nconclusion: 結論\n```\n\n## 節\n\n文。\n"
     )
 }
 
 /// 冒頭が lead でない全体像の元データ
 fn without_lead(ir: &str) -> String {
-    format!("---\nir:\n  - {ir}\n---\n\n# 題名\n\n## 節\n\n文。\n")
+    format!("---\ndocuments:\n  - {ir}\n---\n\n# 題名\n\n## 節\n\n文。\n")
 }
 
 fn kinds_on(value: &serde_json::Value, path: &str) -> Vec<String> {
@@ -77,9 +75,9 @@ fn kinds_on(value: &serde_json::Value, path: &str) -> Vec<String> {
         .collect()
 }
 
-// @kotowari[EX-core-464, REQ-core-278, REQ-core-019, REQ-core-288]
+// @kotowari[C-core-config-24, C-core-ovdata-1, C-core-ovout-1]
 #[test]
-fn ex_core_464_overview_data_in_a_named_hidden_directory_is_read() {
+fn overview_data_in_a_named_hidden_directory_is_read() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(
@@ -97,9 +95,9 @@ fn ex_core_464_overview_data_in_a_named_hidden_directory_is_read() {
     );
 }
 
-// @kotowari[REQ-core-019, REQ-core-278]
+// @kotowari[C-core-config-24]
 #[test]
-fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name() {
+fn a_broad_glob_does_not_enter_hidden_directories_it_does_not_name() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -108,14 +106,14 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
-    write_toc(tmp.path(), &["cli", "r"]);
+    write_toc(tmp.path(), &["cli"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let value = json(&stdout);
     assert!(kinds_on(&value, ".kotowari/overview/a.md").is_empty());
-    // 当たるのは docs/ の下の IR と判断の記録の2つだけ
-    assert_eq!(value["overview"]["files"], 2);
+    // 当たるのは docs/ の下の決定の文書だけ
+    assert_eq!(value["overview"]["files"], 1);
 
     let tmp = TempDir::new().unwrap();
     make_project(
@@ -127,7 +125,7 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
     write(
         tmp.path(),
         ".kotowari/overview/.hidden/c.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
     write_toc(tmp.path(), &["a", "b"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
@@ -136,9 +134,9 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
     assert_eq!(value["overview"]["files"], 2);
 }
 
-// @kotowari[REQ-core-019]
+// @kotowari[C-core-config-24]
 #[test]
-fn req_core_019_a_brace_across_a_slash_in_overview_files_does_not_stop_the_check() {
+fn a_brace_across_a_slash_in_overview_files_does_not_stop_the_check() {
     // 波括弧の中の "/" で切った前置きは glob にならない。設定の glob は有効なので、
     // 検査は止まらずに元データを読む
     let tmp = TempDir::new().unwrap();
@@ -153,9 +151,9 @@ fn req_core_019_a_brace_across_a_slash_in_overview_files_does_not_stop_the_check
     assert_eq!(json(&stdout)["overview"]["files"], 1);
 }
 
-// @kotowari[EX-core-545, REQ-core-019]
+// @kotowari[C-core-config-24]
 #[test]
-fn ex_core_545_a_hidden_directory_named_only_inside_braces_is_not_entered() {
+fn a_hidden_directory_named_only_inside_braces_is_not_entered() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -164,10 +162,14 @@ fn ex_core_545_a_hidden_directory_named_only_inside_braces_is_not_entered() {
     write(
         tmp.path(),
         ".overview/a.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
     // 同じ中身の元データは、波括弧の中の隠しディレクトリでない置き場では読まれて誤りになる
-    write(tmp.path(), "other/b.md", &without_lead("docs/ir/cli.md"));
+    write(
+        tmp.path(),
+        "other/b.md",
+        &without_lead("docs/decisions/cli.md"),
+    );
     write_toc(tmp.path(), &["b"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let value = json(&stdout);
@@ -176,9 +178,9 @@ fn ex_core_545_a_hidden_directory_named_only_inside_braces_is_not_entered() {
     assert_eq!(value["overview"]["files"], 1);
 }
 
-// @kotowari[REQ-core-278]
+// @kotowari[C-core-ovdata-1]
 #[test]
-fn req_core_278_only_files_with_a_lowercase_md_extension_are_read() {
+fn only_files_with_a_lowercase_md_extension_are_read() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -194,9 +196,9 @@ fn req_core_278_only_files_with_a_lowercase_md_extension_are_read() {
     assert_eq!(json(&stdout)["overview"]["files"], 1);
 }
 
-// @kotowari[REQ-core-278, TBL-core-001]
+// @kotowari[C-core-clienv-7, C-core-ovdata-18]
 #[test]
-fn req_core_278_overview_data_that_is_not_utf8_stops() {
+fn overview_data_that_is_not_utf8_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     std::fs::create_dir_all(tmp.path().join(".kotowari/overview")).unwrap();
@@ -210,10 +212,10 @@ fn req_core_278_overview_data_that_is_not_utf8_stops() {
     );
 }
 
-// @kotowari[REQ-core-018, REQ-core-278, TBL-core-001]
+// @kotowari[C-core-clienv-7, C-core-config-11, C-core-ovdata-19]
 #[cfg(unix)]
 #[test]
-fn req_core_018_a_dangling_symbolic_link_in_the_overview_walk_stops() {
+fn a_dangling_symbolic_link_in_the_overview_walk_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     std::fs::create_dir_all(tmp.path().join(".kotowari/overview")).unwrap();
@@ -227,9 +229,9 @@ fn req_core_018_a_dangling_symbolic_link_in_the_overview_walk_stops() {
     assert!(stderr.starts_with("unreadable file: "), "{stderr}");
 }
 
-// @kotowari[EX-core-465, REQ-core-280, TBL-core-020]
+// @kotowari[C-core-clienv-7, C-core-ovdata-3, C-core-ovdata-20]
 #[test]
-fn ex_core_465_overview_data_matched_by_guides_is_a_config_error() {
+fn overview_data_matched_by_guides_is_a_config_error() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -245,9 +247,9 @@ fn ex_core_465_overview_data_matched_by_guides_is_a_config_error() {
     );
 }
 
-// @kotowari[REQ-core-280, TBL-core-020]
+// @kotowari[C-core-clienv-7, C-core-ovdata-4, C-core-ovdata-20]
 #[test]
-fn req_core_280_the_first_overlap_in_byte_order_is_reported_and_tests_overlap_too() {
+fn the_first_overlap_in_byte_order_is_reported_and_tests_overlap_too() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -268,9 +270,9 @@ fn req_core_280_the_first_overlap_in_byte_order_is_reported_and_tests_overlap_to
     );
 }
 
-// @kotowari[REQ-core-280, REQ-core-199]
+// @kotowari[C-core-guides-9, C-core-ovdata-21]
 #[test]
-fn req_core_280_the_guides_and_tests_overlap_is_judged_first_and_guides_win_when_all_three_match() {
+fn the_guides_and_tests_overlap_is_judged_first_and_guides_win_when_all_three_match() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     write(tmp.path(), "tests/a.md", &valid("a"));
@@ -286,16 +288,16 @@ fn req_core_280_the_guides_and_tests_overlap_is_judged_first_and_guides_win_when
     );
 }
 
-// @kotowari[EX-core-472, REQ-core-288, REQ-core-290, REQ-core-027]
+// @kotowari[C-core-forder-4, C-core-ovout-1, C-core-ovout-2]
 #[test]
-fn ex_core_472_errors_in_overview_data_join_findings_counts_and_the_exit_code() {
+fn errors_in_overview_data_join_findings_counts_and_the_exit_code() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
     write(
         tmp.path(),
         ".kotowari/overview/b.md",
-        &without_lead("docs/ir/other.md"),
+        &without_lead("docs/decisions/other.md"),
     );
     write_toc(tmp.path(), &["a", "b"]);
     let (code, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
@@ -313,21 +315,28 @@ fn ex_core_472_errors_in_overview_data_join_findings_counts_and_the_exit_code() 
     assert_eq!(lead[0]["line"], serde_json::Value::Null);
     assert_eq!(lead[0]["detail"], "b.md");
     assert_eq!(value["counts"]["overview_lead_missing"], 1);
-    assert_eq!(value["counts"]["overview_ir_missing"], 1);
+    assert_eq!(value["counts"]["overview_document_missing"], 1);
 }
 
-// @kotowari[REQ-core-290, REQ-core-024]
+// @kotowari[C-core-forder-1, C-core-ovout-3]
 #[test]
-fn req_core_290_overview_findings_are_sorted_with_the_other_findings() {
+fn overview_findings_are_sorted_with_the_other_findings() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
         "overview:\n  files: ['docs/a.md', 'docs/z.md']\n  toc: .kotowari/toc.yaml\n",
     );
-    write(tmp.path(), "docs/a.md", &without_lead("docs/ir/cli.md"));
-    // docs/ir/ の IR の誤りより docs/a.md が先、docs/z.md は後に並ぶ
-    write(tmp.path(), "docs/ir/bad.md", "no title\n");
-    write(tmp.path(), "docs/z.md", &without_lead("docs/ir/none.md"));
+    write(
+        tmp.path(),
+        "docs/a.md",
+        &without_lead("docs/decisions/cli.md"),
+    );
+    // docs/decisions/ の誤りより docs/a.md が先、docs/z.md は後に並ぶ
+    write(
+        tmp.path(),
+        "docs/z.md",
+        &without_lead("docs/decisions/none.md"),
+    );
     write_toc(tmp.path(), &["a", "z"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let paths: Vec<String> = json(&stdout)["findings"]
@@ -343,9 +352,9 @@ fn req_core_290_overview_findings_are_sorted_with_the_other_findings() {
     assert_eq!(paths.last().map(String::as_str), Some("docs/z.md"));
 }
 
-// @kotowari[REQ-core-288]
+// @kotowari[C-core-ovout-1]
 #[test]
-fn req_core_288_the_text_format_does_not_show_the_overview_group() {
+fn the_text_format_does_not_show_the_overview_group() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
@@ -355,9 +364,9 @@ fn req_core_288_the_text_format_does_not_show_the_overview_group() {
     assert!(!stdout.contains("overview"), "{stdout}");
 }
 
-// @kotowari[EX-core-463, REQ-core-279, REQ-core-288, TBL-core-005]
+// @kotowari[C-core-output-3, C-core-ovdata-17]
 #[test]
-fn ex_core_463_without_the_overview_key_check_reads_no_overview_data() {
+fn without_the_overview_key_check_reads_no_overview_data() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     write(
@@ -375,15 +384,15 @@ fn ex_core_463_without_the_overview_key_check_reads_no_overview_data() {
     assert!(kinds_on(&value, ".kotowari/overview/x.md").is_empty());
 }
 
-// @kotowari[EX-core-473, REQ-core-289, REQ-core-290, REQ-core-162, TBL-core-028]
+// @kotowari[C-core-ovout-4, C-core-status-7, C-core-status-2, C-core-status-5]
 #[test]
-fn ex_core_473_an_error_in_overview_data_keeps_status_from_complete() {
+fn an_error_in_overview_data_keeps_status_from_complete() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
     write_toc(tmp.path(), &["a"]);
     let (code, stdout, _) = run(tmp.path(), &["status", "--format", "json"]);
@@ -397,9 +406,9 @@ fn ex_core_473_an_error_in_overview_data_keeps_status_from_complete() {
     assert_eq!(value["findings"]["error"], 1);
 }
 
-// @kotowari[REQ-core-289, REQ-core-166, TBL-core-028]
+// @kotowari[C-core-status-7, C-core-status-11]
 #[test]
-fn req_core_289_status_text_shows_the_overview_group_after_guides() {
+fn status_text_shows_the_overview_group_after_guides() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
@@ -415,9 +424,9 @@ fn req_core_289_status_text_shows_the_overview_group_after_guides() {
     assert!(lines[guides + 2].starts_with("surface "));
 }
 
-// @kotowari[REQ-core-152, REQ-core-158]
+// @kotowari[C-core-list-15, C-core-list-17, C-core-query-9, C-core-query-13]
 #[test]
-fn req_core_152_list_and_query_neither_read_overview_data_nor_stop_on_it() {
+fn list_and_query_neither_read_overview_data_nor_stop_on_it() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -427,7 +436,7 @@ fn req_core_152_list_and_query_neither_read_overview_data_nor_stop_on_it() {
     std::fs::write(tmp.path().join("docs/notes/a.md"), [0xff]).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["list"]);
     assert_eq!(code, Some(0), "{stderr}");
-    let (code, _, stderr) = run(tmp.path(), &["query", "REQ-001"]);
+    let (code, _, stderr) = run(tmp.path(), &["query", "docs/decisions/cli.md#run"]);
     assert_eq!(code, Some(0), "{stderr}");
 }
 
@@ -442,9 +451,9 @@ fn write_toc(tmp: &Path, names: &[&str]) {
     );
 }
 
-// @kotowari[REQ-core-325, REQ-core-328, REQ-core-329, REQ-core-288]
+// @kotowari[C-core-ovtoc-1]
 #[test]
-fn req_core_325_check_reads_the_toc_and_reports_its_errors_on_the_toc_file() {
+fn check_reads_the_toc_and_reports_its_errors_on_the_toc_file() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
@@ -465,9 +474,9 @@ fn req_core_325_check_reads_the_toc_and_reports_its_errors_on_the_toc_file() {
     );
 }
 
-// @kotowari[REQ-core-325]
+// @kotowari[C-core-ovtoc-2]
 #[test]
-fn req_core_325_status_stops_when_the_toc_file_is_missing() {
+fn status_stops_when_the_toc_file_is_missing() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
@@ -482,9 +491,9 @@ fn req_core_325_status_stops_when_the_toc_file_is_missing() {
     }
 }
 
-// @kotowari[REQ-core-325, TBL-core-001]
+// @kotowari[C-core-clienv-7, C-core-ovtoc-3, C-core-ovtoc-16]
 #[test]
-fn req_core_325_a_toc_that_is_not_utf8_stops() {
+fn a_toc_that_is_not_utf8_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
@@ -497,9 +506,9 @@ fn req_core_325_a_toc_that_is_not_utf8_stops() {
     );
 }
 
-// @kotowari[EX-core-506, REQ-core-326, TBL-core-001]
+// @kotowari[C-core-clienv-7, C-core-ovtoc-4]
 #[test]
-fn ex_core_506_a_toc_matched_by_the_overview_glob_is_a_config_error() {
+fn a_toc_matched_by_the_overview_glob_is_a_config_error() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -522,9 +531,9 @@ fn ex_core_506_a_toc_matched_by_the_overview_glob_is_a_config_error() {
     );
 }
 
-// @kotowari[REQ-core-326]
+// @kotowari[C-core-ovtoc-5, C-core-ovtoc-15]
 #[test]
-fn req_core_326_the_toc_is_compared_with_the_files_each_walk_reads() {
+fn the_toc_is_compared_with_the_files_each_walk_reads() {
     // overview.files は ".md" だけを読むので、同じ glob に当たる YAML の目次は重ならない
     let tmp = TempDir::new().unwrap();
     make_project(
@@ -560,9 +569,9 @@ fn req_core_326_the_toc_is_compared_with_the_files_each_walk_reads() {
     }
 }
 
-// @kotowari[REQ-core-326, REQ-core-280]
+// @kotowari[C-core-ovtoc-6]
 #[test]
-fn req_core_326_the_overview_data_overlap_is_judged_before_the_toc_overlap() {
+fn the_overview_data_overlap_is_judged_before_the_toc_overlap() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -578,15 +587,15 @@ fn req_core_326_the_overview_data_overlap_is_judged_before_the_toc_overlap() {
     );
 }
 
-// @kotowari[EX-core-511]
+// @kotowari[C-core-ovdata-10]
 #[test]
-fn ex_core_511_an_unreadable_yaml_part_points_at_the_line_of_the_yaml_error() {
+fn an_unreadable_yaml_part_points_at_the_line_of_the_yaml_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     let lines = [
         "---",
-        "ir:",
-        "  - docs/ir/cli.md",
+        "documents:",
+        "  - docs/decisions/cli.md",
         "---",
         "# 題名",
         "```view lead",

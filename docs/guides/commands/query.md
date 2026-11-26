@@ -2,14 +2,14 @@
 
 English | [日本語](query.ja.md)
 
-<!-- @kotowari[REQ-core-156:f3320502] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
-`kotowari query` takes one ID and prints that item or scenario together with its body and its reverse references (the items that point at that ID).
-Use it when you want to read a single requirement without opening the IR document, or to get the fingerprint to copy into a guide mark.
+`kotowari query` takes one ID, a decision's target or a confirmation row's ID, and prints that entry together with its body and, for a decision, the decisions that link to it.
+Use it when you want to read a single decision without opening the decision document, to see which tests confirm a row, or to get the fingerprint to copy into a guide mark.
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-157:7f12b67c, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
 ```sh
 kotowari query [--format json|text] [--config <path>] <ID>
@@ -18,15 +18,15 @@ kotowari query --version
 ```
 
 The positional argument is exactly one ID.
-Options are accepted before the command or after the ID (`kotowari query REQ-001 --format text` means the same thing).
+Options are accepted before the command or after the ID (`kotowari query C-shop-discount-1 --format text` means the same thing).
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-161:4580b6c0, REQ-core-157:7f12b67c, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5, docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
-| `<ID>` | An ID (of the form `REQ-core-001`) | None (required) | The ID of the item or scenario to read. Case-sensitive |
+| `<ID>` | A decision's target (`docs/decisions/shop/discount.md#members-get-10-off-their-orders`) or a row's ID (`C-shop-discount-1`) | None (required) | The entry to read. Case-sensitive |
 | `--format` | `json` or `text` | `json` | The output format |
 | `--config` | Path to a configuration file | `.kotowari/config.yaml` in the base directory | The configuration file to read. The path is read relative to the current directory |
 | `--help` | None | — | Prints usage and exits |
@@ -36,15 +36,15 @@ Details on the shared options and the base directory are in [CLI common rules](.
 
 ## Output
 
-What it reads is the same as `kotowari check` (the same configuration, and the IR documents and test files in the same locations).
+What it reads is the same as `kotowari check` (the same configuration, and the decision documents and test files in the same locations).
 However, it does not read guides.
-If several items or scenarios have the same ID, all of them are printed.
+If several rows have the same ID, all of them are printed.
 
 ### text
 
-<!-- @kotowari[REQ-core-161:4580b6c0, EX-core-254:cae8bffc] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
-For each entry, the body lines and the reverse reference lines follow the same first line and test lines as the text output of [`kotowari list`](./list.md).
+For each entry, the body lines follow the same first line and test lines as the text output of [`kotowari list`](./list.md).
 
 ```text
 ID 検証 名前 パス:行 tests=数
@@ -59,126 +59,108 @@ ID 検証 名前 パス:行 tests=数
 |---|---|
 | First line and test lines | Same as `kotowari list --format text` |
 | Body lines | Each line of `body`, indented by two half-width spaces. A blank line becomes a line of just two spaces |
-| `<-` lines | One per entry in `referenced_by`: `  <- ID via path:line`. `via` takes a value from the table below |
+| `<-` lines | For a decision, one per entry in `referenced_by`: `  <- target link path:line` |
+| Last line of a row | `  decision state heading`: the state and the heading of the decision holding the row (`-` for the state when the state line is wrong) |
 
 ### JSON
 
-<!-- @kotowari[TBL-core-027:24f0de66, REQ-core-159:4b71c072] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#the-body-when-a-decision-is-looked-up-is-the-whole-decision:39fb387c, docs/decisions/core/query.md#the-reverse-references-of-a-decision-hold-the-decisions-that-link-to-that-decisions-heading:90363085] -->
 
 The top level is an object with only `items`, the same shape as `list`.
-Each entry has all of [the keys of a `kotowari list` entry](./list.md#json) (`id`, `kind`, `name`, `path`, `line`, `type`, `verification`, `definition`, `examples`, `how_to_verify`, `relations`, `sources`, `tests`, `fingerprint`, `deferred`), plus the following two keys.
+Each entry has all of [the keys of a `kotowari list` entry](./list.md#json), plus the following two keys.
 
 | Key | Type | Description |
 |---|---|---|
-| `body` | array of strings | The body lines. Leading and trailing blank lines are excluded; the text of each line is kept as is |
-| `referenced_by` | array of objects | The items and scenarios that point at this ID. Each has `id`, `kind`, `path`, `line` and `via` |
+| `body` | array of strings | The body lines, as written in the decision document |
+| `referenced_by` | array of objects | For a decision, the decisions that link to its heading, each with `id`, `kind` (`decision`), `path`, `line` (the linking decision's heading) and `via` (`link`). Always empty for a row |
 
 The extent of `body` depends on the kind.
 
 | Kind | Extent of `body` |
 |---|---|
-| Item (requirement, decision table, property, flag record) | From the line after the heading up to the line before the next heading of the same or shallower depth. Lines inside code blocks that look like headings do not end it |
-| Scenario | From the `@id` tag line to the last step line |
+| Decision | Every line of the decision from its heading to its last section (the state line, Problem, Decision, Rejected options and Confirmations) |
+| Row | The row's lines as written, including wrapped lines |
 
-`via` tells where the reference comes from.
-
-| `via` | Where it points from |
-|---|---|
-| `definition` | A `- definition:` line |
-| `relations` | A `- related:` line |
-| `about` | A scenario's `@about` tag |
-| `text` | An ID enclosed in backquotes (outside double quotes) in a requirement's statement, a property's statement, or a scenario's step |
-
-Even if one item points at the same ID several times with the same `via`, it appears only once in `referenced_by`.
-The detailed definition is in TBL-core-027 in [the query IR](../../ir/core/query.md).
+A decision that links to the same heading several times appears only once in `referenced_by`.
+Decision documents point at decisions by links to headings, not by row IDs, so nothing points at a row.
+The detailed definition is in [the query decisions](../../decisions/core/query.md).
 
 ### Ordering
 
-<!-- @kotowari[REQ-core-160:897f0db4] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-reverse-references-of-a-decision-hold-the-decisions-that-link-to-that-decisions-heading:90363085] -->
 
 `items` is in the same order as `list` (ascending `path`, and within the same `path`, ascending `line`).
 `referenced_by` is also ordered by `path`, then `line`.
 
 ## Exit codes
 
-<!-- @kotowari[REQ-core-156:f3320502, REQ-core-157:7f12b67c, REQ-core-158:dbb850b2] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c, docs/decisions/core/query.md#query-stops-under-the-same-conditions-as-check-and-does-not-read-guides-or-surfaces:4414244f] -->
 
 | Code | Meaning |
 |---|---|
-| 0 | Read successfully (0 even if the IR has errors). Also 0 when it exits after `--help` or `--version` |
+| 0 | Read successfully (0 even if the decision documents have errors). Also 0 when it exits after `--help` or `--version` |
 | 2 | Stopped (the ID does not exist, the argument is not of ID form, the wrong number of arguments, a configuration error, an unreadable file, and so on; the reason is printed to standard error) |
 
 `query` never returns 1.
-The commands whose exit code depends on whether the IR has errors are `check` and `status`.
+The commands whose exit code depends on whether there are errors are `check` and `status`.
 `query` does not read guides, surface files, surface rule files, the list of unspecified surfaces or overview data, so it never stops because of them.
 
 ## Example
 
-<!-- @kotowari[EX-core-250:b09de293, EX-core-254:cae8bffc, EX-core-255:4af0f3d9] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
-These are results of running it on the same small IR and tests as in [the `kotowari list` example](./list.md#example) (run on 2026-09-24).
+These are results of running it on the same small decision document and test as in [the `kotowari list` example](./list.md#example), where the Problem of the second decision links to the first one.
 
-Read a requirement as text.
-The `<-` line after the body shows that scenario EX-001 points at this requirement through `@about`.
+Read a decision as text.
+The `<-` line after the body shows that the guest decision links to this decision's heading.
 
 ```console
-$ kotowari query REQ-001 --format text
-REQ-001 unit 名前つきの挨拶 docs/ir/greet.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-  - kind: ubiquitous
-  - source: docs/decision/records/records.md#A1
-  - verification: unit
+$ kotowari query 'docs/decisions/shop/discount.md#members-get-10-off-their-orders' --format text
+docs/decisions/shop/discount.md#members-get-10-off-their-orders - Members get 10% off their orders docs/decisions/shop/discount.md:5 tests=0
+  ## Members get 10% off their orders
   
-  システムは常に、名前を受けたら "こんにちは、" に名前を続けた文を返す。
-  <- EX-001 about docs/ir/greet.md:28
+  Status: implemented
+  
+  ### Problem
+  
+  Members asked for a benefit for ordering often.
+  
+  ### Decision
+  
+  An order placed by a member is priced at 10% off.
+  
+  ### Confirmations
+  
+  - C-shop-discount-1 A member's order of 1000 is priced at 900
+  <- docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted link docs/decisions/shop/discount.md:21
 ```
 
-In JSON, an entry of `list` gains `body` and `referenced_by`. Only those two added keys are shown.
+Read a row as text. Its tests come first, and the last line names its decision.
 
 ```console
-$ kotowari query REQ-001 | jq '.items[0] | {body, referenced_by}'
-{
-  "body": [
-    "- kind: ubiquitous",
-    "- source: docs/decision/records/records.md#A1",
-    "- verification: unit",
-    "",
-    "システムは常に、名前を受けたら \"こんにちは、\" に名前を続けた文を返す。"
-  ],
-  "referenced_by": [
-    {
-      "id": "EX-001",
-      "kind": "scenario",
-      "path": "docs/ir/greet.md",
-      "line": 28,
-      "via": "about"
-    }
-  ]
-}
+$ kotowari query C-shop-discount-1 --format text
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+  - C-shop-discount-1 A member's order of 1000 is priced at 900
+  decision implemented Members get 10% off their orders
 ```
 
-A scenario's body starts at the `@id` tag line.
+In JSON, an entry of `list` gains `body` and `referenced_by`.
 
 ```console
-$ kotowari query EX-001 --format text
-EX-001 - 名前を受けて挨拶する docs/ir/greet.md:28 tests=1
-  tests/greet.rs:1 greets_with_name
-  @id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1
-  Scenario: 名前を受けて挨拶する
-    Given 名前 "花子" がある
-    When 挨拶を求める
-    Then "こんにちは、花子" が返る
+$ kotowari query C-shop-discount-1
+{"items":[{"id":"C-shop-discount-1","kind":"confirmation","name":"A member's order of 1000 is priced at 900","path":"docs/decisions/shop/discount.md","line":19,"decision":"Members get 10% off their orders","state":"implemented","by_reading":false,"tests":[{"path":"tests/discount.rs","line":1,"name":"member_gets_ten_percent_off"}],"body":["- C-shop-discount-1 A member's order of 1000 is priced at 900"],"referenced_by":[]}]}
 ```
 
 ### Getting the fingerprint to copy into a guide mark
 
-<!-- @kotowari[TBL-core-026:382b0b95, REQ-core-203:1fdc0443] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f] -->
 
-The fingerprint you write in a guide mark is the `fingerprint` value, copied as is. Do not compute it by hand.
+The fingerprint you write in a guide mark is the `fingerprint` value of the decision, copied as is. Do not compute it by hand.
 
 ```console
-$ kotowari query REQ-001 | jq -r '.items[0].fingerprint'
-ec0d8b1c
+$ kotowari query 'docs/decisions/shop/discount.md#members-get-10-off-their-orders' | jq -r '.items[0].fingerprint'
+e3adc927
 ```
 
 How to write guides is described in [Writing guides](../writing-guides.md).
@@ -187,41 +169,46 @@ How to write guides is described in [Writing guides](../writing-guides.md).
 
 ### It stops with `argument error: unknown id: ...`
 
-<!-- @kotowari[REQ-core-157:7f12b67c, EX-core-251:9c9ef8a2] -->
+<!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
-Neither an item nor a scenario with that ID exists in the IR.
+No decision or row with that ID exists.
 Because it stops instead of returning an empty result, you notice a mistyped ID right away.
+A target whose heading was renamed is unknown too.
 
 ```console
-$ kotowari query REQ-999
-argument error: unknown id: REQ-999
+$ kotowari query C-shop-discount-9
+argument error: unknown id: C-shop-discount-9
 $ echo $?
 2
+$ kotowari query 'docs/decisions/shop/discount.md#no-such-heading'
+argument error: unknown id: docs/decisions/shop/discount.md#no-such-heading
 ```
 
 If you are not sure of the ID, look for it with `kotowari list --format text`.
 
 ### It stops with `argument error: not an id: ...`
 
-<!-- @kotowari[REQ-core-157:7f12b67c] -->
+<!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
-The positional argument is not of ID form.
-IDs are case-sensitive, so writing one in lowercase also makes it stop.
+The positional argument is neither of the row ID form nor of the target form.
+IDs are case-sensitive, so writing one in lowercase also makes it stop, and a document path without `#` is not a target.
 
 ```console
-$ kotowari query req-001
-argument error: not an id: req-001
+$ kotowari query c-shop-discount-1
+argument error: not an id: c-shop-discount-1
+$ kotowari query docs/decisions/shop/discount.md
+argument error: not an id: docs/decisions/shop/discount.md
 ```
 
 ### It stops with `argument error: query expects exactly one id, got N`
 
-<!-- @kotowari[REQ-core-157:7f12b67c, EX-core-252:9d3e3cb6] -->
+<!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
 You passed no ID, or two or more.
 `query` reads only one ID at a time. To look at several, run it once per ID, or filter the JSON of `kotowari list` with `jq`.
 
 ```console
-$ kotowari query REQ-001 REQ-002
+$ kotowari query C-shop-discount-1 C-shop-discount-2
 argument error: query expects exactly one id, got 2
 $ kotowari query
 argument error: query expects exactly one id, got 0
@@ -229,47 +216,40 @@ argument error: query expects exactly one id, got 0
 
 ### Two entries come out for the same ID
 
-<!-- @kotowari[REQ-core-156:f3320502, EX-core-253:b80999a5] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
-The IR has two items with the same ID (a duplicate_id error in `check`).
+Two rows have the same ID (a duplicate_id error in `check`).
 `query` does not hide duplicates; it prints all of them and exits with 0.
 
 ```console
-$ kotowari query REQ-001 --format text
-REQ-001 unit 別れの挨拶 docs/ir/farewell.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-  - kind: ubiquitous
-  - source: docs/decision/records/records.md#A1
-  - verification: unit
-  
-  システムは常に、"さようなら" を返す。
-  <- EX-001 about docs/ir/greet.md:28
-REQ-001 unit 名前つきの挨拶 docs/ir/greet.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-  - kind: ubiquitous
-  - source: docs/decision/records/records.md#A1
-  - verification: unit
-  
-  システムは常に、名前を受けたら "こんにちは、" に名前を続けた文を返す。
-  <- EX-001 about docs/ir/greet.md:28
+$ kotowari query C-shop-discount-1 --format text
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+  - C-shop-discount-1 A member's order of 1000 is priced at 900
+  decision implemented Members get 10% off their orders
+C-shop-discount-1 reading The price list page says that only members get the discount docs/decisions/shop/discount.md:36 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+  - C-shop-discount-1 (by reading) The price list page says that only members get the discount
+  decision implemented Orders of non-members are not discounted
 $ kotowari check --format text
-docs/ir/greet.md:7 [error] duplicate_id REQ-001
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
+docs/decisions/shop/discount.md:36 [error] duplicate_id C-shop-discount-1
 ```
 
-Give one of them a new ID.
+Give the later row the next unused number of the topic.
 
-### An ID mentioned in a statement does not appear in `referenced_by`
+### A decision mentioned in a sentence does not appear in `referenced_by`
 
-<!-- @kotowari[TBL-core-027:24f0de66, EX-core-257:c84b3d33] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-reverse-references-of-a-decision-hold-the-decisions-that-link-to-that-decisions-heading:90363085, docs/decisions/core/decision-documents.md#to-refer-to-another-decision-link-to-its-heading:41ba3d75] -->
 
-Only IDs enclosed in backquotes count as reverse references with `via` `text`.
-IDs inside double quotes, or IDs not enclosed at all, are not counted.
-Write a reference you want listed as a reverse reference like `` `REQ-001` ``.
+Only Markdown links to the decision's heading count as reverse references.
+A heading quoted in plain text, or a row ID written in a sentence, is not counted.
+Write a reference you want listed as a link, like `[the member discount](discount.md#members-get-10-off-their-orders)`.
 
 ## Related
 
-- Specification: [the query IR](../../ir/core/query.md)
-- See all items as a list: [`kotowari list`](./list.md)
+- Specification: [the query decisions](../../decisions/core/query.md)
+- See all decisions and rows as a list: [`kotowari list`](./list.md)
 - See overall counts and whether everything is in place: [`kotowari status`](./status.md)
 - See findings one by one: [`kotowari check`](./check.md)
 - Guide marks and fingerprints: [Writing guides](../writing-guides.md)

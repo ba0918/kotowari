@@ -1,4 +1,4 @@
-//! 面の検査（docs/ir/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
+//! 面の検査（docs/decisions/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -9,24 +9,16 @@ use tempfile::TempDir;
 
 /// 置き場と設定を作る。`surface` の行をそのまま設定に足す
 fn make_project(tmp: &Path, surface: &str) {
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
+    for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{surface}"),
+        format!(
+            "decisions:\n  documents: docs/decisions\ntests:\n  files:\n    - \"tests/**/*.rs\"\n{surface}"
+        ),
     )
     .unwrap();
-    write(
-        tmp,
-        "docs/decision/records/r.md",
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
-    );
 }
 
 /// ファイルを書く（親のディレクトリは作る）
@@ -53,9 +45,9 @@ fn run(tmp: &Path, args: &[&str]) -> (Option<i32>, String, String) {
 
 // --- S1: 面の設定の鍵と停止 ---
 
-// @kotowari[EX-core-415, REQ-core-225]
+// @kotowari[C-core-surface-9]
 #[test]
-fn ex_core_415_rules_without_files_stop_with_a_config_error() {
+fn rules_without_files_stop_with_a_config_error() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -66,9 +58,9 @@ fn ex_core_415_rules_without_files_stop_with_a_config_error() {
     assert!(stderr.starts_with("config error: "), "{stderr}");
 }
 
-// @kotowari[EX-core-416, REQ-core-225]
+// @kotowari[C-core-surface-9]
 #[test]
-fn ex_core_416_files_without_rules_stop() {
+fn files_without_rules_stop() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "surface:\n  files:\n    - \"src/**/*.rs\"\n");
     let (code, stdout, stderr) = run(tmp.path(), &["check"]);
@@ -76,9 +68,9 @@ fn ex_core_416_files_without_rules_stop() {
     assert!(stderr.starts_with("config error: "), "{stderr}");
 }
 
-// @kotowari[EX-core-428, REQ-core-225]
+// @kotowari[C-core-surface-9]
 #[test]
-fn ex_core_428_a_list_key_without_rules_stops_even_list() {
+fn a_list_key_without_rules_stops_even_list() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -89,16 +81,15 @@ fn ex_core_428_a_list_key_without_rules_stops_even_list() {
     assert!(stderr.starts_with("config error: "), "{stderr}");
 }
 
-// @kotowari[REQ-core-225]
+// @kotowari[C-core-surface-9]
 #[test]
-fn req_225_a_key_combination_error_stops_every_command_that_reads_the_config() {
+fn a_key_combination_error_stops_every_command_that_reads_the_config() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "surface:\n  files:\n    - \"src/**/*.rs\"\n");
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     write(tmp.path(), "results.json", "{}");
     for args in [
         &["list"][..],
-        &["query", "REQ-core-001"],
+        &["query", "C-core-cli-1"],
         &["status"],
         &["mutants", "--tool", "cargo-mutants", "results.json"],
     ] {
@@ -118,9 +109,9 @@ const SURFACE_SRC: &str =
 const FLAG_RULE: &str =
     "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n";
 
-// @kotowari[REQ-core-224]
+// @kotowari[C-core-surface-5]
 #[test]
-fn req_224_surface_rules_are_not_added_to_the_test_queries() {
+fn surface_rules_are_not_added_to_the_test_queries() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -132,7 +123,6 @@ fn req_224_surface_rules_are_not_added_to_the_test_queries() {
         "id: func\nlanguage: rust\nrule:\n  kind: function_item\n  has:\n    field: name\n    pattern: $NAME\n",
     );
     write(tmp.path(), "tests/a.rs", "fn helper() {}\n");
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     let (_, stdout, stderr) = run(tmp.path(), &["check"]);
     let v: serde_json::Value =
         serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
@@ -142,13 +132,12 @@ fn req_224_surface_rules_are_not_added_to_the_test_queries() {
     );
 }
 
-// @kotowari[REQ-core-224]
+// @kotowari[C-core-surface-8]
 #[test]
-fn req_224_a_non_utf8_surface_file_in_a_rule_language_stops_as_a_test_file_does() {
+fn a_non_utf8_surface_file_in_a_rule_language_stops_as_a_test_file_does() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     std::fs::create_dir_all(tmp.path().join("src")).unwrap();
     std::fs::write(tmp.path().join("src/data.rs"), [0xff, 0xfe, 0x00]).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["check"]);
@@ -159,27 +148,25 @@ fn req_224_a_non_utf8_surface_file_in_a_rule_language_stops_as_a_test_file_does(
     );
 }
 
-// @kotowari[REQ-core-236, REQ-core-224]
+// @kotowari[C-core-surface-7]
 #[test]
-fn req_236_a_non_utf8_surface_file_not_in_a_rule_language_is_not_read() {
+fn a_non_utf8_surface_file_not_in_a_rule_language_is_not_read() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     std::fs::create_dir_all(tmp.path().join("src")).unwrap();
     std::fs::write(tmp.path().join("src/logo.png"), [0xff, 0xfe, 0x00]).unwrap();
     let (code, stdout, stderr) = run(tmp.path(), &["check"]);
     assert_eq!(code, Some(0), "{stdout}{stderr}");
 }
 
-// @kotowari[REQ-core-018, TBL-core-001]
+// @kotowari[C-core-clienv-7, C-core-config-11]
 #[cfg(unix)]
 #[test]
-fn req_018_a_dangling_symlink_in_the_surface_walk_stops() {
+fn a_dangling_symlink_in_the_surface_walk_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     std::fs::create_dir_all(tmp.path().join("src")).unwrap();
     std::os::unix::fs::symlink("missing.rs", tmp.path().join("src/link.rs")).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["check"]);
@@ -190,24 +177,23 @@ fn req_018_a_dangling_symlink_in_the_surface_walk_stops() {
     );
 }
 
-// @kotowari[EX-core-417, REQ-core-225, REQ-core-229]
+// @kotowari[C-core-surface-10]
 #[test]
-fn ex_core_417_a_missing_rule_file_stops_check_but_not_list() {
+fn a_missing_rule_file_stops_check_but_not_list() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
         "surface:\n  files:\n    - \"src/**/*.rs\"\n  rules:\n    - \"rules/missing.yml\"\n",
     );
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     let (code, _, stderr) = run(tmp.path(), &["check"]);
     assert_eq!(code, Some(2), "{stderr}");
     let (code, _, stderr) = run(tmp.path(), &["list"]);
     assert_eq!(code, Some(0), "{stderr}");
 }
 
-// @kotowari[REQ-core-225, TBL-core-020]
+// @kotowari[C-core-clienv-9, C-core-surface-10]
 #[test]
-fn req_225_a_broken_rule_file_stops_check_and_status_naming_the_rule_file() {
+fn a_broken_rule_file_stops_check_and_status_naming_the_rule_file() {
     let broken: [(&str, &str); 4] = [
         ("rules/surface.yml", "id: [unclosed\n"),
         (
@@ -221,7 +207,6 @@ fn req_225_a_broken_rule_file_stops_check_and_status_naming_the_rule_file() {
         let tmp = TempDir::new().unwrap();
         make_project(tmp.path(), SURFACE_SRC);
         write(tmp.path(), path, content);
-        write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
         for command in ["check", "status"] {
             let (code, _, stderr) = run(tmp.path(), &[command]);
             assert_eq!(code, Some(2), "{command} {content}: {stderr}");
@@ -233,16 +218,15 @@ fn req_225_a_broken_rule_file_stops_check_and_status_naming_the_rule_file() {
     }
 }
 
-// @kotowari[REQ-core-225]
+// @kotowari[C-core-surface-10]
 #[test]
-fn req_225_the_same_rule_path_twice_stops() {
+fn the_same_rule_path_twice_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
         "surface:\n  files:\n    - \"src/**\"\n  rules:\n    - \"rules/surface.yml\"\n    - \"rules/surface.yml\"\n",
     );
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     let (code, _, stderr) = run(tmp.path(), &["check"]);
     assert_eq!(code, Some(2), "{stderr}");
     assert!(
@@ -251,9 +235,9 @@ fn req_225_the_same_rule_path_twice_stops() {
     );
 }
 
-// @kotowari[REQ-core-236]
+// @kotowari[C-core-surface-6]
 #[test]
-fn req_236_a_file_already_unparsable_as_a_test_file_is_not_reported_twice() {
+fn a_file_already_unparsable_as_a_test_file_is_not_reported_twice() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -261,14 +245,13 @@ fn req_236_a_file_already_unparsable_as_a_test_file_is_not_reported_twice() {
     );
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
     write(tmp.path(), "tests/bad.rs", "fn f( {\n");
-    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     let (_, stdout, stderr) = run(tmp.path(), &["check"]);
     let v: serde_json::Value =
         serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
     assert_eq!(v["counts"]["unparsable_file"], 1, "{v}");
 }
 
-// --- S3: IR にあるかの判定と surface_without_spec ---
+// --- S3: 決定の文書にあるかの判定と surface_without_spec ---
 
 /// "surface.files" を "src/**/*.rs" に、"surface.rules" を "rules/surface.yml" にする設定の行
 const SURFACE_RS: &str =
@@ -285,20 +268,15 @@ fn cli_rs() -> String {
     lines.join("\n") + "\n"
 }
 
-/// review の`要求`1つの節。`文`は `statement`
-fn review_requirement(id: &str, statement: &str) -> String {
+/// 「決めたこと」が `decision` の決定を1つ持つ決定の文書。`rest` はそのあとに足す
+fn decision_doc(decision: &str, rest: &str) -> String {
     format!(
-        "### {id}: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: 読んで確かめる\n\n{statement}\n\n"
+        "# 題名\n\n範囲。\n\n## 決定\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n### 決めたこと\n\n{decision}\n{rest}"
     )
 }
 
-/// 要求の節とほかの節から IR の文書を作る
-fn ir_doc(requirements: &str, rest: &str) -> String {
-    format!("# 題名\n\n範囲。\n\n## Requirements\n\n{requirements}{rest}")
-}
-
-/// EX-core-407 の場面: "--format" を`要求`の`文`に二重引用符で書いた IR と、面の規則と "src/cli.rs"
-fn ex_407_project(tmp: &Path) {
+/// 面の規則と "src/cli.rs"
+fn project(tmp: &Path) {
     make_project(tmp, SURFACE_RS);
     write(tmp, "rules/surface.yml", FLAG_RULE);
     write(tmp, "src/cli.rs", &cli_rs());
@@ -336,18 +314,15 @@ fn without_spec(v: &serde_json::Value) -> Vec<String> {
         .collect()
 }
 
-// @kotowari[EX-core-408, EX-core-409, REQ-core-227, TBL-core-019, TBL-core-006, TBL-core-008]
+// @kotowari[C-core-findings-6, C-core-surface-15, C-core-surface-16]
 #[test]
-fn ex_core_408_a_surface_absent_from_the_ir_is_an_error_at_its_first_place() {
+fn a_surface_absent_from_the_decision_documents_is_an_error_at_its_first_place() {
     let tmp = TempDir::new().unwrap();
-    ex_407_project(tmp.path());
+    project(tmp.path());
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
     let (code, v) = check_json(tmp.path());
     assert_eq!(
@@ -363,11 +338,11 @@ fn ex_core_408_a_surface_absent_from_the_ir_is_an_error_at_its_first_place() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-227]
+// @kotowari[C-core-surface-16]
 #[test]
-fn req_227_the_first_place_is_by_path_bytes_then_line() {
+fn the_first_place_is_by_path_bytes_then_line() {
     let tmp = TempDir::new().unwrap();
-    ex_407_project(tmp.path());
+    project(tmp.path());
     let mut a = ["let _ = 0;"; 9];
     a[8] = "fn a() { let _ = \"--verbose\"; }";
     write(tmp.path(), "src/a.rs", &(a.join("\n") + "\n"));
@@ -378,11 +353,8 @@ fn req_227_the_first_place_is_by_path_bytes_then_line() {
     );
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(
@@ -396,19 +368,16 @@ fn req_227_the_first_place_is_by_path_bytes_then_line() {
     );
 }
 
-// @kotowari[EX-core-410, REQ-core-226]
+// @kotowari[C-core-surface-12]
 #[test]
-fn ex_core_410_a_name_that_is_only_part_of_the_quoted_content_is_not_in_the_ir() {
+fn a_name_that_is_only_part_of_the_quoted_content_is_not_in_the_decision_documents() {
     let tmp = TempDir::new().unwrap();
-    ex_407_project(tmp.path());
+    project(tmp.path());
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement(
-                "REQ-001",
-                "\"--format\" と \"--verbose true\" と \" --verbose\" を受ける。",
-            ),
+        "docs/decisions/a/a.md",
+        &decision_doc(
+            "\"--format\" と \"--verbose true\" と \" --verbose\" を受ける。",
             "",
         ),
     );
@@ -416,130 +385,27 @@ fn ex_core_410_a_name_that_is_only_part_of_the_quoted_content_is_not_in_the_ir()
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[REQ-core-226]
+// @kotowari[C-core-surface-11]
 #[test]
-fn req_226_double_quotes_pair_from_the_left() {
+fn double_quotes_pair_from_the_left() {
     let tmp = TempDir::new().unwrap();
-    ex_407_project(tmp.path());
+    project(tmp.path());
     // 左から対にすると "x" の後の引用符と "--verbose" の前の引用符が対になる
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" と x\" \"--verbose\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" と x\" \"--verbose\" を受ける。", ""),
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[EX-core-411, REQ-core-226]
+// @kotowari[C-core-surface-17]
 #[test]
-fn ex_core_411_table_cells_deferred_statements_and_steps_count() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), SURFACE_RS);
-    write(
-        tmp.path(),
-        "rules/surface.yml",
-        "id: command\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n",
-    );
-    write(
-        tmp.path(),
-        "src/cli.rs",
-        "const C: [&str; 4] = [\"list\", \"query\", \"plan\", \"head\"];\n",
-    );
-    let deferred = "### REQ-002: 後回し\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: unit\n- deferred: docs/decision/records/r.md#A1\n\n\"query\" を受ける。\n\n";
-    let table = "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/r.md#A1\n\n| \"head\" | 中身 |\n|---|---|\n| \"list\" | 一覧 |\n\n";
-    let example = "## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001\nScenario: 場面\n  When \"plan\" を実行する\n  Then 終わる\n```\n";
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &format!("{}{deferred}", review_requirement("REQ-001", "文。")),
-            &format!("{table}{example}"),
-        ),
-    );
-    let (_, v) = check_json(tmp.path());
-    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
-}
-
-// @kotowari[EX-core-412, REQ-core-226]
-#[test]
-fn ex_core_412_a_glossary_term_in_backticks_counts() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), SURFACE_RS);
-    write(
-        tmp.path(),
-        "rules/surface.yml",
-        "id: command\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n",
-    );
-    write(tmp.path(), "src/cli.rs", "const S: &str = \"status\";\n");
-    write(
-        tmp.path(),
-        "docs/ir/CONTEXT.md",
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| status | 集計 | docs/decision/records/r.md#A1 |\n",
-    );
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(&review_requirement("REQ-001", "`status` を出す。"), ""),
-    );
-    let (_, v) = check_json(tmp.path());
-    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
-    assert!(findings_of(&v, "unknown_term").is_empty(), "{v}");
-}
-
-// @kotowari[EX-core-429, REQ-core-226]
-#[test]
-fn ex_core_429_property_statements_and_how_to_verify_lines_do_not_count() {
-    let tmp = TempDir::new().unwrap();
-    ex_407_project(tmp.path());
-    let requirement = "### REQ-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: \"--verbose\" を確かめる\n\n\"--format\" を受ける。\n\n";
-    let property = "## Properties\n\n### PROP-001: 性質\n\n- source: docs/decision/records/r.md#A1\n\n\"--verbose\" が常に成り立つ。\n\n";
-    write(tmp.path(), "docs/ir/a.md", &ir_doc(requirement, property));
-    let (_, v) = check_json(tmp.path());
-    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
-}
-
-// @kotowari[REQ-core-226]
-#[test]
-fn req_226_scope_lines_flags_and_the_glossary_do_not_count() {
-    let tmp = TempDir::new().unwrap();
-    ex_407_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n\"--verbose\" を扱う。\n\n## Requirements\n\n{}",
-            review_requirement("REQ-001", "\"--format\" を受ける。")
-        ),
-    );
-    write(
-        tmp.path(),
-        "docs/ir/FLAGS.md",
-        "# Flags\n\n### FLAG-001: 問題\n\n- kind: gap\n- source: docs/decision/records/r.md#A1\n\n\"--verbose\" が決まっていない。\n",
-    );
-    write(
-        tmp.path(),
-        "docs/ir/CONTEXT.md",
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| 冗長 | \"--verbose\" の出力 | docs/decision/records/r.md#A1 |\n",
-    );
-    let (_, v) = check_json(tmp.path());
-    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
-}
-
-// @kotowari[REQ-core-227]
-#[test]
-fn req_227_no_surface_is_extracted_when_surface_rules_is_empty() {
+fn no_surface_is_extracted_when_surface_rules_is_empty() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     write(tmp.path(), "src/cli.rs", &cli_rs());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(&review_requirement("REQ-001", "文。"), ""),
-    );
     let (code, v) = check_json(tmp.path());
     assert!(without_spec(&v).is_empty(), "{v}");
     assert_eq!(code, Some(0), "{v}");
@@ -547,8 +413,8 @@ fn req_227_no_surface_is_extracted_when_surface_rules_is_empty() {
 
 // --- S4: 未記載の面の一覧 ---
 
-/// EX-core-408 の場面（"--format" だけが IR にある）に、"surface.unspecified" と一覧の中身を足す
-fn ex_408_project_with_list(tmp: &Path, list: &str) {
+/// 場面（"--format" だけが決定の文書にある）に、"surface.unspecified" と一覧の中身を足す
+fn project_with_list(tmp: &Path, list: &str) {
     make_project(
         tmp,
         &format!("{SURFACE_RS}  unspecified: \"docs/surface.yaml\"\n"),
@@ -557,11 +423,8 @@ fn ex_408_project_with_list(tmp: &Path, list: &str) {
     write(tmp, "src/cli.rs", &cli_rs());
     write(
         tmp,
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
     write(tmp, "docs/surface.yaml", list);
 }
@@ -571,41 +434,41 @@ fn entry(kind: &str, name: &str, why: &str) -> String {
     format!("- kind: \"{kind}\"\n  name: \"{name}\"\n  why: \"{why}\"\n")
 }
 
-// @kotowari[REQ-core-232]
+// @kotowari[C-core-unspec-1]
 #[test]
-fn req_232_a_matching_entry_removes_the_error() {
+fn a_matching_entry_removes_the_error() {
     let tmp = TempDir::new().unwrap();
     // 同じ内容の1件が2つあっても検査しない
     let one = entry("flag", "--verbose", "まだ決めていない");
-    ex_408_project_with_list(tmp.path(), &format!("{one}{one}"));
+    project_with_list(tmp.path(), &format!("{one}{one}"));
     let (code, v) = check_json(tmp.path());
     assert!(v["findings"].as_array().unwrap().is_empty(), "{v}");
     assert_eq!(code, Some(0));
 }
 
-// @kotowari[EX-core-420, REQ-core-232]
+// @kotowari[C-core-unspec-2]
 #[test]
-fn ex_core_420_an_entry_of_another_kind_does_not_match() {
+fn an_entry_of_another_kind_does_not_match() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), &entry("subcommand", "--verbose", "理由"));
+    project_with_list(tmp.path(), &entry("subcommand", "--verbose", "理由"));
     let (_, v) = check_json(tmp.path());
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[REQ-core-232]
+// @kotowari[C-core-unspec-2, C-core-unspec-6]
 #[test]
-fn req_232_names_are_compared_without_trimming() {
+fn names_are_compared_without_trimming() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose ", "理由"));
+    project_with_list(tmp.path(), &entry("flag", "--verbose ", "理由"));
     let (_, v) = check_json(tmp.path());
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[EX-core-421, REQ-core-233, REQ-core-027, TBL-core-006, TBL-core-008]
+// @kotowari[C-core-forder-4, C-core-unspec-3, C-core-unspec-7]
 #[test]
-fn ex_core_421_an_entry_whose_reason_is_blank_is_invalid_and_removes_nothing() {
+fn an_entry_whose_reason_is_blank_is_invalid_and_removes_nothing() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose", " \t "));
+    project_with_list(tmp.path(), &entry("flag", "--verbose", " \t "));
     let (code, v) = check_json(tmp.path());
     assert_eq!(
         findings_of(&v, "surface_unspecified_invalid"),
@@ -624,9 +487,9 @@ fn ex_core_421_an_entry_whose_reason_is_blank_is_invalid_and_removes_nothing() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-233]
+// @kotowari[C-core-unspec-3, C-core-unspec-7]
 #[test]
-fn req_233_each_malformed_entry_is_invalid_with_the_written_kind_and_name() {
+fn each_malformed_entry_is_invalid_with_the_written_kind_and_name() {
     let tmp = TempDir::new().unwrap();
     let list = [
         "- \"not a mapping\"\n",
@@ -637,7 +500,7 @@ fn req_233_each_malformed_entry_is_invalid_with_the_written_kind_and_name() {
         "- kind: \"flag\"\n  name: \"--d\"\n  why: 1\n",
     ]
     .concat();
-    ex_408_project_with_list(tmp.path(), &list);
+    project_with_list(tmp.path(), &list);
     let (_, v) = check_json(tmp.path());
     let mut details: Vec<String> = findings_of(&v, "surface_unspecified_invalid")
         .into_iter()
@@ -655,16 +518,16 @@ fn req_233_each_malformed_entry_is_invalid_with_the_written_kind_and_name() {
     );
 }
 
-// @kotowari[EX-core-422, REQ-core-234, REQ-core-027, TBL-core-009]
+// @kotowari[C-core-forder-4, C-core-findings-1, C-core-findings-2, C-core-unspec-4]
 #[test]
-fn ex_core_422_an_entry_for_a_surface_gone_from_the_code_is_a_notice() {
+fn an_entry_for_a_surface_gone_from_the_code_is_a_notice() {
     let tmp = TempDir::new().unwrap();
     let list = [
         entry("flag", "--verbose", "理由"),
         entry("flag", "--old", "理由"),
     ]
     .concat();
-    ex_408_project_with_list(tmp.path(), &list);
+    project_with_list(tmp.path(), &list);
     let (code, v) = check_json(tmp.path());
     assert_eq!(
         findings_of(&v, "surface_unspecified_stale"),
@@ -685,11 +548,11 @@ fn ex_core_422_an_entry_for_a_surface_gone_from_the_code_is_a_notice() {
     assert_eq!(code, Some(0), "a notice does not change the exit code: {v}");
 }
 
-// @kotowari[EX-core-423, REQ-core-234]
+// @kotowari[C-core-unspec-4]
 #[test]
-fn ex_core_423_an_entry_for_a_surface_now_in_the_ir_is_a_notice() {
+fn an_entry_for_a_surface_now_in_a_decision_is_a_notice() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), &entry("flag", "--format", "理由"));
+    project_with_list(tmp.path(), &entry("flag", "--format", "理由"));
     let (_, v) = check_json(tmp.path());
     assert_eq!(
         findings_of(&v, "surface_unspecified_stale"),
@@ -702,22 +565,22 @@ fn ex_core_423_an_entry_for_a_surface_now_in_the_ir_is_a_notice() {
     );
 }
 
-// @kotowari[EX-core-424, REQ-core-231, TBL-core-001]
+// @kotowari[C-core-clienv-7, C-core-unspec-5, C-core-unspec-8]
 #[test]
-fn ex_core_424_a_missing_list_file_stops_as_unreadable() {
+fn a_missing_list_file_stops_as_unreadable() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), "");
+    project_with_list(tmp.path(), "");
     std::fs::remove_file(tmp.path().join("docs/surface.yaml")).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["check"]);
     assert_eq!(code, Some(2), "{stderr}");
     assert!(stderr.starts_with("unreadable file: "), "{stderr}");
 }
 
-// @kotowari[EX-core-425, REQ-core-231, TBL-core-020]
+// @kotowari[C-core-clienv-9, C-core-unspec-5, C-core-unspec-8]
 #[test]
-fn ex_core_425_a_list_that_is_not_a_sequence_stops_naming_the_list() {
+fn a_list_that_is_not_a_sequence_stops_naming_the_list() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), "kind: flag\n");
+    project_with_list(tmp.path(), "kind: flag\n");
     let (code, _, stderr) = run(tmp.path(), &["check"]);
     assert_eq!(code, Some(2), "{stderr}");
     assert!(
@@ -726,16 +589,16 @@ fn ex_core_425_a_list_that_is_not_a_sequence_stops_naming_the_list() {
     );
 }
 
-// @kotowari[REQ-core-231, TBL-core-001, TBL-core-020]
+// @kotowari[C-core-clienv-9, C-core-clienv-12, C-core-clienv-7, C-core-unspec-5, C-core-unspec-8]
 #[test]
-fn req_231_a_list_that_is_not_yaml_or_not_utf8_stops_check_and_status() {
+fn a_list_that_is_not_yaml_or_not_utf8_stops_check_and_status() {
     let cases: [(&[u8], &str); 2] = [
         (b"- [unclosed\n", "config error: docs/surface.yaml"),
         (&[0xff, 0xfe], "non-UTF-8 file: docs/surface.yaml"),
     ];
     for (content, wording) in cases {
         let tmp = TempDir::new().unwrap();
-        ex_408_project_with_list(tmp.path(), "");
+        project_with_list(tmp.path(), "");
         std::fs::write(tmp.path().join("docs/surface.yaml"), content).unwrap();
         for command in ["check", "status"] {
             let (code, _, stderr) = run(tmp.path(), &[command]);
@@ -745,34 +608,34 @@ fn req_231_a_list_that_is_not_yaml_or_not_utf8_stops_check_and_status() {
     }
 }
 
-// @kotowari[REQ-core-231]
+// @kotowari[C-core-unspec-5]
 #[test]
-fn req_231_a_blank_list_has_no_entries() {
+fn a_blank_list_has_no_entries() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), "# まだ無い\n\n");
+    project_with_list(tmp.path(), "# まだ無い\n\n");
     let (code, v) = check_json(tmp.path());
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-229, REQ-core-152, REQ-core-158]
+// @kotowari[C-core-list-16, C-core-query-10]
 #[test]
-fn req_229_list_and_query_do_not_read_the_surface_list_or_files() {
+fn list_and_query_do_not_read_the_surface_list_or_files() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), "");
+    project_with_list(tmp.path(), "");
     std::fs::remove_file(tmp.path().join("docs/surface.yaml")).unwrap();
     std::fs::write(tmp.path().join("src/data.bin"), [0xff, 0xfe]).unwrap();
-    for args in [&["list"][..], &["query", "REQ-001"]] {
+    for args in [&["list"][..], &["query", "docs/decisions/a/a.md#決定"]] {
         let (code, _, stderr) = run(tmp.path(), args);
         assert_eq!(code, Some(0), "{args:?}: {stderr}");
     }
 }
 
-// @kotowari[REQ-core-229]
+// @kotowari[C-core-surface-21]
 #[test]
-fn req_229_mutants_does_not_read_the_surface_list_rules_or_files() {
+fn mutants_does_not_read_the_surface_list_rules_or_files() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), "");
+    project_with_list(tmp.path(), "");
     std::fs::remove_file(tmp.path().join("docs/surface.yaml")).unwrap();
     std::fs::write(tmp.path().join("rules/surface.yml"), [0xff, 0xfe]).unwrap();
     std::fs::write(tmp.path().join("src/data.bin"), [0xff, 0xfe]).unwrap();
@@ -790,21 +653,18 @@ fn req_229_mutants_does_not_read_the_surface_list_rules_or_files() {
 
 // --- S5: check の出力と status ---
 
-/// EX-core-407 の場面: "--format" を`要求`の`文`に書き、"--verbose" を`未記載の面の一覧`に載せる
-fn ex_407_ir(tmp: &Path) {
+/// "--format" を`要求`の`文`に書き、"--verbose" を`未記載の面の一覧`に載せる
+fn write_a_decision_quoting_format(tmp: &Path) {
     write(
         tmp,
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
 }
 
-// @kotowari[EX-core-407, REQ-core-223, REQ-core-226, REQ-core-228, TBL-core-005]
+// @kotowari[C-core-output-3, C-core-surface-1, C-core-surface-11, C-core-surface-18]
 #[test]
-fn ex_core_407_a_surface_quoted_in_a_requirement_is_not_an_error() {
+fn a_surface_quoted_in_a_decision_is_not_an_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_RS);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
@@ -813,16 +673,16 @@ fn ex_core_407_a_surface_quoted_in_a_requirement_is_not_an_error() {
     lines[2] = "    let _ = \"--format\";";
     lines[3] = "}";
     write(tmp.path(), "src/cli.rs", &(lines.join("\n") + "\n"));
-    ex_407_ir(tmp.path());
+    write_a_decision_quoting_format(tmp.path());
     let (code, v) = check_json(tmp.path());
     assert!(without_spec(&v).is_empty(), "{v}");
     assert_eq!(v["surface"], serde_json::json!({"unspecified": 0}), "{v}");
     assert_eq!(code, Some(0), "{v}");
 }
 
-// @kotowari[EX-core-414, REQ-core-228]
+// @kotowari[C-core-surface-18, C-core-surface-19]
 #[test]
-fn ex_core_414_the_count_line_is_printed_even_with_no_findings() {
+fn the_count_line_is_printed_even_with_no_findings() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_RS);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
@@ -831,48 +691,45 @@ fn ex_core_414_the_count_line_is_printed_even_with_no_findings() {
         "src/cli.rs",
         "fn main() {\n    let _ = \"--format\";\n}\n",
     );
-    ex_407_ir(tmp.path());
+    write_a_decision_quoting_format(tmp.path());
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "text"]);
     assert_eq!(stdout, "surface: unspecified=0\n", "{stderr}");
     assert_eq!(code, Some(0));
 }
 
-// @kotowari[EX-core-413, REQ-core-227, REQ-core-228]
+// @kotowari[C-core-surface-17, C-core-surface-20]
 #[test]
-fn ex_core_413_a_project_without_surface_rules_sees_nothing() {
+fn a_project_without_surface_rules_sees_nothing() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     write(tmp.path(), "src/cli.rs", &cli_rs());
-    ex_407_ir(tmp.path());
+    write_a_decision_quoting_format(tmp.path());
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "text"]);
     assert!(!stdout.contains("surface"), "{stdout}");
     let (_, v) = check_json(tmp.path());
     assert!(v.get("surface").is_none(), "{v}");
 }
 
-// @kotowari[EX-core-419, REQ-core-232, REQ-core-228]
+// @kotowari[C-core-unspec-1, C-core-surface-18]
 #[test]
-fn ex_core_419_a_listed_surface_is_not_an_error_and_is_counted() {
+fn a_listed_surface_is_not_an_error_and_is_counted() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose", "まだ決めていない"));
+    project_with_list(tmp.path(), &entry("flag", "--verbose", "まだ決めていない"));
     let (code, v) = check_json(tmp.path());
     assert!(without_spec(&v).is_empty(), "{v}");
     assert_eq!(v["surface"]["unspecified"], 1, "{v}");
     assert_eq!(code, Some(0), "{v}");
 }
 
-// @kotowari[EX-core-423, REQ-core-228]
+// @kotowari[C-core-unspec-4, C-core-surface-18]
 #[test]
-fn ex_core_423_a_listed_surface_now_in_the_ir_is_not_counted() {
+fn a_listed_surface_now_in_a_decision_is_not_counted() {
     let tmp = TempDir::new().unwrap();
-    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose", "理由"));
+    project_with_list(tmp.path(), &entry("flag", "--verbose", "理由"));
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" と \"--verbose\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" と \"--verbose\" を受ける。", ""),
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(
@@ -886,10 +743,10 @@ fn ex_core_423_a_listed_surface_now_in_the_ir_is_not_counted() {
     assert_eq!(v["surface"]["unspecified"], 0, "{v}");
 }
 
-/// 面が4つ（"--format" と "--config" は IR に、"--verbose" は一覧に、"--tool" はどこにも無い）のプロジェクト。
+/// 面が4つ（"--format" と "--config" は決定の文書に、"--verbose" は一覧に、"--tool" はどこにも無い）のプロジェクト。
 /// "--config" は2か所にあっても種類と名前の組で1つに数える
 fn four_surfaces(tmp: &Path) {
-    ex_408_project_with_list(tmp, &entry("flag", "--verbose", "理由"));
+    project_with_list(tmp, &entry("flag", "--verbose", "理由"));
     write(
         tmp,
         "src/more.rs",
@@ -897,22 +754,14 @@ fn four_surfaces(tmp: &Path) {
     );
     write(
         tmp,
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" と `--config` を受ける。"),
-            "",
-        ),
-    );
-    write(
-        tmp,
-        "docs/ir/CONTEXT.md",
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| --config | 設定 | docs/decision/records/r.md#A1 |\n",
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" と \"--config\" を受ける。", ""),
     );
 }
 
-// @kotowari[REQ-core-228, TBL-core-005]
+// @kotowari[C-core-surface-19]
 #[test]
-fn req_228_the_count_line_comes_after_the_findings() {
+fn the_count_line_comes_after_the_findings() {
     let tmp = TempDir::new().unwrap();
     four_surfaces(tmp.path());
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "text"]);
@@ -923,9 +772,9 @@ fn req_228_the_count_line_comes_after_the_findings() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-229, REQ-core-162, TBL-core-028]
+// @kotowari[C-core-status-2, C-core-status-5, C-core-status-8, C-core-status-11]
 #[test]
-fn req_229_status_counts_surfaces_and_a_surface_error_makes_it_incomplete() {
+fn status_counts_surfaces_and_a_surface_error_makes_it_incomplete() {
     let tmp = TempDir::new().unwrap();
     four_surfaces(tmp.path());
     let (code, stdout, stderr) = run(tmp.path(), &["status"]);
@@ -949,12 +798,12 @@ fn req_229_status_counts_surfaces_and_a_surface_error_makes_it_incomplete() {
     );
 }
 
-// @kotowari[TBL-core-028, REQ-core-162]
+// @kotowari[C-core-status-8]
 #[test]
-fn tbl_028_status_surface_counts_are_zero_without_surface_rules() {
+fn status_surface_counts_are_zero_without_surface_rules() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
-    ex_407_ir(tmp.path());
+    write_a_decision_quoting_format(tmp.path());
     let (_, stdout, stderr) = run(tmp.path(), &["status"]);
     let v: serde_json::Value =
         serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
@@ -965,9 +814,9 @@ fn tbl_028_status_surface_counts_are_zero_without_surface_rules() {
     );
 }
 
-// @kotowari[REQ-core-227]
+// @kotowari[C-core-surface-16]
 #[test]
-fn req_227_the_first_place_is_the_smallest_line_even_when_rules_share_an_id() {
+fn the_first_place_is_the_smallest_line_even_when_rules_share_an_id() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_RS);
     // 同じ id の規則が2つあり、先の規則は後の行にだけ当たる
@@ -981,11 +830,6 @@ fn req_227_the_first_place_is_the_smallest_line_even_when_rules_share_an_id() {
         "src/cli.rs",
         "fn f() { let _ = \"--verbose\"; }\nconst C: &str = \"--verbose\";\n",
     );
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(&review_requirement("REQ-001", "文。"), ""),
-    );
     let (_, v) = check_json(tmp.path());
     assert_eq!(
         findings_of(&v, "surface_without_spec"),
@@ -998,20 +842,15 @@ fn req_227_the_first_place_is_the_smallest_line_even_when_rules_share_an_id() {
     );
 }
 
-// @kotowari[EX-core-427, REQ-core-236]
+// @kotowari[C-core-surface-6]
 #[test]
-fn ex_core_427_check_reports_the_unparsable_surface_file_beside_a_test_file_one() {
+fn check_reports_the_unparsable_surface_file_beside_a_test_file_one() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_RS);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
     write(tmp.path(), "src/bad.rs", "fn f( {\n");
     // 別のパスのテストのファイルにも unparsable_file が出ている
     write(tmp.path(), "tests/broken.rs", "fn g( {\n");
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(&review_requirement("REQ-001", "文。"), ""),
-    );
     let (_, v) = check_json(tmp.path());
     let paths: Vec<String> = findings_of(&v, "unparsable_file")
         .into_iter()
@@ -1020,29 +859,201 @@ fn ex_core_427_check_reports_the_unparsable_surface_file_beside_a_test_file_one(
     assert_eq!(paths, vec!["src/bad.rs", "tests/broken.rs"], "{v}");
 }
 
-// @kotowari[REQ-core-226]
+// --- 決定の文書に引用された面 ---
+
+/// 面の規則と "src/cli.rs"。決定の文書は無い。
+/// `sections` は決定1つの (節の名前, 中身) の並び
+fn decision_project(tmp: &Path, sections: &[(&str, &str)]) {
+    make_project(tmp, SURFACE_RS);
+    write(tmp, "rules/surface.yml", FLAG_RULE);
+    write(tmp, "src/cli.rs", &cli_rs());
+    let mut text = "# 題名\n\n範囲。\n\n## フラグを受ける\n\n状態: 提案\n\n".to_string();
+    for (name, body) in sections {
+        text.push_str(&format!("### {name}\n\n{body}\n\n"));
+    }
+    write(tmp, "docs/decisions/flags.md", &text);
+}
+
+// @kotowari[C-core-surface-11]
 #[test]
-fn req_226_a_backticked_term_in_a_decision_table_cell_counts() {
+fn names_quoted_in_what_a_decision_decided_and_its_rows_count() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            ("決めたこと", "\"--format\" を受ける。"),
+            ("確認すること", "- C-flags-1 `--verbose` で詳しく出る"),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
+}
+
+// @kotowari[C-core-surface-13]
+#[test]
+fn names_quoted_only_in_the_problem_rejected_options_or_open_items_do_not_count() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "\"--verbose\" が無かった。"),
+            ("決めたこと", "\"--format\" を受ける。"),
+            ("見送った案", "- \"--verbose\" を受ける。要らない。"),
+        ],
+    );
+    let path = tmp.path().join("docs/decisions/flags.md");
+    let text =
+        std::fs::read_to_string(&path).unwrap() + "## 未決\n\n- \"--verbose\" を受けるか。\n";
+    std::fs::write(path, text).unwrap();
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[C-core-surface-11]
+#[test]
+fn a_name_quoted_only_in_the_heading_of_decision_does_not_count() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_RS);
     write(
         tmp.path(),
         "rules/surface.yml",
-        "id: command\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n",
+        "id: word\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"決めたこと\"$'\n  pattern: $NAME\n",
     );
-    write(tmp.path(), "src/cli.rs", "const S: &str = \"status\";\n");
     write(
         tmp.path(),
-        "docs/ir/CONTEXT.md",
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| status | 集計 | docs/decision/records/r.md#A1 |\n",
+        "src/cli.rs",
+        "fn main() {\n    let _ = \"決めたこと\";\n}\n",
     );
-    let table = "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/r.md#A1\n\n| コマンド | 中身 |\n|---|---|\n| `status` | 集計 |\n\n";
+    // 節の見出しは書式を除いた文字で節の名前と照らすので、バッククォートで囲んでも節になる。
+    // 見出しは節の中身ではない
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(&review_requirement("REQ-001", "文。"), table),
+        "docs/decisions/flags.md",
+        "# 題名\n\n範囲。\n\n## フラグを受ける\n\n状態: 提案\n\n### 問題\n\n困っていた。\n\n\
+         ### `決めたこと`\n\nこうする。\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["word 決めたこと"], "{v}");
+}
+
+// @kotowari[C-core-surface-12, C-core-surface-14]
+#[test]
+fn a_decision_quotes_a_name_only_as_the_whole_content_of_a_cell_outside_code() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "| 鍵 | 値 |\n|---|---|\n| \"--format | x\" | \"--verbose true\" |\n\n```\n\"--verbose\"\n```",
+            ),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        without_spec(&v),
+        vec!["flag --format", "flag --verbose"],
+        "{v}"
+    );
+}
+
+// @kotowari[C-core-surface-12]
+#[test]
+fn quotes_are_paired_within_a_cell_and_not_across_the_cells_of_a_row() {
+    let tmp = TempDir::new().unwrap();
+    // 行の文字のまま対にすると "x | " が引用の中身になり、"--format" は引用されない
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "| 鍵 | 値 |\n|---|---|\n| \"x | \"--format\" |",
+            ),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[C-core-status-8, C-core-surface-11]
+#[test]
+fn a_name_quoted_in_a_decision_is_counted_as_specified_by_status() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            ("決めたこと", "\"--format\" を受ける。"),
+        ],
+    );
+    write(
+        tmp.path(),
+        "docs/surface.yaml",
+        &entry("flag", "--format", "古い"),
+    );
+    let config = tmp.path().join(".kotowari/config.yaml");
+    let text = std::fs::read_to_string(&config)
+        .unwrap()
+        .replace("  rules:", "  unspecified: \"docs/surface.yaml\"\n  rules:");
+    std::fs::write(config, text).unwrap();
+    let (_, stdout, stderr) = run(tmp.path(), &["status"]);
+    let v: serde_json::Value =
+        serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
+    assert_eq!(
+        v["surface"],
+        serde_json::json!({"total": 2, "specified": 1, "unspecified": 0}),
+        "{v}"
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_unspecified_stale")
+            .into_iter()
+            .map(|(_, _, detail)| detail)
+            .collect::<Vec<_>>(),
+        vec!["flag --format"],
+        "{v}"
+    );
+}
+
+// @kotowari[C-core-surface-11]
+#[test]
+fn a_name_in_a_decision_cell_counts_even_after_a_stray_quote_in_another_cell() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "| 鍵 | 値 |\n|---|---|\n| x\" | \"--format\" |\n| `--verbose` | y |",
+            ),
+        ],
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
-    assert!(findings_of(&v, "unknown_term").is_empty(), "{v}");
+}
+
+// @kotowari[C-core-surface-11, C-core-surface-14]
+#[test]
+fn a_code_block_inside_a_row_or_a_quote_of_a_decision_is_not_read() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "> \"--format\" を受ける。\n>\n> ```\n> \"--verbose\"\n> ```",
+            ),
+            (
+                "確認すること",
+                "- C-flags-1 次を受ける\n\n  ```\n  \"--verbose\"\n  ```",
+            ),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }

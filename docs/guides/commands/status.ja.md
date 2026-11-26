@@ -2,16 +2,16 @@
 
 [English](status.md) | 日本語
 
-<!-- @kotowari[REQ-core-162:896047ff] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
-`kotowari status` は、IR（仕様）とテストが「いま揃っているか」を、数と一つの真偽で答えるコマンドです。
-CI に一行足すだけで、仕様の抜けやテストの無い要求が紛れ込んだ変更を止められます。
+`kotowari status` は、決定の文書（仕様）とテストが「いま揃っているか」を、数と1つの真偽で答えるコマンドです。
+CI に1行足しておくと、誤りや未決を残したままの変更を止められます。
 
 ## 3 つの読み取りコマンドの中での位置
 
-<!-- @kotowari[REQ-core-162:896047ff] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
-kotowari には、IR を読む道具が段になって並んでいます。
+kotowari で仕様を読む道具は、段になっています。
 
 ```mermaid
 flowchart BT
@@ -19,16 +19,16 @@ flowchart BT
   list --> status["status<br/>全体の数と真偽"]
 ```
 
-- 何が悪いのかを直すときは [`check`](./check.ja.md)
-- どの要求にどのテストが付いているかを見るときは [`list`](./list.ja.md)
-- 全体として出してよい状態かを知りたいときは `status`
+- 何が悪いかを直すときは [`check`](./check.ja.md)
+- どの確認することの行にどのテストが付いているかを見るときは [`list`](./list.ja.md)
+- 全体が出してよい状態かを知りたいときは `status`
 
-`status` は独自の判定を持たず、`check` と同じ設定・同じ検査の結果を集計しているだけです。
-そのため `check` と `status` の答えが食い違うことはありません。
+`status` は独自の判定を持たず、`check` と同じ設定、同じ検査の結果を集計するだけです。
+そのため `check` と `status` の結論が食い違うことはありません。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 ```sh
 kotowari status [--format json|text] [--config <path>]
@@ -36,12 +36,12 @@ kotowari status --help
 kotowari status --version
 ```
 
-オプションはコマンドの前にも後ろにも書けます。
-位置引数は受けません。
+オプションはコマンドの前にも後にも書けます。
+位置引数は取りません。
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -50,81 +50,74 @@ kotowari status --version
 | `--help` | なし | — | 使い方を出して終わります |
 | `--version` | なし | — | 版を出して終わります |
 
-共通のオプションと基準のディレクトリの詳細は [CLI の共通事項](../cli.ja.md) にあります。
+共通のオプションと基準のディレクトリの細部は [CLI の共通事項](../cli.ja.md) にあります。
 
 ## 出力
 
-`status` は `check` と同じ設定と置き場から、IR の文書、テストのファイル、ガイド、全体像の元データを読み、`surface.rules` が空の一覧でなければ面のファイルと面の規則のファイルと未記載の面の一覧も読んで、`check` と同じ検査を行います。
+`status` は `check` と同じ設定と置き場から、決定の文書、テストのファイル、ガイド、全体像の元データを読み、`surface.rules` が空の一覧でなければ面のファイル、面の規則のファイル、未記載の面の一覧も読んで、`check` と同じ検査を行います。
 指摘そのものは出さず、数と `complete` だけを出します。
 
 ### text
 
-<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d] -->
 
-1つの群を1行にして、`群名 鍵=値 鍵=値 …` の形で出します。
-鍵の語は JSON と同じで、値は1つの半角空白で区切り、桁揃えはしません。
-群の順は下の表の順で、最後の行は `complete true` か `complete false` です。
+群ごとに1行、`群 鍵=値 鍵=値 …` の形で出します。
+鍵の語は JSON と同じで、値は半角空白1つで区切り、桁揃えの空白は入れません。
+最後の行は `complete true` か `complete false` です。
 
-`tests` の行だけは、JSON の `files` を開いて `拡張子=ファイルの数` を並べます（例: `tests marks=2042 rs=55`）。
+`tests` の行だけは、JSON の `files` を `拡張子=ファイルの数` に展開します（例 `tests marks=2 rs=1`）。
 
 ### JSON
 
-<!-- @kotowari[TBL-core-028:9645c008, REQ-core-164:c48d77e2, EX-core-398:4b7f4c92] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae, docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
-最上位は次の群の鍵だけのオブジェクトで、`complete` が最後です。
-全部の鍵の定義は [status の IR](../../ir/core/status.ja.md) の TBL-core-028 にあります。
+最上位は、次の群の鍵だけを持つオブジェクトです。
+鍵の定義はすべて [status の決定](../../decisions/core/status.ja.md) にあります。
 
 | 群 | 鍵 | 型 | 説明 |
 |---|---|---|---|
-| `documents` | `files`、`lines` | 数 | 読んだ IR の文書の数と、行数の合計 |
-| `items` | `requirement`、`table`、`property`、`scenario`、`flag` | 数 | ID を持つ項目とシナリオの、種類ごとの数 |
-| `requirements` | `unit`、`property`、`proof`、`review` | 数 | `- verification:` の値ごとの要求の数。行の無い要求はどれにも数えない |
-| `requirements` | `with_tests`、`without_tests` | 数 | 検証が review でなく[後回し](../deferred.ja.md)でない要求のうち、テストがあるものと無いものの数 |
-| `requirements` | `review_with_how_to_verify`、`review_without_how_to_verify` | 数 | 検証が review の要求のうち、`- how_to_verify:` の行があるものと無いものの数 |
-| `requirements` | `without_examples` | 数 | その ID を `@about` に持つシナリオが無い要求の数。後回しの要求も数える |
-| `requirements` | `deferred` | 数 | 後回しの要求の数 |
-| `scenarios` | `with_tests`、`without_tests` | 数 | 後回しのシナリオでないシナリオのうち、印の付いたテストがあるものと無いものの数 |
-| `scenarios` | `deferred` | 数 | 後回しのシナリオの数 |
+| `documents` | `files`、`lines` | 数 | 読んだ決定の文書の数（用語集は数えない）と、行数の合計 |
 | `tests` | `marks` | 数 | 印の出現の数。1つの印に ID が複数あれば ID ごとに1つ |
 | `tests` | `files` | オブジェクト | `check` の JSON の `tests` と同じ。鍵は拡張子、値は `files`（ファイルの数）と `query`（問い合わせのある言語か） |
 | `guides` | `files`、`marks` | 数 | 読んだガイドの数と、ガイドの印の数（`check` の `guides` と同じ） |
-| `overview` | `files`、`marks` | 数 | 読んだ全体像の元データの数と、その中のガイドの印の数（`check` の `overview` と同じ）。設定に `overview` の鍵が無ければ両方 0 |
-| `surface` | `total`、`specified`、`unspecified` | 数 | 面の種類と名前の組の数、そのうち IR にあるものの数、IR になく未記載の面の一覧で外したものの数（[面の検査](../surface.ja.md)）。`surface.rules` が空の一覧なら3つとも 0 |
+| `overview` | `files`、`marks` | 数 | 読んだ全体像の元データの数と、その中のガイドの印の数（`check` の `overview` と同じ）。設定に `overview` の鍵が無ければどちらも 0 |
+| `surface` | `total`、`specified`、`unspecified` | 数 | 面の種類と名前の組の数、そのうち決定に引用されているもの、引用されていないが未記載の面の一覧で外しているものの数（[面の検査](../surface.ja.md)）。`surface.rules` が空の一覧なら3つとも 0 |
+| `decisions` | `proposed`、`implemented` | 数 | 状態ごとの決定の数。状態の行が誤った決定はどちらにも数えない |
+| `confirmations` | `with_tests`、`without_tests`、`by_reading` | 数 | どちらの状態の決定の行も含めた確認することの行のうち、テストの印が指すもの、どの印も指さないもの、`（読んで確認）` で始まるもの（ここにだけ数える） |
 | `findings` | `error`、`notice` | 数 | `check` の誤りと注意の数 |
 | `complete` | （値だけ） | 真偽 | 揃っているか。条件は次の節 |
 
 ### よく見る数
 
-<!-- @kotowari[TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae] -->
 
-特によく見る数だけ挙げます。
+よく見る数だけを挙げます。
 
 | 行 | 見るところ | こういうときに気にする |
 |---|---|---|
-| `requirements` | `without_tests` | 0 でなければ、テストが一つも付いていない要求がある |
-| `requirements` | `review_without_how_to_verify` | 0 でなければ、人か LLM が目で確かめる要求なのに、確かめ方が書かれていない |
-| `requirements` | `without_examples` | 具体例（シナリオ）の無い要求の数。欠陥ではないが、仕様が薄い所の目安になる |
-| `requirements`、`scenarios` | `deferred` | 今は作らないと宣言した要求とシナリオの数。`without_tests` には入らないので、増えても `complete` は変わらない |
-| `items` | `flag` | 「仕様として書ききれていない」と自分で記録した箇所の数 |
+| `decisions` | `proposed` | 決めたが、まだ作っていない決定の数。欠陥ではなく、作り残しの量を示す |
+| `confirmations` | `without_tests` | どのテストも指していない行。実装済みの決定の行なら1件ずつ `check` の誤りになる。提案の決定の行もここに数えるが、誤りにはならない |
+| `confirmations` | `by_reading` | 人か LLM が読んで確かめる行。kotowari は確かめないので、レビューで確かめる |
 | `guides` | `files` / `marks` | 読んだガイドの数と、ガイドの印の数。設定の glob を書き間違えると 0 になる |
-| `surface` | `unspecified` | IR に書かないまま未記載の面の一覧で外している面の数。導入の残りの量の目安で、0 に近づけていく |
+| `surface` | `unspecified` | 決定に引用しないまま、未記載の面の一覧で外している面の数。導入の残りの量の目安で、0 に近づけていく |
 | `findings` | `error` / `notice` | `check` の指摘の数。`notice` は注意で、揃っているかの判定には効かない |
 
 ### `complete` が true になる条件
 
-<!-- @kotowari[REQ-core-165:1c91b003, EX-core-259:6583a1e7, EX-core-260:73c20b9a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed, docs/decisions/core/decision-documents.md#write-questions-handed-back-to-people-in-the-open-section-of-the-topic-document:8286069a] -->
 
-`complete` が true になるのは、次の 2 つが両方成り立つときだけです。
+`complete` が true になるのは、次の2つが両方とも成り立つときだけです。
 
 1. `check` の誤り（`error`）が 0 件
-2. 問題の記録（`FLAGS.md`）の項目が 0 件
+2. どの決定の文書の `## 未決` にも項目が無い
 
-注意（`notice`）がいくつあっても、`complete` は妨げません。
-注意は直す価値のある手がかりですが、出荷を止める理由にはしない、という区別です。
+注意（`notice`）はいくつあっても `complete` を妨げません。
+注意は直す価値のある手がかりですが、リリースを止める理由ではない、という区別です。
+提案のまま置いた決定も、これを妨げません。
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-165:1c91b003, REQ-core-163:9cf2f990, EX-core-262:c1a7983a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed, docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
 終了コードは `complete` の答えをそのまま映します。
 
@@ -140,31 +133,29 @@ kotowari status --version
 
 ### 使ってみる
 
-<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d] -->
 
-リポジトリの根で実行します。
+リポジトリの直下で実行します。
 人が読むなら `--format text` が便利です。
+[`kotowari list` の例](./list.ja.md#例)の決定の文書で、テストで確かめる2つの行の両方にテストを付けたときの結果です。
 
 ```console
 $ kotowari status --format text
-documents files=52 lines=6238
-items requirement=305 table=48 property=13 scenario=374 flag=0
-requirements unit=260 property=3 proof=0 review=42 with_tests=263 without_tests=0 review_with_how_to_verify=42 review_without_how_to_verify=0 without_examples=138 deferred=0
-scenarios with_tests=367 without_tests=7 deferred=0
-tests marks=2152 rs=58
-guides files=14 marks=525
-surface total=11 specified=11 unspecified=0
-findings error=0 notice=8
+documents files=1 lines=36
+tests marks=2 rs=1
+guides files=0 marks=0
+overview files=0 marks=0
+surface total=0 specified=0 unspecified=0
+decisions proposed=0 implemented=2
+confirmations with_tests=2 without_tests=0 by_reading=1
+findings error=0 notice=0
 complete true
 ```
 
-これは kotowari 自身のリポジトリで 2026-09-27 に実行した結果です。
-全体像の元データを読む今の版では、`guides` の行の後に `overview files=… marks=…` の行も出ます（設定に `overview` の鍵が無ければ両方 0）。
-最後の `complete true` が答えで、それより上の行はその内訳です。
-`notice` があっても `complete true` になっている点に注目してください。
+最後の `complete true` が答えで、その上の行は内訳です。
 
 既定の出力は JSON で、鍵の名前は text と同じです。
-スクリプトやエージェントに読ませるときはこちらを使います。
+スクリプトやエージェントが読むときはこちらを使います。
 
 ```console
 $ kotowari status | jq .complete
@@ -173,9 +164,9 @@ true
 
 ### CI で使う
 
-<!-- @kotowari[REQ-core-165:1c91b003] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
 
-終了コードが判定そのものなので、ジョブの一段として置くだけで足ります。
+終了コードがそのまま判定なので、ジョブの1ステップに足すだけで済みます。
 
 ```yaml
 # GitHub Actions の例（kotowari の導入手順は省略）
@@ -183,58 +174,58 @@ true
   run: kotowari status --format text
 ```
 
-揃っていなければジョブが落ち、ログにはどの数が崩れたかが残ります。
-詳しい理由は、同じ手元で `kotowari check --format text` を実行すると 1 件ずつ出ます。
+揃っていなければジョブが失敗し、ログにどの数がおかしいかが残ります。
+細かい理由は、同じチェックアウトで `kotowari check --format text` を実行して1件ずつ見ます。
 
 ## よくあるつまずき
 
-### `without_tests` が 0 でない
+### `without_tests` が 0 でないのに、check に誤りが無い
 
-<!-- @kotowari[TBL-core-028:9645c008, TBL-core-026:382b0b95, EX-core-263:f86b1e4a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae, docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
-テストに印（`@kotowari[REQ-...]`）が付いていない要求があります。
-`kotowari list --format text | grep 'tests=0$'` で、印の付いたテストが無い項目を探せます。
-後回しの項目は行の末尾が ` deferred` なので、この grep には当たりません。
-ただし要求は、直接印が無くても、その要求を `@about` に持つシナリオにテストが付いていれば「テストあり」に数えられます。
-一覧で `tests=0` の要求を見つけたら、そのシナリオ側も確かめてください。
-今は作らないと決めた要求なら、テストの代わりに[後回し](../deferred.ja.md)にすると `without_tests` から外れます。
+`without_tests` には提案の決定の行も数え、その行にはまだテストが要りません。
+例に、行を1つ持つ提案の決定を足すと次のようになります。
 
-### `review_without_how_to_verify` が 0 でない
+```console
+$ kotowari check --format text
+$ kotowari status --format text | grep -E '^(decisions|confirmations|complete)'
+decisions proposed=1 implemented=2
+confirmations with_tests=2 without_tests=1 by_reading=1
+complete true
+```
 
-<!-- @kotowari[REQ-core-098:1e550dfe, EX-core-259:6583a1e7] -->
+実装済みの決定の行でまだテストの要るものを探すには、`check` を読むか、`list` を絞ります。`kotowari list | jq -r '.items[] | select(.kind == "confirmation" and .state == "implemented" and .tests == [] and (.by_reading | not)) | .id'` です。
 
-テストでは確かめられない要求（`verification: review`）に、`- how_to_verify:` の行がありません。
-手順が無いと、人でも LLM でも確かめようがないため、`check` はこれを誤りにします。
+### check に誤りが無いのに `complete` が false
 
-### `flag` が 0 でない
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed, docs/decisions/core/decision-documents.md#write-questions-handed-back-to-people-in-the-open-section-of-the-topic-document:8286069a] -->
 
-<!-- @kotowari[REQ-core-165:1c91b003, EX-core-260:73c20b9a] -->
+どこかの決定の文書の `## 未決` に項目があります。人に戻した問いが、まだ答えを待っています。
 
-`FLAGS.md` に書かれた未解決の箇所が残っています。
-仕様を書き足して記録を消すまで、`complete` にはなりません。
+```console
+$ kotowari check --format text
+$ echo $?
+0
+$ kotowari status --format text | grep '^complete'
+complete false
+```
 
-### `unit`、`property`、`proof`、`review` の合計が `requirement` より少ない
-
-<!-- @kotowari[TBL-core-028:9645c008] -->
-
-`- verification:` の行の無い要求があります。そうした要求は検証の種類ごとの数のどれにも入りません。
-この要求は `check` の誤りでもあるので、`complete` は false になります。
-`kotowari check --format text` で場所が分かります。
+人が決め、その決定を書き、`## 未決` から項目を消すまで、`complete` は true になりません。
 
 ### `config error: ...: matched by both guides.files and tests.files` で止まる
 
-<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:f1e4cc8c] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
-`status` は `check` と同じくガイドも読むので、設定の `guides.files` と `tests.files` の glob が同じファイルに当たると停止します。
-`list` と `query` はガイドを読まないのでこの停止をしません。そのため「list は動くのに status は止まる」ことがあります。
-2つの glob が重ならないように直してください（[設定](../config.ja.md)）。
+`status` も `check` と同じくガイドを読むので、設定の `guides.files` と `tests.files` の glob が同じファイルに当たると止まります。
+`list` と `query` はガイドを読まないのでこの停止をせず、「list は動くのに status は止まる」ことがあるのはこのためです。
+2つの glob が重ならないように直します（[設定](../config.ja.md)）。
 
 ## 関連
 
-- 仕様: [status の IR](../../ir/core/status.ja.md)
-- 1 件ずつの指摘を見る: [`kotowari check`](./check.ja.md)
-- 1 件ずつの項目とテストを見る: [`kotowari list`](./list.ja.md)
-- 1 件を本文と逆引きつきで見る: [`kotowari query`](./query.ja.md)
+- 仕様: [status の決定](../../decisions/core/status.ja.md)
+- 指摘を1件ずつ見る: [`kotowari check`](./check.ja.md)
+- 決定と行とテストを1件ずつ見る: [`kotowari list`](./list.ja.md)
+- 1つの決定か行を本文つきで見る: [`kotowari query`](./query.ja.md)
 - 指摘の種類: [指摘の一覧](../findings.ja.md)
 - 共通のオプション、停止、基準のディレクトリ: [CLI の共通事項](../cli.ja.md)
 - 設定ファイル: [設定](../config.ja.md)

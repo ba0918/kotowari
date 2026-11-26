@@ -1,11 +1,11 @@
-//! `側`と`一致の記録`の名前の文法（REQ-core-336、REQ-core-337）
+//! `側`と`一致の記録`の名前の文法
 
 use super::*;
 
-/// `一致の記録`の名前の、拡張子の前の部分（REQ-core-337、REQ-core-339）
+/// `一致の記録`の名前の、拡張子の前の部分
 pub(super) const RECORD: &str = ".i18n.yaml";
 
-/// REQ-core-340: "blob "、バイト数の10進、1バイトの 0、バイト列をつないだものの SHA-1 を16進の小文字で
+/// "blob "、バイト数の10進、1バイトの 0、バイト列をつないだものの SHA-1 を16進の小文字で
 pub fn blob_hash(bytes: &[u8]) -> String {
     let mut hasher = Sha1::new();
     hasher.update(format!("blob {}\0", bytes.len()).as_bytes());
@@ -17,7 +17,7 @@ pub fn blob_hash(bytes: &[u8]) -> String {
         .collect()
 }
 
-/// ファイル名を、最後の "." の前と、その "." からの拡張子に分ける（REQ-core-337）
+/// ファイル名を、最後の "." の前と、その "." からの拡張子に分ける
 pub(super) fn split_extension(name: &str) -> (&str, &str) {
     match name.rfind('.') {
         Some(dot) => (&name[..dot], &name[dot..]),
@@ -25,7 +25,7 @@ pub(super) fn split_extension(name: &str) -> (&str, &str) {
     }
 }
 
-/// `対`にする置き場で読んだファイルの名前の見分け（REQ-core-337）
+/// `対`にする置き場で読んだファイルの名前の見分け
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Classified {
     /// `先頭の言語`の`側`
@@ -36,7 +36,7 @@ pub enum Classified {
     Record,
 }
 
-/// ファイル名（ディレクトリを除く）を`言語の一覧`で見分ける（REQ-core-337）
+/// ファイル名（ディレクトリを除く）を`言語の一覧`で見分ける
 pub fn classify(name: &str, languages: &[String]) -> Classified {
     if name.ends_with(RECORD) {
         return Classified::Record;
@@ -63,7 +63,7 @@ pub fn side_path(first: &str, language: &str, languages: &[String]) -> String {
     format!("{directory}{stem}.{language}{extension}")
 }
 
-/// `先頭の言語`の`側`のパスから、`一致の記録`のパス（REQ-core-339）
+/// `先頭の言語`の`側`のパスから、`一致の記録`のパス
 pub fn record_path(first: &str) -> String {
     let (directory, name) = split_directory(first);
     let (stem, _) = split_extension(name);

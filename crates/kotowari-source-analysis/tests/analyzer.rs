@@ -1,7 +1,7 @@
 use kotowari_core::{SourceText, config::Config};
 use kotowari_source_analysis::Analyzer;
 
-// @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496, EX-core-497]
+// @kotowari[C-core-libcrates-6]
 #[test]
 fn source_analysis_retains_source_facts_and_diagnostics_without_acquisition() {
     let analyzer = Analyzer::new(Config::default(), vec![], vec![]).unwrap();
@@ -29,7 +29,7 @@ fn source_analysis_retains_source_facts_and_diagnostics_without_acquisition() {
     assert_eq!(text.line_markers.len(), 1);
 }
 
-// @kotowari[REQ-core-315, REQ-core-322, EX-core-496, EX-core-502]
+// @kotowari[C-core-libpaths-10]
 #[test]
 fn cached_analysis_of_another_revision_is_rejected_at_native_admission() {
     use kotowari_core::{NativeSourceText, NativeTestAnalysis, ReadModel, RepositoryReadInputs};
@@ -42,13 +42,11 @@ fn cached_analysis_of_another_revision_is_rejected_at_native_admission() {
             .unwrap();
         ReadModel::build_repository(RepositoryReadInputs {
             config: config.clone(),
-            ir: vec![],
-            records: vec![NativeSourceText::new(
+            decisions: vec![NativeSourceText::new(
                 "tests/sample.rs",
                 "tests/sample.rs",
                 acquired,
             )],
-            adr: vec![],
             tests: vec![NativeTestAnalysis {
                 source: NativeSourceText::new("tests/sample.rs", "tests/sample.rs", acquired),
                 analysis,
@@ -59,10 +57,10 @@ fn cached_analysis_of_another_revision_is_rejected_at_native_admission() {
     assert!(admit(acquired).is_ok());
 }
 
-// @kotowari[REQ-core-315, REQ-core-228, EX-core-497]
+// @kotowari[C-core-surface-15]
 #[test]
 fn public_surface_inspection_reports_uncovered_analyzer_facts() {
-    use kotowari_core::{FindingKind, ir, surface};
+    use kotowari_core::{FindingKind, surface};
     let rule = SourceText::new(
         "rules/commands.yaml",
         "id: command\nlanguage: rust\nrule:\n  pattern: 'fn $NAME() { $$$ }'\n",
@@ -72,7 +70,7 @@ fn public_surface_inspection_reports_uncovered_analyzer_facts() {
     let facts = analyzer
         .surfaces(SourceText::new("src/commands.rs", "fn known() {}\nfn missing() {}\n").unwrap())
         .unwrap();
-    let document = ir::parse_document("topic.md", "# Commands\n\nScope.\n\n## Requirements\n\n### REQ-001: Known\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: Inspect.\n\nThe command \"known\".\n").unwrap();
+    let document = SourceText::new("docs/decisions/topic.md", "# Commands\n\nScope.\n\n## Known\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nThe command \"known\".\n").unwrap();
     let mut findings = vec![];
     let tally = surface::check_analysis(&[facts], &[document], &[], &mut findings).unwrap();
     assert_eq!(tally.total(), 2);
@@ -84,7 +82,7 @@ fn public_surface_inspection_reports_uncovered_analyzer_facts() {
     assert!(findings[0].detail().contains("missing"));
 }
 
-// @kotowari[REQ-core-312, EX-core-484]
+// @kotowari[C-core-libapi-5]
 #[test]
 fn malformed_public_rules_explain_the_analysis_failure() {
     let error = Analyzer::new(

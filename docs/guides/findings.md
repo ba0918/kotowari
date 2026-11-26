@@ -2,7 +2,7 @@
 
 English | [日本語](findings.ja.md)
 
-<!-- @kotowari[REQ-core-029:f774ea58, REQ-core-030:4fe666c1, REQ-core-031:069a10b3] -->
+<!-- @kotowari[docs/decisions/core/findings.md#the-detail-of-a-finding-is-a-short-string-that-identifies-that-finding-decided-per-kind-in-a-table:9134c812, docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd] -->
 
 This page lists every kind of finding that `kotowari check`, `kotowari mutants` and `kotowari plan` report.
 When an unfamiliar kind shows up in the output, look it up in the list below first, then read about its cause and fix in the section that groups it.
@@ -14,12 +14,12 @@ Findings come in two severities: error (`error`) and notice (`notice`).
 | Error (`error`) | 1 if there is at least one | Must be fixed |
 | Notice (`notice`) | Unchanged | A hint worth reviewing. Leaving it does not stand in the way of `complete` in `status` |
 
-Only eight kinds are notices: `too_many_lines`, `too_many_requirements`, `mutant_timeout`, `equivalent_stale`, `guide_stale`, `deferred_with_test`, `depends_on_deferred` and `surface_unspecified_stale`; all others are errors.
+Only four kinds are notices: `mutant_timeout`, `equivalent_stale`, `guide_stale` and `surface_unspecified_stale`; all others are errors.
 The keys of a finding (`kind`, `severity`, `path`, `line`, `detail`) and its text form are described in [cli.md](cli.md#how-findings-are-printed).
 
 ## List of kinds
 
-<!-- @kotowari[TBL-core-008:67ba1ee9, TBL-core-009:e3c60d7c, TBL-core-019:d5c9adce, REQ-core-027:a594c5e0] -->
+<!-- @kotowari[docs/decisions/core/findings.md#the-detail-of-a-finding-is-a-short-string-that-identifies-that-finding-decided-per-kind-in-a-table:9134c812, docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd, docs/decisions/core/finding-order.md#the-line-of-findings-that-have-a-line-is-decided-per-kind-in-one-table:848f58fc, docs/decisions/core/finding-order.md#line-is-counted-from-1-and-a-finding-that-covers-the-whole-document-is-null:b98176aa] -->
 
 The "Line" column is the line that the finding's `line` points at.
 "None" means a finding about the whole document: `line` is null, and text shows `-`.
@@ -29,318 +29,191 @@ The "Line" column is the line that the finding's `line` points at.
 |---|---|---|---|---|
 | `missing_title` | Error | File name of the document | None | [Document form](#document-form) |
 | `multiple_titles` | Error | The second and later titles (without `# `) | None | [Document form](#document-form) |
-| `missing_scope` | Error | File name of the document | None | [Document form](#document-form) |
-| `unknown_line` | Error | Line text | That line | [Document form](#document-form) |
-| `unknown_code_block` | Error | Text of the opening line | The opening line | [Document form](#document-form) |
+| `topic_lead_missing` | Error | The title | The title line | [Document form](#document-form) |
 | `unclosed_code_block` | Error | Text of the opening line | The opening line | [Document form](#document-form) |
-| `unknown_heading` | Error | Heading text | That line | [Item headings and lines](#item-headings-and-lines) |
-| `unknown_field` | Error | Line text | That line | [Item headings and lines](#item-headings-and-lines) |
-| `duplicate_field` | Error | Name of the line | The second line | [Item headings and lines](#item-headings-and-lines) |
-| `missing_field` | Error | Name of the missing line | The item's heading | [Item headings and lines](#item-headings-and-lines) |
-| `missing_statement` | Error | ID of the item | The item's heading | [Item values and statements](#item-values-and-statements) |
-| `missing_table` | Error | ID of the decision table | The item's heading | [Item values and statements](#item-values-and-statements) |
-| `verification_missing` | Error | ID of the requirement | The item's heading | [Item values and statements](#item-values-and-statements) |
-| `verification_invalid` | Error | The value | The item's heading | [Item values and statements](#item-values-and-statements) |
-| `unknown_kind` | Error | The value | The item's heading | [Item values and statements](#item-values-and-statements) |
-| `algorithm_without_definition` | Error | ID of the requirement | The item's heading | [Item values and statements](#item-values-and-statements) |
-| `missing_source` | Error | ID of the item, or the term. For a `- deferred:` line with an empty value, `deferred` | The item's heading. For a scenario, its tag line; for a term, the table row; for a `- deferred:` line with an empty value, that line | [Sources](#sources) |
-| `source_invalid` | Error | The source string | The line where the source is written | [Sources](#sources) |
-| `unknown_term` | Error | The backquoted string | That line | [Terms and vague words](#terms-and-vague-words) |
-| `unclosed_backtick` | Error | Line text | That line | [Terms and vague words](#terms-and-vague-words) |
-| `vague_word` | Error | The word | That line | [Terms and vague words](#terms-and-vague-words) |
-| `missing_document` | Error | The document-name reference string | That line | [Terms and vague words](#terms-and-vague-words) |
-| `glossary_invalid` | Error | File name of the document | None | [Glossaries](#glossaries) |
-| `glossary_title_invalid` | Error | Text of the title line | The title line | [Glossaries](#glossaries) |
-| `invalid_glossary_row` | Error | Line text | That line | [Glossaries](#glossaries) |
-| `duplicate_term` | Error | The term | The line of the duplicate | [Glossaries](#glossaries) |
-| `duplicate_id` | Error | The ID | The second and later headings | [IDs and references](#ids-and-references) |
-| `unresolved_reference` | Error | The ID | The line where the reference is written | [IDs and references](#ids-and-references) |
-| `invalid_id` | Error | The value | The tag line | [IDs and references](#ids-and-references) |
-| `id_domain_mismatch` | Error | The ID | The heading or the tag line | [IDs and references](#ids-and-references) |
-| `missing_tag` | Error | Name of the missing tag | The tag line | [Scenarios](#scenarios) |
-| `unknown_tag` | Error | Name of the tag | The tag line | [Scenarios](#scenarios) |
-| `invalid_gherkin_line` | Error | Line text | That line | [Scenarios](#scenarios) |
-| `requirement_without_test` | Error | ID of the requirement | The item's heading | [Correspondence with tests](#correspondence-with-tests) |
-| `scenario_without_test` | Error | ID of the scenario | The tag line | [Correspondence with tests](#correspondence-with-tests) |
+| `decision_state_invalid` | Error | The value of the state line. Empty when there is none | The state line. The decision's heading when there is none | [Decisions and sections](#decisions-and-sections) |
+| `decision_section_missing` | Error | Name of the missing section | The decision's heading | [Decisions and sections](#decisions-and-sections) |
+| `unknown_heading` | Error | The heading line as written | That line | [Decisions and sections](#decisions-and-sections) |
+| `unknown_line` | Error | Line text | First line of the block | [Decisions and sections](#decisions-and-sections) |
+| `invalid_id` | Error | The first word of the row | The row | [Confirmation rows and IDs](#confirmation-rows-and-ids) |
+| `duplicate_id` | Error | The ID | The second and later rows | [Confirmation rows and IDs](#confirmation-rows-and-ids) |
+| `id_domain_mismatch` | Error | The ID | The row | [Confirmation rows and IDs](#confirmation-rows-and-ids) |
+| `vague_word` | Error | The word | That line | [Vague words](#vague-words) |
+| `link_target_missing` | Error | The link destination as written | The line of the link | [Links](#links) |
+| `link_to_record` | Error | The link destination as written | The line of the link | [Links](#links) |
+| `confirmation_without_test` | Error | The ID of the row | The row | [Correspondence with tests](#correspondence-with-tests) |
 | `test_without_id` | Error | Name of the test | First line of the test | [Correspondence with tests](#correspondence-with-tests) |
+| `unresolved_reference` | Error | The ID written in the mark | The line with the mark | [Correspondence with tests](#correspondence-with-tests) |
 | `invalid_marker` | Error | Line text | The line with the mark | [Correspondence with tests](#correspondence-with-tests), [Guide marks](#guide-marks) |
 | `unparsable_file` | Error | Path of the file | None | [Correspondence with tests](#correspondence-with-tests), [Surface check](#surface-check) |
-| `record_field_missing` | Error | Name of the missing supplementary line | The numbered line | [Decision records](#decision-records) |
-| `record_field_unknown` | Error | Name of the supplementary line | That line | [Decision records](#decision-records) |
-| `revision_link_invalid` | Error | The link's href | That line | [Decision records](#decision-records) |
 | `mutant_survived` | Error | Description of the change | The line of the mutation outcome | [mutants and plan](#mutants-and-plan) |
 | `equivalent_invalid` | Error | The list entry's `file` and `change` joined with `: ` | None | [mutants and plan](#mutants-and-plan) |
 | `invalid_plan` | Error | The schema side's kind and details joined with `: ` | The line the schema side reported | [mutants and plan](#mutants-and-plan) |
 | `surface_without_spec` | Error | `surface-kind surface-name` | First line of the surface's node | [Surface check](#surface-check) |
 | `surface_unspecified_invalid` | Error | `kind` and `name` as written in the list, separated by a single space | None | [Surface check](#surface-check) |
-| `overview_form_invalid` | Error | Name of the kotowari-markdown-schema finding kind. For a frontmatter violation, `frontmatter` | That line. None for findings about the whole document | [Overview data](../ir/core/overview-data.md) |
-| `overview_part_unknown` | Error | Name of the part kind | Opening line of the part's fence | [Overview data](../ir/core/overview-data.md) |
-| `overview_part_invalid` | Error | Name of the part kind, a single space, and the place that did not match (`(root)` for the whole value, `(yaml)` when it cannot be read as YAML) | Opening line of the part's fence. When it cannot be read as YAML, the error line the YAML reader returned (or the fence's opening line if none is returned) | [Overview data](../ir/core/overview-data.md) |
-| `overview_lead_missing` | Error | Document name (file name without directories) | None | [Overview data](../ir/core/overview-data.md) |
-| `overview_ir_missing` | Error | Text of the `ir` entry | None | [Overview data](../ir/core/overview-data.md) |
-| `overview_ir_shared` | Error | Path of an IR document listed in the `ir` of two or more overview data files | None | [Overview data](../ir/core/overview-data.md) |
-| `overview_ref_unresolved` | Error | The reference text | Opening line of the part's fence | [Overview data](../ir/core/overview-data.md) |
-| `overview_name_conflict` | Error | File name without `.md` | None | [Overview data](../ir/core/overview-data.md) |
-| `overview_toc_invalid` | Error | The place in the table of contents that did not match (written as for `overview_part_invalid`: `(root)` for the whole value, `(yaml)` when it cannot be read as YAML) | None | [Table of contents check](../ir/core/overview-toc.md) |
-| `overview_toc_page_missing` | Error | Name of an overview data file missing from the table of contents (file name without `.md`) | None | [Table of contents check](../ir/core/overview-toc.md) |
-| `overview_toc_page_unknown` | Error | JSON Pointer of an entry whose name has no overview data (e.g. `/items/1`) | None | [Table of contents check](../ir/core/overview-toc.md) |
-| `overview_toc_page_duplicate` | Error | JSON Pointer of the second and later entries with the same name | None | [Table of contents check](../ir/core/overview-toc.md) |
-| `overview_toc_group_empty` | Error | JSON Pointer of a group whose `items` is empty. `(root)` for the outermost one | None | [Table of contents check](../ir/core/overview-toc.md) |
+| `overview_form_invalid` | Error | Name of the kotowari-markdown-schema finding kind. For a frontmatter violation, `frontmatter` | That line. None for findings about the whole document | [Overview data](../decisions/core/overview-data.md) |
+| `overview_part_unknown` | Error | Name of the part kind | Opening line of the part's fence | [Overview data](../decisions/core/overview-data.md) |
+| `overview_part_invalid` | Error | Name of the part kind, a single space, and the place that did not match (`(root)` for the whole value, `(yaml)` when it cannot be read as YAML) | Opening line of the part's fence. When it cannot be read as YAML, the error line the YAML reader returned (or the fence's opening line if none is returned) | [Overview data](../decisions/core/overview-data.md) |
+| `overview_lead_missing` | Error | Document name (file name without directories) | None | [Overview data](../decisions/core/overview-data.md) |
+| `overview_document_missing` | Error | Text of the `documents` entry | None | [Overview data](../decisions/core/overview-data.md) |
+| `overview_document_shared` | Error | Path of a decision document listed in the `documents` of two or more overview data files | None | [Overview data](../decisions/core/overview-data.md) |
+| `overview_ref_unresolved` | Error | The reference text | Opening line of the part's fence | [Overview data](../decisions/core/overview-data.md) |
+| `overview_name_conflict` | Error | File name without `.md` | None | [Overview data](../decisions/core/overview-data.md) |
+| `overview_toc_invalid` | Error | The place in the table of contents that did not match (written as for `overview_part_invalid`: `(root)` for the whole value, `(yaml)` when it cannot be read as YAML) | None | [Table of contents check](../decisions/core/overview-toc.md) |
+| `overview_toc_page_missing` | Error | Name of an overview data file missing from the table of contents (file name without `.md`) | None | [Table of contents check](../decisions/core/overview-toc.md) |
+| `overview_toc_page_unknown` | Error | JSON Pointer of an entry whose name has no overview data (e.g. `/items/1`) | None | [Table of contents check](../decisions/core/overview-toc.md) |
+| `overview_toc_page_duplicate` | Error | JSON Pointer of the second and later entries with the same name | None | [Table of contents check](../decisions/core/overview-toc.md) |
+| `overview_toc_group_empty` | Error | JSON Pointer of a group whose `items` is empty. `(root)` for the outermost one | None | [Table of contents check](../decisions/core/overview-toc.md) |
 | `translation_missing` | Error | Path of the missing side | None | [Pairs](#pairs) |
 | `translation_record_invalid` | Error | One of `missing`, `yaml`, `keys`, `value` | None | [Pairs](#pairs) |
 | `translation_stale` | Error | `recorded-hash current-hash` | None | [Pairs](#pairs) |
-| `translation_structure_mismatch` | Error | Name of the first part that differs (`heading`, `field`, `table`, `gherkin`, `code`, `glossary`, `flag`, `mark`, `link`, `frontmatter`, `part`, `toc`) | Line of the first element that differs. None when the counts differ or the element is absent on that side | [Pairs](#pairs) |
+| `translation_structure_mismatch` | Error | Name of the first part that differs (for example `heading`, `confirmation`, `mark`, `code`, `table`, `link`) | Line of the first element that differs. None when the counts differ or the element is absent on that side | [Pairs](#pairs) |
 | `translation_switcher_invalid` | Error | The switcher line as it should be | First non-blank line after the title. If there is none, the title line; if there is no title either, none | [Pairs](#pairs) |
 | `link_language_mismatch` | Error | The link destination as written | The line of the link | [Pairs](#pairs) |
-| `link_to_record` | Error | The link destination as written | The line of the link | [Pairs](#pairs) |
-| `too_many_lines` | Notice | Number of lines | None | [Document size](#document-size) |
-| `too_many_requirements` | Notice | Number of requirements | None | [Document size](#document-size) |
 | `mutant_timeout` | Notice | Description of the change | The line of the mutation outcome | [mutants and plan](#mutants-and-plan) |
 | `equivalent_stale` | Notice | The list entry's `file` and `change` joined with `: ` | None | [mutants and plan](#mutants-and-plan) |
-| `guide_stale` | Notice | `ID written-fingerprint current-fingerprint` | The line where the guide mark starts | [Guide marks](#guide-marks) |
-| `deferred_with_test` | Notice | ID of the deferred requirement or deferred scenario | The requirement's heading. For a scenario, its tag line | [Deferral](#deferral) |
-| `depends_on_deferred` | Notice | `referring-ID referenced-ID` | The line where the reference is written | [Deferral](#deferral) |
+| `guide_stale` | Notice | `target written-fingerprint current-fingerprint` | The line where the guide mark starts | [Guide marks](#guide-marks) |
 | `surface_unspecified_stale` | Notice | `kind` and `name` as written in the list, separated by a single space | None | [Surface check](#surface-check) |
 
-The list is defined in [TBL-core-008 and TBL-core-009 of findings.md](../ir/core/findings.md), and the lines in [TBL-core-019 of finding-order.md](../ir/core/finding-order.md).
+The list is defined in [the finding kinds of the specification](../decisions/core/findings.md), and the lines in [finding order and lines](../decisions/core/finding-order.md).
 
-## Errors: IR documents and items
+## Errors: decision documents
 
-The kinds in this part appear on documents in the IR location (`docs/ir/` by default).
-The text lines in each section were actually produced from deliberately broken IR; the full output is in the [example](#example) below.
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
+
+The kinds in this part appear on decision documents, the files in the location `decisions.documents` names (`docs/decisions/` by default).
+The text lines in each section were actually produced from deliberately broken decision documents; the full output is in the [example](#example) below.
+How a decision document is written is in [Writing decision documents](decision-documents.md).
 
 ### Document form
 
-<!-- @kotowari[REQ-core-034:085fbd4f, REQ-core-035:c0b9706a, REQ-core-036:cb09c25d, REQ-core-174:18bfdd84, REQ-core-112:2fc914d5] -->
+<!-- @kotowari[docs/decisions/core/ir-document.md#a-decision-document-has-one-title-and-each-title-from-the-second-on-is-a-multiple_titles-error:e414db7f, docs/decisions/core/findings.md#missing_title-on-a-decision-document-without-a-title-has-the-document-name-as-its-detail:3a7a6a61, docs/decisions/core/ir-document.md#for-the-paragraph-after-the-title-only-its-presence-is-checked-not-its-content-line-count-or-separation-of-responsibilities:cfff5c08, docs/decisions/core/ir-input.md#an-unclosed-code-block-is-an-unclosed_code_block-error-and-from-its-start-to-the-end-of-the-document-is-not-read:c1db707e] -->
 
 ```text
-docs/ir/misc/notitle.md:- [error] missing_title notitle.md
-docs/ir/misc/table.md:- [error] missing_scope table.md
-docs/ir/misc/table.md:- [error] multiple_titles もう一つの題名
-docs/ir/misc/table.md:6 [error] unknown_line 説明の行をここに書いた。
-docs/ir/misc/table.md:14 [error] unknown_code_block ```text
-docs/ir/misc/table.md:18 [error] unclosed_code_block ```gherkin
+docs/decisions/shop/notitle.md:- [error] missing_title notitle.md
+docs/decisions/shop/price.md:- [error] multiple_titles Another title
+docs/decisions/shop/price.md:13 [error] topic_lead_missing Price
+docs/decisions/shop/price.md:17 [error] unclosed_code_block ```text
 ```
 
 | Kind | Common cause | How to fix |
 |---|---|---|
 | `missing_title` | There is no `# ` title | Write one `# Title` at the top of the document |
 | `multiple_titles` | There are two or more `# ` headings | Keep one title; turn the others into `## ` or lower, or split the document |
-| `missing_scope` | No line between the title and the first `## ` states what the document covers | Right after the title, write one to three lines on what the document covers (glossaries and problem records are exempt) |
-| `unknown_line` | Prose written directly under a `## ` (before the first `### `) | Move the explanation into the scope lines or into an item's statements |
-| `unknown_code_block` | A non-gherkin code block placed under `## Examples` | Put concrete examples in a ` ```gherkin ` block. Lines inside a non-gherkin block are not read as gherkin, so `invalid_gherkin_line` does not appear |
-| `unclosed_code_block` | A code block was left unclosed | Write a closing line with the same character as the opening, at least as many. Until it is closed, nothing after it is checked |
+| `topic_lead_missing` | No paragraph between the title and the first decision says what the topic covers. The switcher line of a pair does not count | Right after the title (after the switcher line in a pair), write a paragraph on what the topic covers. Only its presence is checked, not its content or length |
+| `unclosed_code_block` | A code block was left unclosed | Write a closing line with the same character as the opening, at least as many. From the opening line to the end of the document nothing is read as decisions or rows |
 
-### Item headings and lines
+### Decisions and sections
 
-<!-- @kotowari[REQ-core-043:3153d158, REQ-core-044:a3667e95, REQ-core-045:d0c5af4a, REQ-core-098:1e550dfe] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 ```text
-docs/ir/shop/cart.md:12 [error] duplicate_field verification
-docs/ir/shop/cart.md:26 [error] unknown_field - owner: 山田
-docs/ir/shop/cart.md:30 [error] missing_field how_to_verify
-docs/ir/shop/cart.md:47 [error] unknown_heading ### 備考
+docs/decisions/shop/cart.md:25 [error] decision_section_missing Decision
+docs/decisions/shop/cart.md:27 [error] decision_state_invalid done
+docs/decisions/shop/cart.md:33 [error] unknown_heading ### Notes
+docs/decisions/shop/cart.md:35 [error] unknown_line The rate is in percent.
+docs/decisions/shop/cart.md:37 [error] decision_section_missing Problem
+docs/decisions/shop/cart.md:41 [error] unknown_line An explanation written before the sections.
 ```
 
 | Kind | Common cause | How to fix |
 |---|---|---|
-| `unknown_heading` | A `### ` heading is not of the form `### REQ-…: name`. A `### EX-…` was used as a heading. A `#### ` or deeper heading was used | Use the form `### ID: name`. Write concrete examples as gherkin scenarios, not headings |
-| `unknown_field` | A `- xxx:` line that the item kind does not have, or a list line not of the `xxx:` form | Use only the lines each item kind can have ([TBL-core-011 of ir-items.md](../ir/core/ir-items.md)). Put explanations in statements |
-| `duplicate_field` | The same `- xxx:` line written twice | Merge them into one. Only the first value is read |
-| `missing_field` | A requirement has no `- kind:`. A `verification: review` requirement has no `- how_to_verify:`. A problem record has no `- kind:` or `- related:` | Add the missing line. For a review requirement, write in `- how_to_verify:` the steps a person or an LLM follows to confirm it |
+| `decision_state_invalid` | The first paragraph under a decision's heading is not a state line, or its value is none of `Status: proposed`, `Status: implemented`, `状態: 提案`, `状態: 実装済み` | Write the state in the side's language: proposed (decided, not built yet) or implemented (built, the current behaviour) |
+| `decision_section_missing` | A decision has no `### Problem` or no `### Decision` section. detail is the missing section's name, spelled in the language of the decision's state line | Write the missing section |
+| `unknown_heading` | A `###` heading inside a decision is none of `Problem`, `Decision`, `Rejected options` and `Confirmations` (or their Japanese spellings). A heading is placed before the first decision, between the state line and the first section, or under `## Open` | Rename it to one of the four sections, or move its content into a section |
+| `unknown_line` | A block other than the state line stands between a decision's heading and its first section. A block under `### Confirmations` is not a list. A block stands under an unknown heading. A block under `## Open` is not a list | Move the text into a section of the decision. Write each open question as a list item |
 
-When `- verification:` is missing, only `verification_missing` appears, and when `- source:` is missing, only `missing_source` appears; `missing_field` does not.
-The content under a malformed heading is still read as an item, so other findings may appear alongside `unknown_heading` ([common pitfalls](#one-mistake-produces-several-findings-on-the-same-line)).
+Every `##` heading other than `## Open` starts one decision. `####` and deeper headings inside a section belong to that section.
 
-### Item values and statements
+### Confirmation rows and IDs
 
-<!-- @kotowari[REQ-core-047:5359a274, REQ-core-099:05bae6bf, REQ-core-048:8122d6a7, REQ-core-049:741e10ff, REQ-core-050:bf67c1c1, REQ-core-051:84d0e9f4] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4, docs/decisions/core/findings.md#if-the-same-id-is-in-several-places-duplicate_id-is-reported-for-each-place-from-the-second-on:3c1e544c, docs/decisions/core/findings.md#if-the-group-name-of-a-confirmation-id-does-not-match-the-group-folder-it-is-placed-in-it-is-an-id_domain_mismatch-error:cf755b08] -->
 
 ```text
-docs/ir/shop/cart.md:16 [error] algorithm_without_definition REQ-shop-002
-docs/ir/shop/cart.md:22 [error] unknown_kind sometimes
-docs/ir/shop/cart.md:22 [error] verification_invalid manual
-docs/ir/misc/table.md:8 [error] missing_table TBL-misc-001
+docs/decisions/shop/cart.md:21 [error] duplicate_id C-shop-cart-2
+docs/decisions/shop/cart.md:22 [error] id_domain_mismatch C-cart-3
+docs/decisions/shop/cart.md:23 [error] invalid_id cart-4
 ```
 
 | Kind | Common cause | How to fix |
 |---|---|---|
-| `missing_statement` | A requirement other than algorithm, a property, or a problem record has no statement | Under the heading, write a statement that is neither a list nor a table |
-| `missing_table` | A decision table has no Markdown table | Write the table |
-| `verification_missing` | A requirement has no `- verification:` line | Write one of `unit`, `property`, `proof`, `review` |
-| `verification_invalid` | The `- verification:` value is none of the four | Change it to one of the four |
-| `unknown_kind` | The `- kind:` value is not one of the fixed values | For requirements: `event_driven`, `state_driven`, `ubiquitous`, `prohibition`, `invariant`, `algorithm`. For problem records: `contradiction`, `gap`, `ambiguity` |
-| `algorithm_without_definition` | A `kind: algorithm` requirement has no `- definition:` pointing at a decision table or property | Write the rule as a decision table or property and point at it with `- definition: TBL-…` |
+| `invalid_id` | A row under `### Confirmations` does not start with an ID of the form `C-<name>-<number>` (the name in lowercase letters, digits and `-`; the number from 1 without a leading zero) | Start the row with its ID, such as `C-shop-cart-4` |
+| `duplicate_id` | Two rows have the same ID. It appears on the second and later rows, in byte order of path and then line order | Give the later row the number after the largest one the topic has used. Do not reuse a number of a deleted row |
+| `id_domain_mismatch` | In a document under a group folder (`docs/decisions/shop/`), the group in the row's ID is not that folder's name | Match the name to the folder, as in `C-shop-cart-3`. Documents placed directly in the location are not checked |
 
-### Sources
+### Vague words
 
-<!-- @kotowari[REQ-core-059:8ec34dd6, REQ-core-058:0012abf7, TBL-core-012:df66ea46, REQ-core-210:0772cc2a] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b, docs/decisions/core/finding-order.md#the-line-of-the-vague-word-finding-vague_word-is-the-line-that-has-the-word:b01cfba2, docs/decisions/core/translation-pairs.md#the-vague-word-check-is-made-on-decision-and-confirmations-of-every-side-of-decision-documents:c6a9614d] -->
 
 ```text
-docs/ir/shop/cart.md:22 [error] missing_source REQ-shop-003
-docs/ir/shop/cart.md:52 [error] missing_source EX-shop-001
-docs/ir/greet/greet.md:18 [error] source_invalid docs/decision/records/2026-09-24-greet.md#A3
+docs/decisions/shop/cart.md:15 [error] vague_word 適切に
 ```
 
 | Kind | Common cause | How to fix |
 |---|---|---|
-| `missing_source` | An item has no `- source:`, or it is empty. A scenario has no `@source`. The source column of a glossary is empty. The value of `- deferred:` is empty (detail is `deferred`, and the line is that line) | Write the decision it is based on as `path#decision-number`. For a scenario without `@id`, the detail is the text of the `Scenario:` line |
-| `source_invalid` | The source target has no line with that decision number. The path is inside neither `decisions.records` nor `decisions.adr`. It is not of the form `path#anchor`. The value of `- deferred:` is checked by the same rule, and the line is that `- deferred:` line | Point at a decision number that exists in a decision record (such as `A12`), or at the text of a `## ` heading in an ADR. Write the full path from the base directory (`docs/decision/records/records.md#A26`) |
+| `vague_word` | The `### Decision` or `### Confirmations` section of a decision contains a vague word (substring match). The defaults are 「適切に」 ("appropriately"), 「必要に応じて」 ("as needed"), 「通常は」 ("normally") and 「など」 ("etc.") | Write concretely what happens. The word list can be changed with `vague_words` in the configuration |
 
-kotowari only checks that the source target exists.
-It does not check whether that decision really states what the requirement says.
+`### Problem` and `### Rejected options` are not checked, nor are code blocks and text inside double quotes.
+In a pair, every side is checked.
+There is no check of terms: the glossary `CONTEXT.md` of a group is a document for people, and check does not read its content.
 
-### Terms and vague words
+### Links
 
-<!-- @kotowari[REQ-core-064:75e8708a, REQ-core-065:e0fe5913, REQ-core-116:a444487b, REQ-core-066:79261ab9, REQ-core-070:08653b2b] -->
-
-```text
-docs/ir/greet/greet.md:21 [error] unknown_term 停止
-docs/ir/shop/cart.md:28 [error] unclosed_backtick 在庫が無いとき、システムは`在庫切れ を出し、適切に知らせる。
-docs/ir/shop/cart.md:28 [error] vague_word 適切に
-docs/ir/shop/cart.md:36 [error] missing_document price.md
-```
-
-`unknown_term`, `unclosed_backtick` and `vague_word` look at the statements of requirements and properties, and at the Given, When, Then, And and But lines of gherkin.
-They do not look at `- ` lines, tag lines, `Scenario:` lines, the meaning column of a glossary, or the body of a problem record.
-
-| Kind | Common cause | How to fix |
-|---|---|---|
-| `unknown_term` | A backquoted word is neither a glossary term nor an ID. Paths and code fragments are no exception | If it is a term, add a row to the `CONTEXT.md` in the document's directory or a directory above it. If it is a concrete value, enclose it in double quotes (`"…"`). When there is no glossary at all above the document, every backquoted span other than an ID becomes this error |
-| `unclosed_backtick` | The number of backquotes in the line is odd (one was left unclosed) | Close it. On a line with this error, the term and ID checks are not performed |
-| `vague_word` | A statement contains a vague word (substring match). The defaults are 「適切に」 ("appropriately"), 「必要に応じて」 ("as needed"), 「通常は」 ("normally") and 「など」 ("etc.") | Write concretely what happens. The word list can be changed with `vague_words` in the configuration |
-| `missing_document` | The document referenced as `xxx.md` in a statement does not exist | Fix the document name. A name without `/` is looked up as a document in the same directory, and a name with `/` as a path relative to the IR location. Parent directories are not searched |
-
-### Glossaries
-
-<!-- @kotowari[REQ-core-117:8d685215, REQ-core-122:6644ecb4, REQ-core-123:d1df9959, REQ-core-174:18bfdd84] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#to-refer-to-another-decision-link-to-its-heading:41ba3d75, docs/decisions/core/translation-structure.md#links-from-decision-documents-and-their-paired-sides-to-the-frozen-tree-are-errors:f09f73fc] -->
 
 ```text
-docs/ir/misc/CONTEXT.md:- [error] glossary_invalid CONTEXT.md
-docs/ir/misc/CONTEXT.md:1 [error] glossary_title_invalid # 用語
-docs/ir/shop/CONTEXT.md:6 [error] duplicate_term かご
-docs/ir/shop/CONTEXT.md:7 [error] invalid_glossary_row | 在庫 | |
+docs/decisions/shop/cart.md:3 [error] link_target_missing price.md#prices-exclude-tax
+docs/decisions/shop/cart.md:45 [error] link_to_record ../../frozen/stock.md
 ```
 
 | Kind | Common cause | How to fix |
 |---|---|---|
-| `glossary_invalid` | `CONTEXT.md` has no table with the header `| Term | Meaning | Source |` and a delimiter row (for example, the column names were translated into Japanese) | Place a table with this header after the title and before the first `## `. While this error stands, the glossary is treated as having zero terms |
-| `glossary_title_invalid` | The glossary's title is not `# Glossary` (for example, `# 用語集`) | Change the title to `# Glossary` |
-| `invalid_glossary_row` | A table row has fewer than three cells, or the term cell is empty | Fill in the three cells: term, meaning and source |
-| `duplicate_term` | The same term appears in an earlier row of the same glossary, or in a glossary in a directory above | Delete the duplicate row. The definition that counts is the first one, on the side nearer the root |
+| `link_target_missing` | A link in a decision document points, inside the location of decision documents, at a `.md` file that is not a decision document, or at a heading that the document does not have. A heading was renamed and the links to it were not fixed | Point the link at an existing document and heading. The anchor follows GitHub's rule for headings. When you rename a heading, fix the links and guide marks that point at it in the same change |
+| `link_to_record` | A link on any side of a decision document points under `docs/frozen/` | Remove the link. The frozen tree holds old-form documents and is not grounds for the current rules |
 
-### IDs and references
+Links outside the location of decision documents and links to files other than `.md` are not checked by `link_target_missing`.
 
-<!-- @kotowari[REQ-core-032:6a7acc09, REQ-core-054:cb34b375, REQ-core-114:85e0323f, REQ-core-167:33769b03] -->
-
-```text
-docs/ir/shop/cart.md:30 [error] duplicate_id REQ-shop-001
-docs/ir/shop/cart.md:38 [error] id_domain_mismatch REQ-cart-004
-docs/ir/shop/cart.md:62 [error] invalid_id EX-1
-tests/cart.rs:1 [error] unresolved_reference REQ-shop-077
-```
-
-| Kind | Common cause | How to fix |
-|---|---|---|
-| `duplicate_id` | A heading or scenario with the same ID exists in two or more places | Change the ID of the second and later ones. The first is the one in the document earlier in byte order of path, or the higher one within the same document |
-| `unresolved_reference` | `- definition:`, `@about`, `- related:`, a backquoted ID in a statement, or a test mark points at an ID that does not exist. Usually a typo | Fix the ID. Malformed elements in a mark, such as `REQ001`, also give this error |
-| `invalid_id` | The `@id` value is not of the `EX-…` ID form | Use the form `EX-name-001`. The number has three or more digits |
-| `id_domain_mismatch` | The name in the ID differs from the name of the first-level directory under the IR location | For a document in `docs/ir/shop/`, match the name to the directory, as in `REQ-shop-001` |
-
-The ID form is described in [REQ-core-124 of ir-references.md](../ir/core/ir-references.md).
-
-### Scenarios
-
-<!-- @kotowari[REQ-core-053:a27fbee7, REQ-core-052:20cc2383, REQ-core-113:5093fb04] -->
-
-```text
-docs/ir/shop/cart.md:52 [error] unknown_tag @tags
-docs/ir/shop/cart.md:58 [error] missing_tag @id
-docs/ir/shop/cart.md:64 [error] invalid_gherkin_line   Examples:
-```
-
-| Kind | Common cause | How to fix |
-|---|---|---|
-| `missing_tag` | The line just before the scenario has no `@id` or `@about`, or its value is empty | Write `@id=EX-… @about=REQ-… @source=…` on the one line right before `Scenario:` |
-| `unknown_tag` | A tag other than `@id`, `@about`, `@source` was written. A word not starting with `@` was written on the tag line | Use only those three |
-| `invalid_gherkin_line` | A gherkin block contains a line that is none of: a tag, `Scenario:`, a Given/When/Then/And/But step, a `#` comment, or a blank line (this includes `Feature:`, `Background:`, `Scenario Outline:`, `Examples:` and data tables). A step was written before `Scenario:` | Write scenarios with only `Scenario:` and step lines. If there are several situations, split them into separate scenarios |
-
-### Document size
-
-<!-- @kotowari[REQ-core-038:170fdd3e, REQ-core-039:f3d75ba1] -->
-
-These two are notices and do not change the exit code.
-
-```text
-docs/ir/shop/cart.md:- [notice] too_many_lines 65
-docs/ir/shop/cart.md:- [notice] too_many_requirements 5
-```
-
-| Kind | When it appears | How to review |
-|---|---|---|
-| `too_many_lines` | The document has more lines than `limits.lines` (default 200) | Check whether one document mixes several responsibilities. If it does not, leaving it as is is fine |
-| `too_many_requirements` | A topic document has more requirements than `limits.requirements` (default 10) | Same as above |
-
-There is no need to split a document just because of its line count or number of requirements.
-The example above was produced with `limits.lines` lowered to 60 and `limits.requirements` to 3.
-
-## Errors: tests, guides and decision records
+## Errors: tests and guides
 
 ### Correspondence with tests
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8, REQ-core-086:8035b3f8, REQ-core-072:0d066a71, REQ-core-083:c11fae0c] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4, docs/decisions/core/confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests:bfbb46c7, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
 
 ```text
-docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
-docs/ir/greet/greet.md:26 [error] scenario_without_test EX-greet-001
-tests/greet.rs:6 [error] test_without_id rejects_empty_name
-tests/cart.rs:5 [error] invalid_marker // @kotowari[
-tests/cart.rs:9 [error] invalid_marker // @kotowari[]
+docs/decisions/shop/cart.md:20 [error] confirmation_without_test C-shop-cart-2
 tests/broken.rs:- [error] unparsable_file tests/broken.rs
+tests/cart.rs:5 [error] unresolved_reference C-shop-cart-77
+tests/cart.rs:9 [error] invalid_marker // @kotowari[
+tests/cart.rs:11 [error] test_without_id broken_mark
+tests/cart.rs:14 [error] test_without_id no_mark
 ```
 
 | Kind | Common cause | How to fix |
 |---|---|---|
-| `requirement_without_test` | For a non-review requirement that is not deferred, there is neither a mark listing its ID nor a mark listing the ID of a scenario that has the requirement in its `@about` | Write `@kotowari[REQ-…]` or `@kotowari[EX-…]` in the comment just before a test. A scenario's mark also covers the requirements in that scenario's `@about`. If you have decided not to build the requirement yet, defer it instead of writing a test ([deferred.md](deferred.md)) |
-| `scenario_without_test` | No mark lists the scenario's ID (it does not appear for a scenario whose `@about` requirements are all review, or for a deferred scenario) | Write `@kotowari[EX-…]` on a test that checks the scenario. A requirement's mark does not cover the scenario |
+| `confirmation_without_test` | No test's mark lists the ID of a row of an implemented decision, and the row does not start with `(by reading)` | Write `@kotowari[C-…]` in the comment just before a test that confirms the row. It does not appear for a decision whose state is proposed |
 | `test_without_id` | The test has no mark. The mark was written inside the function body, or in a comment separated by a blank line | Write the mark in the comment block right before the test |
+| `unresolved_reference` | A test mark lists an ID that no decision document has. Usually a typo | Fix the ID. Malformed elements in a mark, such as `C-shop-cart`, also give this error |
 | `invalid_marker` | A test mark is empty or holds only separators. The `]` is not on the same line | Close `@kotowari[ID, ID]` on one line |
 | `unparsable_file` | A test file has a syntax error and tree-sitter cannot read it | Fix the file's syntax. The file is skipped and its marks are not read |
 
 A mark that is not in the preceding comment block of any test is ignored without a finding.
-So if you put a mark in the wrong place, you get `test_without_id` and `requirement_without_test`, not `invalid_marker`.
+So if you put a mark in the wrong place, you get `test_without_id` and `confirmation_without_test`, not `invalid_marker`.
 How to write marks is described in [marks.md](marks.md).
-
-### Deferral
-
-<!-- @kotowari[REQ-core-211:e38f935b, REQ-core-212:070f1cfc] -->
-
-```text
-docs/ir/greet/greet.md:13 [notice] depends_on_deferred REQ-greet-001 REQ-greet-003
-docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
-```
-
-| Kind | Severity | Common cause | How to fix |
-|---|---|---|---|
-| `deferred_with_test` | Notice | A mark contains the ID of a deferred requirement or deferred scenario. Either you finished building it and forgot to remove `- deferred:`, or the mark is wrong | If it is built, write the decision in a decision record and then remove the `- deferred:` line. If it is not built yet, remove the mark |
-| `depends_on_deferred` | Notice | A non-deferred requirement or property, or a scenario that is not a deferred scenario, refers to a deferred requirement (through `- definition:`, `@about`, or a backquoted ID in a statement or step). One per reference | Defer the referring item too, bring the requirement back from deferral, or drop the reference. Each is a specification decision |
-
-How to write a deferral and what it does is described in [deferred.md](deferred.md).
 
 ### Guide marks
 
-<!-- @kotowari[REQ-core-202:907dd989, REQ-core-204:fa82249e] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7, docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce, docs/decisions/core/languages-and-guides.md#a-guide-is-stale-when-the-decision-or-confirmations-change:de5a25a2] -->
 
 ```text
-guides/cart.md:3 [notice] guide_stale REQ-shop-001 00000000 b27eedf4
-guides/cart.md:3 [notice] guide_stale REQ-shop-404 12345678 -
-guides/cart.md:7 [error] invalid_marker <!-- @kotowari[REQ-shop-002] -->
+guides/cart.md:3 [notice] guide_stale docs/decisions/shop/cart.md#the-total-is-rounded 12345678 -
+guides/cart.md:3 [notice] guide_stale docs/decisions/shop/cart.md#the-total-is-the-sum-of-the-line-prices 00000000 ff4409e4
+guides/cart.md:7 [error] invalid_marker <!-- @kotowari[C-shop-cart-1] -->
 ```
 
 | Kind | Severity | Common cause | How to fix |
 |---|---|---|---|
-| `guide_stale` | Notice | The body of the IR item changed after the guide was written, so the fingerprint in the mark differs from the current one. If the current fingerprint is `-`, the ID has been removed from the IR | Reread the section and update it to match the current body from `kotowari query ID`, then copy the third part of the detail (the current fingerprint) into the mark |
-| `invalid_marker` | Error | An entry in a guide mark has no `:fingerprint`. The fingerprint is not eight lowercase hexadecimal characters. It is not of the ID form. The `]` is not on the same line | Use the form `ID:fingerprint`. Copy the fingerprint from `fingerprint` in `kotowari query ID` |
+| `guide_stale` | Notice | The Decision or Confirmations of the decision changed after the guide was written, so the fingerprint in the mark differs from the current one. If the current fingerprint is `-`, the target names no decision (the document or heading is gone, or the heading was renamed) | Reread the section and update it to match the current decision from `kotowari query '<target>'`, then copy the third part of the detail (the current fingerprint) into the mark. For `-`, point the entry at the decision that holds the content now, or remove it |
+| `invalid_marker` | Error | An entry in a guide mark has no `:fingerprint`. The fingerprint is not eight lowercase hexadecimal characters. The part before `:` is not of the target form `<path>#<anchor>`. The `]` is not on the same line | Use the form `<target>:<fingerprint>`. Copy the target from `id` and the fingerprint from `fingerprint` in `kotowari list` |
 
 When a guide mark is malformed, even the valid entries in it are not compared.
 Copying only the fingerprint without updating the section just hides the outdated section.
@@ -348,7 +221,7 @@ The steps are in [writing-guides.md](writing-guides.md).
 
 ### Surface check
 
-<!-- @kotowari[REQ-core-227:9203538c, REQ-core-233:f788681d, REQ-core-234:8a2d9f6e, REQ-core-236:45fa5c5f] -->
+<!-- @kotowari[docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0, docs/decisions/core/surface.md#if-the-name-of-a-surface-is-quoted-in-decision-or-confirmations-of-a-decision-that-surface-is-in-the-specification:6c702ea9, docs/decisions/core/surface-unspecified.md#a-malformed-entry-is-an-error-and-an-entry-no-longer-needed-is-a-notice:090bd4da, docs/decisions/core/surface.md#only-surface-files-in-the-languages-of-the-rules-are-read-and-parsed-into-syntax-trees-and-other-surface-files-are-not-read:82d0c416] -->
 
 These appear only in projects that set `surface.rules` in the configuration ([surface.md](surface.md)).
 
@@ -360,47 +233,28 @@ src/cli.rs:12 [error] surface_without_spec flag --verbose
 
 | Kind | Severity | Common cause | How to fix |
 |---|---|---|---|
-| `surface_without_spec` | Error | The name of a surface taken from the code does not appear, as an exact match of the contents inside double quotes or backquotes, in any requirement statement, decision table cell or scenario step. Surfaces with the same kind and name are reported once, at the first place in byte order of path and then line order | Quote the name in the requirement that defines that surface (this is a specification change, so do it in brainstorming). If it is not going into the specification now, add it with a reason to the list of unspecified surfaces during brainstorming or adoption. Do not add it to the list midway through implementation just to make the check pass |
+| `surface_without_spec` | Error | The name of a surface taken from the code does not appear, as an exact match of the contents inside double quotes or backquotes, in the Decision or Confirmations of any decision. Surfaces with the same kind and name are reported once, at the first place in byte order of path and then line order | Quote the name in the decision that defines that surface (this is a specification change, so do it in brainstorming). If it is not going into the specification now, add it with a reason to the list of unspecified surfaces during brainstorming or adoption. Do not add it to the list midway through implementation just to make the check pass |
 | `surface_unspecified_invalid` | Error | An entry in the list of unspecified surfaces does not have exactly the three keys `kind`, `name` and `why`, a value is not a string, or `why` is only whitespace | Fix the entry's form. Until it is fixed, the entry excludes no surface |
-| `surface_unspecified_stale` | Notice | No surface in the code matches an entry in the list of unspecified surfaces, or the matching surface has been written into the IR | Delete the entry. If you renamed the surface, fix `name` |
+| `surface_unspecified_stale` | Notice | No surface in the code matches an entry in the list of unspecified surfaces, or the matching surface has been written into a decision | Delete the entry. If you renamed the surface, fix `name` |
 
 If a file in a surface rule's language has a syntax error, `unparsable_file` appears. Other surface files are not read, so nothing appears for them.
 If `unparsable_file` was already reported for the same file as a test file, it is not reported again.
 
-### Decision records
-
-<!-- @kotowari[REQ-core-130:f72db551, REQ-core-131:f15cd286, REQ-core-132:cb010297] -->
-
-```text
-docs/decision/records/2026-09-24-shop.md:10 [error] record_field_missing why
-docs/decision/records/2026-09-24-shop.md:13 [error] record_field_unknown reason
-docs/decision/records/2026-09-24-shop.md:17 [error] revision_link_invalid #A9
-```
-
-`record_field_missing` and `record_field_unknown` apply only to decision records that have a `## Context` heading.
-`revision_link_invalid` applies to every decision record.
-
-| Kind | Common cause | How to fix |
-|---|---|---|
-| `record_field_missing` | A decision line lacks the supplementary line required for its section (`why` for Agreements, Prohibitions, Delegated and Rejected; `decides` for Undecided; `superseded_by` for Superseded) | Add a supplementary line such as `  - why: reason` |
-| `record_field_unknown` | The name of a supplementary line is none of `why`, `rejected`, `decided_by`, `superseded_by`, `decides`, `related` | Change it to one of the six |
-| `revision_link_invalid` | The `superseded_by` value has no link. The record or decision number the link points at does not exist | Point at an existing decision in the form `[A9](#A9)` or `[A3](./other.md#A3)` |
-
 ### Pairs
 
-<!-- @kotowari[REQ-core-338:e8fc8d74, REQ-core-339:81c3b742, REQ-core-341:3b853a41, REQ-core-345:589adca5, REQ-core-346:80c8eb1e, REQ-core-347:9420480c, REQ-core-348:12801181, REQ-core-349:f2ae1da2, REQ-core-342:7087b408, REQ-core-343:4f2cb7d4] -->
+<!-- @kotowari[docs/decisions/core/translation-pairs.md#guides-overview-source-data-and-the-table-of-contents-have-a-side-for-every-language-of-the-language-list:a581e9d7, docs/decisions/core/translation-pairs.md#the-agreement-record-holds-the-blob-hash-of-each-side-as-of-the-last-time-they-were-confirmed-to-have-the-same-content:f29e5af9, docs/decisions/core/translation-pairs.md#if-a-side-is-changed-without-updating-the-agreement-record-that-side-is-stale:af90c9ef, docs/decisions/core/translation-structure.md#the-sides-of-a-pair-must-match-in-their-skeleton-everything-other-than-natural-language-sentences:ee743f40, docs/decisions/core/translation-structure.md#each-side-of-a-guide-pair-has-a-switcher-line-right-after-the-title:b65862b3, docs/decisions/core/translation-structure.md#links-inside-guides-and-overview-source-data-point-at-the-side-of-the-same-language:5e21d8c6, docs/decisions/core/languages-and-guides.md#decision-documents-can-also-be-kept-as-multilingual-pairs:535e227a, docs/decisions/core/translation-pairs.md#for-pairs-of-decision-documents-counting-and-output-are-done-on-the-first-languages-side-only:f5bf6692, docs/decisions/core/translation-pairs.md#the-staleness-of-guide-markers-is-reported-on-every-side-of-a-guide-pair:de48ce93] -->
 
 These appear only in projects that list two or more languages in `languages` in the configuration ([languages and pairs](config.md#languages-and-pairs--languages-and-labels)).
-Even when one pair is read from two locations, such as the IR and the guides, the same finding appears only once. translation_missing and translation_stale appear per side.
+Decision documents, their glossaries, guides, overview data and the table of contents are paired.
+translation_missing and translation_stale appear per side.
 
 ```text
-docs/ir/a.md:- [error] translation_missing docs/ir/a.en.md
-docs/ir/a.i18n.yaml:- [error] translation_record_invalid keys
-guides/a.md:- [error] translation_stale 78981922613b2afb6025042ff6bd878ac1994e85 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-docs/ir/b.en.md:9 [error] translation_structure_mismatch field
-guides/b.md:3 [error] translation_switcher_invalid 日本語 | [English](b.en.md)
-guides/g.en.md:5 [error] link_language_mismatch ../docs/ir/a.md#REQ-001
-guides/g.md:3 [error] link_to_record ../docs/decision/records/r.md#A1
+docs/decisions/shop/cart.ja.md:- [error] translation_stale de4818cf633031472beea547627e00905cf3dede 2246e3d2ff17d246033d32bcb65c8bb8717bd840
+docs/decisions/shop/cart.ja.md:22 [error] translation_structure_mismatch confirmation
+guides/a.i18n.yaml:- [error] translation_record_invalid missing
+guides/a.md:- [error] translation_missing guides/a.ja.md
+guides/b.md:3 [error] translation_switcher_invalid English | [日本語](b.ja.md)
+guides/b.md:5 [error] link_language_mismatch ../docs/decisions/shop/cart.ja.md#合計は行の値段の和にする
 ```
 
 | Kind | Common cause | How to fix |
@@ -408,18 +262,17 @@ guides/g.md:3 [error] link_to_record ../docs/decision/records/r.md#A1
 | `translation_missing` | The side for one of the pair's languages is missing. When the first language's side is missing and only other languages' sides exist, it appears on such a side, and that side is not read by the other checks | Write the missing side as a translation of an existing side. If the side is not needed, delete it |
 | `translation_record_invalid` | The consistency record `<stem>.i18n.yaml` is missing, cannot be read as YAML, its keys are not exactly the file names of each language, or a value is not 40 lowercase hexadecimal characters. While this appears, `translation_stale` is not reported | Write the record using the hashes in `translations` from `kotowari list` |
 | `translation_stale` | A side's current git blob hash differs from the record. Only one side was edited | Bring the other sides to the same content, then rewrite the record's hashes with the values from `kotowari list` |
-| `translation_structure_mismatch` | The skeleton other than sentences (headings, item fields and sources, table shape and IDs, scenario tags and step keywords, code blocks, glossary sources, guide marks, link destinations, the non-sentence fields of overview parts, the nesting and names of the table of contents) differs from the first language's side | Give it the same skeleton as the first language's side and translate only the sentences. Whether the meaning matches is confirmed in review |
-| `translation_switcher_invalid` | On a side of the IR or a guide, the first non-blank line after the title is not the switcher line. The switcher line lists each language's `language_name` in `languages` order, separated by ` \| `, with its own language as plain text and every other language as `[name](file name of that side)` | Write the line from detail as is, right after the title |
+| `translation_structure_mismatch` | The skeleton other than sentences differs from the first language's side. For a decision document: the level and order of headings and which section each `###` is, the state of each decision, and each row's ID and whether it starts with `(by reading)`. For a guide: headings, guide marks, code blocks, table shapes and link destinations. For overview data and the table of contents: the non-sentence fields of parts, and the nesting and names | Give it the same skeleton as the first language's side and translate only the sentences. Whether the meaning matches is confirmed in review |
+| `translation_switcher_invalid` | On a side of a decision document or a guide, the first non-blank line after the title is not the switcher line. The switcher line lists each language's `language_name` in `languages` order, separated by ` \| `, with its own language as plain text and every other language as `[name](file name of that side)` | Write the line from detail as is, right after the title |
 | `link_language_mismatch` | A link inside a side of a pair points at another language's side. URLs starting with a scheme, `#`-only links and the links in the switcher line are not checked | Point at the side in the same language |
-| `link_to_record` | A link inside a side of a pair points at a file in the decision record or ADR location | Remove the link. The history can be traced from the IR's sources |
 
-On IR sides in other languages, only the checks for terms (looked up through the chain of that language's glossaries `CONTEXT.<language-tag>.md`), vague words, document-name references, unclosed backquotes and glossary form are run.
-Items, IDs, sources, the comparison with test marks, fingerprints, and the output of `list` and `query` are determined by the first language's side alone.
+The decisions, row IDs, the comparison with test marks, fingerprints and the output of `list` and `query` come from the first language's side alone.
+On another side of a decision document, only its headings, its links and its vague words are checked.
 `guide_stale` for guide marks appears on every side of a guide.
 
 ### mutants and plan
 
-<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-140:49dd0d6f, REQ-core-142:3cafdd68, REQ-core-143:de58796f, REQ-core-193:ee3eed54] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315, docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c] -->
 
 These five kinds do not appear in `kotowari check`.
 Only `kotowari mutants` and `kotowari plan` report them.
@@ -443,101 +296,71 @@ Details are in [commands/mutants.md](commands/mutants.md) and [commands/plan.md]
 
 ## Example
 
-This is the result of running `check` in a small repository containing broken IR, tests, guides and decision records.
-The text lines in each section above were taken from here and from the example in [commands/check.md](commands/check.md#example).
-It shows that several kinds can appear on the same line, and that the content under a malformed heading is still read as an item, so findings pile up.
+<!-- @kotowari[docs/decisions/core/finding-order.md#findings-are-arranged-by-path-line-kind-and-detail-in-that-order:430be622] -->
+
+This is the result of running `check` in a small repository containing broken decision documents, tests and a guide.
+The text lines in each section above were taken from here.
+Findings are sorted by path, then line, then kind, so one row can carry several findings, as line 22 does here.
 
 ```console
 $ kotowari check --format text
-docs/decision/records/2026-09-24-shop.md:10 [error] record_field_missing why
-docs/decision/records/2026-09-24-shop.md:13 [error] record_field_unknown reason
-docs/decision/records/2026-09-24-shop.md:17 [error] revision_link_invalid #A9
-docs/ir/misc/CONTEXT.md:- [error] glossary_invalid CONTEXT.md
-docs/ir/misc/CONTEXT.md:1 [error] glossary_title_invalid # 用語
-docs/ir/misc/notitle.md:- [error] missing_title notitle.md
-docs/ir/misc/table.md:- [error] missing_scope table.md
-docs/ir/misc/table.md:- [error] multiple_titles もう一つの題名
-docs/ir/misc/table.md:6 [error] unknown_line 説明の行をここに書いた。
-docs/ir/misc/table.md:8 [error] missing_table TBL-misc-001
-docs/ir/misc/table.md:14 [error] unknown_code_block ```text
-docs/ir/misc/table.md:18 [error] unclosed_code_block ```gherkin
-docs/ir/shop/CONTEXT.md:6 [error] duplicate_term かご
-docs/ir/shop/CONTEXT.md:7 [error] invalid_glossary_row | 在庫 | |
-docs/ir/shop/cart.md:- [notice] too_many_lines 65
-docs/ir/shop/cart.md:- [notice] too_many_requirements 5
-docs/ir/shop/cart.md:12 [error] duplicate_field verification
-docs/ir/shop/cart.md:16 [error] algorithm_without_definition REQ-shop-002
-docs/ir/shop/cart.md:16 [error] requirement_without_test REQ-shop-002
-docs/ir/shop/cart.md:22 [error] missing_source REQ-shop-003
-docs/ir/shop/cart.md:22 [error] requirement_without_test REQ-shop-003
-docs/ir/shop/cart.md:22 [error] unknown_kind sometimes
-docs/ir/shop/cart.md:22 [error] verification_invalid manual
-docs/ir/shop/cart.md:26 [error] unknown_field - owner: 山田
-docs/ir/shop/cart.md:28 [error] unclosed_backtick 在庫が無いとき、システムは`在庫切れ を出し、適切に知らせる。
-docs/ir/shop/cart.md:28 [error] vague_word 適切に
-docs/ir/shop/cart.md:30 [error] duplicate_id REQ-shop-001
-docs/ir/shop/cart.md:30 [error] missing_field how_to_verify
-docs/ir/shop/cart.md:36 [error] missing_document price.md
-docs/ir/shop/cart.md:38 [error] id_domain_mismatch REQ-cart-004
-docs/ir/shop/cart.md:47 [error] missing_field kind
-docs/ir/shop/cart.md:47 [error] missing_source 備考
-docs/ir/shop/cart.md:47 [error] missing_statement 備考
-docs/ir/shop/cart.md:47 [error] unknown_heading ### 備考
-docs/ir/shop/cart.md:47 [error] verification_missing 備考
-docs/ir/shop/cart.md:52 [error] missing_source EX-shop-001
-docs/ir/shop/cart.md:52 [error] scenario_without_test EX-shop-001
-docs/ir/shop/cart.md:52 [error] unknown_tag @tags
-docs/ir/shop/cart.md:58 [error] missing_tag @id
-docs/ir/shop/cart.md:62 [error] invalid_id EX-1
-docs/ir/shop/cart.md:64 [error] invalid_gherkin_line   Examples:
-guides/cart.md:3 [notice] guide_stale REQ-shop-001 00000000 b27eedf4
-guides/cart.md:3 [notice] guide_stale REQ-shop-404 12345678 -
-guides/cart.md:7 [error] invalid_marker <!-- @kotowari[REQ-shop-002] -->
+docs/decisions/shop/cart.md:3 [error] link_target_missing price.md#prices-exclude-tax
+docs/decisions/shop/cart.md:15 [error] vague_word 適切に
+docs/decisions/shop/cart.md:20 [error] confirmation_without_test C-shop-cart-2
+docs/decisions/shop/cart.md:21 [error] duplicate_id C-shop-cart-2
+docs/decisions/shop/cart.md:22 [error] confirmation_without_test C-cart-3
+docs/decisions/shop/cart.md:22 [error] id_domain_mismatch C-cart-3
+docs/decisions/shop/cart.md:23 [error] invalid_id cart-4
+docs/decisions/shop/cart.md:25 [error] decision_section_missing Decision
+docs/decisions/shop/cart.md:27 [error] decision_state_invalid done
+docs/decisions/shop/cart.md:33 [error] unknown_heading ### Notes
+docs/decisions/shop/cart.md:35 [error] unknown_line The rate is in percent.
+docs/decisions/shop/cart.md:37 [error] decision_section_missing Problem
+docs/decisions/shop/cart.md:41 [error] unknown_line An explanation written before the sections.
+docs/decisions/shop/cart.md:45 [error] link_to_record ../../frozen/stock.md
+docs/decisions/shop/notitle.md:- [error] missing_title notitle.md
+docs/decisions/shop/price.md:- [error] multiple_titles Another title
+docs/decisions/shop/price.md:13 [error] topic_lead_missing Price
+docs/decisions/shop/price.md:17 [error] unclosed_code_block ```text
+guides/cart.md:3 [notice] guide_stale docs/decisions/shop/cart.md#the-total-is-rounded 12345678 -
+guides/cart.md:3 [notice] guide_stale docs/decisions/shop/cart.md#the-total-is-the-sum-of-the-line-prices 00000000 ff4409e4
+guides/cart.md:7 [error] invalid_marker <!-- @kotowari[C-shop-cart-1] -->
 tests/broken.rs:- [error] unparsable_file tests/broken.rs
-tests/cart.rs:1 [error] unresolved_reference REQ-shop-077
-tests/cart.rs:5 [error] invalid_marker // @kotowari[
-tests/cart.rs:7 [error] test_without_id broken_mark
-tests/cart.rs:9 [error] invalid_marker // @kotowari[]
-tests/cart.rs:11 [error] test_without_id empty_mark
+tests/cart.rs:5 [error] unresolved_reference C-shop-cart-77
+tests/cart.rs:9 [error] invalid_marker // @kotowari[
+tests/cart.rs:11 [error] test_without_id broken_mark
+tests/cart.rs:14 [error] test_without_id no_mark
 $ echo $?
 1
 ```
 
 ## Common pitfalls
 
-### One mistake produces several findings on the same line
-
-<!-- @kotowari[REQ-core-043:3153d158] -->
-
-The content under a malformed heading (`### 備考` in the example above) is still read by the item rules.
-So `missing_source`, `missing_statement`, `verification_missing` and others appear alongside `unknown_heading`.
-Fix the heading first, then run the check again.
-
 ### A typo in a mark's ID does not give `test_without_id`
 
-<!-- @kotowari[REQ-core-077:082e5fe4, REQ-core-054:cb34b375] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
 A test whose mark points only at nonexistent IDs still counts as "marked".
-Instead, `unresolved_reference` appears on the mark's line, and `requirement_without_test` on the requirement's side.
+Instead, `unresolved_reference` appears on the mark's line, and `confirmation_without_test` on the row the test was meant for.
 
 ```console
-$ kotowari check --format text      # 印に REQ-greet-02 と書いた
-docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
-tests/greet.rs:5 [error] unresolved_reference REQ-greet-02
+$ kotowari check --format text      # the mark says C-shop-cart-11
+docs/decisions/shop/cart.md:19 [error] confirmation_without_test C-shop-cart-1
+tests/cart.rs:1 [error] unresolved_reference C-shop-cart-11
 ```
 
 ### Notices remain, yet the exit code is 0
 
-<!-- @kotowari[REQ-core-031:069a10b3] -->
+<!-- @kotowari[docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd] -->
 
 This is as specified.
-The eight notice kinds change neither the exit code nor `complete` in `status`.
-In kotowari's own repository, eight `too_many_lines` and `too_many_requirements` notices remain, and the exit code is still 0.
+The four notice kinds change neither the exit code nor `complete` in `status`.
 
 ## Related
 
-- Specification: [check kinds](../ir/core/findings.md), [finding order and lines](../ir/core/finding-order.md)
+- Specification: [finding kinds](../decisions/core/findings.md), [finding order and lines](../decisions/core/finding-order.md)
 - Form and order of findings: [cli.md](cli.md#how-findings-are-printed)
 - Commands that report findings: [check](commands/check.md), [mutants](commands/mutants.md), [plan](commands/plan.md)
+- How to write decision documents: [decision-documents.md](decision-documents.md)
 - Test marks: [marks.md](marks.md)
 - Guide marks: [writing-guides.md](writing-guides.md)

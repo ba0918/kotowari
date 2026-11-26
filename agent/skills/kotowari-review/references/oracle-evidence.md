@@ -2,7 +2,7 @@
 
 The one statement of when a test, a check, or a fixture counts as evidence. Reviewers and every
 agent that edits for cycle get **Conditions** pasted into their prompt; brainstorm reads
-the whole file when it decides how a requirement is verified.
+the whole file when it decides how a row to confirm is confirmed.
 
 ## Conditions
 
@@ -18,9 +18,9 @@ The specification here is the project's specification, or its public user-facing
 when none exists, and the supported environments are those it declares. An oracle that fails any
 condition is a cost: do not add it, keep it in a change under review, or demand it.
 
-## A requirement no oracle can meet
+## A row no oracle can meet
 
-A requirement whose only oracle would fail these conditions is not mechanically verifiable:
+A row to confirm whose only oracle would fail these conditions is not mechanically verifiable:
 when it is not code, verify it by a human-run check or by the platform's own checker; when it
-is code, drop the requirement and let the failure join a generic error path a reachable
+is code, drop the row and let the failure join a generic error path a reachable
 failure already proves — never resolve it by having the implementer build the fixture.

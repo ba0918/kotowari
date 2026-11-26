@@ -6,6 +6,28 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ## [Unreleased]
 
+### Added
+
+- A preamble, a section, an item and the child rules of a bullet (`children`) can declare `open: true`. Such a node accepts, with their contents, blocks of the kinds it has no rule for (paragraphs, ordered lists, tables, code blocks, quotes, bullets), while its own rules keep every constraint. This is separate from the schema's top-level `open` and `check --open`, which still do not relax a declared node.
+- A section rule can select headings by a list of names (`name: [未決, Open]`; a single string still works) or by a regular expression searched in the heading text (`pattern: "^Ch"`; `pattern: ""` selects every heading). A heading belongs to the first rule, in declared order, that selects it. Findings of a name-list rule carry the first name of the list as `node`; findings of a pattern rule carry no `node` and name the pattern in the detail. A section rule must declare exactly one of `name` and `pattern`, and a name may appear only once across the section rules.
+- The derived value `name` can be declared in `of` of a section's extraction; it holds the section's heading text.
+- A key of `of` can take `{ group: <name> }`, the text a named capture of the node's regular expression captured, on the title and on bullets (for example `of: { id: { group: id }, line: line }`). A capture that took no part in the match leaves its key out of that element. `end` can be declared on bullets too: the last line of the list item, continuation paragraphs and child lists included.
+- A new finding `unclosed_codeblock` reports a code block opened with a fence (` ``` ` or `~~~`) that is never closed, at the fence's opening line, whatever the schema: in the closed and the open world, in any node, inside list items and quotes, and in both reading modes. Such a block swallows everything after it, which used to pass unchecked.
+- A preamble, a section and an item can declare `subheading`, a rule for headings of depth 4 or more, with `required`, `repeat` and `pattern` (no `extract`). A heading that does not match the pattern is the new finding `subheading_pattern_mismatch`; a count outside the bounds is `repeat_min_not_met` or `repeat_max_exceeded` with the rule kind `subheading`.
+
+### Changed
+
+- **BREAKING** `group` written next to `path` (`extract: { path: id, group: id }`, title only) is no longer accepted and stops with `schema_invalid`. Write it in `of` instead: `extract: { path: id, of: { id: { group: id } } }` puts the capture under `id.id`; the title's own `value` stays the heading text.
+- **BREAKING** When reading by paragraph, the regular expression of a bullet (and its named captures) is matched against the lead paragraph of the list item joined into one line (each line trimmed, line breaks replaced by one space), not only against the marker line. A pattern anchored at the end of the marker line (`^first line$`) no longer matches a bullet that wraps onto a second line; widen it to cover the whole sentence. Continuation paragraphs and child lists are still not matched, and `reading: line` still matches the marker line only.
+- **BREAKING** Item rules are written as a list in `items` (under a section) and `document.items` (directly under the document); a schema that writes `item` or `document.item` now stops with `schema_invalid`. To migrate, rename `item:` to `items:` and make its rule the one element of the list (`item: X` becomes `items: [X]`); the findings and values stay the same. An item rule can select headings by `name` (one name or a list) or `pattern`, like a section rule; only the last rule may have neither, and that rule (the ID rule) takes every remaining heading and is the only one that requires the `ID: Name` form. A heading no rule selects is `undeclared_heading`, and its lines are `undeclared_line`. An item selected by name or pattern has its whole heading as `name` and no `id`. Findings of a name-list item rule carry its first name as `node`.
+- **BREAKING** When reading by paragraph (the default), a block quote, an HTML block and a thematic break inside a node that does not declare `open: true` are now `undeclared_line` findings, with the rule kind `block_quote`, `html` or `thematic_break`; they used to pass silently, even in the closed world. Image-only paragraphs, link reference definitions and blocks of only HTML comments are still ignored. To keep accepting such blocks, declare `open: true` on the node that holds them.
+- A heading of depth 4 or more is now read as a line of the preamble, section or item that contains it: it no longer ends that node for anything that follows it, and the lines after it are checked and extracted with the same node. Without a `subheading` rule it is still `heading_level_mismatch`, also inside a node that declares `open: true` and inside an undeclared section in the open world. Findings come out in document order, so a `heading_level_mismatch` is no longer listed after all other findings.
+
+### Fixed
+
+- In a list where one item opens a fence and leaves it unclosed, the item after it was dropped: it was neither checked nor extracted. It is now read as a list line of the same list, like the items after it.
+- A document whose lines end with a lone carriage return (CR, without LF) had its frontmatter overlooked, so `kotowari-mds` stopped with `schema_not_found` although the document declared `$schema`. The frontmatter is now read with all three line breaks (LF, CRLF and CR), as the rest of the document already was.
+
 ## [0.2.1] - 2026-11-25
 
 ### Changed

@@ -1,4 +1,4 @@
-//! 部品を HTML にする（TBL-view-001）。値はスキーマに合うものとして読み、合わない欄は描かない
+//! 部品を HTML にする（C-view-parts-1）。値はスキーマに合うものとして読み、合わない欄は描かない
 
 use crate::html::escape;
 use crate::{Part, Reference, ReferenceState, Ui};
@@ -23,7 +23,7 @@ impl<'a> Refs<'a> {
     }
 
     /// 参照を表示名で描き、選ぶとページを移らずに本文を開く。どの参照もページの外へリンクしない
-    /// （REQ-view-008）。表に無い参照は開く本文を持たないので、本文の無い参照と同じく文字のまま描く
+    /// （C-view-rendering-13）。表に無い参照は開く本文を持たないので、本文の無い参照と同じく文字のまま描く
     fn draw(&self, key: &str) -> String {
         let Some(reference) = self.table.get(key) else {
             return format!("<span class=\"ref ref-plain\">{}</span>", escape(key));
@@ -40,7 +40,7 @@ impl<'a> Refs<'a> {
                 escape(&reference.label),
                 escape(body)
             ),
-            // REQ-view-030: 本文の無い参照は表示名だけで描き、選んでも何も開かない
+            // C-view-languages-9: 本文の無い参照は表示名だけで描き、選んでも何も開かない
             None => format!(
                 "<span class=\"{class} ref-plain\">{}{mark}</span>",
                 escape(&reference.label)
@@ -94,7 +94,7 @@ fn tone(value: &Value) -> String {
     }
 }
 
-/// 値に "width": "half" を持つか（REQ-view-015）
+/// 値に "width": "half" を持つか（C-view-parts-7）
 pub(crate) fn is_half(part: &Part) -> bool {
     part.value.get("width").and_then(Value::as_str) == Some("half")
 }
@@ -191,7 +191,7 @@ fn cards(value: &Value) -> String {
 }
 
 /// 状態の札の class と、札に描く UI の文字の鍵。スキーマが許す4つの状態のほかは札の色を付けない
-/// （TBL-view-001）
+/// （C-view-parts-2）
 fn state_class(state: &str) -> Option<(&'static str, &'static str)> {
     match state {
         "decided" => Some(("state-decided", "state_decided")),

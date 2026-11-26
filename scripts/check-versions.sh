@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 版の宣言のずれを検査する（判断の記録 docs/decision/records/2026-09-26-release-flow.md の A5、A13）。
+# 版の宣言のずれを検査する。
 #
 #   check-versions.sh          kotowari の版（根の Cargo.toml）に、kotowari 系のパッケージ（kotowari、
 #                              kotowari-core、kotowari-source-analysis、kotowari-overview）の Cargo.toml と

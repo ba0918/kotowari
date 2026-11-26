@@ -1,5 +1,4 @@
-# 依存のライセンスと既知の脆弱性の検査（cargo-deny）の設定。scripts/deps.sh が読む
-# （判断の記録 docs/decision/records/2026-11-24-unattended-merge.md の A18）。
+# 依存のライセンスと既知の脆弱性の検査（cargo-deny）の設定。scripts/deps.sh が読む。
 #
 # ここは検査の定義なので、.kotowari/confirm-paths に載せてある。変更は人が確認する。
 

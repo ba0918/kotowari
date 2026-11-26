@@ -9,7 +9,7 @@ fn poll<F: Future>(future: std::pin::Pin<&mut F>) -> Poll<F::Output> {
     future.poll(&mut Context::from_waker(Waker::noop()))
 }
 
-// @kotowari[REQ-core-319, REQ-core-320, REQ-schema-075, EX-core-493, EX-core-494, EX-schema-092]
+// @kotowari[C-core-libasync-3, C-core-libasync-4, C-core-libasync-5, C-core-libasync-6]
 #[test]
 fn clones_hold_started_permits_and_cancelled_waiters_are_never_submitted() {
     assert_eq!(AsyncOptions::default().max_concurrency.get(), 1);
@@ -50,7 +50,7 @@ fn clones_hold_started_permits_and_cancelled_waiters_are_never_submitted() {
     });
 }
 
-// @kotowari[REQ-core-319, REQ-schema-075, EX-core-493, EX-schema-092]
+// @kotowari[C-core-libasync-3, C-core-libasync-4]
 #[test]
 fn configured_limits_allow_two_workers_and_independent_objects_do_not_share_slots() {
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -91,7 +91,7 @@ fn configured_limits_allow_two_workers_and_independent_objects_do_not_share_slot
     });
 }
 
-// @kotowari[REQ-core-321, REQ-schema-075, EX-core-492, EX-schema-092]
+// @kotowari[C-core-libasync-9]
 #[test]
 fn runtime_shutdown_of_queued_blocking_work_is_a_typed_task_failure() {
     let runtime = tokio::runtime::Builder::new_current_thread()

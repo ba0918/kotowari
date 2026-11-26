@@ -1,4 +1,4 @@
-//! スキーマの意味の検査（TBL-schema-009）。型に読めたスキーマが、宣言として成り立つかを見る。
+//! スキーマの意味の検査。型に読めたスキーマが、宣言として成り立つかを見る。
 
 use super::*;
 
@@ -10,20 +10,23 @@ pub(super) fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
         validate_preamble(preamble)?;
     }
     reject_duplicate_names(
-        schema.document.sections.iter().map(|s| s.name.as_str()),
+        schema
+            .document
+            .sections
+            .iter()
+            .flat_map(|s| s.name.iter().flat_map(|names| names.all()))
+            .map(String::as_str),
         "section",
     )?;
     for section in &schema.document.sections {
         validate_section(section)?;
     }
-    if let Some(item) = &schema.document.item {
-        validate_item(item)?;
-    }
+    validate_item_rules(&schema.document.items)?;
     reject_colliding_root_paths(&schema.document)?;
     reject_root_paths_on_the_type_key(schema)
 }
 
-/// 要素オブジェクトの外、文書の値の根に置く配置パスの衝突を停止にする（TBL-schema-009）。
+/// 要素オブジェクトの外、文書の値の根に置く配置パスの衝突を停止にする。
 /// 題名・前置部・節・項目と、それらの直下のノードの配置パスはすべて同じ置き場に並ぶ。
 fn reject_colliding_root_paths(document: &Document) -> Result<(), SchemaError> {
     let mut paths: Vec<String> = Vec::new();
@@ -59,9 +62,13 @@ fn collect_root_paths(document: &Document, paths: &mut Vec<String>) {
         push(section.bullets.as_ref().and_then(|b| b.extract.as_ref()));
         push(section.table.as_ref().and_then(|t| t.extract.as_ref()));
         push(section.codeblock.as_ref().and_then(|c| c.extract.as_ref()));
-        push(section.item.as_ref().and_then(|i| i.extract.as_ref()));
+        for item in &section.items {
+            push(item.extract.as_ref());
+        }
     }
-    push(document.item.as_ref().and_then(|i| i.extract.as_ref()));
+    for item in &document.items {
+        push(item.extract.as_ref());
+    }
     // 箇条書きの子フィールドも、その箇条書きの置き場（根）に値を出す
     if let Some(bullets) = document.preamble.as_ref().and_then(|p| p.bullets.as_ref()) {
         collect_children_extract_paths(bullets, paths);
@@ -75,7 +82,6 @@ fn collect_root_paths(document: &Document, paths: &mut Vec<String>) {
 
 /// "ast --schema" は根の "type" に "name" を置くので、"name" を宣言した`スキーマ`で根の
 /// 配置パスが "type" の鍵を使うと "name" が消える。衝突と同じく停止にする
-/// （TBL-schema-009、2026-09-24-review2-gaps の A2）
 fn reject_root_paths_on_the_type_key(schema: &Schema) -> Result<(), SchemaError> {
     if schema.name.is_none() {
         return Ok(());
@@ -94,22 +100,29 @@ fn reject_root_paths_on_the_type_key(schema: &Schema) -> Result<(), SchemaError>
 }
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
-    reject_of_words(title.extract.as_ref(), "title", OUTSIDE_ITEM_OF)?;
+    reject_of_words(title.extract.as_ref(), "title", TITLE_OF)?;
     reject_duplicate_element_keys(title.extract.as_ref(), "title", &[])?;
-    let Some(group) = title.extract.as_ref().and_then(Extract::group) else {
-        return Ok(());
-    };
-    // `group` を宣言した抽出は pattern の名前付きキャプチャを取る。pattern が無い、
-    // または pattern が指定の名前付きキャプチャを含まない題名は schema_invalid（REQ-schema-048）
-    let Some(pattern) = &title.pattern else {
-        return Err(SchemaError(
-            "title capture extract requires a pattern".into(),
-        ));
-    };
-    if !pattern.has_capture_group(group) {
-        return Err(SchemaError(format!(
-            "title pattern does not contain a named capture group \"{group}\""
-        )));
+    reject_missing_groups(title.extract.as_ref(), "title", title.pattern.as_ref())
+}
+
+/// `of` の `{ group: <名前> }` は、そのノードの正規表現の名前付きキャプチャを取る。正規表現が
+/// 無いか、正規表現がその名前付きキャプチャを含まないノードは schema_invalid にする
+fn reject_missing_groups(
+    extract: Option<&Extract>,
+    node: &str,
+    pattern: Option<&Pattern>,
+) -> Result<(), SchemaError> {
+    for group in extract.into_iter().flat_map(Extract::groups) {
+        let Some(pattern) = pattern else {
+            return Err(SchemaError(format!(
+                "{node} extract uses the capture \"{group}\" but the {node} has no pattern"
+            )));
+        };
+        if !pattern.has_capture_group(group) {
+            return Err(SchemaError(format!(
+                "{node} pattern does not contain a named capture group \"{group}\""
+            )));
+        }
     }
     Ok(())
 }
@@ -120,14 +133,20 @@ fn validate_preamble(preamble: &Preamble) -> Result<(), SchemaError> {
     validate_bullets(preamble.bullets.as_ref(), false)?;
     validate_table(preamble.table.as_ref())?;
     validate_codeblock(preamble.codeblock.as_ref())?;
+    validate_subheading(preamble.subheading.as_ref())?;
     Ok(())
 }
 
 fn validate_section(section: &Section) -> Result<(), SchemaError> {
+    // 見出しを選ぶ手段は "name" か "pattern" のちょうど一方
+    if section.name.is_some() == section.pattern.is_some() {
+        return Err(SchemaError(
+            "section must declare exactly one of \"name\" or \"pattern\"".into(),
+        ));
+    }
     if let Some(repeat) = &section.repeat {
         repeat.validate()?;
     }
-    reject_capture_extract(section.extract.as_ref(), "section")?;
     reject_of_words(section.extract.as_ref(), "section", SECTION_OF)?;
     reject_duplicate_element_keys(section.extract.as_ref(), "section", &[])?;
     validate_fields(&section.fields)?;
@@ -135,29 +154,62 @@ fn validate_section(section: &Section) -> Result<(), SchemaError> {
     validate_bullets(section.bullets.as_ref(), false)?;
     validate_table(section.table.as_ref())?;
     validate_codeblock(section.codeblock.as_ref())?;
-    if let Some(item) = &section.item {
+    validate_subheading(section.subheading.as_ref())?;
+    validate_item_rules(&section.items)?;
+    Ok(())
+}
+
+/// 1つの項目の規則の一覧を検査する。ID の規則はほかの規則が選ばなかった見出しをすべて
+/// 選ぶので、その後ろの規則は何も選べない。同じ名前が2度出ると、後の名前は何も選ばない
+fn validate_item_rules(items: &[Item]) -> Result<(), SchemaError> {
+    reject_duplicate_names(
+        items
+            .iter()
+            .flat_map(|i| i.name.iter().flat_map(|names| names.all()))
+            .map(String::as_str),
+        "item",
+    )?;
+    if let Some(position) = items.iter().position(|i| i.selector().is_none())
+        && position + 1 < items.len()
+    {
+        return Err(SchemaError(
+            "an item rule follows the item rule with neither \"name\" nor \"pattern\", which takes every remaining heading".into(),
+        ));
+    }
+    for item in items {
         validate_item(item)?;
     }
     Ok(())
 }
 
 fn validate_item(item: &Item) -> Result<(), SchemaError> {
+    if item.name.is_some() && item.pattern.is_some() {
+        return Err(SchemaError(
+            "item must not declare both \"name\" and \"pattern\"".into(),
+        ));
+    }
+    if item.id.is_some() && item.selector().is_some() {
+        return Err(SchemaError(
+            "item \"id\" belongs to the rule with neither \"name\" nor \"pattern\"".into(),
+        ));
+    }
     if let Some(repeat) = &item.repeat {
         repeat.validate()?;
     }
-    reject_capture_extract(item.extract.as_ref(), "item")?;
     // 項目の内部に extract を宣言するなら、項目自身も extract を持つ必要がある。
-    // 内部の配置パスは項目オブジェクトの中の相対パスなので、置き場が要る（REQ-schema-039、REQ-schema-047）
+    // 内部の配置パスは項目オブジェクトの中の相対パスなので、置き場が要る
     let internal = item_internal_extract_paths(item);
     if item.extract.is_none() && !internal.is_empty() {
         return Err(SchemaError(
             "item internals declare extract but the item itself does not".into(),
         ));
     }
-    // 内側の配置パスも項目オブジェクトの中の鍵なので、重複の判定に含める（TBL-schema-009）
+    reject_of_words(item.extract.as_ref(), "item", ITEM_OF)?;
+    // 内側の配置パスも項目オブジェクトの中の鍵なので、重複の判定に含める
     reject_duplicate_element_keys(item.extract.as_ref(), "item", &internal)?;
     validate_table(item.table.as_ref())?;
     validate_codeblock(item.codeblock.as_ref())?;
+    validate_subheading(item.subheading.as_ref())?;
     validate_fields(&item.fields)?;
     validate_statement(item.statement.as_ref())?;
     validate_bullets(item.bullets.as_ref(), false)?;
@@ -170,21 +222,20 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         if let Some(repeat) = &table.repeat {
             repeat.validate()?;
         }
-        // どの表を選ぶかはヘッダで決めるので、ヘッダの無い select は停止にする（TBL-schema-009）
+        // どの表を選ぶかはヘッダで決めるので、ヘッダの無い select は停止にする
         if table.select.is_some() && table.header.is_none() {
             return Err(SchemaError("table select requires a header".into()));
         }
         if let Some(header) = &table.header {
             reject_duplicate_names(header.iter().map(String::as_str), "table header column")?;
         }
-        reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_of_words(table.extract.as_ref(), "table", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(table.extract.as_ref(), "table", &[])?;
     }
     Ok(())
 }
 
-/// 1つの要素オブジェクトの中で鍵が重複するスキーマを停止にする（TBL-schema-009）。鍵は
+/// 1つの要素オブジェクトの中で鍵が重複するスキーマを停止にする。鍵は
 /// `value`、`of` の鍵、そして内側のノードの配置パス（`internal` で渡す）である。
 /// 判定は配置パス全体で行い、`a.b` と `a.c` は別の鍵、`a` と `a.b` は重複とする。
 fn reject_duplicate_element_keys(
@@ -202,7 +253,7 @@ fn reject_duplicate_element_keys(
 }
 
 /// 同じ置き場の配置パスのうち、同じパスか一方が他方の手前の段にあたるものを停止にする
-/// （TBL-schema-009）。`a.b` と `a.c` は別の鍵、`a` と `a.b` は衝突とする。
+/// 。`a.b` と `a.c` は別の鍵、`a` と `a.b` は衝突とする。
 fn reject_colliding_keys(keys: &[&str], place: &str) -> Result<(), SchemaError> {
     for (index, key) in keys.iter().enumerate() {
         for other in &keys[index + 1..] {
@@ -223,21 +274,27 @@ fn is_ancestor_path(outer: &str, inner: &str) -> bool {
         .is_some_and(|rest| rest.starts_with('.'))
 }
 
+/// 深さ4以上の見出しの規則を検査する。
+fn validate_subheading(subheading: Option<&Subheading>) -> Result<(), SchemaError> {
+    match subheading.and_then(|s| s.repeat.as_ref()) {
+        Some(repeat) => repeat.validate(),
+        None => Ok(()),
+    }
+}
+
 /// コードブロックの規則を検査する。
 fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> {
     if let Some(codeblock) = codeblock {
         if let Some(repeat) = &codeblock.repeat {
             repeat.validate()?;
         }
-        reject_capture_extract(codeblock.extract.as_ref(), "codeblock")?;
         reject_of_words(codeblock.extract.as_ref(), "codeblock", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(codeblock.extract.as_ref(), "codeblock", &[])?;
     }
     Ok(())
 }
 
-/// 同じ置き場で同じ名前を2度宣言したスキーマを停止にする（TBL-schema-009、
-/// 2026-09-24-review4-gaps の A3、A5）。検査と抽出で効く宣言が食い違うか、値が黙って消える
+/// 同じ置き場で同じ名前を2度宣言したスキーマを停止にする。検査と抽出で効く宣言が食い違うか、値が黙って消える
 fn reject_duplicate_names<'a>(
     names: impl Iterator<Item = &'a str>,
     what: &str,
@@ -260,7 +317,6 @@ fn validate_fields(fields: &[Field]) -> Result<(), SchemaError> {
         if let Some(when) = &field.when {
             when.validate()?;
         }
-        reject_capture_extract(field.extract.as_ref(), "field")?;
         reject_of_words(field.extract.as_ref(), "field", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(field.extract.as_ref(), "field", &[])?;
     }
@@ -275,7 +331,6 @@ fn validate_statement(statement: Option<&Statement>) -> Result<(), SchemaError> 
         if let Some(when) = &statement.when {
             when.validate()?;
         }
-        reject_capture_extract(statement.extract.as_ref(), "statement")?;
         reject_of_words(statement.extract.as_ref(), "statement", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(statement.extract.as_ref(), "statement", &[])?;
     }
@@ -295,10 +350,12 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
         if let Some(when) = &bullets.when {
             when.validate()?;
         }
-        if !in_children {
-            reject_capture_extract(bullets.extract.as_ref(), "bullets")?;
-        }
-        reject_of_words(bullets.extract.as_ref(), "bullets", OUTSIDE_ITEM_OF)?;
+        reject_of_words(bullets.extract.as_ref(), "bullets", BULLETS_OF)?;
+        reject_missing_groups(
+            bullets.extract.as_ref(),
+            "bullets",
+            bullets.pattern.as_ref(),
+        )?;
         reject_duplicate_element_keys(bullets.extract.as_ref(), "bullets", &[])?;
         if let Some(children) = &bullets.children {
             validate_fields(&children.fields)?;
@@ -308,37 +365,27 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
     Ok(())
 }
 
-/// 題名以外のノードには名前付きキャプチャ（`group`）の抽出を宣言できない（TBL-schema-008）。
-/// 宣言すると schema_invalid の停止になる。
-fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
-    if extract.and_then(Extract::group).is_some() {
-        return Err(SchemaError(format!(
-            "{node} extract cannot use the named-group capture form"
-        )));
-    }
-    Ok(())
-}
+/// ノードが `of` に宣言できる語の名前。`line` と `raw` はどのノードにも、`id` は項目だけ、
+/// `name` は項目と節だけ、`end` は項目と節と箇条書きだけ、名前付きキャプチャ（`group`）は
+/// 題名と箇条書きだけ。
+const OUTSIDE_ITEM_OF: &[&str] = &["line", "raw"];
+const TITLE_OF: &[&str] = &["line", "raw", "group"];
+const SECTION_OF: &[&str] = &["line", "raw", "name", "end"];
+const ITEM_OF: &[&str] = &["line", "id", "name", "raw", "end"];
+const BULLETS_OF: &[&str] = &["line", "raw", "end", "group"];
 
-/// 項目と節の外のノードが `of` に宣言できる語。`id` と `name` は項目だけ、`end` は項目と節だけ（REQ-schema-048）。
-const OUTSIDE_ITEM_OF: &[OfKind] = &[OfKind::Line, OfKind::Raw];
-/// 節が `of` に宣言できる語（REQ-schema-048）。
-const SECTION_OF: &[OfKind] = &[OfKind::Line, OfKind::Raw, OfKind::End];
-
-/// ノードが受け付けない `of` の語を schema_invalid の停止にし、受け付ける語の一覧を示す（REQ-schema-065）。
+/// ノードが受け付けない `of` の語を schema_invalid の停止にし、受け付ける語の一覧を示す。
 fn reject_of_words(
     extract: Option<&Extract>,
     node: &str,
-    accepted: &[OfKind],
+    accepted: &[&str],
 ) -> Result<(), SchemaError> {
     let Some(extract) = extract else {
         return Ok(());
     };
     for (_, kind) in extract.of() {
-        if !accepted.contains(kind) {
-            let words: Vec<String> = accepted
-                .iter()
-                .map(|k| format!("\"{}\"", k.word()))
-                .collect();
+        if !accepted.contains(&kind.word()) {
+            let words: Vec<String> = accepted.iter().map(|word| format!("\"{word}\"")).collect();
             return Err(SchemaError(format!(
                 "{node} extract cannot use \"{}\" in of; accepted: {}",
                 kind.word(),

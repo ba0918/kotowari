@@ -2,39 +2,41 @@
 
 English | [日本語](writing-guides.ja.md)
 
-A guide is a how-to document for users, written by a person or an LLM who has read the IR (this page is one of them).
+A guide is a how-to document for users, written by a person or an LLM who has read the decision documents (this page is one of them).
 kotowari does not generate guides.
-Instead, each section of a guide carries a mark stating "which IR items it explains" and "the item's fingerprint at the time of writing", and `kotowari check` compares them with the current IR.
-Sections that have gone stale because the IR changed are reported as `guide_stale` notices whenever you run it.
+Instead, each section of a guide carries a mark stating "which decisions it explains" and "each decision's fingerprint at the time of writing", and `kotowari check` compares them with the current decision documents.
+Sections that have gone stale because a decision changed are reported as `guide_stale` notices whenever you run it.
 
 ## Format
 
-<!-- @kotowari[REQ-core-201:82ef697c, TBL-core-036:96778f03] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 A guide mark is written inside an HTML comment, so it does not appear in the rendered guide.
 
 ```markdown
-## 会員の割引
+## Member discount
 
-<!-- @kotowari[REQ-001:874e14a4, EX-001:54af105a] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:e3adc927] -->
 
-会員の注文は1割引きになります。
+A member's order is 10% off.
 ```
 
 | Part | Form |
 |---|---|
 | Start | `@kotowari[` |
-| Contents | Each entry in the form `ID:fingerprint`, separated by commas |
+| Contents | Each entry in the form `target:fingerprint`, separated by commas |
+| Target | The path of the decision document and the anchor of the decision's heading, joined with `#` (`<path>#<anchor>`). The path is the first language's side, relative to the base directory |
 | Fingerprint | 8 lowercase hexadecimal characters (`0`–`9` and `a`–`f`) |
 | End | `]` on the same line as the start |
 
-- Each entry has its surrounding whitespace removed and is split into ID and fingerprint at the first `:`. Whitespace is allowed just inside the brackets and around the `:`.
-- If you write two entries with the same ID, each is checked on its own.
-- These are different rules from test marks (`@kotowari[REQ-001]`). For test marks, see [Marking tests](marks.md).
+- The anchor is made by the same rule as a link to a heading inside a decision document ([Writing decision documents](decision-documents.md#changing-a-decision)). You do not need to build it: `kotowari list` prints it as the `id` of each decision.
+- Whitespace is allowed just inside the brackets and around the `:`.
+- If you write two entries with the same target, each is checked on its own.
+- These are different rules from test marks (`@kotowari[C-shop-discount-1]`). For test marks, see [Marking tests](marks.md).
 
 ## Where marks are read
 
-<!-- @kotowari[REQ-core-200:97b3eb9b, EX-core-366:c019e492, EX-core-374:4cdeb739] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guide-markers-are-read-only-from-inside-html-comments:6ad1c700] -->
 
 Guides are read as CommonMark.
 Only an `@kotowari[` between the `<!--` and the `-->` of an HTML comment is read as a guide mark.
@@ -53,27 +55,22 @@ All the examples on this page are inside code blocks too.
 In the following guide, only the last entry is read as a mark.
 
 ````markdown
-# 印の書き方
+# How to write marks
 
-印は @kotowari[REQ-001] の形ではなく、`<!-- @kotowari[REQ-001:874e14a4] -->` の形で書きます。
+Write a mark as `<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:e3adc927] -->`, not as @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:e3adc927].
 
 ```markdown
-<!-- @kotowari[REQ-001] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:00000000] -->
 ```
 
-<!-- メモ --> @kotowari[REQ-001:00000000]
+<!-- note --> @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:00000000]
 
-<!-- @kotowari[REQ-001 : 874e14a4] -->
+<!-- @kotowari[ docs/decisions/shop/discount.md#members-get-10-off-their-orders : e3adc927 ] -->
 ````
-
-```console
-$ kotowari check | jq -c .guides
-{"files":1,"marks":1}
-```
 
 ## Configuring where guides live
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c, EX-core-369:248c0ebf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 List the locations of guides as globs under `guides.files` in the configuration file.
 
@@ -88,66 +85,63 @@ guides:
 | `guides.files` is missing or an empty list | No guides are read, and no guide checks run |
 | A glob matches nothing | Not an error (`files` in `guides` becomes 0) |
 | It matches the same file as `tests.files` | Stops with a configuration error (exit code 2) |
-| It matches a file in the IR or decision record locations | Does not stop. That file is read as a guide as well |
+| It matches a file in the location of decision documents | Does not stop. That file is read as a guide as well |
 
 - Only `kotowari check` and `kotowari status` read guides. `list` and `query` do not.
 - How globs are read, how files are scanned, and stopping on unreadable files work the same as for `tests.files` ([Configuration file](config.md#how-globs-are-read)).
 
 ## Fingerprints
 
-<!-- @kotowari[REQ-core-203:1fdc0443, TBL-core-026:382b0b95, EX-core-364:cc1080a1, EX-core-375:6d9bd3bb] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f, docs/decisions/core/languages-and-guides.md#a-guide-is-stale-when-the-decision-or-confirmations-change:de5a25a2, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
-A fingerprint is an 8-character lowercase hexadecimal value taken from the body of an item or scenario.
-It appears as `fingerprint` in the JSON of `kotowari list` and `kotowari query`.
-Copy it from there rather than computing it by hand.
+A fingerprint is an 8-character lowercase hexadecimal value taken from the Decision and Confirmations sections of a decision.
+`kotowari list` prints one entry of kind `decision` per decision, whose `id` is the target and whose `fingerprint` is the value to copy; `kotowari query '<target>'` prints the same for one decision.
+Copy them from there rather than computing them by hand.
 
 ```console
-$ kotowari query REQ-001 | jq -r '.items[0].fingerprint'
-874e14a4
-$ kotowari list | jq -r '.items[] | "\(.id) \(.fingerprint)"'
-REQ-001 874e14a4
-REQ-002 76709f33
-EX-001 54af105a
+$ kotowari list | jq -r '.items[] | select(.kind == "decision") | "\(.id) \(.fingerprint)"'
+docs/decisions/shop/discount.md#members-get-10-off-their-orders e3adc927
+docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted 55ce4da7
+$ kotowari query 'docs/decisions/shop/discount.md#members-get-10-off-their-orders' | jq -r '.items[0].fingerprint'
+e3adc927
 ```
 
 These changes do and do not change the fingerprint:
 
 | Change | Fingerprint |
 |---|---|
-| Changing the item's body (the `- kind:` and `- verification:` lines, statements, tables) | Changes |
-| Changing a scenario's step lines (Given, When, Then, And) | Changes |
-| Renaming the item's heading | Does not change |
-| Changing the `- source:` line (the source) | Does not change |
-| Adding, removing or changing a `- deferred:` line under a requirement heading | Changes |
-| Adding, removing or changing a document-level `- deferred:` line (after the title) | Changes for the requirements of that document. Decision tables and scenarios do not change |
-| Changing the name on a scenario's `Scenario:` line, or its tag lines (`@source` and so on) | Does not change |
+| Changing the Decision section (sentences, tables) | Changes |
+| Changing the Confirmations section (adding, removing or rewording a row) | Changes |
+| Changing the state line (proposed to implemented) | Does not change |
+| Changing the Problem or the Rejected options | Does not change |
+| Renaming the decision's heading | The target changes, so marks pointing at the old target become `guide_stale` with `-` |
 | Changing line endings (`\r\n` versus `\n`) | Does not change |
 
-Sources are added every time the IR is revised, so including them in the fingerprint would raise noisy notices each time.
-[Deferral](deferred.md) declarations are included in the fingerprint: removing a deferral means shipping that feature, so the guide should be reviewed.
-A document-level declaration sits outside the requirements' bodies, so its first line is prepended to the fingerprint input of each requirement in that document.
-The definition of the calculation is in [REQ-core-203](../ir/core/guides.md#REQ-core-203).
+The fingerprint follows only what the guide explains: the rule and the results that show it is kept.
+Turning a decision to implemented, or adding to its reasons, does not ask for the guide to be reviewed.
 
 ## Output
 
 ### The `guides` group
 
-<!-- @kotowari[REQ-core-206:e2f3dc5c, EX-core-371:f354c476] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7, docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 A `guides` group appears at the top level of the JSON of `kotowari check` and in `kotowari status`.
 
 | Key | Type | Description |
 |---|---|---|
 | `files` | number | The number of guides read |
-| `marks` | number | The number of entries in well-formed guide marks (2 for `REQ-001:…, EX-001:…`) |
+| `marks` | number | The number of entries in well-formed guide marks (2 for a mark with two targets) |
 
 It does not appear in `check --format text`. In `status --format text` it appears as the `guides` line.
 
+For a guide with three sections, the last of which marks both decisions:
+
 ```console
 $ kotowari check | jq -c .guides
-{"files":1,"marks":3}
+{"files":1,"marks":4}
 $ kotowari status --format text | grep -E '^(guides|findings|complete)'
-guides files=1 marks=3
+guides files=1 marks=4
 findings error=0 notice=0
 complete true
 ```
@@ -156,102 +150,99 @@ If a mistyped glob leaves you with zero guides, `files=0` lets you notice.
 
 ### `guide_stale` (notice)
 
-<!-- @kotowari[REQ-core-204:fa82249e, EX-core-363:9bff9f93, EX-core-365:542b2c69] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce] -->
 
 For each entry of a well-formed mark, one notice is reported when:
 
-- no item or scenario with that ID exists in the IR, or
-- no item with that ID has a fingerprint equal to the one written.
+- the target names no decision (the document or heading does not exist, or the heading is the title or a section), or
+- the current fingerprint of the decision differs from the one written.
 
 | Field | Value |
 |---|---|
 | path | The path relative to the guide's base directory |
 | line | The line where the mark starts |
-| detail | `ID written-fingerprint current-fingerprint` (separated by single spaces). When the ID is not in the IR, the current fingerprint is `-` |
+| detail | `target written-fingerprint current-fingerprint` (separated by single spaces). When the target names no decision, the current fingerprint is `-` |
 
-Changing REQ-001's statement from "10%" to "20%" produces:
+Changing the member decision from "10% off" to "20% off" produces:
 
 ```console
 $ kotowari check --format text
-guides/discount.md:5 [notice] guide_stale REQ-001 874e14a4 19e1ff5a
+guides/discount.md:5 [notice] guide_stale docs/decisions/shop/discount.md#members-get-10-off-their-orders e3adc927 6db223da
+guides/discount.md:17 [notice] guide_stale docs/decisions/shop/discount.md#members-get-10-off-their-orders e3adc927 6db223da
 $ echo $?
 0
 ```
 
-Removing REQ-002 from the IR makes the current fingerprint `-`.
+Renaming the heading of the guest decision makes the current fingerprint `-`.
 
 ```console
 $ kotowari check --format text
-guides/discount.md:11 [notice] guide_stale REQ-002 76709f33 -
+guides/discount.md:11 [notice] guide_stale docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted 55ce4da7 -
 ```
 
 `guide_stale` is a notice, so it changes neither the exit code nor `complete` in `status`.
 It stays in the counts of `check` and `status` until you fix it.
 
-When two or more items with the same ID exist in the IR, the entry is not stale if it matches either fingerprint.
-
 ### `invalid_marker` (error)
 
-<!-- @kotowari[REQ-core-202:907dd989, EX-core-367:68e78a4a, EX-core-373:acd8d951] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 One finding per mark is reported (exit code 1) when:
 
 - the contents are empty or only separators
 - there is no `]` on the same line as the start
 - an entry has no `:` (the fingerprint was forgotten)
-- the part before `:` is not in ID form (including empty)
+- the part before `:` is not in target form (no path, no `#anchor`, or a confirmation ID)
 - the part after `:` is not 8 lowercase hexadecimal characters (including uppercase)
 
 The detail is the whole line containing the mark.
 None of the entries in a malformed mark are checked, including the well-formed ones.
 
 ```markdown
-## 会員の割引
+## Member discount
 
-<!-- @kotowari[REQ-001] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders] -->
 
-## 会員でない注文
+## Orders from guests
 
-<!-- @kotowari[REQ-002:76709F33] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55CE4DA7] -->
 
-## 例
+## Example
 
-<!-- @kotowari[REQ-001:874e14a4, EX-001] -->
+<!-- @kotowari[C-shop-discount-1:e3adc927, docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55ce4da7] -->
 ```
 
 ```console
 $ kotowari check --format text
-guides/discount.md:5 [error] invalid_marker <!-- @kotowari[REQ-001] -->
-guides/discount.md:9 [error] invalid_marker <!-- @kotowari[REQ-002:76709F33] -->
-guides/discount.md:13 [error] invalid_marker <!-- @kotowari[REQ-001:874e14a4, EX-001] -->
-$ kotowari check | jq -c .guides
-{"files":1,"marks":0}
+guides/bad.md:5 [error] invalid_marker <!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders] -->
+guides/bad.md:9 [error] invalid_marker <!-- @kotowari[docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55CE4DA7] -->
+guides/bad.md:13 [error] invalid_marker <!-- @kotowari[C-shop-discount-1:e3adc927, docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55ce4da7] -->
 ```
 
 ## Steps for writing a guide
 
-<!-- @kotowari[REQ-core-205:7110f061] -->
+<!-- @kotowari[docs/decisions/core/guides.md#the-occasions-for-writing-and-reviewing-guides-are-placed-in-the-kotowari-skill:cfbcc10a] -->
 
-1. Read the IR and write a section for your readers.
-2. List the items and scenarios the section explains. Read their bodies with `kotowari query ID` and confirm that the section really is based on those items. If you do not know an ID, look it up with `kotowari list`.
-3. Place one mark just below the section heading, with one entry per ID, copying the fingerprint from `kotowari query ID | jq -r '.items[0].fingerprint'`.
-4. Keep a mark to a few IDs. A section that needs more usually explains several things, so split it (kotowari does not check this).
+1. Read the decision documents and write a section for your readers.
+2. List the decisions the section explains. Read each with `kotowari query '<target>'` and confirm that the section really is based on it. If you do not know a target, look it up with `kotowari list`.
+3. Place one mark just below the section heading, with one entry per decision, copying the fingerprint from `kotowari query '<target>' | jq -r '.items[0].fingerprint'`.
+4. Keep a mark to a few decisions. A section that needs more usually explains several things, so split it (kotowari does not check this).
 5. Run `kotowari check` and confirm that there are no findings on the guide and that `guides` counts the guides and entries.
 
-If you forget to list in the mark an item the section explains, kotowari cannot tell. Step 2 is the only safeguard.
+If you forget to list in the mark a decision the section explains, kotowari cannot tell. Step 2 is the only safeguard.
 
-Sections not tied to IR items, such as `## Related`, do not need a mark.
+Sections not tied to decisions, such as `## Related`, do not need a mark.
 
 ## Steps for reviewing a guide
 
-<!-- @kotowari[REQ-core-205:7110f061, REQ-core-204:fa82249e] -->
+<!-- @kotowari[docs/decisions/core/guides.md#the-occasions-for-writing-and-reviewing-guides-are-placed-in-the-kotowari-skill:cfbcc10a, docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce] -->
 
 When `guide_stale` appears, do the following for each finding.
 
-1. Read the section the mark belongs to, and read the current body with `kotowari query ID`.
-2. If the section no longer agrees with the IR, fix the section first. While you are at it, use `kotowari query` to check whether the section explains any item missing from the mark, and add it if so.
+1. Read the section the mark belongs to, and read the current decision with `kotowari query '<target>'`.
+2. If the section no longer agrees with the decision, fix the section first. While you are at it, use `kotowari list` and `kotowari query` to check whether the section explains any decision missing from the mark, and add it if so.
 3. Only after reviewing the section, copy the current fingerprint from the detail into the mark's entry.
-4. If the current fingerprint is `-`, the item has been removed from the IR. Rewrite or remove what the section says about that item, and either change the entry to the replacing ID or remove the entry.
+4. If the current fingerprint is `-`, the target names no decision now. Find the decision that holds the content (a renamed heading, or a decision in another topic), rewrite or remove what the section says, and either point the entry at that decision or remove the entry.
 5. Run `kotowari check` again and confirm that `guide_stale` is gone.
 
 Copying only the fingerprint without reading the section clears the notice while leaving the stale section unfixed ([pitfalls](#the-notice-is-gone-but-the-section-is-still-stale)).
@@ -260,7 +251,7 @@ Copying only the fingerprint without reading the section clears the notice while
 
 ### `marks` is 0 even though you wrote marks
 
-<!-- @kotowari[REQ-core-200:97b3eb9b, EX-core-366:c019e492] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guide-markers-are-read-only-from-inside-html-comments:6ad1c700] -->
 
 The mark is outside an HTML comment, or inside a code block or code span.
 Enclose it in `<!--` and `-->`, and keep it outside code.
@@ -268,7 +259,7 @@ A mark written after `-->` on the same line is not read either.
 
 ### `files` in `guides` is 0
 
-<!-- @kotowari[REQ-core-198:253e79fd, EX-core-369:248c0ebf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8] -->
 
 The configuration has no `guides.files`, or its globs match no files.
 Without `guides.files`, nothing is reported even if guides contain stale marks.
@@ -280,14 +271,14 @@ guides files=0 marks=0
 
 ### You fixed one entry, but the other entries of the same mark are still not checked
 
-<!-- @kotowari[REQ-core-202:907dd989, EX-core-373:acd8d951] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 If even one entry in a mark is malformed, the whole mark becomes `invalid_marker`, and its well-formed entries are not checked either.
 Fix `invalid_marker` first, then look at `guide_stale`.
 
 ### Stopping because guide and test locations overlap
 
-<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 `tests.files` is too broad (such as `**/*`) and also matches guides.
 Files in languages without a query have every `@kotowari[` picked up, so kotowari stops to prevent guide marks from being read as test marks.
@@ -296,11 +287,11 @@ For details, see [Configuration file](config.md#stopping-because-the-guide-and-t
 ### The notice is gone but the section is still stale
 
 You did not review the section before copying the fingerprint.
-Copying the fingerprint is a declaration that "this section agrees with the current IR". Do steps 1 and 2 of [the review steps](#steps-for-reviewing-a-guide) first.
+Copying the fingerprint is a declaration that "this section agrees with the current decision". Do steps 1 and 2 of [the review steps](#steps-for-reviewing-a-guide) first.
 
 ## Related
 
-- Specification: [IR for guide marks](../ir/core/guides.md)
+- Specification: [guides](../decisions/core/guides.md), [when a guide is stale](../decisions/core/languages-and-guides.md)
 - Configuring locations: [Configuration file](config.md)
 - Marks written in tests: [Marking tests](marks.md)
 - Getting fingerprints: [kotowari list](commands/list.md), [kotowari query](commands/query.md)

@@ -4,22 +4,20 @@
 )]
 // --- Step 3: 文書の読み込み ---
 
-// @kotowari[REQ-core-033]
+// @kotowari[C-core-document-2]
 #[test]
-fn req_033_uppercase_md_is_not_read() {
+fn uppercase_md_is_not_read() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions")).unwrap();
+    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "").unwrap();
+    // .MD ファイルは読まない
     std::fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        tmp.path().join("docs/decisions/README.MD"),
+        "# Title\n\nScope.\n",
     )
     .unwrap();
-    // .MD ファイルは読まない
-    std::fs::write(tmp.path().join("docs/ir/README.MD"), "# Title\n\nScope.\n").unwrap();
     let output = assert_cmd::Command::cargo_bin("kotowari")
         .unwrap()
         .arg("check")
@@ -28,27 +26,28 @@ fn req_033_uppercase_md_is_not_read() {
         .unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
-    assert_eq!(v["files"], 0, ".MD file should not be read");
+    assert_eq!(
+        v["decisions"]["documents"], 0,
+        ".MD file should not be read"
+    );
 }
 
-// @kotowari[REQ-core-033]
+// @kotowari[C-core-document-4]
 #[test]
-fn req_033_file_symlink_is_read() {
+fn file_symlink_is_read() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions")).unwrap();
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "decisions:\n  documents: docs/decisions\n",
     )
     .unwrap();
-    // 実体を別の場所に作り、シンボリックリンクを ir/ に置く
+    // 実体を別の場所に作り、シンボリックリンクを決定の文書の置き場に置く
     let target = tmp.path().join("target.md");
     std::fs::write(&target, "# Title\n\nScope.\n").unwrap();
-    std::os::unix::fs::symlink(&target, tmp.path().join("docs/ir/link.md")).unwrap();
+    std::os::unix::fs::symlink(&target, tmp.path().join("docs/decisions/link.md")).unwrap();
     let output = assert_cmd::Command::cargo_bin("kotowari")
         .unwrap()
         .arg("check")
@@ -57,29 +56,26 @@ fn req_033_file_symlink_is_read() {
         .unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
-    assert_eq!(v["files"], 1, "symlinked file should be read");
+    assert_eq!(
+        v["decisions"]["documents"], 1,
+        "symlinked file should be read"
+    );
 }
 
 // --- Step 4b: gherkin の行の形と ID の定義 ---
 
-// @kotowari[REQ-core-033]
+// @kotowari[C-core-document-4]
 #[test]
 #[cfg(unix)]
-fn req_033_broken_symlink_in_ir_dir_stops() {
+fn broken_symlink_in_the_decision_document_dir_stops() {
     use std::os::unix::fs::symlink;
     let tmp = tempfile::TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    std::fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions")).unwrap();
+    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "").unwrap();
     symlink(
         tmp.path().join("nowhere.md"),
-        tmp.path().join("docs/ir/broken.md"),
+        tmp.path().join("docs/decisions/broken.md"),
     )
     .unwrap();
     let output = assert_cmd::Command::cargo_bin("kotowari")
@@ -91,31 +87,21 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
     assert_eq!(
         output.status.code(),
         Some(2),
-        "a broken symlink in the IR dir must stop: {:?}",
+        "a broken symlink in the place of decision documents must stop: {:?}",
         output
     );
 }
 
-// --- REQ-core-055, REQ-core-056: 見ないもの ---
+// --- 見ないもの ---
 
 /// CLI を通して検査するプロジェクトを一時ディレクトリに作る
 fn make_cli_project(tmp: &std::path::Path) {
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
+    for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
-    std::fs::write(
-        tmp.join("docs/decision/records/records.md"),
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+        "decisions:\n  documents: docs/decisions\n",
     )
     .unwrap();
 }
@@ -132,161 +118,49 @@ fn run_cli(tmp: &std::path::Path) -> serde_json::Value {
     serde_json::from_str(&stdout).expect("valid JSON")
 }
 
-/// 指定した文書の指定した行を指す指摘を集める
-fn findings_on_line(v: &serde_json::Value, path: &str, line: u64) -> Vec<serde_json::Value> {
-    v["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|f| f["path"] == path && f["line"] == line)
-        .cloned()
-        .collect()
-}
-
-// @kotowari[REQ-core-055]
-#[test]
-fn req_055_non_ears_statement_gets_no_finding_on_its_line() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    // 13行目の文は「常に」も「とき」も持たない平叙文
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nこの道具は文書を読む。\n",
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    assert!(
-        findings_on_line(&v, "docs/ir/a.md", 13).is_empty(),
-        "the statement line should get no finding: {v}"
-    );
-    // 検査そのものは動いている（要求の見出しの行にはテストのない要求の誤りが出る）
-    assert!(
-        !findings_on_line(&v, "docs/ir/a.md", 7).is_empty(),
-        "the requirement heading should still be checked: {v}"
-    );
-}
-
-// @kotowari[REQ-core-056]
-#[test]
-fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nこの道具は文書を読む。\n",
-    )
-    .unwrap();
-    // 種類 contradiction の問題の記録に、読みを1つだけ書く
-    std::fs::write(
-        tmp.path().join("docs/ir/FLAGS.md"),
-        "# 問題の記録\n\n## Flags\n\n### FLAG-001: 読みが割れる\n\n- kind: contradiction\n- related: REQ-001\n- source: docs/decision/records/records.md#A1\n\n読みは1つだけ書いてある。\n",
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    let on_flags: Vec<_> = v["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|f| f["path"] == "docs/ir/FLAGS.md")
-        .collect();
-    assert!(
-        on_flags.is_empty(),
-        "the contradiction entry should get no finding: {on_flags:?}"
-    );
-    // 検査そのものは動いている
-    assert!(
-        !findings_on_line(&v, "docs/ir/a.md", 7).is_empty(),
-        "the requirement heading should still be checked: {v}"
-    );
-}
-
 // --- ir-document.md の具体例 ---
 
-// @kotowari[REQ-core-036, EX-core-006]
+// @kotowari[C-core-document-1]
 #[test]
-fn req_036_glossary_with_only_a_title_and_a_table_has_no_missing_scope() {
+fn a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
+    std::fs::create_dir_all(tmp.path().join("docs/decisions/network/dns")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions/network/empty")).unwrap();
     std::fs::write(
-        tmp.path().join("docs/ir/CONTEXT.md"),
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
+        tmp.path().join("docs/decisions/network/dns/timeout.md"),
+        "# Title\n\nScope.\n\n## Decision\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo it.\n\n### Confirmations\n\n- C-network-timeout-1 Checked\n",
     )
     .unwrap();
     let v = run_cli(tmp.path());
-    assert!(
-        find_kind_in_json(&v, "missing_scope").is_empty(),
-        "a glossary needs no scope line: {v}"
-    );
-}
-
-// @kotowari[REQ-core-033, EX-core-021]
-#[test]
-fn req_033_context_and_flags_under_a_subdirectory_have_no_missing_scope() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::create_dir_all(tmp.path().join("docs/ir/network")).unwrap();
-    std::fs::write(
-        tmp.path().join("docs/ir/network/CONTEXT.md"),
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
-    )
-    .unwrap();
-    std::fs::write(
-        tmp.path().join("docs/ir/network/FLAGS.md"),
-        "# 問題の記録\n",
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    assert!(
-        find_kind_in_json(&v, "missing_scope").is_empty(),
-        "CONTEXT.md and FLAGS.md under a subdirectory are a glossary and a flags document: {v}"
-    );
-}
-
-// @kotowari[REQ-core-033, EX-core-020]
-#[test]
-fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir/network/empty")).unwrap();
-    std::fs::write(
-        tmp.path().join("docs/ir/network/dns/timeout.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n",
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    let missing = find_kind_in_json(&v, "requirement_without_test");
+    let missing = find_kind_in_json(&v, "confirmation_without_test");
     assert_eq!(missing.len(), 1, "the deep document is read: {v}");
-    assert_eq!(missing[0]["path"], "docs/ir/network/dns/timeout.md");
+    assert_eq!(missing[0]["path"], "docs/decisions/network/dns/timeout.md");
     assert!(
         v["findings"].as_array().unwrap().iter().all(|f| {
             !f["path"]
                 .as_str()
                 .unwrap()
-                .starts_with("docs/ir/network/empty")
+                .starts_with("docs/decisions/network/empty")
         }),
         "an empty directory gets no finding: {v}"
     );
 }
 
-// @kotowari[REQ-core-033, EX-core-030]
+// @kotowari[C-core-document-3]
 #[test]
 #[cfg(unix)]
-fn req_033_hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read() {
+fn hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
-    std::fs::create_dir_all(tmp.path().join("docs/ir/network/.draft")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions/network/.draft")).unwrap();
     // 読まれれば題名も範囲も無い文書として指摘が出る中身
-    std::fs::write(tmp.path().join("docs/ir/network/.draft/a.md"), "bad").unwrap();
+    std::fs::write(tmp.path().join("docs/decisions/network/.draft/a.md"), "bad").unwrap();
     std::os::unix::fs::symlink(
-        tmp.path().join("docs/ir"),
-        tmp.path().join("docs/ir/network/link"),
+        tmp.path().join("docs/decisions"),
+        tmp.path().join("docs/decisions/network/link"),
     )
     .unwrap();
     let output = assert_cmd::Command::cargo_bin("kotowari")
@@ -302,7 +176,10 @@ fn req_033_hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read(
         String::from_utf8_lossy(&output.stderr)
     );
     let v: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid JSON");
-    assert_eq!(v["files"], 0, "no document under either place is read: {v}");
+    assert_eq!(
+        v["decisions"]["documents"], 0,
+        "no document under either place is read: {v}"
+    );
     assert!(v["findings"].as_array().unwrap().is_empty(), "{v}");
 }
 
@@ -319,56 +196,18 @@ fn find_kind_in_json(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value
 
 // --- ir-references.md の具体例 ---
 
-// @kotowari[REQ-core-052, EX-core-009]
-#[test]
-fn req_052_retired_tag_on_a_scenario_is_unknown_tag() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1 @requirement=REQ-001\nScenario: Test\n  Given a\n  When b\n  Then c\n```\n",
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    let unknown = find_kind_in_json(&v, "unknown_tag");
-    assert_eq!(
-        unknown.len(),
-        1,
-        "the retired @requirement tag is unknown: {v}"
-    );
-    assert_eq!(unknown[0]["detail"], "@requirement");
-}
-
-// @kotowari[REQ-core-054, EX-core-010]
-#[test]
-fn req_054_scenario_about_an_unknown_requirement_is_unresolved() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-999 @source=docs/decision/records/records.md#A1\nScenario: Test\n  Given a\n  When b\n  Then c\n```\n",
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    let unresolved = find_kind_in_json(&v, "unresolved_reference");
-    assert_eq!(unresolved.len(), 1, "@about points nowhere: {v}");
-    assert_eq!(unresolved[0]["detail"], "REQ-999");
-}
-
 // --- findings.md と ir-items.md の具体例 ---
 
-// @kotowari[REQ-core-032, EX-core-005]
+// @kotowari[C-core-findings-8]
 #[test]
-fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
+fn three_places_yield_two_duplicates_and_none_on_the_first() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
-    let requirement = "### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\nStatement.\n\n";
     std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        format!("# Title\n\nScope.\n\n## Requirements\n\n{requirement}{requirement}{requirement}"),
+        tmp.path().join("docs/decisions/a.md"),
+        "# Title\n\nScope.\n\n## Decision\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n\
+### Decision\n\nDo it.\n\n### Confirmations\n\n- C-t-1 One\n- C-t-1 Two\n- C-t-1 Three\n",
     )
     .unwrap();
     let v = run_cli(tmp.path());
@@ -378,188 +217,24 @@ fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
         2,
         "three places yield two duplicates: {v}"
     );
-    assert!(duplicates.iter().all(|f| f["detail"] == "REQ-001"));
-    // 1つ目の見出しは 7 行目
+    assert!(duplicates.iter().all(|f| f["detail"] == "C-t-1"));
+    // 1つ目の行は 19 行目
     assert!(
-        duplicates.iter().all(|f| f["line"] != 7),
-        "the first heading gets no duplicate_id: {v}"
+        duplicates.iter().all(|f| f["line"] != 19),
+        "the first row gets no duplicate_id: {v}"
     );
 }
 
-// @kotowari[REQ-core-044, EX-core-008]
+// --- 見出しの下の行は1行ずつ文として読む ---
+
+// @kotowari[C-core-forder-4, C-core-document-5]
 #[test]
-fn req_044_priority_line_under_a_requirement_is_an_unknown_field() {
+fn three_titles_give_one_multiple_titles_per_extra_title() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
     std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n- 優先度: 高\n\nStatement.\n",
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    let unknown = find_kind_in_json(&v, "unknown_field");
-    assert_eq!(
-        unknown.len(),
-        1,
-        "the 優先度 line is not a known field: {v}"
-    );
-    assert_eq!(unknown[0]["detail"], "- 優先度: 高");
-}
-
-// --- REQ-core-178: 見出しの下の行は1行ずつ文として読む ---
-
-/// 要求を1つ持つ話題の文書。`fields` は "- kind:" と "- source:" の後に続く行
-fn topic_with_requirement(fields: &str) -> String {
-    format!(
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{fields}"
-    )
-}
-
-/// 指定した種類の指摘のうち、指定した文書を指すもの
-fn kinds_on(v: &serde_json::Value, path: &str) -> Vec<String> {
-    v["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|f| f["path"] == path)
-        .map(|f| f["kind"].as_str().unwrap().to_string())
-        .collect()
-}
-
-// @kotowari[EX-core-273, REQ-core-178]
-#[test]
-fn ex_core_273_statement_right_after_a_field_line_is_not_part_of_its_value() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        topic_with_requirement(
-            "- verification: review\n検証の次の文。\n- how_to_verify: 見る\n確かめ方の次の文。\n",
-        ),
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    let kinds = kinds_on(&v, "docs/ir/a.md");
-    for kind in [
-        "missing_statement",
-        "verification_invalid",
-        "requirement_without_test",
-    ] {
-        assert!(!kinds.iter().any(|k| k == kind), "{kind} が出た: {v}");
-    }
-}
-
-// @kotowari[EX-core-274]
-#[test]
-fn ex_core_274_indented_quote_and_html_lines_are_statements_checked_for_backticks() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    // 行番号: 字下げした行が13行目、引用が14行目、HTML が15行目
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        topic_with_requirement("- verification: unit\n\n  `字下げ\n> `引用\n<div>`HTML</div>\n"),
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    for line in [13, 14, 15] {
-        let on_line: Vec<_> = findings_on_line(&v, "docs/ir/a.md", line)
-            .into_iter()
-            .filter(|f| f["kind"] == "unclosed_backtick")
-            .collect();
-        assert_eq!(on_line.len(), 1, "{line} 行目: {v}");
-    }
-}
-
-// @kotowari[EX-core-275]
-#[test]
-fn ex_core_275_pipe_line_that_is_not_a_table_is_checked_as_a_statement() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    // 行番号: 縦棒の行が13行目
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        topic_with_requirement("- verification: unit\n\n| a | `x |\n"),
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    let on_line = findings_on_line(&v, "docs/ir/a.md", 13);
-    assert_eq!(
-        on_line
-            .iter()
-            .filter(|f| f["kind"] == "unclosed_backtick")
-            .count(),
-        1,
-        "{v}"
-    );
-    assert!(
-        !kinds_on(&v, "docs/ir/a.md")
-            .iter()
-            .any(|k| k == "unknown_line"),
-        "{v}"
-    );
-}
-
-// @kotowari[EX-core-276]
-#[test]
-fn ex_core_276_flag_entries_without_a_section_are_read() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        topic_with_requirement("- verification: review\n- how_to_verify: 人が読む\n\n文である。\n"),
-    )
-    .unwrap();
-    let flag = |id: &str| {
-        format!(
-            "### {id}: 例\n\n- kind: gap\n- related: REQ-001\n- source: docs/decision/records/records.md#A1\n\n本文。\n"
-        )
-    };
-    std::fs::write(
-        tmp.path().join("docs/ir/FLAGS.md"),
-        format!("# 問題の記録\n\n{}", flag("FLAG-001")),
-    )
-    .unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
-    std::fs::write(
-        tmp.path().join("docs/ir/sub/FLAGS.md"),
-        format!(
-            "# 問題の記録\n\n{}\n## Flags\n\n{}",
-            flag("FLAG-002"),
-            flag("FLAG-003")
-        ),
-    )
-    .unwrap();
-    let v = run_cli(tmp.path());
-    for path in ["docs/ir/FLAGS.md", "docs/ir/sub/FLAGS.md"] {
-        let kinds = kinds_on(&v, path);
-        for kind in ["unknown_heading", "unknown_field", "unknown_line"] {
-            assert!(!kinds.iter().any(|k| k == kind), "{path} に {kind}: {v}");
-        }
-    }
-    let output = assert_cmd::Command::cargo_bin("kotowari")
-        .unwrap()
-        .arg("status")
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
-    let status: serde_json::Value =
-        serde_json::from_str(&String::from_utf8_lossy(&output.stdout)).expect("valid JSON");
-    assert_eq!(status["items"]["flag"], 3, "{status}");
-}
-
-// @kotowari[EX-core-278]
-#[test]
-fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    make_cli_project(tmp.path());
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
+        tmp.path().join("docs/decisions/a.md"),
         "# 一\n\n範囲。\n\n# 二\n\n#  三  \n",
     )
     .unwrap();
@@ -568,7 +243,7 @@ fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
         .as_array()
         .unwrap()
         .iter()
-        .filter(|f| f["path"] == "docs/ir/a.md" && f["kind"] == "multiple_titles")
+        .filter(|f| f["path"] == "docs/decisions/a.md" && f["kind"] == "multiple_titles")
         .cloned()
         .collect();
     assert!(multiple.iter().all(|f| f["line"].is_null()), "{v}");

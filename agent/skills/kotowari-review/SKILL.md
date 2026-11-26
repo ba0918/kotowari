@@ -1,6 +1,6 @@
 ---
 name: kotowari-review
-description: "Workflow station of the kotowari workflow: adversarial review of a diff or a document set, called by kotowari-cycle inside its loop or directly by a person for a codebase diagnosis or a full review. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked for a kotowari review, a finding list, a full or diff review, or when cycle delegates a review. 日本語キーワード: レビュー 指摘 フルレビュー 差分レビュー 診断 敵対的レビュー 検証 動作確認 実装確認"
+description: "Workflow station of the kotowari workflow: adversarial review of a diff or a document set, called by kotowari-cycle inside its loop or directly by a person for a codebase diagnosis or a full review. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when asked for a kotowari review, a finding list, a full or diff review, or when cycle delegates a review. 日本語キーワード: レビュー 指摘 フルレビュー 差分レビュー 診断 敵対的レビュー 検証 動作確認 実装確認"
 ---
 
 # Review
@@ -43,19 +43,17 @@ depth → Skill; `docs/` and top-level explanatory documents → Document; other
 configuration → Code. Several kinds → every profile that applies; each finding records which one
 it came from.
 
-Counterpart by target: specification → the brainstorm record while it
-exists, plus the repository's principles document if it keeps one (this workflow's convention is
+Counterpart by target: specification → the repository's principles document if it keeps one (this workflow's convention is
 `docs/principles.md`; nothing guarantees it exists); other explanatory documents → specification if
 one exists. Code, and skill text, which is read as code, have no counterpart here: their agreement
 with the specification is the consistency phase's. A counterpart is read within the quality
 perspective: whether a document contradicts the specification is a quality question.
 
-When the specification is the kotowari IR, a counterpart that is the specification is the IR store
-path. A review gets no list of IDs to cover. A deferred requirement or deferred scenario (the
-`- deferred:` line) is specified but not built now: no finding demands a test or an implementation
-for it. A changed file the IR does not hold (CI, hooks, release, build configuration; the kotowari
-skill's **What the IR holds**) is read against its decision record, never the IR: no finding asks
-to add it to the IR.
+A counterpart that is the specification is the place of the decision documents. A review gets no
+list of decisions to cover. A decision still proposed is decided but not built yet: no finding
+demands a test or an implementation for it. A changed file that is not product behavior (CI, hooks,
+release, build configuration; the kotowari skill's **What the decision documents hold**) is read
+against its decision without rows to confirm: no finding asks to add rows to confirm for it.
 
 ## Reviewer setup
 
@@ -85,9 +83,9 @@ that file.
   Treat an untraceable rule or section in a document as `human_judgment`, because deleting prose
   requires a judgment about meaning, and flag it for the terminal report as absent from the
   specification.
-- For verification added or changed by the diff, including prose-shaped scenarios and CI checks,
-  apply the Evidence conditions (for a CI or hook gate, the rule it enforces is stated by its
-  decision record, not by the IR); if it fails, propose deletion with `auto_fix` and use all existing
+- For verification added or changed by the diff, CI checks included, apply the Evidence
+  conditions (for a CI or hook gate, the rule it enforces is stated by its decision in the decision
+  documents); if it fails, propose deletion with `auto_fix` and use all existing
   checks passing after deletion as its oracle.
 - Read the whole evaluation target. For `security` and `critical` candidates also read direct
   callers one level up and the specification sections they affect. `warn` reads the target

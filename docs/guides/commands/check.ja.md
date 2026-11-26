@@ -2,15 +2,15 @@
 
 [English](check.md) | 日本語
 
-<!-- @kotowari[REQ-core-001:4ea3a019] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-has-seven-commands-and-the-single-command-check-does-both-the-check-of-the-specification-and-the-check-of-the-correspondence-with-tests:d77a0bd7] -->
 
-IR（仕様）の書き方の誤りと、IR とテストの対応の抜けを、1件ずつの指摘として挙げるコマンドです。
-IR やテストを書いたら実行し、指摘を直して、誤りが0件になるまで繰り返します。
-IR の形の検査とテストとの対応の検査は、この1つのコマンドで両方行います。
+決定の文書（仕様）の書き方の誤りと、その確認することの行とテストの対応の抜けを、1件ずつの指摘として挙げるコマンドです。
+決定の文書やテストを書いたら実行し、指摘を直して、誤りが0件になるまで繰り返します。
+決定の文書の形の検査とテストとの対応の検査は、この1つのコマンドで両方行います。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:f86e2efd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
@@ -20,7 +20,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -34,15 +34,13 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/config.md#the-location-of-decision-documents-is-pointed-at-by-decisionsdocuments-with-docsdecisions-as-the-default-and-the-keys-for-the-locations-of-the-old-form-are-removed:4a2eacb8, docs/decisions/core/overview-toc.md#how-the-index-is-bundled-and-ordered-is-written-in-the-one-table-of-contents-file-that-overviewtoc-points-at:0883f676, docs/decisions/core/translation-pairs.md#guides-overview-source-data-and-the-table-of-contents-have-a-side-for-every-language-of-the-language-list:a581e9d7, docs/decisions/core/translation-pairs.md#the-sides-of-a-pair-are-told-apart-by-file-names-and-configuration-only:3c4056af] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
 | 読むもの | 置き場を決める設定のキー | 既定 |
 |---|---|---|
-| IR の文書（用語集 `CONTEXT.md` と問題の記録 `FLAGS.md` を含む） | `ir` | `docs/ir` |
-| 判断の記録（出典の先） | `decisions.records` | `docs/decision/records` |
-| ADR（出典の先） | `decisions.adr` | `docs/decision/adr` |
+| 決定の文書（各群の用語集 `CONTEXT.md` は決定の文書としては読まない） | `decisions.documents` | `docs/decisions` |
 | テストのファイル | `tests.files` | `src/**/*.rs`、`tests/**/*.rs` |
 | ガイド | `guides.files` | 空（読まない） |
 | 面のファイルと面の規則のファイル | `surface.files`、`surface.rules` | 空（読まない） |
@@ -51,12 +49,12 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 | 全体像の目次 | `overview.toc` | 無し（`overview` の鍵が無ければ読まない。鍵があれば必須で、指す先が無いか読めなければ止まる） |
 
 面の3つは `surface.rules` が空の一覧でないときだけ読みます（[面の検査](../surface.ja.md)）。
-`languages` に2つ以上の言語を書いたときは、IR、ガイド、全体像の元データ、目次のほかの言語の側（`foo.en.md`）と一致の記録（`foo.i18n.yaml`）を、先頭の言語の側と同じディレクトリで名前で探して読みます（[言語と対](../config.ja.md#言語と対--languages-と-labels)）。
+`languages` に2つ以上の言語を書いたときは、決定の文書、ガイド、全体像の元データ、目次のほかの言語の側（`foo.ja.md`）と一致の記録（`foo.i18n.yaml`）を、先頭の言語の側と同じディレクトリで名前で探して読みます（[言語と対](../config.ja.md#言語と対--languages-と-labels)）。
 キーの全部は [config.md](../config.ja.md) にあります。
 
 ### 設定ファイル
 
-<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 - `--config` が無ければ、基準のディレクトリの `.kotowari/config.yaml` を読みます。
 - そのファイルが無ければ、すべて既定の値で検査します。
@@ -66,11 +64,11 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:10278003] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46, docs/decisions/core/config.md#the-glob--is-read-recursively-and-hidden-directories-are-entered-only-when-named-by-a-path-component:6f67f22b, docs/decisions/core/coverage.md#the-check-of-tests-is-performed-even-when-there-is-no-decision-document-at-all:8dedcbac] -->
 
-`ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
-どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
-使わない置き場でも、空のディレクトリを作っておいてください。
+決定の文書の置き場（`decisions.documents`）は、既定のままでもディレクトリが存在している必要があります。
+無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
+空のディレクトリならかまいません。決定の文書が無くてもテストは検査し、印の無いテストは指摘します。
 
 `tests.files`、`guides.files`、`surface.files`、`overview.files` は glob の一覧です。
 何にも当たらない glob は誤りになりません。
@@ -82,28 +80,28 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ### 文字コードと閉じないコードブロック
 
-<!-- @kotowari[REQ-core-111:a41af8e5, REQ-core-112:2fc914d5] -->
+<!-- @kotowari[docs/decisions/core/ir-input.md#a-leading-utf-8-bom-is-skipped-and-is-not-a-stop-as-a-file-that-is-not-utf-8:52a6c07c, docs/decisions/core/ir-input.md#an-unclosed-code-block-is-an-unclosed_code_block-error-and-from-its-start-to-the-end-of-the-document-is-not-read:c1db707e] -->
 
 読むファイルは UTF-8 である必要があります。
 先頭の BOM は読み飛ばすので、BOM 付きの UTF-8 でも止まりません。
 UTF-8 でないファイルがあると `non-UTF-8 file` で停止します。
 
-IR の文書のコードブロックが閉じられずに文書が終わると、開始の行に `unclosed_code_block` の誤りが出ます。
-そのときは、開始から文書の終わりまでを検査しません。
+決定の文書のコードブロックが閉じられずに文書が終わると、開始の行に `unclosed_code_block` の誤りが出ます。
+そのときは、開始から文書の終わりまでを決定としても行としても読みません。
 
 ## 出力
 
 ### text
 
-<!-- @kotowari[REQ-core-025:58025379, REQ-core-026:530a64e3] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 1行が1件の指摘です。
 誤りも注意も無ければ、何も出しません。
 
 ```text
 パス:行 [error] 種類 詳細
-docs/ir/greet/greet.md:18 [error] source_invalid docs/decision/records/2026-09-24-greet.md#A3
-docs/ir/greet/greet.md:- [notice] too_many_lines 30
+docs/decisions/greet/greet.md:31 [error] vague_word など
+guides/greet.md:5 [notice] guide_stale docs/decisions/greet/greet.md#the-command-greets-the-name-it-is-given 00000000 b08a343a
 ```
 
 | 部分 | 中身 |
@@ -114,68 +112,65 @@ docs/ir/greet/greet.md:- [notice] too_many_lines 30
 | 種類 | 指摘の種類。意味と直し方は [findings.md](../findings.ja.md) |
 | 詳細 | 種類ごとに決まった短い文字列 |
 
-text には、下の JSON の `files`、`lines`、`tests`、`guides`、`overview` は出ません。
+text には、下の JSON の `tests`、`guides`、`overview`、`decisions` は出ません。
 
 設定の `surface.rules` が空の一覧でないときは、指摘の行の後の最後の1行に、未記載の面の一覧で外した面の数を `surface: unspecified=数` の形で出します。
 指摘が0件でも、数が0でも出します（[面の検査](../surface.ja.md#外した数を見る)）。
 
 ### JSON
 
-<!-- @kotowari[REQ-core-022:8e221eee, TBL-core-005:73d0910b, PROP-core-002:35724b25, REQ-core-228:095b2109, REQ-core-288:0f3318d5] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7, docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9, docs/decisions/core/overview-output.md#the-json-of-check-carries-an-overview-group-of-the-same-form-as-guides:c1d88d3a] -->
 
 既定の出力です。
 標準出力に JSON のオブジェクトを1つ出します。
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
-| `files` | 数 | 読んだ IR の文書の数（用語集と問題の記録を含む。対ならほかの言語の側も数える） |
-| `lines` | 数 | IR の文書の行数の合計（用語集と問題の記録を含む。対ならほかの言語の側も数える） |
 | `findings` | 配列 | 指摘の一覧。1件の鍵は `kind`、`severity`、`path`、`line`、`detail`（[cli.md](../cli.ja.md#json-の指摘)） |
 | `counts` | オブジェクト | 種類ごとの指摘の数。0件の種類は鍵ごと出ない |
 | `tests` | オブジェクト | 読んだテストのファイルの、拡張子ごとの数（下の節） |
 | `guides` | オブジェクト | 読んだガイドの数と、ガイドの印の数（下の節） |
-| `surface` | オブジェクト | `unspecified`（未記載の面の一覧で外した面の、種類と名前の組の数）の鍵1つ。`surface.rules` が空の一覧のときは鍵ごと出ない |
 | `overview` | オブジェクト | `files`（読んだ全体像の元データの数）と `marks`（その中の形の正しいガイドの印の1件の数）。数え方は `guides` と同じで、設定に `overview` の鍵が無くても両方0で出る |
+| `surface` | オブジェクト | `unspecified`（未記載の面の一覧で外した面の、種類と名前の組の数）の鍵1つ。`surface.rules` が空の一覧のときは鍵ごと出ない |
+| `decisions` | オブジェクト | `documents`（読んだ決定の文書の数）、`decisions`（決定の数）、`confirmations`（形の正しい ID を持つ確認することの行の数） |
 
 `counts` の値は、いつも `findings` の中のその種類の件数と一致します。
 
 ### JSON の `tests` と `guides`
 
-<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-206:e2f3dc5c] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-tests-of-checks-json-counts-the-test-files-read-per-extension:834f2486, docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7] -->
 
-`tests` と `guides` は、設定の glob が思った所に当たっているかを確かめるための数です。
+`tests` と `guides` は、設定の glob が思った場所に当たっているかを確かめるための数です。
 glob を書き間違えても指摘は出ないので、ここで確かめます。
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
-| `tests.<拡張子>.files` | 数 | その拡張子の、読んだテストのファイルの数。読めずに `unparsable_file` になったファイルも数える |
-| `tests.<拡張子>.query` | 真偽 | その拡張子の言語でテストを見つける問い合わせがあるか。false の言語では、テストの関数を見分けずに印だけを拾う |
+| `tests.<拡張子>.files` | 数 | その拡張子の読んだテストのファイルの数。構文を読めず `unparsable_file` になったファイルも数える |
+| `tests.<拡張子>.query` | 真偽値 | その拡張子の言語に、テストを見つける問い合わせがあるか。false の言語では、テストの関数を見分けずに印だけを拾う |
 | `guides.files` | 数 | 読んだガイドの数 |
-| `guides.marks` | 数 | 形の正しいガイドの印の1件（`ID:指紋` の1つ）の数 |
+| `guides.marks` | 数 | 形の正しいガイドの印の1件（`行き先:指紋` の1つずつ）の数 |
 
-- 拡張子の鍵は `.` を含めません（`rs`、`ts`）。拡張子の無いファイルの鍵は空文字列です。
+- 拡張子の鍵に `.` は含めません（`rs`、`ts`）。拡張子の無いファイルの鍵は空の文字列です。
 - テストのファイルが0件なら `tests` は `{}`、ガイドが0件なら `guides` は `{"files":0,"marks":0}` です。
-- ファイルはパスごとに1回数えます。複数の glob に当たっても1回です。
+- 1つのファイルは、いくつの glob に当たってもパスごとに1回だけ数えます。
 
-拡張子ごとの細部は [output.md の TBL-core-021](../../ir/core/output.ja.md) にあります。
+拡張子ごとの細部は [出力の決定](../../decisions/core/output.ja.md#check-の-json-の-tests-は読んだテストのファイルを拡張子ごとに数える) にあります。
 
 ### 指摘の並びと行
 
-<!-- @kotowari[TBL-core-007:15954989, REQ-core-027:a594c5e0, TBL-core-019:d5c9adce] -->
+<!-- @kotowari[docs/decisions/core/finding-order.md#findings-are-arranged-by-path-line-kind-and-detail-in-that-order:430be622, docs/decisions/core/finding-order.md#line-is-counted-from-1-and-a-finding-that-covers-the-whole-document-is-null:b98176aa, docs/decisions/core/finding-order.md#the-line-of-findings-that-have-a-line-is-decided-per-kind-in-one-table:848f58fc] -->
 
 指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.ja.md#指摘の並び)）。
 同じ行の指摘は、種類の名前の順に並びます。
 
 `line` は種類ごとに決まっています。
-文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` と、目次の `overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty` と、対の `translation_missing`、`translation_record_invalid`、`translation_stale` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
-`overview_form_invalid` は形に合わない行（文書全体にかかるものは null）、`overview_part_unknown`、`overview_part_invalid`、`overview_ref_unresolved` は部品のフェンスの開始の行です。
-ただし部品の中身が YAML として読めない `overview_part_invalid` は、YAML の読み取りが誤りの位置を返せばその行（全体像の元データのファイルの行に直したもの）です。
-`translation_structure_mismatch` は最初に食い違った要素の行（数の違いか、要素がその側に無いときは null）、`translation_switcher_invalid` は題名の後の最初の空でない行（無ければ題名の行、題名も無ければ null）、`link_language_mismatch` と `link_to_record` はリンクの行です。
+文書全体かファイル全体への指摘（`missing_title`、`multiple_titles`、`unparsable_file` など）、等価の一覧と未記載の面の一覧への指摘、全体像の元データの `overview_lead_missing`、`overview_document_missing`、`overview_document_shared`、`overview_name_conflict`、目次の指摘、対の `translation_missing`、`translation_record_invalid`、`translation_stale` は null です。
+決定への指摘は決定の見出しか状態の行、行への指摘はその行、`surface_without_spec` は面のノードの最初の行です。
 種類ごとの行は [findings.md](../findings.ja.md#種類の一覧) の表にあります。
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 | コード | 意味 |
 |---|---|
@@ -187,95 +182,98 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ## テストより先に仕様をコミットする
 
-<!-- @kotowari[REQ-core-357:352c971a, TBL-core-047:0a2c3aa9] -->
+<!-- @kotowari[docs/decisions/core/test-side-findings.md#with---allow-test-findings-check-does-not-count-test-side-findings-toward-the-exit-code:b75bbdf7, docs/decisions/core/test-side-findings.md#test-side-findings-are-limited-to-errors-caused-by-test-files-and-their-range-is-set-in-a-table:09dd0c43, docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
 仕様はふつう、それを確かめるテストを書くより先に承認してコミットします。
-そのコミットの時点では新しい要求とシナリオにまだテストが無いので、`check` は `requirement_without_test` と `scenario_without_test` を出し、終了コード1で終わります。
+提案で書いた決定はテストを求めないので、そのコミットを止めません。
+ただし実装済みの決定に足した行にはまだテストが無いので、`check` は `confirmation_without_test` を出し、終了コード1で終わります。
 `--allow-test-findings` を付けると、`check` はこうしたテスト側の指摘を終了コードに数えません。
 
 どの誤りがテスト側の指摘かは、呼び出す側ではなく kotowari が決めます。
 
 | 種類 | テスト側の指摘になる条件 |
 |---|---|
-| `requirement_without_test` | いつも |
-| `scenario_without_test` | いつも |
+| `confirmation_without_test` | いつも |
 | `test_without_id` | いつも |
 | `invalid_marker` | パスがテストのファイルのとき |
 | `unresolved_reference` | パスがテストのファイルのとき |
 | `unparsable_file` | パスがテストのファイルで、面のファイルでないとき |
 
-ほかの誤りは、これまでどおり終了コードを1にします。IR の誤り、形の崩れたガイドの印、読めない面のファイルなどです。
+ほかの誤りは、これまでどおり終了コードを1にします。決定の文書の誤り、形の崩れたガイドの印、読めない面のファイルなどです。
 オプションが変えるのは終了コードだけです。指摘、その順序、JSON とテキストの出力はオプションが無いときと同じなので、テスト側の指摘も見えたままです。
 
 ```console
 $ kotowari check --format text --allow-test-findings
-docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
+docs/decisions/greet/greet.md:35 [error] confirmation_without_test C-greet-greet-2
+tests/greet.rs:6 [error] test_without_id rejects_empty_name
 $ echo $?
 0
 ```
 
 ### フックのどこで使うか
 
-<!-- @kotowari[REQ-core-358:879777ff] -->
+<!-- @kotowari[docs/decisions/core/test-side-findings.md#how-to-build-the-hooks-is-guided-in-the-skill-and-in-the-guide-of-check:3bde432b] -->
 
 - pre-commit のフックでは `kotowari check --allow-test-findings` を走らせます。仕様を承認するコミットが、テストより先だという理由で止まらないようにするためです。
-- pre-push のフックと CI では、オプションを付けずに `kotowari check` を走らせます。テストの無い要求やシナリオを残したまま共有のブランチに届けないためです。
+- pre-push のフックと CI では、オプションを付けずに `kotowari check` を走らせます。テストの無い確認することの行を残したまま共有のブランチに届けないためです。
 
 ## 例
 
-挨拶を返すだけの小さなコマンドの IR を書いた場面です。
-置いたのは、次の5つのファイルと1つの空のディレクトリです。
+挨拶を返すだけの小さなコマンドの決定の文書を書いた場面です。
+置いたのは、次の3つのファイルです。
 
 ```text
-.kotowari/config.yaml                     設定（tests.files に "tests/**/*.rs"）
-docs/decision/records/2026-09-24-greet.md 判断の記録（決定は A1 と A2 の2件）
-docs/decision/adr/                        空のディレクトリ
-docs/ir/greet/CONTEXT.md                  用語集（「挨拶文」だけ）
-docs/ir/greet/greet.md                    IR の本体
-tests/greet.rs                            テスト2本
+.kotowari/config.yaml           設定（tests.files に "tests/**/*.rs"）
+docs/decisions/greet/greet.md   決定の文書
+tests/greet.rs                  テスト2本
 ```
 
-### 書いたばかりの IR を検査する
+### 書いたばかりの決定の文書を検査する
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-086:8035b3f8, REQ-core-137:cb66f5a8] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
-IR の本体（`docs/ir/greet/greet.md`）とテストは次のとおりです。
+決定の文書（`docs/decisions/greet/greet.md`）とテストは次のとおりです。
 
-````markdown
-# 挨拶
+```markdown
+# Greeting
 
-挨拶のコマンドが名前を受けて返す文を扱う。
+This topic decides the text the greet command prints for a name.
 
-## Requirements
+## The command greets the name it is given
 
-### REQ-greet-001: 名前を入れて挨拶する
+Status: implemented
 
-- kind: event_driven
-- source: docs/decision/records/2026-09-24-greet.md#A1
-- verification: unit
+### Problem
 
-名前を受けたとき、コマンドは「こんにちは、名前さん」の`挨拶文`を出す。
+Users wanted to see their own name in the greeting.
 
-### REQ-greet-002: 空の名前は停止する
+### Decision
 
-- kind: event_driven
-- source: docs/decision/records/2026-09-24-greet.md#A3
-- verification: unit
+Given a name, the command prints "Hello, <name>!".
 
-名前が空のとき、コマンドは`停止`し、必要に応じて理由を出す。
+### Confirmations
 
-## Examples
+- C-greet-greet-1 "greet Taro" prints "Hello, Taro!"
 
-```gherkin
-@id=EX-greet-001 @about=REQ-greet-001 @source=docs/decision/records/2026-09-24-greet.md#A1
-Scenario: 名前を挨拶文に入れる
-  When "greet 太郎" を実行する
-  Then "こんにちは、太郎さん" が出る
+## An empty name stops the command
+
+Status: implemented
+
+### Problem
+
+An empty name printed "Hello, !", which looked like a bug. The rule for names is in [names](#names-are-trimmed).
+
+### Decision
+
+When the name is empty, the command stops and prints the reason など.
+
+### Confirmations
+
+- C-greet-greet-2 "greet ''" exits with 2
 ```
-````
 
 ```rust
-// @kotowari[REQ-greet-001]
+// @kotowari[C-greet-greet-1]
 #[test]
 fn greets_with_name() {}
 
@@ -285,100 +283,95 @@ fn rejects_empty_name() {}
 
 ```console
 $ kotowari check --format text
-docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
-docs/ir/greet/greet.md:18 [error] source_invalid docs/decision/records/2026-09-24-greet.md#A3
-docs/ir/greet/greet.md:21 [error] unknown_term 停止
-docs/ir/greet/greet.md:21 [error] vague_word 必要に応じて
-docs/ir/greet/greet.md:26 [error] scenario_without_test EX-greet-001
+docs/decisions/greet/greet.md:27 [error] link_target_missing #names-are-trimmed
+docs/decisions/greet/greet.md:31 [error] vague_word など
+docs/decisions/greet/greet.md:35 [error] confirmation_without_test C-greet-greet-2
 tests/greet.rs:6 [error] test_without_id rejects_empty_name
 $ echo $?
 1
 $ kotowari check | jq '.findings[0]'
 {
-  "kind": "requirement_without_test",
+  "kind": "link_target_missing",
   "severity": "error",
-  "path": "docs/ir/greet/greet.md",
-  "line": 15,
-  "detail": "REQ-greet-002"
+  "path": "docs/decisions/greet/greet.md",
+  "line": 27,
+  "detail": "#names-are-trimmed"
 }
 ```
 
 ### テストの印を直す
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
-`rejects_empty_name` に印を足し、`greets_with_name` の印をシナリオの ID に替えます。
-シナリオの印は、そのシナリオの `@about` の要求の分も満たします。
-今は作らないと決めた要求なら、印の代わりに[後回し](../deferred.ja.md)を宣言してもこの誤りは消えます。
+`rejects_empty_name` に、それが確かめる行の ID の印を付けます。
 
 ```rust
-// @kotowari[EX-greet-001]
+// @kotowari[C-greet-greet-1]
 #[test]
 fn greets_with_name() {}
 
-// @kotowari[REQ-greet-002]
+// @kotowari[C-greet-greet-2]
 #[test]
 fn rejects_empty_name() {}
 ```
 
 ```console
 $ kotowari check --format text
-docs/ir/greet/greet.md:18 [error] source_invalid docs/decision/records/2026-09-24-greet.md#A3
-docs/ir/greet/greet.md:21 [error] unknown_term 停止
-docs/ir/greet/greet.md:21 [error] vague_word 必要に応じて
+docs/decisions/greet/greet.md:27 [error] link_target_missing #names-are-trimmed
+docs/decisions/greet/greet.md:31 [error] vague_word など
 ```
 
-### IR を直して0件にする
+### 決定の文書を直して0件にする
 
-<!-- @kotowari[REQ-core-058:0012abf7, REQ-core-064:75e8708a, REQ-core-066:79261ab9] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#to-refer-to-another-decision-link-to-its-heading:41ba3d75, docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b] -->
 
-出典を実在する `#A2` に直し、用語集に「停止」を足し、「必要に応じて」を具体的な文に書き替えます。
+無い見出しへのリンクを外し、「など」を具体的な文に書き直します。
 
 ```markdown
-名前が空のとき、コマンドは`停止`し、理由を標準エラーに出す。
+When the name is empty, the command stops and prints the reason to standard error.
 ```
 
 ```console
 $ kotowari check --format text
 $ echo $?
 0
-$ kotowari check | jq -c .
-{"files":2,"lines":36,"findings":[],"counts":{},"tests":{"rs":{"files":1,"query":true}},"guides":{"files":0,"marks":0}}
+$ kotowari check
+{"findings":[],"counts":{},"tests":{"rs":{"files":1,"query":true}},"guides":{"files":0,"marks":0},"overview":{"files":0,"marks":0},"decisions":{"documents":1,"decisions":2,"confirmations":2}}
 ```
 
-各指摘の直し方は [findings.md](../findings.ja.md) にあります。
+指摘ごとの直し方は [findings.md](../findings.ja.md) にあります。
 
-### 注意だけが出る
+### 注意だけのとき
 
-<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce, docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
-`limits.lines` を20に下げた設定で試すと、行数の注意が出ます。
-注意だけなので終了コードは0です。
+印の指紋が古いガイドも読む設定で試すと、`guide_stale` の注意が出ます。
+注意だけなので、終了コードは0です。
 
 ```console
 $ kotowari check --config notice.yaml --format text
-docs/ir/greet/greet.md:- [notice] too_many_lines 30
+guides/greet.md:5 [notice] guide_stale docs/decisions/greet/greet.md#the-command-greets-the-name-it-is-given 00000000 b08a343a
 $ echo $?
 0
 ```
 
 ## よくあるつまずき
 
-### 設定ファイルを置いていないのに `unreadable file` で止まる
+### 設定ファイルが無いのに `unreadable file` で止まる
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46, docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 ```console
 $ kotowari check --format text
-unreadable file: docs/decision/adr: No such file or directory (os error 2)
+unreadable file: docs/decisions: No such file or directory (os error 2)
 ```
 
-設定ファイルが無くても、既定の置き場（`docs/ir`、`docs/decision/records`、`docs/decision/adr`）は存在している必要があります。
-ADR を使わないなら、空の `docs/decision/adr/` を作るか、設定の `decisions.adr` で別のディレクトリを指してください。
+設定ファイルが無くても、既定の決定の文書の置き場（`docs/decisions`）は存在している必要があります。
+ディレクトリを作るか、設定の `decisions.documents` を決定の文書のあるディレクトリに向けてください。
 
 ### テストを書いたのに `tests` が `{}` のまま
 
-<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-015:44b9e418] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-tests-of-checks-json-counts-the-test-files-read-per-extension:834f2486, docs/decisions/core/config.md#a-list-key-accepts-only-a-list-the-list-written-replaces-the-default-and-an-empty-list-is-a-list-with-no-elements:7c2ef13f] -->
 
 `tests.files` の glob がテストのファイルに当たっていません。
 既定は `src/**/*.rs` と `tests/**/*.rs` だけです。
@@ -387,14 +380,14 @@ Rust 以外のテストや、別の場所のテストは、設定の `tests.file
 
 ### ガイドを書いたのに `guides.files` が0
 
-<!-- @kotowari[REQ-core-206:e2f3dc5c] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7] -->
 
 `guides.files` の既定は空の一覧なので、設定に書くまでガイドは読まれません。
 設定に glob を書いてください（[writing-guides.md](../writing-guides.ja.md)）。
 
 ### 印を書いたのに `test_without_id` が消えない
 
-<!-- @kotowari[REQ-core-086:8035b3f8] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 印の位置が違う可能性があります。
 印はテストの直前のコメントの塊に書きます。
@@ -402,7 +395,7 @@ Rust 以外のテストや、別の場所のテストは、設定の `tests.file
 
 ```console
 $ kotowari check --format text      # 印を関数の本体の中に書いた
-docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
+docs/decisions/greet/greet.md:35 [error] confirmation_without_test C-greet-greet-2
 tests/greet.rs:6 [error] test_without_id rejects_empty_name
 ```
 
@@ -410,9 +403,10 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 
 ## 関連
 
-- 仕様: [出力の形](../../ir/core/output.ja.md)、[指摘の並べ方と行](../../ir/core/finding-order.ja.md)、[設定](../../ir/core/config.ja.md)、[文字コードとコードブロックの境界](../../ir/core/ir-input.ja.md)
+- 仕様: [出力の形](../../decisions/core/output.ja.md)、[指摘の並べ方と行](../../decisions/core/finding-order.ja.md)、[設定](../../decisions/core/config.ja.md)、[文字コードとコードブロックの境界](../../decisions/core/ir-input.ja.md)、[テスト側の指摘](../../decisions/core/test-side-findings.ja.md)
 - 全コマンド共通の決まり: [cli.md](../cli.ja.md)
 - 指摘の種類と直し方: [findings.md](../findings.ja.md)
+- 決定の文書の書き方: [decision-documents.md](../decision-documents.ja.md)
 - 設定のキー: [config.md](../config.ja.md)
 - 全体として揃っているかを見る: [status](status.ja.md)
-- 1件ずつの項目とテストを見る: [list](list.ja.md)
+- 決定と行とテストを1件ずつ見る: [list](list.ja.md)

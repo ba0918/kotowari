@@ -12,17 +12,10 @@ fn cmd() -> Command {
 
 fn make_project(tmp: &std::path::Path) {
     fs::create_dir_all(tmp.join(".kotowari")).unwrap();
-    fs::create_dir_all(tmp.join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decisions")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp.join("docs/decision/records/records.md"),
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+        "decisions:\n  documents: docs/decisions\n",
     )
     .unwrap();
 }
@@ -32,11 +25,11 @@ fn parse_json(output: &std::process::Output) -> serde_json::Value {
     serde_json::from_str(&stdout).expect("valid JSON")
 }
 
-// --- REQ-core-021: 出力の形の値 ---
+// --- 出力の形の値 ---
 
-// @kotowari[REQ-core-021, REQ-core-022]
+// @kotowari[C-core-output-2]
 #[test]
-fn req_021_format_values_are_json_and_text() {
+fn format_values_are_json_and_text() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // --format json
@@ -47,7 +40,7 @@ fn req_021_format_values_are_json_and_text() {
         .unwrap();
     assert_eq!(output.status.code(), Some(0));
     let stdout = String::from_utf8_lossy(&output.stdout);
-    // REQ-core-022: 標準出力の全体が1つの JSON の値
+    // 標準出力の全体が1つの JSON の値
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("should be valid JSON");
     assert!(v.is_object());
 
@@ -65,45 +58,29 @@ fn req_021_format_values_are_json_and_text() {
     );
 }
 
-// --- REQ-core-023: JSON の中身 ---
+// --- JSON の中身 ---
 
-// @kotowari[REQ-core-023, TBL-core-005, TBL-core-006]
+// @kotowari[C-core-output-3]
 #[test]
-fn req_023_files_counts_all_docs_and_lines_sums_them() {
+fn files_counts_all_docs_and_lines_sums_them() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# A\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStmt.\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/CONTEXT.md"),
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
-    )
-    .unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "# A\n\nScope.\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    // files は用語集を含む
-    assert_eq!(
-        v["files"], 2,
-        "files should count all docs including glossary"
-    );
-    // lines は合計
-    assert!(v["lines"].as_u64().unwrap() > 0, "lines should be positive");
     // findings は配列
     assert!(v["findings"].is_array());
     // counts はオブジェクト
     assert!(v["counts"].is_object());
 }
 
-// @kotowari[REQ-core-023, TBL-core-006]
+// @kotowari[C-core-output-6]
 #[test]
-fn req_023_finding_keys_match_the_table() {
+fn finding_keys_match_the_table() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 題名なしの文書を作って指摘を出す
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -121,14 +98,14 @@ fn req_023_finding_keys_match_the_table() {
     }
 }
 
-// --- PROP-core-002: counts と findings の一致 ---
+// --- counts と findings の一致 ---
 
-// @kotowari[PROP-core-002]
+// @kotowari[C-core-output-4]
 #[test]
-fn prop_002_counts_match_findings() {
+fn counts_match_findings() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -159,14 +136,14 @@ fn prop_002_counts_match_findings() {
     }
 }
 
-// --- REQ-core-025: 文字の出力 ---
+// --- 文字の出力 ---
 
-// @kotowari[REQ-core-025]
+// @kotowari[C-core-output-8]
 #[test]
-fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
+fn text_has_one_line_per_finding_with_bracketed_severity() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -184,13 +161,13 @@ fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     }
 }
 
-// @kotowari[REQ-core-025, EX-core-286]
+// @kotowari[C-core-output-10]
 #[test]
-fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
+fn a_line_break_in_a_file_name_stays_on_one_text_line() {
     // 改行を含むファイル名でも1つの指摘は1行。改行は "\\n" と書く
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a\nb.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a\nb.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -200,17 +177,17 @@ fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
     let lines: Vec<&str> = stdout.lines().collect();
     assert!(!lines.is_empty(), "should have text output");
     for line in &lines {
-        assert!(line.starts_with("docs/ir/a\\nb.md:"), "{stdout}");
+        assert!(line.starts_with("docs/decisions/a\\nb.md:"), "{stdout}");
     }
 }
 
-// @kotowari[REQ-core-025]
+// @kotowari[C-core-output-10]
 #[test]
-fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
+fn a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
     // "\r" だけでは行は分かれないので、行の全体を照合して、パスと詳細の両方で書き換えたことを見る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a\rb.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a\rb.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -220,18 +197,18 @@ fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
     assert!(
         stdout
             .lines()
-            .any(|line| line == "docs/ir/a\\rb.md:- [error] missing_title a\\rb.md"),
+            .any(|line| line == "docs/decisions/a\\rb.md:- [error] missing_title a\\rb.md"),
         "{stdout:?}"
     );
     assert!(!stdout.contains('\r'), "{stdout:?}");
 }
 
-// @kotowari[REQ-core-025, REQ-core-026, EX-core-004]
+// @kotowari[C-core-output-8, C-core-output-9]
 #[test]
-fn req_025_text_line_for_a_document_without_a_title() {
+fn text_line_for_a_document_without_a_title() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -241,31 +218,48 @@ fn req_025_text_line_for_a_document_without_a_title() {
     assert!(
         stdout
             .lines()
-            .any(|l| l == "docs/ir/a.md:- [error] missing_title a.md"),
+            .any(|l| l == "docs/decisions/a.md:- [error] missing_title a.md"),
         "the finding without a line prints the path, a dash, the severity, the kind and the detail: {stdout}"
     );
 }
 
-// --- REQ-core-007: 終了コード ---
+// --- 終了コード ---
 
-// @kotowari[REQ-core-007, TBL-core-002]
+// @kotowari[C-core-cli-15]
 #[test]
-fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
+fn exit_code_one_on_error_and_zero_on_notice_only() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
 
     // 誤りなし → 終了コード 0
-    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    fs::write(
+        tmp.path().join("docs/decisions/a.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(0), "no errors should exit 0");
 
-    // 注意だけ（201行で too_many_lines）→ 終了コード 0 のまま
-    let long = format!("# Title\n\nScope.\n{}", "\n".repeat(198));
-    fs::write(tmp.path().join("docs/ir/a.md"), long).unwrap();
+    // 注意だけ（指紋の古いガイドの印で guide_stale）→ 終了コード 0 のまま
+    fs::write(
+        tmp.path().join("docs/decisions/a.md"),
+        "# Title\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nGreet.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "decisions:\n  documents: docs/decisions\nguides:\n  files:\n    - \"guide.md\"\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("guide.md"),
+        "# Guide\n\n<!-- @kotowari[docs/decisions/a.md#greet:00000000] -->\n",
+    )
+    .unwrap();
     let output_notice = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let stdout = String::from_utf8_lossy(&output_notice.stdout);
     assert!(
-        stdout.contains("too_many_lines"),
+        stdout.contains("guide_stale"),
         "notice should be present: {stdout}"
     );
     assert!(
@@ -279,7 +273,7 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     );
 
     // 誤りあり → 終了コード 1
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output2 = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output2.status.code(), Some(1), "errors should exit 1");
 
@@ -292,7 +286,7 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     assert_eq!(output3.status.code(), Some(2), "stop should exit 2");
 }
 
-// --- REQ-core-128, TBL-core-021, PROP-core-004: 読んだテストのファイルの申告 ---
+// --- 読んだテストのファイルの申告 ---
 
 /// "tests.files" の glob を指定したプロジェクトを作る
 fn make_project_with_test_globs(tmp: &std::path::Path, globs: &[&str]) {
@@ -300,9 +294,7 @@ fn make_project_with_test_globs(tmp: &std::path::Path, globs: &[&str]) {
     let list: String = globs.iter().map(|g| format!("    - \"{g}\"\n")).collect();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        format!(
-            "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n{list}"
-        ),
+        format!("tests:\n  files:\n{list}"),
     )
     .unwrap();
 }
@@ -314,10 +306,10 @@ fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
     fs::write(path, content).unwrap();
 }
 
-// @kotowari[REQ-core-128, TBL-core-021, EX-core-035]
+// @kotowari[C-core-output-12]
 #[test]
-fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
-    // EX-core-035: ".rs" が2つと ".go" が1つ
+fn tests_key_lists_files_per_extension_with_query_flag() {
+    // ".rs" が2つと ".go" が1つ
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
@@ -336,9 +328,9 @@ fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
     );
 }
 
-// @kotowari[REQ-core-128, TBL-core-021]
+// @kotowari[C-core-output-15]
 #[test]
-fn req_128_tests_is_an_empty_object_without_test_files() {
+fn tests_is_an_empty_object_without_test_files() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["nothing/**/*.rs"]);
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -353,12 +345,11 @@ fn req_128_tests_is_an_empty_object_without_test_files() {
     );
 }
 
-// @kotowari[REQ-core-128]
+// @kotowari[C-core-output-11]
 #[test]
-fn req_128_text_format_does_not_print_tests() {
+fn text_format_does_not_print_tests() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
-    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
     write_test_file(tmp.path(), "lib/a.go", "package a\n");
 
     // JSON には出る
@@ -382,9 +373,9 @@ fn req_128_text_format_does_not_print_tests() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[C-core-output-13]
 #[test]
-fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key() {
+fn extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.test.rs", "pub fn a() {}\n");
@@ -408,9 +399,9 @@ fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key
     assert_eq!(v["tests"].as_object().unwrap().len(), 2, "two keys: {v}");
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[C-core-output-13]
 #[test]
-fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
+fn uppercase_extension_is_a_separate_key_without_query() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.RS", "x\n");
@@ -423,10 +414,10 @@ fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
     assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
 }
 
-// @kotowari[TBL-core-021, EX-core-038]
+// @kotowari[C-core-output-14]
 #[test]
-fn tbl_021_unparsable_file_is_counted() {
-    // EX-core-038: tree-sitter で読めないファイルも "files" に数える
+fn unparsable_file_is_counted() {
+    // tree-sitter で読めないファイルも "files" に数える
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
     write_test_file(tmp.path(), "lib/ok.rs", "pub fn ok() {}\n");
@@ -446,10 +437,10 @@ fn tbl_021_unparsable_file_is_counted() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[C-core-output-14]
 #[test]
 #[cfg(unix)]
-fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
+fn same_path_counts_once_and_symlink_counts_apart() {
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     // 同じファイルが2つの glob に当たる
@@ -465,9 +456,9 @@ fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[C-core-output-13]
 #[test]
-fn tbl_021_keys_are_in_byte_order() {
+fn keys_are_in_byte_order() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
@@ -493,10 +484,10 @@ fn tbl_021_keys_are_in_byte_order() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[C-core-output-14, C-core-discover-16]
 #[test]
 #[cfg(unix)]
-fn tbl_021_excluded_entries_are_not_counted() {
+fn excluded_entries_are_not_counted() {
     use std::os::unix::net::UnixListener;
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
@@ -511,9 +502,9 @@ fn tbl_021_excluded_entries_are_not_counted() {
     );
 }
 
-// @kotowari[PROP-core-004]
+// @kotowari[C-core-output-16]
 #[test]
-fn prop_004_files_sum_equals_the_number_of_read_test_files() {
+fn files_sum_equals_the_number_of_read_test_files() {
     use proptest::prelude::*;
 
     // 1件ごとに CLI を起動するので試行回数を絞る。変異テストで同じ変異が実行ごとに殺されたり

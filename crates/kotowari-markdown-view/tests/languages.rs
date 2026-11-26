@@ -1,4 +1,4 @@
-//! ページの言語、UI の文字、ほかの言語へのリンク、本文の無い参照（docs/ir/view/languages.md）
+//! ページの言語、UI の文字、ほかの言語へのリンク、本文の無い参照（docs/decisions/view/languages.md）
 
 use kotowari_markdown_view::{
     Block, Document, OtherLanguage, Page, Part, Reference, ReferenceState, RenderInput, Section,
@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 mod common;
 use common::page;
 
-/// TBL-view-002 の鍵と、数を入れるか
+/// UI の文字の鍵と、数を入れるか
 const KEYS: [(&str, bool); 17] = [
     ("language_name", false),
     ("index_link", false),
@@ -105,9 +105,9 @@ fn lang(html: &str) -> &str {
     &value[..value.find('"').expect("attribute end")]
 }
 
-// @kotowari[REQ-view-026, REQ-view-027, EX-view-018]
+// @kotowari[C-view-languages-1, C-view-languages-2]
 #[test]
-fn ex_view_018_the_page_language_and_its_text_follow_the_input() {
+fn the_page_language_and_its_text_follow_the_input() {
     let mut ui = marked_ui();
     ui.insert("stale_mark".into(), "Pas encore relu".into());
     let mut input = input(vec![document("a", vec![section(true, vec![])])], ui);
@@ -169,9 +169,9 @@ fn strings(value: &Value, out: &mut Vec<String>) {
     }
 }
 
-// @kotowari[REQ-view-027, EX-view-019, TBL-view-002]
+// @kotowari[C-view-languages-3]
 #[test]
-fn ex_view_019_every_text_the_view_writes_comes_from_the_ui_text() {
+fn every_text_the_view_writes_comes_from_the_ui_text() {
     let refs = json!(["REQ-x-001", "docs/x.md#A1"]);
     let parts = vec![
         part(
@@ -316,9 +316,9 @@ fn ex_view_019_every_text_the_view_writes_comes_from_the_ui_text() {
     }
 }
 
-// @kotowari[REQ-view-028, EX-view-020]
+// @kotowari[C-view-languages-4]
 #[test]
-fn ex_view_020_the_number_goes_where_the_text_puts_it() {
+fn the_number_goes_where_the_text_puts_it() {
     let mut ui = marked_ui();
     ui.insert("pages".into(), "全{n}件".into());
     let mut input = input(
@@ -355,9 +355,9 @@ fn with_and_without_others() -> (Vec<Page>, Vec<Page>) {
     (render(&input), without)
 }
 
-// @kotowari[REQ-view-029, EX-view-021]
+// @kotowari[C-view-languages-5, C-view-languages-6, C-view-languages-8]
 #[test]
-fn ex_view_021_every_page_links_the_same_page_in_the_other_language() {
+fn every_page_links_the_same_page_in_the_other_language() {
     let (pages, _) = with_and_without_others();
     for (name, target) in [("a.html", "en/a.html"), ("index.html", "en/index.html")] {
         assert!(
@@ -370,9 +370,9 @@ fn ex_view_021_every_page_links_the_same_page_in_the_other_language() {
     }
 }
 
-// @kotowari[REQ-view-029, EX-view-022]
+// @kotowari[C-view-languages-7]
 #[test]
-fn ex_view_022_without_other_languages_there_is_no_language_link() {
+fn without_other_languages_there_is_no_language_link() {
     let (with, without) = with_and_without_others();
     for (name, target) in [("a.html", "en/a.html"), ("index.html", "en/index.html")] {
         let mut expected = common::links(page(&with, name));
@@ -381,9 +381,9 @@ fn ex_view_022_without_other_languages_there_is_no_language_link() {
     }
 }
 
-// @kotowari[REQ-view-030, EX-view-023]
+// @kotowari[C-view-languages-9]
 #[test]
-fn ex_view_023_a_reference_without_a_body_is_its_label_and_opens_nothing() {
+fn a_reference_without_a_body_is_its_label_and_opens_nothing() {
     let steps = part(
         "steps",
         json!({"items": [{"title": "段階", "refs": ["docs/x.md#A1"]}]}),
@@ -407,7 +407,7 @@ fn ex_view_023_a_reference_without_a_body_is_its_label_and_opens_nothing() {
     assert!(!a.contains("<details"), "{a}");
 }
 
-// @kotowari[REQ-view-008, REQ-view-030]
+// @kotowari[C-view-rendering-13]
 #[test]
 fn a_reference_missing_from_the_table_is_its_key_as_text_and_opens_nothing() {
     // 表に無い参照は開く本文を持たないので、本文の無い参照と同じく選んでも何も開かない
