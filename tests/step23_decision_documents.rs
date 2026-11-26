@@ -1892,7 +1892,7 @@ fn every_line_ending_gives_the_same_body_fingerprint_and_lines() {
     }
 }
 
-// @kotowari[C-core-docs-5]
+// @kotowari[C-core-docs-1]
 #[test]
 fn a_state_line_wrapped_by_a_lone_carriage_return_is_read() {
     for (text, state) in [
@@ -1953,7 +1953,7 @@ fn each_title_after_the_first_is_an_error_without_a_line() {
     }
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-docs-1]
 #[test]
 fn a_code_block_under_a_confirmation_row_stays_out_of_its_name_and_in_its_body() {
     let tmp = TempDir::new().unwrap();
