@@ -54,7 +54,7 @@ document:
 
 const DOCUMENT: &str = "---\n$schema: ../.kotowari/schemas/ir.yaml\n---\n# 題名\n\nこの文書が扱う範囲。\n\n## 要求\n\n### REQ-001: 名前\n\n- 種類: ubiquitous\n\n本文。\n";
 
-// @kotowari[REQ-schema-068, REQ-schema-069, EX-schema-085, C-schema-libext-2]
+// @kotowari[C-schema-libext-2]
 #[test]
 fn parsed_values_can_be_reused_for_validated_extraction() {
     use kotowari_markdown_schema::{Schema, ValidationOptions, extract_validated};
@@ -68,7 +68,7 @@ fn parsed_values_can_be_reused_for_validated_extraction() {
     }
 }
 
-// @kotowari[REQ-schema-068, EX-schema-086, C-schema-libext-1]
+// @kotowari[C-schema-libext-1]
 #[test]
 fn semantic_schema_errors_are_rejected_before_document_operations() {
     use kotowari_markdown_schema::Schema;
@@ -80,7 +80,7 @@ fn semantic_schema_errors_are_rejected_before_document_operations() {
     let _: &dyn std::error::Error = &error;
 }
 
-// @kotowari[REQ-schema-069, EX-schema-087, C-schema-libext-3]
+// @kotowari[C-schema-libext-3]
 #[test]
 fn violating_documents_have_partial_values_but_no_validated_values() {
     use kotowari_markdown_schema::{Schema, ValidationOptions, extract_partial, extract_validated};
@@ -93,7 +93,7 @@ fn violating_documents_have_partial_values_but_no_validated_values() {
     assert_eq!(partial.findings()[0].kind(), FindingKind::FieldEnumInvalid);
 }
 
-// @kotowari[REQ-schema-069, REQ-schema-070, EX-schema-087, EX-schema-088, C-schema-libext-4]
+// @kotowari[C-schema-libext-4]
 #[test]
 fn validation_respects_schema_open_and_explicit_relaxation() {
     use kotowari_markdown_schema::{Schema, ValidationOptions};
@@ -124,7 +124,7 @@ fn validation_respects_schema_open_and_explicit_relaxation() {
     }
 }
 
-// @kotowari[REQ-schema-049, REQ-schema-014, C-schema-resolve-3]
+// @kotowari[C-schema-resolve-3]
 #[test]
 fn a_null_schema_reference_has_an_explanatory_public_error() {
     let error = frontmatter_schema("---\n$schema: null\n---\n# Topic\n").unwrap_err();
@@ -133,7 +133,7 @@ fn a_null_schema_reference_has_an_explanatory_public_error() {
     assert!(!message.trim().is_empty());
 }
 
-// @kotowari[REQ-schema-071, EX-schema-089, C-schema-libext-5]
+// @kotowari[C-schema-libext-5]
 #[test]
 fn typed_partial_json_keeps_obtainable_values_and_schema_name() {
     use kotowari_markdown_schema::{Schema, ValidationOptions, extract_typed_partial};
@@ -145,7 +145,7 @@ fn typed_partial_json_keeps_obtainable_values_and_schema_name() {
     assert_eq!(partial.findings()[0].kind(), FindingKind::FieldEnumInvalid);
 }
 
-// @kotowari[REQ-schema-049, EX-schema-015, C-schema-lib-1]
+// @kotowari[C-schema-lib-1]
 #[test]
 fn a_dependent_crate_can_run_the_whole_pipeline() {
     let ast: Result<serde_json::Value, kotowari_markdown_schema::ParseError> =
@@ -187,7 +187,7 @@ fn a_dependent_crate_can_run_the_whole_pipeline() {
     assert_eq!(values["requirements"][0]["line"], 10);
 }
 
-// @kotowari[REQ-schema-049, C-schema-lib-4]
+// @kotowari[C-schema-lib-4]
 #[test]
 fn findings_carry_the_kind_line_and_detail() {
     let broken = DOCUMENT.replace("- 種類: ubiquitous", "- 種類: bogus");
@@ -200,7 +200,7 @@ fn findings_carry_the_kind_line_and_detail() {
     assert!(!finding.detail().is_empty());
 }
 
-// @kotowari[REQ-schema-049, REQ-schema-050, EX-schema-016, C-schema-lib-5]
+// @kotowari[C-schema-lib-5]
 #[test]
 fn a_url_schema_resolves_to_a_url_for_the_caller_to_fetch() {
     let source = "---\n$schema: https://example.com/ir.yaml\n---\n# 題名\n\n範囲。\n";

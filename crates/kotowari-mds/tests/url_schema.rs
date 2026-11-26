@@ -59,7 +59,7 @@ fn mds() -> Command {
     Command::cargo_bin("kotowari-mds").unwrap()
 }
 
-// @kotowari[REQ-schema-013, C-schema-resolve-5]
+// @kotowari[C-schema-resolve-5]
 #[test]
 fn url_schema_is_fetched_once_and_cached() {
     let (url, counter) = serve_schema();
@@ -104,7 +104,7 @@ fn url_schema_is_fetched_once_and_cached() {
     );
 }
 
-// @kotowari[REQ-schema-011, REQ-schema-013, C-schema-resolve-5]
+// @kotowari[C-schema-resolve-5]
 #[test]
 fn url_schema_resolves_the_same_for_all_commands() {
     let (url, counter) = serve_schema();
@@ -131,7 +131,7 @@ fn url_schema_resolves_the_same_for_all_commands() {
     );
 }
 
-// @kotowari[REQ-schema-011, REQ-schema-009, C-schema-cli-17, C-schema-resolve-9]
+// @kotowari[C-schema-cli-17, C-schema-resolve-9]
 #[test]
 fn url_schema_without_cache_and_unreachable_server_stops() {
     let dir = tempfile::tempdir().unwrap();
@@ -155,7 +155,7 @@ fn url_schema_without_cache_and_unreachable_server_stops() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-schema-013, EX-schema-006, C-schema-resolve-6]
+// @kotowari[C-schema-resolve-6]
 #[test]
 fn corrupted_cache_is_refetched_and_recovers() {
     let (url, counter) = serve_schema();
@@ -193,7 +193,7 @@ fn corrupted_cache_is_refetched_and_recovers() {
     );
 }
 
-// @kotowari[REQ-schema-011, REQ-schema-009, EX-schema-066, C-schema-cli-17, C-schema-resolve-10]
+// @kotowari[C-schema-cli-17, C-schema-resolve-10]
 #[test]
 fn schema_response_over_4mib_stops() {
     let url = serve_body_once("x".repeat(4 * 1024 * 1024 + 1));
@@ -234,7 +234,7 @@ fn serve_body_once(body: String) -> String {
     format!("http://127.0.0.1:{port}/schema.yaml")
 }
 
-// @kotowari[EX-schema-068, TBL-schema-003, C-schema-resolve-11]
+// @kotowari[C-schema-resolve-11]
 #[test]
 fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
     // YAML の注釈で埋めて、応答をちょうど 4MiB にする
@@ -256,7 +256,7 @@ fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
     assert_eq!(output.status.code(), Some(0), "stderr: {stderr}");
 }
 
-// @kotowari[EX-schema-069, C-schema-resolve-7]
+// @kotowari[C-schema-resolve-7]
 #[test]
 fn ex_schema_069_the_cache_goes_under_the_base_directory_above_the_current_one() {
     let (url, _) = serve_schema();
@@ -289,7 +289,7 @@ fn ex_schema_069_the_cache_goes_under_the_base_directory_above_the_current_one()
     );
 }
 
-// @kotowari[EX-schema-070, C-schema-resolve-7]
+// @kotowari[C-schema-resolve-7]
 #[test]
 fn ex_schema_070_without_a_base_directory_the_cache_goes_under_the_current_one() {
     let (url, _) = serve_schema();
@@ -320,7 +320,7 @@ fn ex_schema_070_without_a_base_directory_the_cache_goes_under_the_current_one()
     );
 }
 
-// @kotowari[REQ-schema-052, EX-schema-017, C-schema-resolve-12]
+// @kotowari[C-schema-resolve-12]
 #[test]
 fn userinfo_in_a_schema_url_does_not_reach_the_error_output() {
     let dir = tempfile::tempdir().unwrap();
@@ -355,7 +355,7 @@ fn userinfo_in_a_schema_url_does_not_reach_the_error_output() {
     );
 }
 
-// @kotowari[REQ-schema-013, C-schema-resolve-8]
+// @kotowari[C-schema-resolve-8]
 #[test]
 fn a_directory_check_fetches_a_shared_url_schema_once_even_when_the_cache_cannot_be_written() {
     // 1回の check の間は、読んだスキーマを文書ごとに読み直さない。キャッシュに書けなくても
@@ -384,7 +384,7 @@ fn a_directory_check_fetches_a_shared_url_schema_once_even_when_the_cache_cannot
     assert_eq!(counter.load(Ordering::SeqCst), 1);
 }
 
-// @kotowari[EX-schema-093, REQ-schema-013, C-schema-resolve-8]
+// @kotowari[C-schema-resolve-8]
 #[test]
 fn ex_schema_093_a_cache_that_cannot_be_written_does_not_stop_the_check() {
     // ディレクトリを作れないときと、ディレクトリはあってもファイルを書けないとき

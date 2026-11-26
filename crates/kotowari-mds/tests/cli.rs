@@ -38,7 +38,7 @@ fn mds() -> Command {
     Command::cargo_bin("kotowari-mds").unwrap()
 }
 
-// @kotowari[REQ-schema-044, REQ-schema-073, REQ-core-313, C-schema-cli-26, C-schema-io-2, C-core-libapi-11]
+// @kotowari[REQ-core-313, C-schema-cli-26, C-schema-io-2, C-core-libapi-11]
 #[test]
 fn directory_check_reports_dot_prefixed_markdown_and_skips_hidden_directories() {
     let root = tempfile::tempdir().unwrap();
@@ -67,7 +67,7 @@ fn directory_check_reports_dot_prefixed_markdown_and_skips_hidden_directories() 
     assert_eq!(result["files"][0]["findings"][0]["kind"], "missing_title");
 }
 
-// @kotowari[REQ-schema-005, C-schema-cli-1]
+// @kotowari[C-schema-cli-1]
 #[test]
 fn version_prints_the_command_name_and_version_to_stdout_and_exits_zero() {
     let output = mds().arg("--version").output().unwrap();
@@ -76,7 +76,7 @@ fn version_prints_the_command_name_and_version_to_stdout_and_exits_zero() {
     assert!(stdout.starts_with("kotowari-mds "), "stdout: {stdout}");
 }
 
-// @kotowari[REQ-schema-005, REQ-schema-040, C-schema-extract-44]
+// @kotowari[C-schema-extract-44]
 #[test]
 fn ast_outputs_mdast_json_for_the_adr_fixture() {
     let mut cmd = Command::cargo_bin("kotowari-mds").unwrap();
@@ -97,7 +97,7 @@ fn ast_outputs_mdast_json_for_the_adr_fixture() {
     assert!(json["children"][0].get("position").is_none());
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-042, REQ-schema-043, C-schema-cli-17]
+// @kotowari[C-schema-cli-17]
 #[test]
 fn ast_with_format_text_stops_with_argument_error() {
     let mut cmd = Command::cargo_bin("kotowari-mds").unwrap();
@@ -111,7 +111,7 @@ fn ast_with_format_text_stops_with_argument_error() {
     );
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-042, C-schema-cli-17]
+// @kotowari[C-schema-cli-17]
 #[test]
 fn unknown_flag_stops_with_argument_error() {
     let output = mds()
@@ -126,7 +126,7 @@ fn unknown_flag_stops_with_argument_error() {
     );
 }
 
-// @kotowari[REQ-schema-036, REQ-schema-067, C-schema-cli-3, C-schema-extract-2]
+// @kotowari[C-schema-cli-3, C-schema-extract-2]
 #[test]
 fn ast_schema_outputs_typed_tree() {
     let output = mds()
@@ -143,7 +143,7 @@ fn ast_schema_outputs_typed_tree() {
     );
 }
 
-// @kotowari[REQ-schema-067, EX-schema-082, EX-schema-083, C-schema-cli-3, C-schema-cli-4]
+// @kotowari[C-schema-cli-3, C-schema-cli-4]
 #[test]
 fn ex_schema_082_083_ast_schema_is_values_with_the_schema_name_as_type() {
     let dir = tempfile::tempdir().unwrap();
@@ -173,7 +173,7 @@ fn ex_schema_082_083_ast_schema_is_values_with_the_schema_name_as_type() {
     assert!(ast.get("type").is_none(), "{ast}");
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-014, REQ-schema-042, C-schema-cli-14, C-schema-resolve-4]
+// @kotowari[C-schema-cli-14, C-schema-resolve-4]
 #[test]
 fn ast_schema_without_schema_stops() {
     let dir = tempfile::tempdir().unwrap();
@@ -187,7 +187,7 @@ fn ast_schema_without_schema_stops() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-schema-006, EX-schema-003, C-schema-cli-5]
+// @kotowari[C-schema-cli-5]
 #[test]
 fn check_clean_document_exits_zero_with_no_output() {
     let output = mds()
@@ -198,7 +198,7 @@ fn check_clean_document_exits_zero_with_no_output() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-schema-007, C-schema-cli-6]
+// @kotowari[C-schema-cli-6]
 #[test]
 fn check_json_outputs_empty_files_array_for_clean_file() {
     let output = mds()
@@ -210,7 +210,7 @@ fn check_json_outputs_empty_files_array_for_clean_file() {
     assert_eq!(json, serde_json::json!({ "files": [] }));
 }
 
-// @kotowari[REQ-schema-007, REQ-schema-010, C-schema-cli-6]
+// @kotowari[C-schema-cli-6]
 #[test]
 fn check_json_outputs_empty_files_array_for_clean_directory() {
     let dir = tempfile::tempdir().unwrap();
@@ -225,7 +225,7 @@ fn check_json_outputs_empty_files_array_for_clean_directory() {
     assert_eq!(json, serde_json::json!({ "files": [] }));
 }
 
-// @kotowari[REQ-schema-006, REQ-schema-007, C-schema-cli-5, C-schema-cli-6]
+// @kotowari[C-schema-cli-5, C-schema-cli-6]
 #[test]
 fn check_document_with_findings_exits_one_with_text() {
     let dir = tempfile::tempdir().unwrap();
@@ -242,7 +242,7 @@ fn check_document_with_findings_exits_one_with_text() {
     assert!(!stdout.trim_start().starts_with('{'));
 }
 
-// @kotowari[REQ-schema-007, REQ-schema-008, C-schema-cli-6, C-schema-cli-8, C-schema-cli-9]
+// @kotowari[C-schema-cli-6, C-schema-cli-8, C-schema-cli-9]
 #[test]
 fn check_json_output_has_files_with_findings() {
     let dir = tempfile::tempdir().unwrap();
@@ -264,7 +264,7 @@ fn check_json_output_has_files_with_findings() {
     assert!(finding.get("detail").is_some());
 }
 
-// @kotowari[REQ-schema-002, EX-schema-001, C-schema-closed-2]
+// @kotowari[C-schema-closed-2]
 #[test]
 fn check_open_relaxes_undeclared_headings() {
     let dir = tempfile::tempdir().unwrap();
@@ -283,7 +283,7 @@ fn check_open_relaxes_undeclared_headings() {
     assert!(opened.stdout.is_empty());
 }
 
-// @kotowari[REQ-schema-003, REQ-schema-031, C-schema-block-20, C-schema-closed-1]
+// @kotowari[C-schema-block-20, C-schema-closed-1]
 #[test]
 fn check_undeclared_child_under_declared_field_exits_one() {
     let dir = tempfile::tempdir().unwrap();
@@ -309,7 +309,7 @@ fn check_undeclared_child_under_declared_field_exits_one() {
     );
 }
 
-// @kotowari[REQ-schema-021, C-schema-lang-13]
+// @kotowari[C-schema-lang-13]
 #[test]
 fn check_child_bullet_when_uses_sibling_field_exits_one() {
     let dir = tempfile::tempdir().unwrap();
@@ -335,7 +335,7 @@ fn check_child_bullet_when_uses_sibling_field_exits_one() {
     );
 }
 
-// @kotowari[REQ-schema-039, C-schema-extract-20]
+// @kotowari[C-schema-extract-20]
 #[test]
 fn check_item_child_field_extract_stops_with_schema_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -361,7 +361,7 @@ fn check_item_child_field_extract_stops_with_schema_invalid() {
     );
 }
 
-// @kotowari[REQ-schema-008, C-schema-cli-9]
+// @kotowari[C-schema-cli-9]
 #[test]
 fn check_skips_bom_and_counts_crlf_lines() {
     let dir = tempfile::tempdir().unwrap();
@@ -380,7 +380,7 @@ fn check_skips_bom_and_counts_crlf_lines() {
     assert!(stdout.contains(&format!("{}:8: undeclared_heading:", doc.display())));
 }
 
-// @kotowari[REQ-schema-008, REQ-schema-022, C-schema-cli-10, C-schema-doc-3]
+// @kotowari[C-schema-cli-10, C-schema-doc-3]
 #[test]
 fn check_missing_title_has_no_line_number() {
     let dir = tempfile::tempdir().unwrap();
@@ -400,7 +400,7 @@ fn check_missing_title_has_no_line_number() {
     assert!(!stdout.contains(":1: missing_title:"));
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-011, REQ-schema-042, C-schema-cli-14, C-schema-resolve-4]
+// @kotowari[C-schema-cli-14, C-schema-resolve-4]
 #[test]
 fn check_missing_schema_stops_with_schema_not_found() {
     let dir = tempfile::tempdir().unwrap();
@@ -414,7 +414,7 @@ fn check_missing_schema_stops_with_schema_not_found() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-011, REQ-schema-042, C-schema-cli-14, C-schema-cli-17, C-schema-resolve-4]
+// @kotowari[C-schema-cli-14, C-schema-cli-17, C-schema-resolve-4]
 #[test]
 fn check_unresolvable_schema_stops_with_schema_not_found() {
     let dir = tempfile::tempdir().unwrap();
@@ -432,7 +432,7 @@ fn check_unresolvable_schema_stops_with_schema_not_found() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-042, C-schema-cli-17]
+// @kotowari[C-schema-cli-17]
 #[test]
 fn check_unreadable_file_stops() {
     let dir = tempfile::tempdir().unwrap();
@@ -446,7 +446,7 @@ fn check_unreadable_file_stops() {
     assert!(stderr.contains("unreadable_file"));
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-014, EX-schema-004, REQ-schema-042, C-schema-cli-14, C-schema-cli-17, C-schema-resolve-3]
+// @kotowari[C-schema-cli-14, C-schema-cli-17, C-schema-resolve-3]
 #[test]
 fn check_broken_frontmatter_stops_with_frontmatter_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -460,7 +460,7 @@ fn check_broken_frontmatter_stops_with_frontmatter_invalid() {
     assert!(stderr.contains("frontmatter_invalid"));
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-014, C-schema-cli-14, C-schema-cli-17, C-schema-resolve-3]
+// @kotowari[C-schema-cli-14, C-schema-cli-17, C-schema-resolve-3]
 #[test]
 fn values_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -474,7 +474,7 @@ fn values_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     assert!(stderr.contains("frontmatter_invalid"));
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-014, C-schema-cli-14, C-schema-cli-17, C-schema-resolve-3]
+// @kotowari[C-schema-cli-14, C-schema-cli-17, C-schema-resolve-3]
 #[test]
 fn ast_schema_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -488,7 +488,7 @@ fn ast_schema_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     assert!(stderr.contains("frontmatter_invalid"));
 }
 
-// @kotowari[REQ-schema-007, C-schema-cli-6, C-schema-cli-7]
+// @kotowari[C-schema-cli-6, C-schema-cli-7]
 #[test]
 fn values_text_defaults_to_indented_text() {
     let output = mds()
@@ -503,7 +503,7 @@ fn values_text_defaults_to_indented_text() {
     assert!(stdout.contains("  reasons:\n    1. - 理由その1\n    2. - 理由その2\n"));
 }
 
-// @kotowari[REQ-schema-007, C-schema-cli-6]
+// @kotowari[C-schema-cli-6]
 #[test]
 fn values_text_indents_multiline_value_two_deeper_than_the_key() {
     let dir = tempfile::tempdir().unwrap();
@@ -529,7 +529,7 @@ fn values_text_indents_multiline_value_two_deeper_than_the_key() {
     );
 }
 
-// @kotowari[REQ-schema-036, EX-schema-013, C-schema-extract-2]
+// @kotowari[C-schema-extract-2]
 #[test]
 fn values_json_is_nested_by_path() {
     let output = mds()
@@ -550,7 +550,7 @@ fn values_json_is_nested_by_path() {
     );
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-014, REQ-schema-042, C-schema-cli-14, C-schema-resolve-4]
+// @kotowari[C-schema-cli-14, C-schema-resolve-4]
 #[test]
 fn values_without_schema_stops_with_schema_not_found() {
     let dir = tempfile::tempdir().unwrap();
@@ -564,7 +564,7 @@ fn values_without_schema_stops_with_schema_not_found() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-schema-010, C-schema-cli-25]
+// @kotowari[C-schema-cli-25]
 #[test]
 fn check_directory_reports_all_failing_documents() {
     let dir = tempfile::tempdir().unwrap();
@@ -584,7 +584,7 @@ fn check_directory_reports_all_failing_documents() {
     assert_eq!(files[0]["findings"][0]["kind"], "undeclared_heading");
 }
 
-// @kotowari[REQ-schema-002, REQ-schema-010, C-schema-closed-2]
+// @kotowari[C-schema-closed-2]
 #[test]
 fn check_directory_relaxes_a_schema_that_declares_open() {
     let dir = tempfile::tempdir().unwrap();
@@ -607,7 +607,7 @@ fn check_directory_relaxes_a_schema_that_declares_open() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-044, C-schema-cli-26]
+// @kotowari[C-schema-cli-26]
 #[test]
 fn check_directory_skips_hidden_directories() {
     let dir = tempfile::tempdir().unwrap();
@@ -622,7 +622,7 @@ fn check_directory_skips_hidden_directories() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-044, C-schema-cli-28]
+// @kotowari[C-schema-cli-28]
 #[test]
 fn check_directory_does_not_follow_symlinks() {
     let outside = tempfile::tempdir().unwrap();
@@ -639,7 +639,7 @@ fn check_directory_does_not_follow_symlinks() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-schema-043, C-schema-cli-15, C-schema-cli-29]
+// @kotowari[C-schema-cli-15, C-schema-cli-29]
 #[test]
 fn stop_does_not_carry_the_referenced_file_contents() {
     // スキーマとして読めないファイルを `$schema` に指定すると、パーサの
@@ -669,7 +669,7 @@ fn stop_does_not_carry_the_referenced_file_contents() {
     );
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, C-schema-cli-16]
+// @kotowari[C-schema-cli-16]
 #[test]
 fn check_directory_stops_on_invalid_schema() {
     let dir = tempfile::tempdir().unwrap();
@@ -684,7 +684,7 @@ fn check_directory_stops_on_invalid_schema() {
     assert!(stderr.contains("schema_invalid"));
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043, REQ-schema-053, C-schema-cli-15, C-schema-cli-16, C-schema-cli-17]
+// @kotowari[C-schema-cli-15, C-schema-cli-16, C-schema-cli-17]
 #[test]
 fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();
@@ -705,7 +705,7 @@ fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
     assert!(output.stdout.is_empty(), "停止のときは指摘を出力しない");
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043, C-schema-cli-15, C-schema-cli-16, C-schema-cli-17]
+// @kotowari[C-schema-cli-15, C-schema-cli-16, C-schema-cli-17]
 #[test]
 fn check_directory_stops_on_schema_not_found_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();
@@ -726,7 +726,7 @@ fn check_directory_stops_on_schema_not_found_and_outputs_no_findings() {
     assert!(output.stdout.is_empty(), "停止のときは指摘を出力しない");
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, C-schema-cli-16, C-schema-cli-17]
+// @kotowari[C-schema-cli-16, C-schema-cli-17]
 #[test]
 fn check_directory_stops_on_unreadable_file() {
     use std::os::unix::fs::PermissionsExt;
@@ -742,7 +742,7 @@ fn check_directory_stops_on_unreadable_file() {
     assert!(stderr.contains("unreadable_file"));
 }
 
-// @kotowari[REQ-schema-010, C-schema-cli-5]
+// @kotowari[C-schema-cli-5]
 #[test]
 fn check_fixtures_directory_passes() {
     let output = mds().args(["check", "fixtures"]).output().unwrap();
@@ -750,7 +750,7 @@ fn check_fixtures_directory_passes() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-035, C-schema-cli-5]
+// @kotowari[C-schema-cli-5]
 #[test]
 fn ir_fixture_passes_check_and_extracts_values() {
     let checked = mds()
@@ -771,7 +771,7 @@ fn ir_fixture_passes_check_and_extracts_values() {
     assert!(stdout.contains("Scenario: 印を書く"));
 }
 
-// @kotowari[REQ-schema-035, REQ-schema-031, C-schema-block-21, C-schema-extract-12]
+// @kotowari[C-schema-block-21, C-schema-extract-12]
 #[test]
 fn decision_record_fixture_passes_check_and_extracts_values() {
     // 判断の記録（決定の行 `- 決定1 ...` + 子の `superseded_by`）の書式を、
@@ -811,7 +811,7 @@ fn decision_record_fixture_passes_check_and_extracts_values() {
     );
 }
 
-// @kotowari[REQ-schema-009, REQ-schema-043, C-schema-cli-5]
+// @kotowari[C-schema-cli-5]
 #[test]
 fn no_subcommand_stops_with_a_usage_hint_not_the_about_text() {
     let output = mds().output().unwrap();
@@ -835,7 +835,7 @@ document:
           - name: 種類
 "#;
 
-// @kotowari[REQ-schema-008, C-schema-cli-9, C-schema-cli-11, C-schema-cli-12]
+// @kotowari[C-schema-cli-9, C-schema-cli-11, C-schema-cli-12]
 #[test]
 fn check_json_finding_carries_the_node_name_and_the_raw_line() {
     let dir = tempfile::tempdir().unwrap();
@@ -858,7 +858,7 @@ fn check_json_finding_carries_the_node_name_and_the_raw_line() {
     assert_eq!(finding["text"], "### REQ-001: `名前`");
 }
 
-// @kotowari[REQ-schema-055, C-schema-closed-6]
+// @kotowari[C-schema-closed-6]
 #[test]
 fn check_json_undeclared_line_has_rule_kind() {
     let dir = tempfile::tempdir().unwrap();
@@ -944,7 +944,7 @@ fn check_findings(schema: &str, doc_body: &str) -> Vec<serde_json::Value> {
     json["files"][0]["findings"].as_array().unwrap().clone()
 }
 
-// @kotowari[EX-schema-018, C-schema-extract-30]
+// @kotowari[C-schema-extract-30]
 #[test]
 fn values_json_keys_table_rows_by_declared_header_or_by_column_position() {
     let schema = r#"
@@ -972,7 +972,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-019, C-schema-extract-32]
+// @kotowari[C-schema-extract-32]
 #[test]
 fn values_json_nests_repeated_table_rows_per_table_with_the_data_row_lines() {
     let schema = r#"
@@ -1004,7 +1004,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-020, C-schema-extract-28, C-schema-extract-29]
+// @kotowari[C-schema-extract-28, C-schema-extract-29]
 #[test]
 fn values_json_splits_a_statement_with_derived_values_into_one_element_per_line() {
     let schema = r#"
@@ -1034,7 +1034,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-021, C-schema-extract-10]
+// @kotowari[C-schema-extract-10]
 #[test]
 fn values_json_keeps_shorthand_extractions_unsplit() {
     let schema = r#"
@@ -1065,7 +1065,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-022, C-schema-extract-5]
+// @kotowari[C-schema-extract-5]
 #[test]
 fn values_without_a_path_in_the_extract_declaration_stops() {
     let schema = r#"
@@ -1080,7 +1080,7 @@ document:
     assert_eq!(code, Some(2), "stderr: {stderr}");
 }
 
-// @kotowari[EX-schema-023, C-schema-extract-6]
+// @kotowari[C-schema-extract-6]
 #[test]
 fn values_json_omits_the_value_key_when_the_extract_declares_only_derived_values() {
     let schema = r#"
@@ -1103,7 +1103,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-024, C-schema-extract-22]
+// @kotowari[C-schema-extract-22]
 #[test]
 fn values_with_an_unaccepted_derived_word_stops() {
     let schema = r#"
@@ -1120,7 +1120,7 @@ document:
     assert_eq!(code, Some(2), "stderr: {stderr}");
 }
 
-// @kotowari[EX-schema-025, C-schema-extract-25, C-schema-extract-26]
+// @kotowari[C-schema-extract-25, C-schema-extract-26]
 #[test]
 fn values_json_gives_the_raw_line_for_the_title_and_for_table_rows() {
     let schema = r#"
@@ -1171,7 +1171,7 @@ document:
         header: [用語, 意味]
 "#;
 
-// @kotowari[EX-schema-026, C-schema-cli-9]
+// @kotowari[C-schema-cli-9]
 #[test]
 fn check_json_finding_line_points_at_the_node_or_at_the_one_that_should_contain_it() {
     let doc = "## 要求\n\n### REQ-001: 欠落\n\n### REQ-002: 形\n\n- 種類: bogus\n\n## 用語集\n\n| 用語 | 意味 |\n|---|---|\n| 印 |\n";
@@ -1213,7 +1213,7 @@ document:
             enum: [ubiquitous]
 "#;
 
-// @kotowari[EX-schema-027, C-schema-cli-11]
+// @kotowari[C-schema-cli-11]
 #[test]
 fn check_json_finding_carries_the_declared_name_only_where_the_node_has_one() {
     let doc = "# 合わない題名\n\n## 要求\n\n### REQ-001: 欠落\n";
@@ -1236,7 +1236,7 @@ fn check_json_finding_carries_the_declared_name_only_where_the_node_has_one() {
     );
 }
 
-// @kotowari[EX-schema-028, C-schema-cli-12]
+// @kotowari[C-schema-cli-12]
 #[test]
 fn check_json_invalid_id_finding_carries_the_heading_line_verbatim() {
     let doc = "# T-1: 例\n\n## 要求\n\n###  BAD-1:  `名前`  \n";
@@ -1251,7 +1251,7 @@ fn check_json_invalid_id_finding_carries_the_heading_line_verbatim() {
     );
 }
 
-// @kotowari[EX-schema-029, C-schema-cli-18]
+// @kotowari[C-schema-cli-18]
 #[test]
 fn values_with_colliding_element_keys_stops_without_reporting_the_document() {
     let schema = r#"
@@ -1275,7 +1275,7 @@ document:
     assert!(stdout.is_empty(), "文書から読んだ値は出さない: {stdout}");
 }
 
-// @kotowari[EX-schema-030, C-schema-cli-18, C-schema-cli-19]
+// @kotowari[C-schema-cli-18, C-schema-cli-19]
 #[test]
 fn values_with_paths_sharing_only_a_level_above_the_dot_does_not_stop() {
     let sibling = r#"
@@ -1350,7 +1350,7 @@ fn all_findings(check_json: &serde_json::Value) -> Vec<serde_json::Value> {
         .unwrap_or_default()
 }
 
-// @kotowari[EX-schema-040, C-schema-lang-5]
+// @kotowari[C-schema-lang-5]
 #[test]
 fn ex_schema_040_schema_without_reading_reads_by_paragraph() {
     let rules = r#"
@@ -1403,7 +1403,7 @@ fn finding_shape(check_json: &serde_json::Value) -> Vec<(u64, String, String)> {
         .collect()
 }
 
-// @kotowari[REQ-schema-058, TBL-schema-011, REQ-schema-031, C-schema-block-13, C-schema-block-14]
+// @kotowari[C-schema-block-13, C-schema-block-14]
 #[test]
 fn list_nesting_and_fences_read_the_same_in_both_readings() {
     // 一覧の行の入れ子とフェンスのコードブロックは、どちらの読み方でも同じに読む。
@@ -1442,7 +1442,7 @@ fn list_nesting_and_fences_read_the_same_in_both_readings() {
     }
 }
 
-// @kotowari[REQ-schema-058, TBL-schema-011, C-schema-block-17]
+// @kotowari[C-schema-block-17]
 #[test]
 fn line_reading_takes_up_to_three_leading_spaces_for_a_heading() {
     let line = "reading: line\ndocument:\n  preamble: {}\n";
@@ -1459,7 +1459,7 @@ fn line_reading_takes_up_to_three_leading_spaces_for_a_heading() {
     );
 }
 
-// @kotowari[REQ-schema-058, TBL-schema-011, TBL-schema-007, C-schema-block-10, C-schema-block-3]
+// @kotowari[C-schema-block-10, C-schema-block-3]
 #[test]
 fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordered_lists() {
     let line = "reading: line\ndocument:\n  preamble: {}\n";
@@ -1482,7 +1482,7 @@ fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordere
     );
 }
 
-// @kotowari[EX-schema-051, C-schema-block-17]
+// @kotowari[C-schema-block-17]
 #[test]
 fn ex_schema_051_headings_are_commonmark_atx_headings_in_both_readings() {
     let paragraph = "reading: paragraph\ndocument:\n  preamble: {}\n";
@@ -1526,7 +1526,7 @@ fn ex_schema_051_headings_are_commonmark_atx_headings_in_both_readings() {
     assert_eq!(shape(&check_p), shape(&check_l));
 }
 
-// @kotowari[EX-schema-052, C-schema-block-18]
+// @kotowari[C-schema-block-18]
 #[test]
 fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_line() {
     let schema = "reading: line\ndocument:\n  preamble:\n    table:\n      extract: rows\n";
@@ -1536,7 +1536,7 @@ fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_li
     assert_eq!(json["rows"], serde_json::json!([["1", "2"]]), "{json}");
 }
 
-// @kotowari[TBL-schema-011, C-schema-block-18]
+// @kotowari[C-schema-block-18]
 #[test]
 fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_tables_in_both_readings()
 {
@@ -1557,7 +1557,7 @@ fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_table
     }
 }
 
-// @kotowari[EX-schema-053, C-schema-doc-16]
+// @kotowari[C-schema-doc-16]
 #[test]
 fn ex_schema_053_open_world_without_a_declared_preamble_allows_a_level_three_heading_before_sections()
  {
@@ -1568,7 +1568,7 @@ fn ex_schema_053_open_world_without_a_declared_preamble_allows_a_level_three_hea
     assert!(all_findings(&json).is_empty(), "{json}");
 }
 
-// @kotowari[EX-schema-041, C-schema-lang-6]
+// @kotowari[C-schema-lang-6]
 #[test]
 fn ex_schema_041_unknown_reading_value_stops() {
     let schema = "reading: word\ndocument:\n  sections:\n    - name: 要求\n";
@@ -1577,7 +1577,7 @@ fn ex_schema_041_unknown_reading_value_stops() {
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
 }
 
-// @kotowari[EX-schema-063, C-schema-cli-24]
+// @kotowari[C-schema-cli-24]
 #[test]
 fn ex_schema_063_an_unknown_reading_word_names_the_field_and_the_accepted_words() {
     let schema = "reading: foo\ndocument:\n  sections:\n    - name: 要求\n";
@@ -1588,7 +1588,7 @@ fn ex_schema_063_an_unknown_reading_word_names_the_field_and_the_accepted_words(
     }
 }
 
-// @kotowari[EX-schema-062, C-schema-cli-24]
+// @kotowari[C-schema-cli-24]
 #[test]
 fn ex_schema_062_a_non_string_schema_value_names_the_field_and_the_expected_type() {
     let dir = tempfile::tempdir().unwrap();
@@ -1604,7 +1604,7 @@ fn ex_schema_062_a_non_string_schema_value_names_the_field_and_the_expected_type
     }
 }
 
-// @kotowari[REQ-schema-065, C-schema-cli-24]
+// @kotowari[C-schema-cli-24]
 #[test]
 fn req_schema_065_a_wrongly_typed_schema_value_names_the_field_and_the_expected_type() {
     let cases = [
@@ -1630,7 +1630,7 @@ fn req_schema_065_a_wrongly_typed_schema_value_names_the_field_and_the_expected_
     }
 }
 
-// @kotowari[REQ-schema-065, C-schema-cli-24]
+// @kotowari[C-schema-cli-24]
 #[test]
 fn req_schema_065_an_of_word_not_accepted_by_the_node_names_it_and_the_accepted_words() {
     let cases = [
@@ -1681,7 +1681,7 @@ fn undeclared_statement_lines(findings: &[serde_json::Value]) -> Vec<u64> {
         .collect()
 }
 
-// @kotowari[EX-schema-031, C-schema-block-9]
+// @kotowari[C-schema-block-9]
 #[test]
 fn ex_schema_031_line_reading_keeps_the_line_after_a_field_line_as_a_statement() {
     let schema = r#"
@@ -1705,7 +1705,7 @@ document:
     assert_eq!(json["items"][0]["text"], "次の行", "{json}");
 }
 
-// @kotowari[EX-schema-032, C-schema-block-9, C-schema-block-10]
+// @kotowari[C-schema-block-9, C-schema-block-10]
 #[test]
 fn ex_schema_032_line_reading_counts_indented_quote_html_and_image_lines_as_statements() {
     let schema = r#"
@@ -1730,7 +1730,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-033, C-schema-block-11]
+// @kotowari[C-schema-block-11]
 #[test]
 fn ex_schema_033_line_reading_makes_no_setext_heading_or_indented_code_block() {
     let schema = r#"
@@ -1763,7 +1763,7 @@ document:
     assert!(all_findings(&json).is_empty(), "{json}");
 }
 
-// @kotowari[EX-schema-071, C-schema-block-19]
+// @kotowari[C-schema-block-19]
 #[test]
 fn ex_schema_071_line_reading_opens_a_fence_at_any_indent() {
     let schema = r#"
@@ -1789,7 +1789,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-034, C-schema-block-12]
+// @kotowari[C-schema-block-12]
 #[test]
 fn ex_schema_034_pipe_line_without_delimiter_is_a_statement_in_both_readings() {
     for reading in ["paragraph", "line"] {
@@ -1809,7 +1809,7 @@ fn ex_schema_034_pipe_line_without_delimiter_is_a_statement_in_both_readings() {
     }
 }
 
-// @kotowari[EX-schema-039, C-schema-block-13]
+// @kotowari[C-schema-block-13]
 #[test]
 fn ex_schema_039_line_reading_keeps_an_indented_list_line_a_list_line() {
     let schema = r#"
@@ -1836,7 +1836,7 @@ document:
     assert!(undeclared_statement_lines(&findings).is_empty(), "{json}");
 }
 
-// @kotowari[TBL-schema-011, C-schema-block-11, C-schema-block-17]
+// @kotowari[C-schema-block-11, C-schema-block-17]
 #[test]
 fn tbl_schema_011_line_reading_reads_hash_word_and_equals_lines_as_statements() {
     let schema = r#"
@@ -1860,7 +1860,7 @@ document:
     assert_eq!(findings.len(), 3, "見出しの指摘は出ない: {json}");
 }
 
-// @kotowari[TBL-schema-011, C-schema-block-17]
+// @kotowari[C-schema-block-17]
 #[test]
 fn tbl_schema_011_a_hash_only_line_is_a_heading_in_both_readings() {
     let rules =
@@ -1886,7 +1886,7 @@ fn tbl_schema_011_a_hash_only_line_is_a_heading_in_both_readings() {
     );
 }
 
-// @kotowari[EX-schema-036, C-schema-block-27]
+// @kotowari[C-schema-block-27]
 #[test]
 fn ex_schema_036_select_first_uses_only_the_first_table_whose_header_matches() {
     let schema = r#"
@@ -1924,7 +1924,7 @@ document:
     assert_eq!(findings.len(), 2, "{json}");
 }
 
-// @kotowari[REQ-schema-059, C-schema-block-27]
+// @kotowari[C-schema-block-27]
 #[test]
 fn req_schema_059_select_first_picks_one_table_per_occurrence_of_a_repeated_section_in_both_check_and_values()
  {
@@ -1955,7 +1955,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-037, TBL-schema-009, C-schema-block-24, C-schema-block-28, C-schema-cli-17]
+// @kotowari[C-schema-block-24, C-schema-block-28, C-schema-cli-17]
 #[test]
 fn ex_schema_037_table_rule_without_select_reports_a_mismatched_header_and_select_needs_header() {
     let header_only = "document:\n  preamble:\n    table:\n      header: [a, b]\n";
@@ -1978,7 +1978,7 @@ fn ex_schema_037_table_rule_without_select_reports_a_mismatched_header_and_selec
     );
 }
 
-// @kotowari[EX-schema-038, C-schema-block-25]
+// @kotowari[C-schema-block-25]
 #[test]
 fn ex_schema_038_extra_cells_are_dropped_and_missing_cells_are_reported() {
     let schema = r#"
@@ -2004,7 +2004,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-050, C-schema-block-28]
+// @kotowari[C-schema-block-28]
 #[test]
 fn ex_schema_050_select_other_than_first_stops() {
     let schema = "document:\n  preamble:\n    table:\n      header: [a, b]\n      select: last\n";
@@ -2013,7 +2013,7 @@ fn ex_schema_050_select_other_than_first_stops() {
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
 }
 
-// @kotowari[EX-schema-043, C-schema-doc-25]
+// @kotowari[C-schema-doc-25]
 #[test]
 fn ex_schema_043_document_item_reads_items_before_the_first_section() {
     let schema = r#"
@@ -2055,7 +2055,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-044, C-schema-doc-15]
+// @kotowari[C-schema-doc-15]
 #[test]
 fn ex_schema_044_without_document_item_a_level_three_heading_before_sections_is_reported() {
     let schema = r#"
@@ -2077,7 +2077,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-045, C-schema-extract-27, C-schema-extract-21]
+// @kotowari[C-schema-extract-27, C-schema-extract-21]
 #[test]
 fn ex_schema_045_end_is_the_line_before_the_next_heading_as_deep_or_shallower() {
     let schema = r#"
@@ -2116,7 +2116,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-046, C-schema-extract-47]
+// @kotowari[C-schema-extract-47]
 #[test]
 fn ex_schema_046_end_outside_items_and_sections_stops() {
     let schema = r#"
@@ -2139,7 +2139,7 @@ fn two_section_statement_schema(first: &str, second: &str) -> String {
 
 const TWO_SECTION_DOC: &str = "## 一\n\n文。\n\n## 二\n\n文。\n";
 
-// @kotowari[EX-schema-047, C-schema-cli-18]
+// @kotowari[C-schema-cli-18]
 #[test]
 fn ex_schema_047_colliding_paths_outside_element_objects_stop() {
     for (first, second) in [("a", "a"), ("a", "a.b")] {
@@ -2150,7 +2150,7 @@ fn ex_schema_047_colliding_paths_outside_element_objects_stop() {
     }
 }
 
-// @kotowari[EX-schema-048, C-schema-cli-19]
+// @kotowari[C-schema-cli-19]
 #[test]
 fn ex_schema_048_paths_diverging_after_a_shared_level_outside_element_objects_do_not_stop() {
     let schema = two_section_statement_schema("a.b", "a.c");
@@ -2163,7 +2163,7 @@ fn ex_schema_048_paths_diverging_after_a_shared_level_outside_element_objects_do
     );
 }
 
-// @kotowari[EX-schema-072, C-schema-doc-6]
+// @kotowari[C-schema-doc-6]
 #[test]
 fn ex_schema_072_first_title_is_matched_even_when_there_are_more() {
     let schema = "document:\n  title:\n    pattern: \"^甲\"\n";
@@ -2190,7 +2190,7 @@ fn ex_schema_072_first_title_is_matched_even_when_there_are_more() {
     );
 }
 
-// @kotowari[EX-schema-073, C-schema-cli-20]
+// @kotowari[C-schema-cli-20]
 #[test]
 fn ex_schema_073_a_root_path_named_type_in_a_named_schema_stops() {
     let named = "name: adr\ndocument:\n  title:\n    extract: type\n";
@@ -2207,7 +2207,7 @@ fn ex_schema_073_a_root_path_named_type_in_a_named_schema_stops() {
     assert_eq!(json["type"], "例", "{json}");
 }
 
-// @kotowari[EX-schema-074, C-schema-doc-4]
+// @kotowari[C-schema-doc-4]
 #[test]
 fn ex_schema_074_a_schema_without_a_title_rule_does_not_ask_for_a_title() {
     let schema = "document:\n  preamble:\n    statement: { repeat: { min: 0 } }\n";
@@ -2215,7 +2215,7 @@ fn ex_schema_074_a_schema_without_a_title_rule_does_not_ask_for_a_title() {
     assert_eq!(code, Some(0), "stderr: {stderr} json: {json}");
 }
 
-// @kotowari[EX-schema-075, C-schema-doc-18]
+// @kotowari[C-schema-doc-18]
 #[test]
 fn ex_schema_075_a_missing_item_without_repeat_is_below_its_minimum() {
     let schema =
@@ -2235,7 +2235,7 @@ fn ex_schema_075_a_missing_item_without_repeat_is_below_its_minimum() {
     assert_eq!(kinds, vec![("repeat_min_not_met".to_string(), 6)], "{json}");
 }
 
-// @kotowari[EX-schema-076, C-schema-cli-21]
+// @kotowari[C-schema-cli-21]
 #[test]
 fn ex_schema_076_the_same_name_declared_twice_in_one_place_stops() {
     let sections = "document:\n  title: {}\n  sections:\n    - name: S\n    - name: S\n";
@@ -2252,7 +2252,7 @@ fn ex_schema_076_the_same_name_declared_twice_in_one_place_stops() {
     }
 }
 
-// @kotowari[EX-schema-078, C-schema-cli-21]
+// @kotowari[C-schema-cli-21]
 #[test]
 fn ex_schema_078_a_table_header_naming_a_column_twice_stops() {
     let schema = "document:\n  title: {}\n  preamble:\n    table: { header: [A, A] }\n";
@@ -2265,7 +2265,7 @@ fn ex_schema_078_a_table_header_naming_a_column_twice_stops() {
     );
 }
 
-// @kotowari[REQ-schema-036, EX-schema-077, C-schema-cli-22]
+// @kotowari[C-schema-cli-22]
 #[test]
 fn ex_schema_077_a_placement_path_with_an_empty_name_stops() {
     for path in ["\"\"", "a..b", ".a", "a."] {
@@ -2276,7 +2276,7 @@ fn ex_schema_077_a_placement_path_with_an_empty_name_stops() {
     }
 }
 
-// @kotowari[REQ-schema-024, EX-schema-079, C-schema-doc-11]
+// @kotowari[C-schema-doc-11]
 #[test]
 fn ex_schema_079_strikethrough_text_in_a_heading_is_part_of_its_name() {
     // 見出しの名前はインラインの記法を除いた文字。打ち消し線の中の文字も名前に含める
@@ -2285,7 +2285,7 @@ fn ex_schema_079_strikethrough_text_in_a_heading_is_part_of_its_name() {
     assert_eq!(code, Some(0), "stderr: {stderr} json: {json}");
 }
 
-// @kotowari[REQ-schema-022, REQ-schema-062, EX-schema-080, C-schema-doc-7, C-schema-cli-27]
+// @kotowari[C-schema-doc-7, C-schema-cli-27]
 #[test]
 fn ex_schema_080_a_later_title_ends_the_section_and_item_before_it() {
     // 2つ目の題名は、それまでの節と項目を終える。後の行は項目の文に入らない
@@ -2300,7 +2300,7 @@ fn ex_schema_080_a_later_title_ends_the_section_and_item_before_it() {
     );
 }
 
-// @kotowari[TBL-schema-009, EX-schema-081, C-schema-cli-23]
+// @kotowari[C-schema-cli-23]
 #[test]
 fn ex_schema_081_an_option_given_twice_stops() {
     let dir = tempfile::tempdir().unwrap();
@@ -2319,7 +2319,7 @@ fn ex_schema_081_an_option_given_twice_stops() {
     assert_eq!(output.status.code(), Some(2));
 }
 
-// @kotowari[EX-schema-042, C-schema-doc-5]
+// @kotowari[C-schema-doc-5]
 #[test]
 fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {
     let schema = "document:\n  title:\n    pattern: \".+\"\n";
@@ -2347,7 +2347,7 @@ fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {
     );
 }
 
-// @kotowari[EX-schema-049, C-schema-cli-13]
+// @kotowari[C-schema-cli-13]
 #[test]
 fn ex_schema_049_occurrence_finding_carries_the_counted_rule_kind() {
     let schema = r#"
@@ -2370,7 +2370,7 @@ document:
     assert_eq!(min["rule_kind"], "statement", "{json}");
 }
 
-// @kotowari[EX-schema-054, C-schema-extract-37, C-schema-extract-40]
+// @kotowari[C-schema-extract-37, C-schema-extract-40]
 #[test]
 fn values_json_keeps_bullet_lines_and_blank_lines_as_written() {
     let schema = r#"
@@ -2393,7 +2393,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-055, C-schema-extract-38, C-schema-extract-35]
+// @kotowari[C-schema-extract-38, C-schema-extract-35]
 #[test]
 fn values_json_starts_a_field_value_after_the_name_and_keeps_its_continuation_apart() {
     let schema = r#"
@@ -2417,7 +2417,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-056, C-schema-extract-39]
+// @kotowari[C-schema-extract-39]
 #[test]
 fn values_json_drops_excluded_blocks_from_a_section_body_and_merges_blank_lines() {
     let schema = r#"
@@ -2441,7 +2441,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-057, C-schema-extract-39]
+// @kotowari[C-schema-extract-39]
 #[test]
 fn values_json_adds_no_blank_line_between_statement_lines_read_by_line() {
     let schema = r#"
@@ -2457,7 +2457,7 @@ document:
     assert_eq!(v["text"], "一行目\n二行目\n\n三行目");
 }
 
-// @kotowari[EX-schema-058, REQ-schema-064, C-schema-extract-41]
+// @kotowari[C-schema-extract-41]
 #[test]
 fn ex_schema_058_heading_names_and_cells_drop_inline_markup_and_keep_code() {
     let schema = r#"
@@ -2480,7 +2480,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-059, C-schema-extract-42]
+// @kotowari[C-schema-extract-42]
 #[test]
 fn ex_schema_059_a_heading_whose_text_without_markup_differs_is_undeclared() {
     let schema = "document:\n  sections:\n    - name: Req\n";
@@ -2509,7 +2509,7 @@ document:
           - name: 種類
 "#;
 
-// @kotowari[EX-schema-060, TBL-schema-008, C-schema-extract-15]
+// @kotowari[C-schema-extract-15]
 #[test]
 fn ex_schema_060_an_item_body_leaves_out_the_child_bullets_of_a_declared_field() {
     let doc = "## 要求\n\n### REQ-1: 名前\n\n- 種類: a\n  - 子\n";
@@ -2517,7 +2517,7 @@ fn ex_schema_060_an_item_body_leaves_out_the_child_bullets_of_a_declared_field()
     assert_eq!(v["items"], "REQ-1: 名前\n- 種類: a", "{v}");
 }
 
-// @kotowari[EX-schema-061, TBL-schema-008, C-schema-extract-15]
+// @kotowari[C-schema-extract-15]
 #[test]
 fn ex_schema_061_an_item_body_keeps_the_child_bullets_of_an_undeclared_line() {
     let doc = "## 要求\n\n### REQ-1: 名前\n\n- 他: b\n  - 子\n";
@@ -2543,14 +2543,14 @@ fn values_text(schema: &str, doc_body: &str) -> String {
     String::from_utf8(output.stdout).unwrap()
 }
 
-// @kotowari[EX-schema-064, REQ-schema-066, C-schema-cli-7]
+// @kotowari[C-schema-cli-7]
 #[test]
 fn ex_schema_064_values_text_indents_two_spaces_per_level() {
     let schema = "document:\n  preamble:\n    statement:\n      extract: a.b\n";
     assert_eq!(values_text(schema, "文\n"), "a:\n  b: 文\n");
 }
 
-// @kotowari[EX-schema-065, REQ-schema-066, C-schema-cli-7]
+// @kotowari[C-schema-cli-7]
 #[test]
 fn ex_schema_065_values_text_numbers_array_elements_from_one() {
     // 配列を1段深い所に置き、字下げの幅が入れ子の深さで決まることも見る
@@ -2562,7 +2562,7 @@ fn ex_schema_065_values_text_numbers_array_elements_from_one() {
     );
 }
 
-// @kotowari[REQ-schema-066, C-schema-cli-7]
+// @kotowari[C-schema-cli-7]
 #[test]
 fn req_schema_066_values_text_writes_a_derived_number_after_its_key() {
     let schema = r#"
@@ -2580,7 +2580,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-066, C-schema-cli-7]
+// @kotowari[C-schema-cli-7]
 #[test]
 fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_level_deeper() {
     let schema = "document:\n  preamble:\n    bullets:\n      extract: t.list\n";
@@ -2591,7 +2591,7 @@ fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_le
     );
 }
 
-// @kotowari[EX-schema-094, REQ-schema-061, C-schema-doc-17]
+// @kotowari[C-schema-doc-17]
 #[test]
 fn ex_schema_094_a_level_three_heading_in_a_document_without_a_title_is_outside_the_declared_preamble()
  {
