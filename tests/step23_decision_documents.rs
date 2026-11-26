@@ -673,6 +673,27 @@ fn a_link_to_a_document_that_does_not_exist_is_an_error() {
 
 // @kotowari[C-core-docs-11]
 #[test]
+fn a_colon_in_a_relative_link_does_not_make_it_a_link_with_a_scheme() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    // スキームは英字で始まり、英数字と "+"・"."・"-" だけでできる。片方だけを満たすものは相対パス
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        "# 挨拶\n\n挨拶の仕方を決める。[時刻](sub/7:00.md)と[番号](1a:b.md)を見る。\n",
+    );
+    let path = "docs/decisions/greet/greet.md";
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![
+            finding("link_target_missing", path, 3, "1a:b.md"),
+            finding("link_target_missing", path, 3, "sub/7:00.md"),
+        ]
+    );
+}
+
+// @kotowari[C-core-docs-11]
+#[test]
 fn a_link_to_a_heading_that_does_not_exist_is_an_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), Some("docs/decisions"));
@@ -2166,6 +2187,27 @@ fn a_block_between_the_state_line_and_the_first_section_is_an_error_at_its_first
 
 // @kotowari[C-core-docs-1]
 #[test]
+fn every_paragraph_after_the_state_line_is_an_error_at_its_first_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &proposed_with_preamble(false, "補足の段落。\n\nもう1つの段落。\n\n3つ目の段落。"),
+    );
+    let path = "docs/decisions/greet.md";
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![
+            finding("unknown_line", path, 9, "補足の段落。"),
+            finding("unknown_line", path, 11, "もう1つの段落。"),
+            finding("unknown_line", path, 13, "3つ目の段落。"),
+        ]
+    );
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
 fn a_first_paragraph_that_is_not_a_state_line_is_only_a_state_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), Some("docs/decisions"));
@@ -2769,6 +2811,23 @@ fn a_vague_word_in_problem_or_rejected_options_is_not_a_finding() {
     );
     let value = check(tmp.path());
     assert_eq!(vague(&value), vec![]);
+}
+
+// @kotowari[C-core-docs-18, C-core-docs-19]
+#[test]
+fn the_heading_line_of_decision_and_the_line_before_it_are_not_checked_for_vague_words() {
+    let tmp = TempDir::new().unwrap();
+    // "こと" は節の名前「決めたこと」「確認すること」の中にもある
+    make_project_with_vague_words(tmp.path(), &["こと", "適切に"]);
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        "# 挨拶\n\n挨拶の仕方を決める。\n\n## 挨拶する\n\n状態: 提案\n\n### 問題\n\n\
+         適切に挨拶できていなかった。\n### 決めたこと\n\n会ったら挨拶する。\n\n\
+         ### 確認すること\n\n- C-greet-1 挨拶が出る\n",
+    );
+    let value = check(tmp.path());
+    assert_eq!(vague(&value), vec![], "{value}");
 }
 
 // @kotowari[C-core-docs-18]

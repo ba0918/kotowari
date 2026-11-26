@@ -1646,6 +1646,25 @@ mod tests {
         );
     }
 
+    // @kotowari[C-core-formc-3]
+    #[test]
+    fn too_many_statements_outside_any_decision_stop_with_a_mapping_error() {
+        let reading = read_with_engine("x.md", "# 題\n\n段落。\n").unwrap();
+        let grouped = group(&reading.values);
+        let engine = EngineFinding {
+            kind: EngineKind::RepeatMaxExceeded,
+            line: Some(3),
+            node: None,
+            raw: None,
+            rule_kind: Some(RuleKind::Statement),
+        };
+        let stop = map_one("x.md", &reading, &grouped, false, &engine)
+            .err()
+            .map(|stop| stop.to_string())
+            .unwrap_or_default();
+        assert!(stop.starts_with("mapping error: "), "{stop}");
+    }
+
     // @kotowari[C-core-clienv-13]
     #[test]
     fn a_node_name_that_cannot_be_mapped_to_a_section_stops_with_the_name_in_the_details() {

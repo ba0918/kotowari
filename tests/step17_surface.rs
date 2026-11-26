@@ -910,6 +910,33 @@ fn names_quoted_only_in_the_problem_rejected_options_or_open_items_do_not_count(
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
+// @kotowari[C-core-surface-11]
+#[test]
+fn a_name_quoted_only_in_the_heading_of_decision_does_not_count() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    write(
+        tmp.path(),
+        "rules/surface.yml",
+        "id: word\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"決めたこと\"$'\n  pattern: $NAME\n",
+    );
+    write(
+        tmp.path(),
+        "src/cli.rs",
+        "fn main() {\n    let _ = \"決めたこと\";\n}\n",
+    );
+    // 節の見出しは書式を除いた文字で節の名前と照らすので、バッククォートで囲んでも節になる。
+    // 見出しは節の中身ではない
+    write(
+        tmp.path(),
+        "docs/decisions/flags.md",
+        "# 題名\n\n範囲。\n\n## フラグを受ける\n\n状態: 提案\n\n### 問題\n\n困っていた。\n\n\
+         ### `決めたこと`\n\nこうする。\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["word 決めたこと"], "{v}");
+}
+
 // @kotowari[C-core-surface-12, C-core-surface-14]
 #[test]
 fn a_decision_quotes_a_name_only_as_the_whole_content_of_a_cell_outside_code() {
