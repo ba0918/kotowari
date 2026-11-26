@@ -14,6 +14,7 @@ pub mod config;
 mod decisions;
 pub use decisions::{
     ConfirmationCounts, DecisionStates, DecisionTally, is_confirmation_id, is_decision_target,
+    is_frozen,
 };
 mod deferred;
 mod deferred_notices;

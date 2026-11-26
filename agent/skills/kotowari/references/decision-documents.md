@@ -31,7 +31,9 @@ group, `docs/decisions/<group>/CONTEXT.md`. check does not read the glossary as 
 and checks nothing inside it; links to it and its headings are checked like links to any
 document. A `CONTEXT.md` directly in the place, or deeper than a group folder, is a topic document.
 Put nothing else there — no index, no notes. A tree named `docs/frozen/` is not read; it holds
-documents in the old form only and nothing is added to it.
+documents in the old form only and nothing is added to it. A link from any side of a decision
+document to anything under `docs/frozen/` is link_to_record: the frozen tree is not grounds for
+the current rules, so do not link to it.
 
 ## The form of a topic document
 

@@ -913,3 +913,32 @@ fn list_gives_the_path_and_blob_hash_of_each_side_of_a_decision_document_pair() 
         }])
     );
 }
+
+// @kotowari[C-core-pairstruct-17]
+#[test]
+fn a_link_from_another_side_into_the_frozen_tree_is_an_error_on_that_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(tmp.path(), "docs/frozen/ir/greet.ja.md", "# 古い挨拶\n");
+    let side = japanese("greet", "提案", &[]).replace(
+        "こうする。",
+        "[古い形](../../frozen/ir/greet.ja.md)と同じにする。",
+    );
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &english("greet", "proposed", &[]),
+        &side,
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "link_to_record",
+            "docs/decisions/greet/greet.ja.md",
+            Some(17),
+            "../../frozen/ir/greet.ja.md"
+        )]
+    );
+}

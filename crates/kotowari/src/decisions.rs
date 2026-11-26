@@ -4,12 +4,7 @@ use crate::acquisition::read_utf8_file;
 use kotowari_core::config::Config;
 use std::path::Path;
 
-/// 凍結した木。切り替える前の古い形の文書を置き、check は読まない（C-core-docs-14）
-const FROZEN: &str = "docs/frozen";
-
-fn is_frozen(path: &str) -> bool {
-    path == FROZEN || path.starts_with(&format!("{FROZEN}/"))
-}
+use kotowari_core::is_frozen;
 
 /// 設定に置き場があれば、その下の Markdown の文書を読んで加える。置き場が無いか
 /// ディレクトリでなければ、ほかの置き場と同じく停止する。言語が2つ以上なら文書を`対`に入れ、

@@ -124,7 +124,7 @@ The links on each side of pairs of decision documents also get [the same check o
 
 ## Links from decision documents and their paired sides to the frozen tree are errors
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

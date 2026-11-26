@@ -1039,6 +1039,14 @@ fn has_scheme(destination: &str) -> bool {
     })
 }
 
+/// 凍結した木。切り替える前の古い形の文書を置き、check は読まない（C-core-docs-14）
+const FROZEN: &str = "docs/frozen";
+
+/// `基準のディレクトリ`からの相対パスが、凍結した木かその下か
+pub fn is_frozen(path: &str) -> bool {
+    path == FROZEN || path.starts_with(&format!("{FROZEN}/"))
+}
+
 /// リンクの行き先の文書のパス（`基準のディレクトリ`からの相対パス）と、"#" のあとの見出しの名前
 /// （"%XX" を戻したもの）。スキームで始まるリンクは None。doc は書いてある文書のパス
 fn link_target(doc: &str, destination: &str) -> Option<(String, Option<String>)> {
@@ -1093,7 +1101,8 @@ fn referenced_by(
 
 /// 決定の文書の中のリンクのうち、置き場の中を指すものが、無い文書か無い見出しを指していれば指摘する。
 /// 置き場の外を指すリンク、Markdown の文書でないファイルを指すリンク、スキームで始まるリンクは見ない。
-/// targets は話題の文書でない、行き先としてだけ読んだ文書
+/// 凍結した木の下を指すリンクは、在るかを問わず link_to_record にする（C-core-pairstruct-17）。
+/// targets は話題の文書でない、行き先としてだけ読んだ文書（ほかの言語の側と用語集）
 pub(crate) fn check_links(
     documents: &[Document],
     targets: &[Document],
@@ -1111,6 +1120,15 @@ pub(crate) fn check_links(
             let Some((target, anchor)) = link_target(&doc.path, &link.destination) else {
                 continue;
             };
+            if is_frozen(&target) {
+                findings.push(Finding::new(
+                    FindingKind::LinkToRecord,
+                    doc.path.clone(),
+                    Some(link.line),
+                    link.destination.clone(),
+                ));
+                continue;
+            }
             // 決定の文書でないファイル（図など）は core が読まないので、在るかを判断できない
             if !inside(&target) || !target.ends_with(".md") {
                 continue;

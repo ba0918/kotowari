@@ -18,6 +18,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - A `CONTEXT.md` directly inside a group folder of the decision-document place (`<place>/<group>/CONTEXT.md`) is a glossary for people: `kotowari check` does not read it as a topic document, checks nothing inside it, and counts it in no number of `decisions`. A link from a topic document to it, or to one of its headings, is checked like a link to any document in the place. A `CONTEXT.md` directly in the place or deeper than a group folder is still read as a topic document.
 - A word of `vague_words` in the `### 決めたこと` or `### 確認すること` section of a decision is a vague_word error on its line, on every language side, matched as in the IR (inside words, once per occurrence, the longest word first). Code blocks and text inside double quotes are not checked, nor are `### 問題` and `### 見送った案`.
 - In a decision document under a group folder of the place (`<place>/<group>/...`), a row ID whose group name (`C-<group>-...`) differs from that folder's name is an id_domain_mismatch error on its row. Documents directly in the place are not matched.
+- A link from a decision document, on any language side and with one language too, to anything under `docs/frozen/` is a link_to_record error at the link's line, whether or not the target exists.
 
 ### Changed
 

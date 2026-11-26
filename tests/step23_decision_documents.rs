@@ -3113,3 +3113,29 @@ fn status_counts_the_rows_with_tests_without_tests_and_by_reading_apart() {
         "{text}"
     );
 }
+
+// @kotowari[C-core-pairstruct-17]
+#[test]
+fn a_link_from_a_decision_document_into_the_frozen_tree_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(tmp.path(), "docs/frozen/ir/greet.md", "# 古い挨拶\n");
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &topic(&[linking(
+            "挨拶する",
+            "[古い形](../../frozen/ir/greet.md)と同じにする。[外](../../guides/x.txt)",
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "link_to_record",
+            "docs/decisions/greet/greet.md",
+            15,
+            "../../frozen/ir/greet.md"
+        )]
+    );
+}
