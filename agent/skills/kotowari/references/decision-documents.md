@@ -90,12 +90,12 @@ names the missing section in the spelling of the decision's state line.
 | Part | How check reads it |
 |---|---|
 | Title | The first `#` heading. A document without one is missing_title; each later `#` heading is multiple_titles |
-| Lead | At least one paragraph between the title and the first decision, the switcher line not counted; without it, topic_lead_missing. More paragraphs, lists and tables there are part of the lead; a `###` or deeper heading there is unknown_heading |
+| Lead | At least one paragraph between the title and the first decision, the switcher line not counted; without it, topic_lead_missing. More paragraphs, lists and tables there are part of the lead; a `###` or deeper heading there is unknown_heading, and each block under a `###` heading there is unknown_line |
 | Decision | Every `##` heading other than `## 未決` starts one decision, up to the next `##` heading |
-| State | The first paragraph under the decision's heading, `状態: 提案` or `状態: 実装済み`; anything else, or no such paragraph, is decision_state_invalid. A second line in the state paragraph, and any other block before the first `###` section, is unknown_line (a heading, unknown_heading); only a link reference definition may stand there |
-| Sections | `###` headings. `### 問題` and `### 決めたこと` are required (decision_section_missing); `### 見送った案` and `### 確認すること` are not; a `###` heading with any other name is unknown_heading. `####` and deeper headings inside a section belong to it, even when named like a section |
-| Rows | Each item of a list under `### 確認すること` is one row; its first word is its ID |
-| Open section | `## 未決`, placed last; each item of a list under it is one open item. Any other block under it (a paragraph, a heading) is unknown_line or unknown_heading, so write every open question as a list item. It is not a decision |
+| State | The first paragraph under the decision's heading, `状態: 提案` or `状態: 実装済み`; anything else, or no paragraph before the first `###` section, is decision_state_invalid. A second line in the state paragraph, and any other block before the first `###` section (a list or a table before the state line too), is unknown_line (a heading, unknown_heading); only a link reference definition may stand there |
+| Sections | `###` headings. `### 問題` and `### 決めたこと` are required (decision_section_missing); `### 見送った案` and `### 確認すること` are not; a `###` heading with any other name is unknown_heading, and each block under it (a paragraph, a list, a table, a code block, a deeper heading) is unknown_line (a heading, unknown_heading). `####` and deeper headings inside a section belong to it, even when named like a section |
+| Rows | Each item of a list under `### 確認すること` is one row; its first word is its ID. Any other block there (a paragraph, a table, a code block, an ordered list) is unknown_line and holds no row |
+| Open section | `## 未決`, placed last; each item of a list under it is one open item. Any other block under it (a paragraph, an ordered list, a heading, and each block under such a heading) is unknown_line or unknown_heading, so write every open question as a list item. It is not a decision |
 | Code blocks | A fenced code block never closed swallows what follows it: unclosed_code_block at its opening line |
 
 ### Languages: a pair of sides
