@@ -1905,3 +1905,40 @@ fn a_state_line_wrapped_by_a_lone_carriage_return_is_read() {
         assert_eq!(decision["state"], state);
     }
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn each_title_after_the_first_is_an_error_without_a_line() {
+    for english in [false, true] {
+        let text = format!(
+            "{}\n#  二つ目 \n\n本文。\n\n# 三つ目\n",
+            implemented_after(english, "段落。")
+        );
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(tmp.path(), "docs/decisions/greet.md", &text);
+        marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1"]);
+        let (code, stdout, _) = run(tmp.path(), &["check"]);
+        let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+        let path = "docs/decisions/greet.md".to_string();
+        assert_eq!(
+            findings(&value),
+            vec![
+                (
+                    "multiple_titles".to_string(),
+                    path.clone(),
+                    None,
+                    "三つ目".to_string()
+                ),
+                (
+                    "multiple_titles".to_string(),
+                    path,
+                    None,
+                    "二つ目".to_string()
+                ),
+            ],
+            "english={english}"
+        );
+        assert_eq!(code, Some(1), "english={english}");
+    }
+}

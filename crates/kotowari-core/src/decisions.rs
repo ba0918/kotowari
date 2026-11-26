@@ -355,6 +355,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
     // 行の区切りは kotowari のほかの文書と同じ（"\n"、"\r\n"、単独の "\r"）。Markdown の読み手の行の番号もそう数える
     let lines = crate::ir::split_lines(text);
     unclosed_code_blocks(path, &root, text, &lines, findings);
+    extra_titles(path, &root, &lines, findings);
     let anchored = heading_anchors(&root);
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
     for node in blocks {
@@ -418,6 +419,25 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         open_items,
         anchors: anchored.into_values().collect(),
         links: crate::translations::markdown_links(&root),
+    }
+}
+
+/// 2つ目からの題名（文書の直下の "#" の見出し）を1つずつ multiple_titles にする。古い形と同じく、
+/// line は持たず、detail はその行から "#" を除き前後の空白を除いた文字
+fn extra_titles(path: &str, root: &Node, lines: &[&str], findings: &mut Vec<Finding>) {
+    let titles = root
+        .children()
+        .into_iter()
+        .flatten()
+        .filter(|node| matches!(node, Node::Heading(heading) if heading.depth == 1));
+    for title in titles.skip(1) {
+        let line = lines.get(line_of(title) - 1).copied().unwrap_or_default();
+        findings.push(Finding::new(
+            FindingKind::MultipleTitles,
+            path.to_owned(),
+            None,
+            line.strip_prefix('#').unwrap_or(line).trim().to_owned(),
+        ));
     }
 }
 
@@ -536,13 +556,14 @@ pub(crate) fn is_glossary(path: &str, place: &str) -> bool {
 
 /// リンクの行き先としてだけ読む文書。決定の形を検査せず、見出しの行き先の名前だけを持つ。
 /// content があれば（ほかの言語の側）その文書の中のリンクも持ち、check_links がその行き先を確かめる。
-/// そのときは、読み飛ばされる中身を作る誤り（閉じないコードブロック）を content に積む
+/// そのときは、読み飛ばされる中身を作る誤り（閉じないコードブロック、2つ目からの題名）を content に積む
 pub(crate) fn parse_target(path: &str, text: &str, content: Option<&mut Vec<Finding>>) -> Document {
     let root = crate::markdown::parse(text).ok();
     let links = content.is_some();
     if let (Some(findings), Some(root)) = (content, &root) {
         let lines = crate::ir::split_lines(text);
         unclosed_code_blocks(path, root, text, &lines, findings);
+        extra_titles(path, root, &lines, findings);
     }
     Document {
         path: path.to_owned(),

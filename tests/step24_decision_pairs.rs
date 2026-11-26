@@ -588,3 +588,40 @@ fn a_pair_whose_lines_end_in_a_lone_carriage_return_reads_like_one_ending_in_lin
     );
     assert_eq!(read("\r"), (findings_lf, decision_lf));
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_second_title_on_both_sides_is_an_error_on_each_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &format!(
+            "{}\n# More\n",
+            english("greet", "proposed", &["C-greet-1 Shown"])
+        ),
+        &format!(
+            "{}\n# 続き\n",
+            japanese("greet", "提案", &["C-greet-1 出る"])
+        ),
+    );
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![
+            finding(
+                "multiple_titles",
+                "docs/decisions/greet/greet.ja.md",
+                None,
+                "続き"
+            ),
+            finding(
+                "multiple_titles",
+                "docs/decisions/greet/greet.md",
+                None,
+                "More"
+            ),
+        ]
+    );
+}
