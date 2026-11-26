@@ -35,11 +35,11 @@ An entry of "items" has the same keys as [an entry of list](list.md#a-confirmati
 
 ## The body when a decision is looked up is the whole decision
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
-That an LLM reading one entry does not have to open the document again is the value query has that list does not. The current query, when a decision is looked up, returns in "body" only the lines of that decision's "Decision" and "Confirmations" sections (the lines the guide fingerprint is taken from). What was decided can be read, but to read why it was decided so (Problem) and what was turned down (Rejected options), the document has to be opened again.
+That an LLM reading one entry does not have to open the document again is the value query has that list does not. Before this decision, query, when a decision was looked up, returned in "body" only the lines of that decision's "Decision" and "Confirmations" sections (the lines the guide fingerprint is taken from). What was decided can be read, but to read why it was decided so (Problem) and what was turned down (Rejected options), the document has to be opened again.
 
 ### Decision
 
@@ -51,11 +51,11 @@ When a decision is looked up with "kotowari query", "body" holds the lines of th
 
 ## The reverse references of a decision hold the decisions that link to that decision's heading
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
-Where a decision is pointed at from could be looked up with query when reading one entry (reverse references). Only the query side holds reverse references, and the side that points holds no reverse information. In the new form, a decision points at another decision with a link to its heading ([To refer to another decision, link to its heading](decision-documents.md#to-refer-to-another-decision-link-to-its-heading)). The current query returns empty reverse references for both decisions and confirmation rows.
+Where a decision is pointed at from could be looked up with query when reading one entry (reverse references). Only the query side holds reverse references, and the side that points holds no reverse information. In the new form, a decision points at another decision with a link to its heading ([To refer to another decision, link to its heading](decision-documents.md#to-refer-to-another-decision-link-to-its-heading)). Before this decision, query returned empty reverse references for both decisions and confirmation rows.
 
 ### Decision
 

@@ -1447,7 +1447,10 @@ fn query_of_a_decision_returns_the_fingerprint_a_guide_mark_takes() {
             "line": 5,
             "state": "proposed",
             "fingerprint": GREETING_FINGERPRINT,
-            "body": ["### 決めたこと", "", "こうする。", "### 確認すること", "", "- C-greet-1 挨拶が出る"],
+            "body": [
+                "## 挨拶する", "", "状態: 提案", "", "### 問題", "", "困っていた。", "",
+                "### 決めたこと", "", "こうする。", "", "### 確認すること", "", "- C-greet-1 挨拶が出る"
+            ],
             "referenced_by": [],
         }]})
     );
@@ -1911,9 +1914,18 @@ fn every_line_ending_gives_the_same_body_fingerprint_and_lines() {
     assert_eq!(
         decision_lf["body"],
         serde_json::json!([
+            "## 挨拶する",
+            "",
+            "状態: 実装済み",
+            "",
+            "### 問題",
+            "",
+            "困っていた。",
+            "",
             "### 決めたこと",
             "",
             "こうする。",
+            "",
             "### 確認すること",
             "",
             "- C-greet-1 挨拶が",
@@ -2961,4 +2973,101 @@ fn row_ids_of_a_document_directly_in_the_place_are_not_matched_with_a_group() {
     );
     let value = check(tmp.path());
     assert_eq!(findings(&value), vec![]);
+}
+
+// @kotowari[C-core-query-14]
+#[test]
+fn query_of_a_decision_puts_the_whole_decision_in_its_body() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[
+            decision(
+                "挨拶する",
+                "提案",
+                &[
+                    ("問題", "困っていた。"),
+                    ("決めたこと", "こうする。"),
+                    ("見送った案", "- 黙る。"),
+                    ("確認すること", "- C-greet-1 挨拶が出る"),
+                ],
+            ),
+            bare("別れる", "提案"),
+        ]),
+    );
+    let item = &query(tmp.path(), "docs/decisions/greet.md#挨拶する")["items"][0];
+    assert_eq!(
+        item["body"],
+        serde_json::json!([
+            "## 挨拶する",
+            "",
+            "状態: 提案",
+            "",
+            "### 問題",
+            "",
+            "困っていた。",
+            "",
+            "### 決めたこと",
+            "",
+            "こうする。",
+            "",
+            "### 見送った案",
+            "",
+            "- 黙る。",
+            "",
+            "### 確認すること",
+            "",
+            "- C-greet-1 挨拶が出る"
+        ])
+    );
+}
+
+/// 決めたことにリンクを書いた、問題と決めたことだけの決定
+fn linking(heading: &str, link: &str) -> String {
+    decision(
+        heading,
+        "提案",
+        &[("問題", "困っていた。"), ("決めたこと", link)],
+    )
+}
+
+// @kotowari[C-core-query-15, C-core-query-16]
+#[test]
+fn query_of_a_decision_lists_the_decisions_linking_to_its_heading_by_path_and_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/b.md",
+        &topic(&[
+            linking("後で指す", "[挨拶](a.md#挨拶する)に従う。"),
+            linking(
+                "先に指す",
+                "[挨拶](a.md#挨拶する)に従う。[もう一度](a.md#挨拶する)",
+            ),
+        ]),
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/a.md",
+        &topic(&[
+            bare("挨拶する", "提案"),
+            linking("同じ文書から指す", "[挨拶](#挨拶する)に従う。"),
+            linking("ほかを指す", "[別](#同じ文書から指す)"),
+        ]),
+    );
+    assert_eq!(findings(&check(tmp.path())), vec![]);
+    let item = &query(tmp.path(), "docs/decisions/a.md#挨拶する")["items"][0];
+    assert_eq!(
+        item["referenced_by"],
+        serde_json::json!([
+            {"id": "docs/decisions/a.md#同じ文書から指す", "kind": "decision", "path": "docs/decisions/a.md", "line": 17, "via": "link"},
+            {"id": "docs/decisions/b.md#後で指す", "kind": "decision", "path": "docs/decisions/b.md", "line": 5, "via": "link"},
+            {"id": "docs/decisions/b.md#先に指す", "kind": "decision", "path": "docs/decisions/b.md", "line": 17, "via": "link"}
+        ])
+    );
+    let unlinked = &query(tmp.path(), "docs/decisions/a.md#ほかを指す")["items"][0];
+    assert_eq!(unlinked["referenced_by"], serde_json::json!([]));
 }

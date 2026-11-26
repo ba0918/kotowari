@@ -50,11 +50,14 @@ pub(crate) struct Decision {
     pub(crate) heading: String,
     /// 見出しの行
     pub(crate) line: usize,
+    /// 決定の最後の行（次の "##" の見出しの前）
+    pub(crate) end: usize,
+    /// 見出しの行から最後の行までの、決定のすべての行。query の本文（C-core-query-14）
+    pub(crate) whole: Vec<String>,
     /// 見出しへのリンクの行き先になる名前。同じ見出しの2つ目からは "-1"、"-2" が付いている
     pub(crate) anchor: String,
-    /// 「決めたこと」と「確認すること」の節の、見出しの行から節の最後のブロックの行まで。文書の順
-    pub(crate) fingerprinted: Vec<String>,
-    /// `fingerprinted` の指紋。ガイドの印と照らす（C-core-lang-5、C-core-lang-6）
+    /// 「決めたこと」と「確認すること」の節の、見出しの行から節の最後のブロックの行までの指紋（文書の順）。
+    /// ガイドの印と照らす（C-core-lang-5、C-core-lang-6）
     pub(crate) fingerprint: String,
     /// 「決めたこと」と「確認すること」の中の、引用を探す文字。表はセルごと、コードブロックは入れない
     pub(crate) quotable: Vec<String>,
@@ -715,12 +718,13 @@ fn decision(
     Decision {
         heading: grouped.span.name.trim().to_owned(),
         line: grouped.span.line,
+        end: grouped.span.end,
+        whole: reading.lines(grouped.span.line, grouped.span.end),
         anchor: anchored
             .get(&grouped.span.line)
             .cloned()
             .unwrap_or_default(),
         fingerprint: crate::fingerprint::digest(&fingerprinted),
-        fingerprinted,
         quotable,
         state: grouped.state(),
         confirmations: grouped
@@ -1022,6 +1026,58 @@ fn has_scheme(destination: &str) -> bool {
     })
 }
 
+/// リンクの行き先の文書のパス（`基準のディレクトリ`からの相対パス）と、"#" のあとの見出しの名前
+/// （"%XX" を戻したもの）。スキームで始まるリンクは None。doc は書いてある文書のパス
+fn link_target(doc: &str, destination: &str) -> Option<(String, Option<String>)> {
+    if has_scheme(destination) {
+        return None;
+    }
+    let (target, anchor) = destination
+        .split_once('#')
+        .map_or((destination, None), |(path, anchor)| (path, Some(anchor)));
+    let target = if target.is_empty() {
+        doc.to_owned()
+    } else {
+        let directory = doc.rsplit_once('/').map_or("", |(dir, _)| dir);
+        crate::normalize_path(&crate::join_display_path(directory, target))
+    };
+    Some((target, anchor.map(percent_decode)))
+}
+
+/// 決定の見出しへのリンクを持つ、ほかの決定（C-core-query-15、C-core-query-16）。1つの決定が何度
+/// 指しても1件にし、path の昇順、同じ path では見出しの行の昇順に並べる
+fn referenced_by(
+    documents: &[Document],
+    doc: &Document,
+    decision: &Decision,
+) -> Vec<crate::query::Reference> {
+    let mut references: Vec<crate::query::Reference> = documents
+        .iter()
+        .flat_map(|from| {
+            from.decisions.iter().filter_map(move |linking| {
+                let links = from.links.iter().filter(|link| {
+                    (linking.line..=linking.end).contains(&link.line)
+                        && link_target(&from.path, &link.destination).is_some_and(
+                            |(path, anchor)| {
+                                path == doc.path && anchor.as_deref() == Some(&decision.anchor)
+                            },
+                        )
+                });
+                let is_self = from.path == doc.path && linking.line == decision.line;
+                (!is_self && links.count() > 0).then(|| crate::query::Reference {
+                    id: target(from, linking),
+                    kind: "decision",
+                    path: from.path.clone(),
+                    line: linking.line,
+                    via: "link",
+                })
+            })
+        })
+        .collect();
+    references.sort_by(|a, b| (a.path.as_bytes(), a.line).cmp(&(b.path.as_bytes(), b.line)));
+    references
+}
+
 /// 決定の文書の中のリンクのうち、置き場の中を指すものが、無い文書か無い見出しを指していれば指摘する。
 /// 置き場の外を指すリンク、Markdown の文書でないファイルを指すリンク、スキームで始まるリンクは見ない。
 /// targets は話題の文書でない、行き先としてだけ読んだ文書
@@ -1038,28 +1094,18 @@ pub(crate) fn check_links(
         .collect();
     let inside = |path: &str| place.is_empty() || path.starts_with(&format!("{place}/"));
     for doc in documents.iter().chain(targets) {
-        let directory = doc.path.rsplit_once('/').map_or("", |(dir, _)| dir);
         for link in &doc.links {
-            if has_scheme(&link.destination) {
+            let Some((target, anchor)) = link_target(&doc.path, &link.destination) else {
                 continue;
-            }
-            let (target, anchor) = link
-                .destination
-                .split_once('#')
-                .map_or((link.destination.as_str(), None), |(path, anchor)| {
-                    (path, Some(anchor))
-                });
-            let target = if target.is_empty() {
-                doc.path.clone()
-            } else {
-                crate::normalize_path(&crate::join_display_path(directory, target))
             };
             // 決定の文書でないファイル（図など）は core が読まないので、在るかを判断できない
             if !inside(&target) || !target.ends_with(".md") {
                 continue;
             }
             let found = by_path.get(target.as_str()).is_some_and(|target| {
-                anchor.is_none_or(|anchor| target.anchors.contains(&percent_decode(anchor)))
+                anchor
+                    .as_ref()
+                    .is_none_or(|anchor| target.anchors.contains(anchor))
             });
             if !found {
                 findings.push(Finding::new(
@@ -1238,8 +1284,8 @@ fn row_items(
 }
 
 /// "kotowari query" の、その ID を持つ確認することの行の1件ずつ（C-core-confirm-5）と、
-/// その行き先の決定（本文は指紋に入れる行）。確認することの行と決定を ID で指す文は無いので、
-/// 逆引きはいつも空
+/// その行き先の決定（本文は決定のすべての行、逆引きはその見出しへリンクする決定）。確認することの
+/// 行を ID で指す文は無いので、行の逆引きはいつも空
 pub(crate) fn query_items(
     documents: &[Document],
     markers: &[crate::tests_discovery::TestMarker],
@@ -1248,16 +1294,16 @@ pub(crate) fn query_items(
     let decisions = documents.iter().flat_map(|doc| {
         doc.decisions
             .iter()
-            .map(move |decision| (target(doc, decision), decision))
+            .map(move |decision| (target(doc, decision), doc, decision))
     });
     let mut items: Vec<crate::query::QueryItem> = decision_items(documents)
         .into_iter()
         .zip(decisions)
-        .filter(|(_, (target, _))| target == id)
-        .map(|(item, (_, decision))| crate::query::QueryItem {
+        .filter(|(_, (target, _, _))| target == id)
+        .map(|(item, (_, doc, decision))| crate::query::QueryItem {
             item,
-            body: decision.fingerprinted.clone(),
-            referenced_by: Vec::new(),
+            body: decision.whole.clone(),
+            referenced_by: referenced_by(documents, doc, decision),
         })
         .collect();
     let bodies = rows(documents)
