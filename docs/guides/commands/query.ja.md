@@ -4,8 +4,8 @@
 
 <!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
-`kotowari query` は、ID を1つ受けて、その項目かシナリオを本文と逆引き（その ID を指している項目）つきで出すコマンドです。
-1つの要求を IR の文書を開かずに読みたいときや、ガイドの印に写す指紋を取りたいときに使います。
+`kotowari query` は、ID を1つ（決定の行き先か確認することの行の ID）受け取り、その1件を本文と一緒に出すコマンドです。決定なら、その決定へリンクしている決定も出します。
+決定の文書を開かずに1つの決定を読みたいとき、ある行をどのテストが確かめているかを見たいとき、ガイドの印に写す指紋を取りたいときに使います。
 
 ## 書式
 
@@ -18,7 +18,7 @@ kotowari query --version
 ```
 
 位置引数はちょうど1つの ID です。
-オプションはコマンドの前に書いても、ID の後に書いても受けます（`kotowari query REQ-001 --format text` も同じ意味です）。
+オプションはコマンドの前にも ID の後にも書けます（`kotowari query C-shop-discount-1 --format text` も同じ意味です）。
 
 ## オプションと引数
 
@@ -26,25 +26,25 @@ kotowari query --version
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
-| `<ID>` | ID（`REQ-core-001` のような形） | なし（必須） | 読む項目かシナリオの ID。大文字小文字を区別します |
-| `--format` | `json` か `text` | `json` | 出力の形 |
+| `<ID>` | 決定の行き先（`docs/decisions/shop/discount.md#members-get-10-off-their-orders`）か行の ID（`C-shop-discount-1`） | なし（必須） | 読む1件。大文字と小文字を区別します |
+| `--format` | `json` か `text` | `json` | 出力の形式 |
 | `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイル。パスはカレントディレクトリからの相対で読みます |
-| `--help` | なし | — | 使い方を出して終わります |
-| `--version` | なし | — | 版を出して終わります |
+| `--help` | なし | — | 使い方を出して終わる |
+| `--version` | なし | — | 版を出して終わる |
 
-共通のオプションと基準のディレクトリの詳細は [CLI の共通事項](../cli.ja.md) にあります。
+共通のオプションと基準のディレクトリの細部は [CLI の共通事項](../cli.ja.md) にあります。
 
 ## 出力
 
-何を読むかは `kotowari check` と同じです（同じ設定、同じ置き場の IR の文書とテストのファイル）。
+読むものは `kotowari check` と同じです（同じ設定、同じ置き場の決定の文書とテストのファイル）。
 ただしガイドは読みません。
-同じ ID を持つ項目やシナリオが複数あれば、全部出します。
+同じ ID の行がいくつもあれば、すべてを出します。
 
 ### text
 
 <!-- @kotowari[docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
-1件ごとに、[`kotowari list`](./list.ja.md) の text と同じ1行目とテストの行に、本文と逆引きの行を続けます。
+1件ごとに、[`kotowari list`](./list.ja.md) の text と同じ1行目とテストの行の後に、本文の行が続きます。
 
 ```text
 ID 検証 名前 パス:行 tests=数
@@ -58,45 +58,38 @@ ID 検証 名前 パス:行 tests=数
 | 行 | 中身 |
 |---|---|
 | 1行目とテストの行 | `kotowari list --format text` と同じ |
-| 本文の行 | `body` の各行を2つの半角空白で字下げしたもの。空の行は空白2つだけの行になります |
-| `<-` の行 | `referenced_by` の1件ごとに `  <- ID via パス:行`。`via` は下の表の値 |
+| 本文の行 | `body` の各行を、2つの半角空白で字下げしたもの。空の行は空白2つだけの行になる |
+| `<-` の行 | 決定では `referenced_by` の1件ごとに `  <- 行き先 link パス:行` |
+| 行の最後の行 | `  decision 状態 見出し`。その行を持つ決定の状態と見出し（状態の行が誤っていれば状態は `-`） |
 
 ### JSON
 
-<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#the-body-when-a-decision-is-looked-up-is-the-whole-decision:39fb387c, docs/decisions/core/query.md#the-reverse-references-of-a-decision-hold-the-decisions-that-link-to-that-decisions-heading:90363085] -->
 
-最上位は `items` だけのオブジェクトで、`list` と同じ形です。
-1件は [`kotowari list` の1件の鍵](./list.ja.md#json)（`id`、`kind`、`name`、`path`、`line`、`type`、`verification`、`definition`、`examples`、`how_to_verify`、`relations`、`sources`、`tests`、`fingerprint`、`deferred`）をすべて持ち、次の2つの鍵が増えます。
+最上位は `items` だけを持つオブジェクトで、`list` と同じ形です。
+1件は [`kotowari list` の1件の鍵](./list.ja.md#json)をすべて持ち、次の2つの鍵が加わります。
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
-| `body` | 文字列の並び | 本文の行。先頭と末尾の空の行は含めず、行の文字はそのまま |
-| `referenced_by` | オブジェクトの並び | その ID を指している項目とシナリオ。1件は `id`、`kind`、`path`、`line`、`via` |
+| `body` | 文字列の並び | 本文の行。決定の文書に書かれたまま |
+| `referenced_by` | オブジェクトの並び | 決定では、その見出しへリンクしている決定。1件は `id`、`kind`（`decision`）、`path`、`line`（リンクしている決定の見出しの行）、`via`（`link`）を持つ。行ではいつも空 |
 
-`body` の範囲は種類で違います。
+`body` の範囲は種類で決まります。
 
 | 種類 | `body` の範囲 |
 |---|---|
-| 項目（要求、決定表、性質、問題の記録） | 見出しの次の行から、同じ深さかそれより浅い次の見出しの前の行まで。コードブロックの中の見出しの形の行では切りません |
-| シナリオ | `@id` のタグの行から最後のステップの行まで |
+| 決定 | 見出しから最後の節までの、決定のすべての行（状態の行、問題、決めたこと、見送った案、確認すること） |
+| 行 | 書かれたままの行。折り返した行も含む |
 
-`via` は、どこから指しているかを表します。
-
-| `via` | 指している場所 |
-|---|---|
-| `definition` | `- definition:` の行 |
-| `relations` | `- related:` の行 |
-| `about` | シナリオの `@about` のタグ |
-| `text` | 要求の文、性質の文、シナリオのステップの中で、バッククォートで囲んだ ID（二重引用符の外のもの） |
-
-1つの項目が同じ ID を同じ `via` で何度指しても、`referenced_by` には1件だけ出ます。
-細かい定義は [query の IR](../../ir/core/query.ja.md) の TBL-core-027 にあります。
+同じ見出しに何度もリンクしている決定も、`referenced_by` には1回だけ出ます。
+決定の文書は、行の ID ではなく見出しへのリンクで決定を指すので、行を指すものはありません。
+細かい定義は [query の決定](../../decisions/core/query.ja.md) にあります。
 
 ### 並び順
 
 <!-- @kotowari[docs/decisions/core/query.md#the-reverse-references-of-a-decision-hold-the-decisions-that-link-to-that-decisions-heading:90363085] -->
 
-`items` は `list` と同じ順（`path` の昇順、同じ `path` の中は `line` の昇順）です。
+`items` は `list` と同じ並び（`path` の昇順、同じ `path` の中は `line` の昇順）です。
 `referenced_by` も `path`、`line` の順に並びます。
 
 ## 終了コード
@@ -105,83 +98,72 @@ ID 検証 名前 パス:行 tests=数
 
 | コード | 意味 |
 |---|---|
-| 0 | 読めた（IR に誤りがあっても 0）。`--help` か `--version` で終わったときも 0 |
-| 2 | 停止した（ID が無い、ID の形でない、引数の数が違う、設定の誤り、読めないファイルなど。理由は標準エラーに出ます） |
+| 0 | 読めた（決定の文書に誤りがあっても 0）。`--help` か `--version` で終わったときも 0 |
+| 2 | 停止した（ID が無い、引数が ID の形でない、引数の数が違う、設定の誤り、読めないファイルなど。理由は標準エラーに出ます） |
 
 `query` は 1 を返しません。
-IR の誤りの有無で終了コードを変えるのは `check` と `status` です。
-`query` はガイド、面のファイル、面の規則のファイル、未記載の面の一覧、全体像の元データを読まないので、それらによる停止はしません。
+誤りの有無で終了コードを変えるのは `check` と `status` です。
+`query` はガイド、面のファイル、面の規則のファイル、未記載の面の一覧、全体像の元データを読まないので、それらを理由に止まることはありません。
 
 ## 例
 
 <!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
-[`kotowari list` の例](./list.ja.md#例)と同じ小さな IR とテストで実行した結果です（2026-09-24 に実行）。
+[`kotowari list` の例](./list.ja.md#例)と同じ小さな決定の文書とテストで実行した結果です。2つ目の決定の問題から、1つ目の決定へリンクを張っています。
 
-要求を text で読みます。
-本文の後の `<-` の行から、シナリオ EX-001 がこの要求を `@about` で指していると分かります。
+決定を text で読みます。
+本文の後の `<-` の行は、客の決定がこの決定の見出しへリンクしていることを示します。
 
 ```console
-$ kotowari query REQ-001 --format text
-REQ-001 unit 名前つきの挨拶 docs/ir/greet.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-  - kind: ubiquitous
-  - source: docs/decision/records/records.md#A1
-  - verification: unit
+$ kotowari query 'docs/decisions/shop/discount.md#members-get-10-off-their-orders' --format text
+docs/decisions/shop/discount.md#members-get-10-off-their-orders - Members get 10% off their orders docs/decisions/shop/discount.md:5 tests=0
+  ## Members get 10% off their orders
   
-  システムは常に、名前を受けたら "こんにちは、" に名前を続けた文を返す。
-  <- EX-001 about docs/ir/greet.md:28
+  Status: implemented
+  
+  ### Problem
+  
+  Members asked for a benefit for ordering often.
+  
+  ### Decision
+  
+  An order placed by a member is priced at 10% off.
+  
+  ### Confirmations
+  
+  - C-shop-discount-1 A member's order of 1000 is priced at 900
+  <- docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted link docs/decisions/shop/discount.md:21
 ```
 
-JSON では、`list` の1件に `body` と `referenced_by` が増えます。増えた2つだけを示します。
+行を text で読みます。テストが先に出て、最後の行がその決定を示します。
 
 ```console
-$ kotowari query REQ-001 | jq '.items[0] | {body, referenced_by}'
-{
-  "body": [
-    "- kind: ubiquitous",
-    "- source: docs/decision/records/records.md#A1",
-    "- verification: unit",
-    "",
-    "システムは常に、名前を受けたら \"こんにちは、\" に名前を続けた文を返す。"
-  ],
-  "referenced_by": [
-    {
-      "id": "EX-001",
-      "kind": "scenario",
-      "path": "docs/ir/greet.md",
-      "line": 28,
-      "via": "about"
-    }
-  ]
-}
+$ kotowari query C-shop-discount-1 --format text
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+  - C-shop-discount-1 A member's order of 1000 is priced at 900
+  decision implemented Members get 10% off their orders
 ```
 
-シナリオの本文は、`@id` のタグの行から始まります。
+JSON では、`list` の1件に `body` と `referenced_by` が加わります。
 
 ```console
-$ kotowari query EX-001 --format text
-EX-001 - 名前を受けて挨拶する docs/ir/greet.md:28 tests=1
-  tests/greet.rs:1 greets_with_name
-  @id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1
-  Scenario: 名前を受けて挨拶する
-    Given 名前 "花子" がある
-    When 挨拶を求める
-    Then "こんにちは、花子" が返る
+$ kotowari query C-shop-discount-1
+{"items":[{"id":"C-shop-discount-1","kind":"confirmation","name":"A member's order of 1000 is priced at 900","path":"docs/decisions/shop/discount.md","line":19,"decision":"Members get 10% off their orders","state":"implemented","by_reading":false,"tests":[{"path":"tests/discount.rs","line":1,"name":"member_gets_ten_percent_off"}],"body":["- C-shop-discount-1 A member's order of 1000 is priced at 900"],"referenced_by":[]}]}
 ```
 
 ### ガイドの印に写す指紋を取る
 
 <!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f] -->
 
-ガイドの印に書く指紋は、`fingerprint` の値をそのまま写します。手で計算しません。
+ガイドの印に書く指紋は、決定の `fingerprint` の値をそのまま写します。手で計算しないでください。
 
 ```console
-$ kotowari query REQ-001 | jq -r '.items[0].fingerprint'
-ec0d8b1c
+$ kotowari query 'docs/decisions/shop/discount.md#members-get-10-off-their-orders' | jq -r '.items[0].fingerprint'
+e3adc927
 ```
 
-書き方は [ガイドを書く](../writing-guides.ja.md) にあります。
+ガイドの書き方は [ガイドを書く](../writing-guides.ja.md) にあります。
 
 ## よくあるつまずき
 
@@ -189,28 +171,33 @@ ec0d8b1c
 
 <!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
-その ID を持つ項目もシナリオも IR にありません。
-空の結果を返さずに止まるので、ID の打ち間違いにすぐ気づけます。
+その ID の決定も行もありません。
+空の結果を返さずに止まるので、ID の書き間違いにすぐ気づけます。
+見出しの文を変えた決定の行き先も、無い ID になります。
 
 ```console
-$ kotowari query REQ-999
-argument error: unknown id: REQ-999
+$ kotowari query C-shop-discount-9
+argument error: unknown id: C-shop-discount-9
 $ echo $?
 2
+$ kotowari query 'docs/decisions/shop/discount.md#no-such-heading'
+argument error: unknown id: docs/decisions/shop/discount.md#no-such-heading
 ```
 
-ID がうろ覚えなら、`kotowari list --format text` で探します。
+ID が分からなければ `kotowari list --format text` で探します。
 
 ### `argument error: not an id: ...` で止まる
 
 <!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
-位置引数が ID の形ではありません。
-ID は大文字小文字を区別するので、小文字で書いても止まります。
+位置引数が、行の ID の形でも行き先の形でもありません。
+ID は大文字と小文字を区別するので、小文字で書いても止まります。`#` の無い文書のパスも行き先ではありません。
 
 ```console
-$ kotowari query req-001
-argument error: not an id: req-001
+$ kotowari query c-shop-discount-1
+argument error: not an id: c-shop-discount-1
+$ kotowari query docs/decisions/shop/discount.md
+argument error: not an id: docs/decisions/shop/discount.md
 ```
 
 ### `argument error: query expects exactly one id, got N` で止まる
@@ -218,10 +205,10 @@ argument error: not an id: req-001
 <!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
 ID を渡していないか、2つ以上渡しています。
-`query` は1回に1つの ID だけを読みます。複数を見たいときは1つずつ実行するか、`kotowari list` の JSON を `jq` で絞ります。
+`query` が読むのは1回に1つの ID です。いくつも見たいときは ID ごとに実行するか、`kotowari list` の JSON を `jq` で絞ります。
 
 ```console
-$ kotowari query REQ-001 REQ-002
+$ kotowari query C-shop-discount-1 C-shop-discount-2
 argument error: query expects exactly one id, got 2
 $ kotowari query
 argument error: query expects exactly one id, got 0
@@ -231,45 +218,38 @@ argument error: query expects exactly one id, got 0
 
 <!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
-IR に同じ ID の項目が2つあります（`check` では duplicate_id の誤り）。
-`query` は重複を隠さず、全部出して 0 で終わります。
+2つの行が同じ ID を持っています（`check` では duplicate_id の誤り）。
+`query` は重複を隠さず、すべてを出して 0 で終わります。
 
 ```console
-$ kotowari query REQ-001 --format text
-REQ-001 unit 別れの挨拶 docs/ir/farewell.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-  - kind: ubiquitous
-  - source: docs/decision/records/records.md#A1
-  - verification: unit
-  
-  システムは常に、"さようなら" を返す。
-  <- EX-001 about docs/ir/greet.md:28
-REQ-001 unit 名前つきの挨拶 docs/ir/greet.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-  - kind: ubiquitous
-  - source: docs/decision/records/records.md#A1
-  - verification: unit
-  
-  システムは常に、名前を受けたら "こんにちは、" に名前を続けた文を返す。
-  <- EX-001 about docs/ir/greet.md:28
+$ kotowari query C-shop-discount-1 --format text
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+  - C-shop-discount-1 A member's order of 1000 is priced at 900
+  decision implemented Members get 10% off their orders
+C-shop-discount-1 reading The price list page says that only members get the discount docs/decisions/shop/discount.md:36 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+  - C-shop-discount-1 (by reading) The price list page says that only members get the discount
+  decision implemented Orders of non-members are not discounted
 $ kotowari check --format text
-docs/ir/greet.md:7 [error] duplicate_id REQ-001
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
+docs/decisions/shop/discount.md:36 [error] duplicate_id C-shop-discount-1
 ```
 
-どちらかの ID を付け直してください。
+後の行に、その話題でまだ使っていない次の番号を付けます。
 
-### 文の中で ID に触れているのに `referenced_by` に出ない
+### 文の中で決定に触れているのに `referenced_by` に出ない
 
-<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-reverse-references-of-a-decision-hold-the-decisions-that-link-to-that-decisions-heading:90363085, docs/decisions/core/decision-documents.md#to-refer-to-another-decision-link-to-its-heading:41ba3d75] -->
 
-`via` が `text` の逆引きに数えるのは、バッククォートで囲んだ ID だけです。
-二重引用符の中の ID や、囲んでいない ID は数えません。
-逆引きに載せたい参照は `` `REQ-001` `` のように書きます。
+逆引きに数えるのは、決定の見出しへの Markdown のリンクだけです。
+見出しを地の文に書いただけのものや、文に書いた行の ID は数えません。
+逆引きに出したい参照は、`[会員の割引](discount.ja.md#会員は注文が1割引きになる)` のようにリンクで書きます。
 
 ## 関連
 
-- 仕様: [query の IR](../../ir/core/query.ja.md)
-- 全項目を一覧で見る: [`kotowari list`](./list.ja.md)
+- 仕様: [query の決定](../../decisions/core/query.ja.md)
+- 決定と行をすべて一覧で見る: [`kotowari list`](./list.ja.md)
 - 全体の数と揃っているかを見る: [`kotowari status`](./status.ja.md)
 - 指摘を1件ずつ見る: [`kotowari check`](./check.ja.md)
 - ガイドの印と指紋: [ガイドを書く](../writing-guides.ja.md)
