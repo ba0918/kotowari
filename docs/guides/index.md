@@ -20,7 +20,6 @@ The specification itself is in the [IR](../ir/core/); when the guide and the IR 
 | Configure where the IR, records and test files are | [Configuration file](config.md) |
 | Check the specification and fix findings | [kotowari check](commands/check.md) and [Finding kinds](findings.md) |
 | Tie tests to requirements | [Marking tests](marks.md) |
-| Leave requirements you are not building now out of the test checks | [Deferring requirements](deferred.md) |
 | Find, from the code, features built without being written in the IR | [Surface check](surface.md) |
 
 ## Commands
@@ -41,7 +40,6 @@ The specification itself is in the [IR](../ir/core/); when the guide and the IR 
 - [Configuration file](config.md) — every key of `.kotowari/config.yaml`
 - [Finding kinds](findings.md) — the list of errors and notices, their detail, and how to fix them
 - [Marking tests](marks.md) — how to write `@kotowari[...]`, and which tests are found
-- [Deferring requirements](deferred.md) — how to write `- deferred:`, what it does, and the mismatch notices
 - [Surface check](surface.md) — how to write surface rules, where a surface counts as being in the IR, and the list of unspecified surfaces
 - [Writing guides](writing-guides.md) — put marks and fingerprints in user-facing documents like this guide so they keep up with IR changes
 

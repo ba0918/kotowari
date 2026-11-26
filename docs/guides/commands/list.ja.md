@@ -54,7 +54,7 @@ ID 検証 名前 パス:行 tests=数
   パス:行 テストの名前
 ```
 
-[後回し](../deferred.ja.md)の要求と後回しのシナリオ（JSON の `deferred` が true の1件）では、行の末尾に ` deferred` が付きます。
+後回しの要求と後回しのシナリオ（JSON の `deferred` が true の1件）では、行の末尾に ` deferred` が付きます。
 
 ```text
 REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
@@ -97,7 +97,7 @@ docs/ir/a.md ja=78981922613b2afb6025042ff6bd878ac1994e85 en=-
 | `sources` | 文字列の並び | すべて | 出典 |
 | `tests` | オブジェクトの並び | すべて | その ID を印に含むテスト。1件は `path`、`line`（印の行）、`name`（テストの名前か null） |
 | `fingerprint` | 文字列 | すべて | 指紋（16進8桁）。[ガイドの印](../writing-guides.ja.md)に写す値 |
-| `deferred` | 真偽値 | すべて | [後回し](../deferred.ja.md)の要求と後回しのシナリオは true、ほかは false |
+| `deferred` | 真偽値 | すべて | 後回しの要求と後回しのシナリオは true、ほかは false |
 
 同じテストに同じ ID の印が2つあれば、`tests` には2件出ます。
 同じ ID のシナリオが2つあるときは、`examples` には1つ目だけを数えます。

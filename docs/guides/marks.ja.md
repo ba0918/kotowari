@@ -195,7 +195,7 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 シナリオのある要求なら、シナリオの ID を書くのが近道です。
 シナリオの無い要求（例の REQ-002）には、要求の ID を直接書きます。
 
-[後回し](deferred.ja.md)の要求は、どちらの誤りにもなりません。
+後回しの要求は、どちらの誤りにもなりません。
 後回しの要求だけ（と review の要求）を `@about` に持つシナリオも同じです。
 後回しの ID を印に書くと、`deferred_with_test` の注意が出ます。
 

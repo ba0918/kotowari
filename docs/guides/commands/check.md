@@ -309,7 +309,7 @@ $ kotowari check | jq '.findings[0]'
 
 Add a mark to `rejects_empty_name`, and change the mark on `greets_with_name` to the scenario's ID.
 A scenario mark also covers the requirement named in that scenario's `@about`.
-If you have decided not to build a requirement for now, declaring a [deferral](../deferred.md) instead of adding a mark also clears this error.
+If you have decided not to build a requirement for now, declaring a deferral instead of adding a mark also clears this error.
 
 ```rust
 // @kotowari[EX-greet-001]

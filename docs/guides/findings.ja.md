@@ -301,7 +301,7 @@ tests/broken.rs:- [error] unparsable_file tests/broken.rs
 
 | 種類 | よくある原因 | 直し方 |
 |---|---|---|
-| `requirement_without_test` | review 以外の後回しでない要求に、その ID を挙げた印も、その要求を `@about` に持つシナリオの ID を挙げた印も無い | テストの直前のコメントに `@kotowari[REQ-…]` か `@kotowari[EX-…]` を書く。シナリオの印は、そのシナリオの `@about` の要求の分も満たす。今は作らないと決めた要求なら、テストの代わりに後回しにする（[deferred.md](deferred.ja.md)） |
+| `requirement_without_test` | review 以外の後回しでない要求に、その ID を挙げた印も、その要求を `@about` に持つシナリオの ID を挙げた印も無い | テストの直前のコメントに `@kotowari[REQ-…]` か `@kotowari[EX-…]` を書く。シナリオの印は、そのシナリオの `@about` の要求の分も満たす。今は作らないと決めた要求なら、テストの代わりに後回しにする（deferred.md） |
 | `scenario_without_test` | シナリオの ID を挙げた印が無い（`@about` の要求がすべて review か後回しのシナリオには出ない） | そのシナリオを確かめるテストに `@kotowari[EX-…]` を書く。要求の印はシナリオの分を満たさない |
 | `test_without_id` | テストに印が無い。印を関数の本体の中や、空行で切り離したコメントに書いた | テストの直前のコメントの塊に印を書く |
 | `invalid_marker` | テストの印の中が空か区切りだけ。`]` が同じ行に無い | `@kotowari[ID, ID]` を1行で閉じる |
@@ -325,7 +325,7 @@ docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
 | `deferred_with_test` | 注意 | 後回しの要求か後回しのシナリオの ID を含む印がある。作り終えたのに `- deferred:` を消し忘れたか、印の付け間違い | 作り終えたなら、決定を判断の記録に書いてから `- deferred:` の行を消す。まだ作らないなら印を消す |
 | `depends_on_deferred` | 注意 | 後回しでない要求か性質か、後回しのシナリオでないシナリオが、後回しの要求を参照している（`- definition:`、`@about`、文とステップの中のバッククォートで囲んだ ID）。参照1件ごとに1件 | 参照元も後回しにするか、要求を後回しから戻すか、参照を外す。どれも仕様の判断 |
 
-後回しの書き方と効き目は [deferred.md](deferred.ja.md) にあります。
+後回しの書き方と効き目は deferred.md にあります。
 
 ### ガイドの印
 

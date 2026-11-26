@@ -195,7 +195,7 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 For a requirement that has scenarios, writing the scenario's ID is the shortcut.
 For a requirement without scenarios (REQ-002 in the example), write the requirement's ID directly.
 
-A [deferred](deferred.md) requirement produces neither error.
+A deferred requirement produces neither error.
 The same goes for a scenario whose `@about` names only deferred requirements (and review requirements).
 If you write a deferred ID in a mark, you get a `deferred_with_test` notice.
 

@@ -79,7 +79,7 @@ kotowari status --version
 | `documents` | `files`、`lines` | 数 | 読んだ IR の文書の数と、行数の合計 |
 | `items` | `requirement`、`table`、`property`、`scenario`、`flag` | 数 | ID を持つ項目とシナリオの、種類ごとの数 |
 | `requirements` | `unit`、`property`、`proof`、`review` | 数 | `- verification:` の値ごとの要求の数。行の無い要求はどれにも数えない |
-| `requirements` | `with_tests`、`without_tests` | 数 | 検証が review でなく[後回し](../deferred.ja.md)でない要求のうち、テストがあるものと無いものの数 |
+| `requirements` | `with_tests`、`without_tests` | 数 | 検証が review でなく後回しでない要求のうち、テストがあるものと無いものの数 |
 | `requirements` | `review_with_how_to_verify`、`review_without_how_to_verify` | 数 | 検証が review の要求のうち、`- how_to_verify:` の行があるものと無いものの数 |
 | `requirements` | `without_examples` | 数 | その ID を `@about` に持つシナリオが無い要求の数。後回しの要求も数える |
 | `requirements` | `deferred` | 数 | 後回しの要求の数 |
@@ -197,7 +197,7 @@ true
 後回しの項目は行の末尾が ` deferred` なので、この grep には当たりません。
 ただし要求は、直接印が無くても、その要求を `@about` に持つシナリオにテストが付いていれば「テストあり」に数えられます。
 一覧で `tests=0` の要求を見つけたら、そのシナリオ側も確かめてください。
-今は作らないと決めた要求なら、テストの代わりに[後回し](../deferred.ja.md)にすると `without_tests` から外れます。
+今は作らないと決めた要求なら、テストの代わりに後回しにすると `without_tests` から外れます。
 
 ### `review_without_how_to_verify` が 0 でない
 

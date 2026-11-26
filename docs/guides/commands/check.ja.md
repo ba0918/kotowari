@@ -307,7 +307,7 @@ $ kotowari check | jq '.findings[0]'
 
 `rejects_empty_name` に印を足し、`greets_with_name` の印をシナリオの ID に替えます。
 シナリオの印は、そのシナリオの `@about` の要求の分も満たします。
-今は作らないと決めた要求なら、印の代わりに[後回し](../deferred.ja.md)を宣言してもこの誤りは消えます。
+今は作らないと決めた要求なら、印の代わりに後回しを宣言してもこの誤りは消えます。
 
 ```rust
 // @kotowari[EX-greet-001]

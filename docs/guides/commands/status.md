@@ -79,7 +79,7 @@ All keys are defined in TBL-core-028 of the [status IR](../../ir/core/status.md)
 | `documents` | `files`, `lines` | number | The number of IR documents read, and their total line count |
 | `items` | `requirement`, `table`, `property`, `scenario`, `flag` | number | The number of items and scenarios with IDs, per kind |
 | `requirements` | `unit`, `property`, `proof`, `review` | number | The number of requirements per `- verification:` value. Requirements without the line are not counted in any of them |
-| `requirements` | `with_tests`, `without_tests` | number | Among requirements whose verification is not review and that are not [deferred](../deferred.md), the number with tests and without |
+| `requirements` | `with_tests`, `without_tests` | number | Among requirements whose verification is not review and that are not deferred, the number with tests and without |
 | `requirements` | `review_with_how_to_verify`, `review_without_how_to_verify` | number | Among requirements whose verification is review, the number with a `- how_to_verify:` line and without |
 | `requirements` | `without_examples` | number | The number of requirements with no scenario naming their ID in `@about`. Deferred requirements are counted too |
 | `requirements` | `deferred` | number | The number of deferred requirements |
@@ -197,7 +197,7 @@ Some requirements have no marks (`@kotowari[REQ-...]`) on their tests.
 Deferred items end their line with ` deferred`, so this grep does not match them.
 Note, however, that a requirement counts as "having tests" even without a direct mark if a scenario naming it in `@about` has a test.
 When you find a requirement with `tests=0` in the list, also check its scenarios.
-If you decided not to build the requirement for now, making it [deferred](../deferred.md) instead of adding a test removes it from `without_tests`.
+If you decided not to build the requirement for now, making it deferred instead of adding a test removes it from `without_tests`.
 
 ### `review_without_how_to_verify` is not 0
 

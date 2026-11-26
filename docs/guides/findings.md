@@ -301,7 +301,7 @@ tests/broken.rs:- [error] unparsable_file tests/broken.rs
 
 | Kind | Common cause | How to fix |
 |---|---|---|
-| `requirement_without_test` | For a non-review requirement that is not deferred, there is neither a mark listing its ID nor a mark listing the ID of a scenario that has the requirement in its `@about` | Write `@kotowari[REQ-…]` or `@kotowari[EX-…]` in the comment just before a test. A scenario's mark also covers the requirements in that scenario's `@about`. If you have decided not to build the requirement yet, defer it instead of writing a test ([deferred.md](deferred.md)) |
+| `requirement_without_test` | For a non-review requirement that is not deferred, there is neither a mark listing its ID nor a mark listing the ID of a scenario that has the requirement in its `@about` | Write `@kotowari[REQ-…]` or `@kotowari[EX-…]` in the comment just before a test. A scenario's mark also covers the requirements in that scenario's `@about`. If you have decided not to build the requirement yet, defer it instead of writing a test (deferred.md) |
 | `scenario_without_test` | No mark lists the scenario's ID (it does not appear for a scenario whose `@about` requirements are all review, or for a deferred scenario) | Write `@kotowari[EX-…]` on a test that checks the scenario. A requirement's mark does not cover the scenario |
 | `test_without_id` | The test has no mark. The mark was written inside the function body, or in a comment separated by a blank line | Write the mark in the comment block right before the test |
 | `invalid_marker` | A test mark is empty or holds only separators. The `]` is not on the same line | Close `@kotowari[ID, ID]` on one line |
@@ -325,7 +325,7 @@ docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
 | `deferred_with_test` | Notice | A mark contains the ID of a deferred requirement or deferred scenario. Either you finished building it and forgot to remove `- deferred:`, or the mark is wrong | If it is built, write the decision in a decision record and then remove the `- deferred:` line. If it is not built yet, remove the mark |
 | `depends_on_deferred` | Notice | A non-deferred requirement or property, or a scenario that is not a deferred scenario, refers to a deferred requirement (through `- definition:`, `@about`, or a backquoted ID in a statement or step). One per reference | Defer the referring item too, bring the requirement back from deferral, or drop the reference. Each is a specification decision |
 
-How to write a deferral and what it does is described in [deferred.md](deferred.md).
+How to write a deferral and what it does is described in deferred.md.
 
 ### Guide marks
 

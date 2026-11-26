@@ -124,7 +124,7 @@ These changes do and do not change the fingerprint:
 | Changing line endings (`\r\n` versus `\n`) | Does not change |
 
 Sources are added every time the IR is revised, so including them in the fingerprint would raise noisy notices each time.
-[Deferral](deferred.md) declarations are included in the fingerprint: removing a deferral means shipping that feature, so the guide should be reviewed.
+Deferral declarations are included in the fingerprint: removing a deferral means shipping that feature, so the guide should be reviewed.
 A document-level declaration sits outside the requirements' bodies, so its first line is prepended to the fingerprint input of each requirement in that document.
 The definition of the calculation is in [REQ-core-203](../ir/core/guides.md#REQ-core-203).
 

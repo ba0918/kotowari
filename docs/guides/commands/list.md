@@ -54,7 +54,7 @@ ID 検証 名前 パス:行 tests=数
   パス:行 テストの名前
 ```
 
-For a [deferred](../deferred.md) requirement or a deferred scenario (an entry whose `deferred` is true in the JSON), ` deferred` is appended to the end of the line.
+For a deferred requirement or a deferred scenario (an entry whose `deferred` is true in the JSON), ` deferred` is appended to the end of the line.
 
 ```text
 REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
@@ -97,7 +97,7 @@ The top level is an object with `items`, plus `translations` only when `language
 | `sources` | array of strings | All | The sources |
 | `tests` | array of objects | All | The tests whose marks include this ID. Each has `path`, `line` (the mark's line) and `name` (the test's name, or null) |
 | `fingerprint` | string | All | The fingerprint (8 hex digits). The value you copy into a [guide mark](../writing-guides.md) |
-| `deferred` | boolean | All | true for a [deferred](../deferred.md) requirement or a deferred scenario, otherwise false |
+| `deferred` | boolean | All | true for a deferred requirement or a deferred scenario, otherwise false |
 
 If the same test has two marks with the same ID, it appears twice in `tests`.
 If there are two scenarios with the same ID, only the first one is counted in `examples`.
