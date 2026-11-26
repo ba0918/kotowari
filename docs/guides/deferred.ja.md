@@ -2,7 +2,7 @@
 
 [English](deferred.md) | 日本語
 
-<!-- @kotowari[REQ-core-208:eb40fd95] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
 仕様には書いたが今は作らない、と決めた要求を「後回し」と宣言する書き方です。
 後回しの要求と、それだけを指すシナリオには、テストが無くても `requirement_without_test` と `scenario_without_test` が出なくなります。
@@ -13,7 +13,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-208:eb40fd95, REQ-core-209:bc5f958e, REQ-core-210:0772cc2a, TBL-core-011:245eca98, REQ-core-046:0ee3c10b] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 値は出典です。
 後回しにすると決めた決定を、理由と一緒に判断の記録に書き、それを `- source:` と同じ `パス#決定の番号` の形で指します。
@@ -55,7 +55,7 @@
 
 ## 変わること、変わらないこと
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8, REQ-core-208:eb40fd95] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
 上の `REQ-greet-003` から `- deferred:` の行を消すと、その要求と、それを指すシナリオ `EX-greet-002` にテストが無いことが誤りになります。
 
@@ -90,7 +90,7 @@ $ echo $?
 
 ## status と list と query
 
-<!-- @kotowari[TBL-core-028:9645c008, TBL-core-026:382b0b95, REQ-core-155:586b389e, TBL-core-027:24f0de66, REQ-core-161:4580b6c0] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7, docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
 `status` は、後回しの要求の数を `requirements` の `deferred` に、後回しのシナリオの数を `scenarios` の `deferred` に出します。
 後回しは `with_tests` にも `without_tests` にも数えないので、`without_tests` は本物の未完の数になります。
@@ -131,7 +131,7 @@ $ kotowari list | jq -r '.items[] | select(.tests == [] and .verification != "re
 
 ## 後回しとの食い違いの注意
 
-<!-- @kotowari[REQ-core-211:e38f935b, REQ-core-212:070f1cfc, TBL-core-009:e3c60d7c] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd] -->
 
 後回しと、テストの印や参照が食い違うと、2種類の注意が出ます。
 注意なので、終了コードも `status` の `complete` も変えません。
@@ -159,7 +159,7 @@ docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
 
 ## 宣言の誤り
 
-<!-- @kotowari[REQ-core-209:bc5f958e, REQ-core-210:0772cc2a, REQ-core-115:117f839a, TBL-core-008:67ba1ee9, TBL-core-019:d5c9adce] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/decision-documents.md#the-specification-lives-only-in-decision-documents-one-per-topic-holding-the-decisions-now-in-force:d2ea663b, docs/decisions/core/findings.md#the-detail-of-a-finding-is-a-short-string-that-identifies-that-finding-decided-per-kind-in-a-table:9134c812, docs/decisions/core/finding-order.md#the-line-of-findings-that-have-a-line-is-decided-per-kind-in-one-table:848f58fc] -->
 
 `- deferred:` の値は `- source:` と同じ規則で検査します。
 誤りの行は、その `- deferred:` の行です。
@@ -184,7 +184,7 @@ docs/ir/greet/i18n.md:4 [error] source_invalid docs/decision/records/2026-09-24-
 
 ## 指紋とガイド
 
-<!-- @kotowari[REQ-core-203:1fdc0443] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f] -->
 
 要求の見出しの下の `- deferred:` の行は、`- source:` と違って要求の指紋に入ります。
 文書単位の宣言を持つ文書では、その1つ目の行を、その文書の要求の指紋の先頭に加えます。

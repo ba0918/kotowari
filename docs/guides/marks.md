@@ -8,7 +8,7 @@ Once you have written the IR, add marks to your existing tests, and `check` and 
 
 ## Format
 
-<!-- @kotowari[REQ-core-071:2eb26299, TBL-core-015:3a4c51ae, REQ-core-073:2133d014, REQ-core-074:e7275c62] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-ids-listed-with-commas-and-may-be-anywhere-in-a-line:74293754] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001]
@@ -28,7 +28,7 @@ Marks written in guides (`<!-- @kotowari[ID:指紋] -->`) are read under differe
 
 ## Try marking one test
 
-<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-026:382b0b95] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 As an example, here is a small IR with just two requirements and one scenario.
 
@@ -89,7 +89,7 @@ Starting a test name with an ID is just this repository's convention; kotowari d
 
 ## Where to put marks
 
-<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-016:d4d7ced2, TBL-core-035:e8943c7c] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a, docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78] -->
 
 A mark is linked to a test only when it is in the test's **preceding comment block**.
 The block is the run of comment lines going upward from just above the test's first line until a blank line.
@@ -116,7 +116,7 @@ The full rules are in [TBL-core-016](../ir/core/test-markers.md#TBL-core-016) an
 
 ### Python and TypeScript examples
 
-<!-- @kotowari[EX-core-307:eb880f50, REQ-core-180:c597decc, EX-core-296:c2f1fd62] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78, docs/decisions/core/test-discovery.md#a-tests-name-is-taken-from-the-text-the-query-captured:a5dba3c1] -->
 
 In Python, the mark is linked even when decorators sit between it and the test function.
 
@@ -150,7 +150,7 @@ The test name is the function name in Python, and in TypeScript the first argume
 
 ### Tests inside macros
 
-<!-- @kotowari[TBL-core-017:aff9f804, EX-core-018:0b4c0d06] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868] -->
 
 Inside a macro such as `proptest!`, marks are placed the same way.
 The following example is from this repository: the explanatory `///` and the mark's `//` are both comment lines and form a single block (from `crates/kotowari-markdown-schema/tests/properties.rs`).
@@ -166,8 +166,6 @@ proptest! {
 For kotowari to read inside a macro, the macro's name must be in the `tests.rust.macros` setting ([pitfalls](#tests-inside-a-macro-are-not-counted)).
 
 ## Marking the requirement or the scenario
-
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8, EX-core-121:252c9340, EX-core-122:7a95532e] -->
 
 The ID in a mark may be either a requirement (`REQ-`) or a scenario (`EX-`).
 `check` looks at this in two steps.
@@ -203,7 +201,7 @@ If you write a deferred ID in a mark, you get a `deferred_with_test` notice.
 
 ### Requirements verified by review
 
-<!-- @kotowari[REQ-core-078:aec849b3, EX-core-123:18e5541b] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-that-points-at-a-line-checked-by-reading-is-not-an-error:e433e730] -->
 
 A requirement whose verification is `review` (one that a person or an LLM checks by reading) does not require a test.
 Pointing at it from a mark is not an error, but you do not need to.
@@ -211,7 +209,7 @@ A scenario whose `@about` names only `review` requirements does not require a te
 
 ### `tests=0` in `list` does not always mean "no tests"
 
-<!-- @kotowari[TBL-core-026:382b0b95, EX-core-122:7a95532e] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 The `tests` in `list` shows only the marks that write that ID **directly**.
 If you write only the scenario's ID, the requirement appears as `tests=0` in `list`, but `check` and `status` count it as having tests.
@@ -231,7 +229,7 @@ When you look for requirements without tests, also check the scenarios of the `t
 
 ## Which tests are found
 
-<!-- @kotowari[REQ-core-079:589c548b, REQ-core-080:35cc39ab, REQ-core-081:d861bda1, TBL-core-031:aab33120] -->
+<!-- @kotowari[docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7, docs/decisions/core/test-discovery.md#tests-are-found-by-applying-queries-to-the-syntax-tree-not-by-searching-lines-with-regular-expressions:ce30c2d1, docs/decisions/core/test-discovery.md#the-correspondence-between-extensions-and-languages-is-the-same-as-ast-grep-and-is-case-sensitive:0894862d] -->
 
 kotowari finds tests in this order.
 
@@ -243,7 +241,7 @@ The full mapping from extensions to languages is in [TBL-core-031](../ir/core/te
 
 ### Languages with a bundled query
 
-<!-- @kotowari[REQ-core-182:8ad61d2f, TBL-core-017:aff9f804, TBL-core-032:93a48eea, TBL-core-033:091add60, TBL-core-034:bf49690a, REQ-core-181:5c809bd5] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#queries-are-bundled-only-for-the-four-families-of-languages-the-user-uses:e806bd53, docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868, docs/decisions/core/test-queries.md#in-typescript-and-javascript-calls-of-it-and-test-are-counted:9a76e5a9, docs/decisions/core/test-queries.md#in-python-functions-and-methods-whose-names-start-with-test-are-counted:8ba7df8f, docs/decisions/core/test-queries.md#in-php-methods-and-calls-of-test-are-counted:a1039155, docs/decisions/core/test-discovery.md#overlapping-matches-on-the-same-node-count-as-one-and-a-test-inside-a-test-is-counted-separately:0ccd8b7a] -->
 
 | Language | What counts as a test | Full rules |
 |---|---|---|
@@ -257,7 +255,7 @@ A test inside a test (an `it` inside an `it`) is counted as a separate test.
 
 ### Adding more through the configuration
 
-<!-- @kotowari[REQ-core-121:6502b5d5, REQ-core-186:cfb141ec] -->
+<!-- @kotowari[docs/decisions/core/query-rules.md#queries-are-added-with-testsrules-in-the-configuration-and-the-bundled-queries-cannot-be-removed:ec930518, docs/decisions/core/query-rules.md#a-rule-file-is-read-as-an-ast-grep-rule-yaml-as-it-is:10835ba2] -->
 
 | What to add | Configuration key |
 |---|---|
@@ -270,7 +268,7 @@ For how to write them, see [Configuration file](config.md#testsrules).
 
 ### Languages without a query
 
-<!-- @kotowari[REQ-core-076:9413bda6, REQ-core-087:2c99751b, EX-core-124:5c88c586] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#in-files-of-a-language-without-a-query-all-markers-in-the-file-are-picked-up:d8565343, docs/decisions/core/coverage.md#markers-in-files-of-a-language-without-a-query-also-count-toward-satisfying-confirmation-rows:e4917759] -->
 
 For languages without a query, such as Go or Java (including files whose extension maps to no language), kotowari does not read the syntax tree.
 It picks up every mark in the file, regardless of whether it is in a comment or before which test, and counts the requirements and scenarios as "having tests".
@@ -294,7 +292,7 @@ Whether the tests are marked correctly is left for a person to check.
 
 ## Findings about marks
 
-<!-- @kotowari[REQ-core-086:8035b3f8, REQ-core-072:0d066a71, REQ-core-077:082e5fe4, REQ-core-083:c11fae0c, REQ-core-118:2e6e1171] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
 
 | Finding | Severity | When it appears | Line | detail |
 |---|---|---|---|---|
@@ -315,7 +313,7 @@ The following are results of breaking the example in [Try marking one test](#try
 
 ### A blank line between the mark and the test
 
-<!-- @kotowari[EX-core-016:e63e6fd1, REQ-core-086:8035b3f8] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001]
@@ -337,7 +335,7 @@ Removing the blank line fixes it.
 
 ### Written inside the function body
 
-<!-- @kotowari[EX-core-306:e057840d, TBL-core-016:d4d7ced2] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a] -->
 
 ```rust
 #[test]
@@ -357,7 +355,7 @@ The same three findings as with the blank line. Move the mark above `#[test]`.
 
 ### A line of code between the mark and the test
 
-<!-- @kotowari[EX-core-309:549f0665, TBL-core-035:e8943c7c] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78] -->
 
 ```ts
 describe('discount', () => {
@@ -378,7 +376,7 @@ In TypeScript, any line other than a comment line ends the block.
 
 ### Written above `describe`
 
-<!-- @kotowari[TBL-core-032:93a48eea, TBL-core-016:d4d7ced2] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-typescript-and-javascript-calls-of-it-and-test-are-counted:9a76e5a9, docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a] -->
 
 ```ts
 // @kotowari[REQ-002]
@@ -398,7 +396,7 @@ Move the mark to just before the `it`.
 
 ### A mistyped ID
 
-<!-- @kotowari[REQ-core-077:082e5fe4, REQ-core-118:2e6e1171] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722] -->
 
 ```rust
 // @kotowari[REQ-010, EX-001]
@@ -423,7 +421,7 @@ What needs fixing is the ID inside the mark.
 
 ### An unclosed or empty mark
 
-<!-- @kotowari[REQ-core-072:0d066a71, TBL-core-015:3a4c51ae] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#a-marker-is-ids-listed-with-commas-and-may-be-anywhere-in-a-line:74293754] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001
@@ -450,7 +448,7 @@ A mark must close within one line. If you push the `]` to the next line, the mar
 
 ### Tests inside a macro are not counted
 
-<!-- @kotowari[REQ-core-082:2cab52bb, EX-core-018:0b4c0d06] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868] -->
 
 Even if you mark a test inside `proptest!`, the inside of the macro is not read without configuration.
 
@@ -479,7 +477,7 @@ tests:
 
 ### The test file is not covered by `tests.files`
 
-<!-- @kotowari[REQ-core-079:589c548b] -->
+<!-- @kotowari[docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7] -->
 
 When the tests live in `spec/` but `tests.files` is only `tests/**/*`:
 
@@ -494,7 +492,7 @@ If everything is reported as "no tests" even though the marks are there, suspect
 
 ### An uppercase extension makes tests slip through
 
-<!-- @kotowari[REQ-core-081:d861bda1, EX-core-295:ac47cbef] -->
+<!-- @kotowari[docs/decisions/core/test-discovery.md#the-correspondence-between-extensions-and-languages-is-the-same-as-ast-grep-and-is-case-sensitive:0894862d] -->
 
 Adding an unmarked `def test_forgotten():` to `test_discount.PY` produces no finding.
 

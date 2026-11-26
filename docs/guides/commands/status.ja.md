@@ -2,14 +2,14 @@
 
 [English](status.md) | 日本語
 
-<!-- @kotowari[REQ-core-162:896047ff] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
 `kotowari status` は、IR（仕様）とテストが「いま揃っているか」を、数と一つの真偽で答えるコマンドです。
 CI に一行足すだけで、仕様の抜けやテストの無い要求が紛れ込んだ変更を止められます。
 
 ## 3 つの読み取りコマンドの中での位置
 
-<!-- @kotowari[REQ-core-162:896047ff] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
 kotowari には、IR を読む道具が段になって並んでいます。
 
@@ -28,7 +28,7 @@ flowchart BT
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 ```sh
 kotowari status [--format json|text] [--config <path>]
@@ -41,7 +41,7 @@ kotowari status --version
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -59,7 +59,7 @@ kotowari status --version
 
 ### text
 
-<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d] -->
 
 1つの群を1行にして、`群名 鍵=値 鍵=値 …` の形で出します。
 鍵の語は JSON と同じで、値は1つの半角空白で区切り、桁揃えはしません。
@@ -69,7 +69,7 @@ kotowari status --version
 
 ### JSON
 
-<!-- @kotowari[TBL-core-028:9645c008, REQ-core-164:c48d77e2, EX-core-398:4b7f4c92] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 最上位は次の群の鍵だけのオブジェクトで、`complete` が最後です。
 全部の鍵の定義は [status の IR](../../ir/core/status.ja.md) の TBL-core-028 にあります。
@@ -95,7 +95,7 @@ kotowari status --version
 
 ### よく見る数
 
-<!-- @kotowari[TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 特によく見る数だけ挙げます。
 
@@ -112,7 +112,7 @@ kotowari status --version
 
 ### `complete` が true になる条件
 
-<!-- @kotowari[REQ-core-165:1c91b003, EX-core-259:6583a1e7, EX-core-260:73c20b9a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
 
 `complete` が true になるのは、次の 2 つが両方成り立つときだけです。
 
@@ -124,7 +124,7 @@ kotowari status --version
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-165:1c91b003, REQ-core-163:9cf2f990, EX-core-262:c1a7983a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed, docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
 終了コードは `complete` の答えをそのまま映します。
 
@@ -140,7 +140,7 @@ kotowari status --version
 
 ### 使ってみる
 
-<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d] -->
 
 リポジトリの根で実行します。
 人が読むなら `--format text` が便利です。
@@ -173,7 +173,7 @@ true
 
 ### CI で使う
 
-<!-- @kotowari[REQ-core-165:1c91b003] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
 
 終了コードが判定そのものなので、ジョブの一段として置くだけで足ります。
 
@@ -190,7 +190,7 @@ true
 
 ### `without_tests` が 0 でない
 
-<!-- @kotowari[TBL-core-028:9645c008, TBL-core-026:382b0b95, EX-core-263:f86b1e4a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae] -->
 
 テストに印（`@kotowari[REQ-...]`）が付いていない要求があります。
 `kotowari list --format text | grep 'tests=0$'` で、印の付いたテストが無い項目を探せます。
@@ -201,21 +201,21 @@ true
 
 ### `review_without_how_to_verify` が 0 でない
 
-<!-- @kotowari[REQ-core-098:1e550dfe, EX-core-259:6583a1e7] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 テストでは確かめられない要求（`verification: review`）に、`- how_to_verify:` の行がありません。
 手順が無いと、人でも LLM でも確かめようがないため、`check` はこれを誤りにします。
 
 ### `flag` が 0 でない
 
-<!-- @kotowari[REQ-core-165:1c91b003, EX-core-260:73c20b9a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
 
 `FLAGS.md` に書かれた未解決の箇所が残っています。
 仕様を書き足して記録を消すまで、`complete` にはなりません。
 
 ### `unit`、`property`、`proof`、`review` の合計が `requirement` より少ない
 
-<!-- @kotowari[TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 `- verification:` の行の無い要求があります。そうした要求は検証の種類ごとの数のどれにも入りません。
 この要求は `check` の誤りでもあるので、`complete` は false になります。
@@ -223,7 +223,7 @@ true
 
 ### `config error: ...: matched by both guides.files and tests.files` で止まる
 
-<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:f1e4cc8c] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 `status` は `check` と同じくガイドも読むので、設定の `guides.files` と `tests.files` の glob が同じファイルに当たると停止します。
 `list` と `query` はガイドを読まないのでこの停止をしません。そのため「list は動くのに status は止まる」ことがあります。

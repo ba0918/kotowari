@@ -6,7 +6,7 @@
 
 ## ローカルの検証
 
-<!-- @kotowari[REQ-core-309:6d260573, docs/decisions/schema/library.md#internal-implementation-types-do-not-appear-in-public-signatures:151573ff] -->
+<!-- @kotowari[docs/decisions/core/library-crates.md#whether-something-is-public-is-decided-by-whether-external-users-rely-on-it-and-kotowari-re-exports-as-the-same-types-only-the-lower-types-reachable-from-its-entry-points:86d0d335, docs/decisions/schema/library.md#internal-implementation-types-do-not-appear-in-public-signatures:151573ff] -->
 
 Cargo 1.98以降と安全なtar展開を提供するPython 3.11以降を使い、変更をコミットした清潔な作業ツリーで実行します。
 
@@ -23,7 +23,7 @@ Tokioの有効・無効、別クレートからの呼出、再公開した型の
 
 ## 将来の公開順
 
-<!-- @kotowari[TBL-core-040:4f46993e] -->
+<!-- @kotowari[docs/decisions/core/library-crates.md#packages-are-split-by-purpose-and-users-choose-a-package-by-purpose:9a903158] -->
 
 公開を行う人は、検証と独立レビューが済んだ同じ変更について、各製品の版を上げてから実行します。
 依存される側を先に公開します。

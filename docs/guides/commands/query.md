@@ -2,14 +2,14 @@
 
 English | [日本語](query.ja.md)
 
-<!-- @kotowari[REQ-core-156:f3320502] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
 `kotowari query` takes one ID and prints that item or scenario together with its body and its reverse references (the items that point at that ID).
 Use it when you want to read a single requirement without opening the IR document, or to get the fingerprint to copy into a guide mark.
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-157:7f12b67c, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
 ```sh
 kotowari query [--format json|text] [--config <path>] <ID>
@@ -22,7 +22,7 @@ Options are accepted before the command or after the ID (`kotowari query REQ-001
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-161:4580b6c0, REQ-core-157:7f12b67c, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5, docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -42,7 +42,7 @@ If several items or scenarios have the same ID, all of them are printed.
 
 ### text
 
-<!-- @kotowari[REQ-core-161:4580b6c0, EX-core-254:cae8bffc] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
 For each entry, the body lines and the reverse reference lines follow the same first line and test lines as the text output of [`kotowari list`](./list.md).
 
@@ -63,7 +63,7 @@ ID 検証 名前 パス:行 tests=数
 
 ### JSON
 
-<!-- @kotowari[TBL-core-027:24f0de66, REQ-core-159:4b71c072] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
 The top level is an object with only `items`, the same shape as `list`.
 Each entry has all of [the keys of a `kotowari list` entry](./list.md#json) (`id`, `kind`, `name`, `path`, `line`, `type`, `verification`, `definition`, `examples`, `how_to_verify`, `relations`, `sources`, `tests`, `fingerprint`, `deferred`), plus the following two keys.
@@ -94,14 +94,14 @@ The detailed definition is in TBL-core-027 in [the query IR](../../ir/core/query
 
 ### Ordering
 
-<!-- @kotowari[REQ-core-160:897f0db4] -->
+<!-- @kotowari[docs/decisions/core/query.md#the-reverse-references-of-a-decision-hold-the-decisions-that-link-to-that-decisions-heading:90363085] -->
 
 `items` is in the same order as `list` (ascending `path`, and within the same `path`, ascending `line`).
 `referenced_by` is also ordered by `path`, then `line`.
 
 ## Exit codes
 
-<!-- @kotowari[REQ-core-156:f3320502, REQ-core-157:7f12b67c, REQ-core-158:dbb850b2] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c, docs/decisions/core/query.md#query-stops-under-the-same-conditions-as-check-and-does-not-read-guides-or-surfaces:4414244f] -->
 
 | Code | Meaning |
 |---|---|
@@ -114,7 +114,7 @@ The commands whose exit code depends on whether the IR has errors are `check` an
 
 ## Example
 
-<!-- @kotowari[EX-core-250:b09de293, EX-core-254:cae8bffc, EX-core-255:4af0f3d9] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
 These are results of running it on the same small IR and tests as in [the `kotowari list` example](./list.md#example) (run on 2026-09-24).
 
@@ -172,7 +172,7 @@ EX-001 - 名前を受けて挨拶する docs/ir/greet.md:28 tests=1
 
 ### Getting the fingerprint to copy into a guide mark
 
-<!-- @kotowari[TBL-core-026:382b0b95, REQ-core-203:1fdc0443] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f] -->
 
 The fingerprint you write in a guide mark is the `fingerprint` value, copied as is. Do not compute it by hand.
 
@@ -187,7 +187,7 @@ How to write guides is described in [Writing guides](../writing-guides.md).
 
 ### It stops with `argument error: unknown id: ...`
 
-<!-- @kotowari[REQ-core-157:7f12b67c, EX-core-251:9c9ef8a2] -->
+<!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
 Neither an item nor a scenario with that ID exists in the IR.
 Because it stops instead of returning an empty result, you notice a mistyped ID right away.
@@ -203,7 +203,7 @@ If you are not sure of the ID, look for it with `kotowari list --format text`.
 
 ### It stops with `argument error: not an id: ...`
 
-<!-- @kotowari[REQ-core-157:7f12b67c] -->
+<!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
 The positional argument is not of ID form.
 IDs are case-sensitive, so writing one in lowercase also makes it stop.
@@ -215,7 +215,7 @@ argument error: not an id: req-001
 
 ### It stops with `argument error: query expects exactly one id, got N`
 
-<!-- @kotowari[REQ-core-157:7f12b67c, EX-core-252:9d3e3cb6] -->
+<!-- @kotowari[docs/decisions/core/query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error:bbaa030c] -->
 
 You passed no ID, or two or more.
 `query` reads only one ID at a time. To look at several, run it once per ID, or filter the JSON of `kotowari list` with `jq`.
@@ -229,7 +229,7 @@ argument error: query expects exactly one id, got 0
 
 ### Two entries come out for the same ID
 
-<!-- @kotowari[REQ-core-156:f3320502, EX-core-253:b80999a5] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
 The IR has two items with the same ID (a duplicate_id error in `check`).
 `query` does not hide duplicates; it prints all of them and exits with 0.
@@ -260,7 +260,7 @@ Give one of them a new ID.
 
 ### An ID mentioned in a statement does not appear in `referenced_by`
 
-<!-- @kotowari[TBL-core-027:24f0de66, EX-core-257:c84b3d33] -->
+<!-- @kotowari[docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7] -->
 
 Only IDs enclosed in backquotes count as reverse references with `via` `text`.
 IDs inside double quotes, or IDs not enclosed at all, are not counted.

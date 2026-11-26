@@ -8,7 +8,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-002:f86e2efd, EX-core-244:e4a4c37f] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-mutants-always-takes-the-tools-name-with---tool-and-takes-exactly-one-results-file:4fc5bc6e, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <結果のファイル>
@@ -19,7 +19,7 @@ kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <�
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-021:ccedd28b, REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-mutants-always-takes-the-tools-name-with---tool-and-takes-exactly-one-results-file:4fc5bc6e, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -31,7 +31,7 @@ kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <�
 
 ## 読むもの
 
-<!-- @kotowari[REQ-core-147:7559338c, EX-core-210:e791ccb1] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#mutation-tests-run-outside-kotowari-and-kotowari-mutants-reads-their-results-file-and-turns-it-into-findings:0293ff69] -->
 
 変異テストの実行そのものは kotowari の外にあります。
 kotowari は、道具が書き終えた結果のファイルを読むだけです。
@@ -57,7 +57,7 @@ IR、テストのファイル、判断の記録は読まず、`check` の検査�
 
 ## 結果のファイル
 
-<!-- @kotowari[TBL-core-024:17ed4a06, REQ-core-138:7c91c1d5] -->
+<!-- @kotowari[docs/decisions/core/mutants-input.md#mutation-outcomes-are-held-in-a-form-that-does-not-know-the-tool-and-the-results-file-of-cargo-mutants-is-mapped-as-in-the-table:13ad252a] -->
 
 `--tool cargo-mutants` では、最上位の `outcomes` に並びを持つ JSON を読みます。
 `scenario` が文字列 `"Baseline"` の1件は、変異を入れない基準の実行で、数に入れません。
@@ -86,7 +86,7 @@ IR、テストのファイル、判断の記録は読まず、`check` の検査�
 
 ### text
 
-<!-- @kotowari[REQ-core-146:5accc94e, REQ-core-026:530a64e3, EX-core-230:c8e82733, EX-core-209:a0577005] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#counts-are-always-output-and-the-number-excluded-as-equivalent-is-shown-every-time:f134f9eb, docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 指摘を1件1行で出し、最後の1行に集計を出します。
 指摘の行の形は `check` と同じ `パス:行 [error|notice] 種類 詳細` です。
@@ -103,7 +103,7 @@ mutants: caught=4 survived=1 timeout=1 unviable=1 equivalent=1
 
 ### 指摘の種類
 
-<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-140:49dd0d6f, REQ-core-142:3cafdd68, REQ-core-143:de58796f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315, docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2] -->
 
 | 種類 | 重さ | path | line | detail |
 |---|---|---|---|---|
@@ -118,7 +118,7 @@ mutants: caught=4 survived=1 timeout=1 unviable=1 equivalent=1
 
 ### JSON
 
-<!-- @kotowari[TBL-core-025:68fca5c5, PROP-core-005:80d67bc3, REQ-core-145:38dec30f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#counts-are-always-output-and-the-number-excluded-as-equivalent-is-shown-every-time:f134f9eb] -->
 
 最上位は `findings`、`counts`、`mutants` の3つの鍵だけです。
 
@@ -139,7 +139,7 @@ mutants: caught=4 survived=1 timeout=1 unviable=1 equivalent=1
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:36817bf5, REQ-core-139:5736cb73, REQ-core-140:49dd0d6f] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73, docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807] -->
 
 | コード | 意味 |
 |---|---|
@@ -151,7 +151,7 @@ mutants: caught=4 survived=1 timeout=1 unviable=1 equivalent=1
 
 ## 等価の一覧
 
-<!-- @kotowari[REQ-core-148:9dc7ec0a, REQ-core-143:de58796f] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#judgments-of-equivalence-are-placed-in-the-yaml-list-that-mutantsequivalents-in-the-configuration-points-at:820edb3b, docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2] -->
 
 等価の一覧は、見逃しのうち「変異を入れても観測できる振る舞いが変わらない」と判断したものを、理由と一緒に並べる YAML のファイルです。
 一覧に一致した見逃しは指摘にならず、集計の `equivalent` に数えられます。
@@ -197,7 +197,7 @@ mutants:
 
 ### 一致の取り方
 
-<!-- @kotowari[REQ-core-141:07d68190, EX-core-212:cf501da6, EX-core-213:4f4e6142] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1] -->
 
 見逃しと一覧の1件は、次の3つがすべて同じときに一致します。
 
@@ -215,7 +215,7 @@ mutants:
 
 ## 例
 
-<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-141:07d68190, REQ-core-142:3cafdd68, EX-core-206:1d66c66f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315] -->
 
 次のソース `src/price.rs` に対する結果のファイルを、cargo-mutants の形（[TBL-core-024](../../ir/core/mutants-input.ja.md#TBL-core-024)）に沿って手で8件作り、読ませた例です。
 cargo mutants は実行していません。出力はこの入力で実際に `kotowari mutants` を実行したものです。
@@ -309,7 +309,7 @@ $ kotowari mutants --tool cargo-mutants outcomes.json
 
 ### `argument error: mutants requires the option: --tool`
 
-<!-- @kotowari[REQ-core-149:1ac13c99, EX-core-218:a0656f36, EX-core-240:3f1d22d5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-mutants-always-takes-the-tools-name-with---tool-and-takes-exactly-one-results-file:4fc5bc6e] -->
 
 `--tool` を付け忘れています。
 結果のファイルの形は道具ごとに違うので、既定値はありません。
@@ -324,7 +324,7 @@ argument error: unknown tool: stryker
 
 ### `results error: ...`
 
-<!-- @kotowari[REQ-core-144:ad1689f2, EX-core-207:34357194, EX-core-208:e5d0458a] -->
+<!-- @kotowari[docs/decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error:16167069] -->
 
 結果のファイルが読めない形です。
 JSON として壊れている、要る鍵が無いか型が違う、知らない `summary` の値がある、基準の実行が失敗している、行が1未満、`name` の前置きが形に合わない、ファイルが絶対パスか `..` を含む、のどれかで止まります（全部の条件は [REQ-core-144](../../ir/core/mutants-input.ja.md#REQ-core-144)）。
@@ -342,7 +342,7 @@ results error: unknown-summary.json: unknown outcome: Flaky
 
 ### `equivalent_invalid` が出て、外していた見逃しが戻ってきた
 
-<!-- @kotowari[REQ-core-143:de58796f, EX-core-215:60ee255d] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2] -->
 
 一覧の1件の形がおかしく、その1件はどの見逃しも外しません。
 上の例の一覧で、`clamp_index` の1件の `why` を `" "` にしたときの出力です。
@@ -361,7 +361,7 @@ detail の `file: change` で、どの1件かを見分けます。
 
 ### `equivalent_stale` が出る
 
-<!-- @kotowari[REQ-core-142:3cafdd68, EX-core-213:4f4e6142] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315, docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1] -->
 
 一覧の1件の `text` と同じ文面の行が、`file` のどこにも無くなっています。
 コードを書き換えたか、関数ごと消したときに出ます。
@@ -370,7 +370,7 @@ detail の `file: change` で、どの1件かを見分けます。
 
 ### 等価の一覧に書いたのに時間切れが消えない
 
-<!-- @kotowari[REQ-core-140:49dd0d6f, EX-core-206:1d66c66f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807] -->
 
 仕様どおりです。
 一覧で外せるのは見逃しだけで、時間切れは一覧との一致を見ません。
@@ -378,7 +378,7 @@ detail の `file: change` で、どの1件かを見分けます。
 
 ### 等価の一覧のパスが無くて止まる
 
-<!-- @kotowari[REQ-core-148:9dc7ec0a, EX-core-217:41f2375e, EX-core-239:069fe928] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#judgments-of-equivalence-are-placed-in-the-yaml-list-that-mutantsequivalents-in-the-configuration-points-at:820edb3b] -->
 
 設定の `mutants.equivalents` が指すファイルが無いと、`unreadable file` で止まります。
 一覧を使わないなら鍵ごと消すか、空のファイルを置きます。

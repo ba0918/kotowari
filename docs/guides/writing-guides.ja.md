@@ -9,7 +9,7 @@ IR が変わって古くなった節は、いつ実行しても `guide_stale` �
 
 ## 書式
 
-<!-- @kotowari[REQ-core-201:82ef697c, TBL-core-036:96778f03] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 ガイドの印は、HTML のコメントの中に書きます。描画したガイドには出ません。
 
@@ -34,7 +34,7 @@ IR が変わって古くなった節は、いつ実行しても `guide_stale` �
 
 ## 印を読む場所
 
-<!-- @kotowari[REQ-core-200:97b3eb9b, EX-core-366:c019e492, EX-core-374:4cdeb739] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guide-markers-are-read-only-from-inside-html-comments:6ad1c700] -->
 
 ガイドは CommonMark として読みます。
 ガイドの印として読むのは、HTML のコメントの `<!--` から `-->` までの中にある `@kotowari[` だけです。
@@ -58,7 +58,7 @@ IR が変わって古くなった節は、いつ実行しても `guide_stale` �
 印は @kotowari[REQ-001] の形ではなく、`<!-- @kotowari[REQ-001:874e14a4] -->` の形で書きます。
 
 ```markdown
-<!-- @kotowari[REQ-001] -->
+<!-- @kotowari[:REQ-001] -->
 ```
 
 <!-- メモ --> @kotowari[REQ-001:00000000]
@@ -73,7 +73,7 @@ $ kotowari check | jq -c .guides
 
 ## 置き場の設定
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c, EX-core-369:248c0ebf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 ガイドの置き場は、設定ファイルの `guides.files` に glob の一覧で書きます。
 
@@ -95,7 +95,7 @@ guides:
 
 ## 指紋
 
-<!-- @kotowari[REQ-core-203:1fdc0443, TBL-core-026:382b0b95, EX-core-364:cc1080a1, EX-core-375:6d9bd3bb] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 指紋は、項目かシナリオの本文から取る16進の小文字8文字の値です。
 `kotowari list` と `kotowari query` の JSON の `fingerprint` に出ます。
@@ -132,7 +132,7 @@ EX-001 54af105a
 
 ### `guides` の群
 
-<!-- @kotowari[REQ-core-206:e2f3dc5c, EX-core-371:f354c476] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7, docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 `kotowari check` の JSON の最上位と `kotowari status` に、`guides` の群が出ます。
 
@@ -156,7 +156,7 @@ glob の書き間違いでガイドが0件になっても、`files=0` で気づ�
 
 ### `guide_stale`（注意）
 
-<!-- @kotowari[REQ-core-204:fa82249e, EX-core-363:9bff9f93, EX-core-365:542b2c69] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce] -->
 
 形の正しい印の1件について、次のときに1件ずつ出ます。
 
@@ -192,7 +192,7 @@ guides/discount.md:11 [notice] guide_stale REQ-002 76709f33 -
 
 ### `invalid_marker`（誤り）
 
-<!-- @kotowari[REQ-core-202:907dd989, EX-core-367:68e78a4a, EX-core-373:acd8d951] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 次のときに、1つの印につき1件出ます（終了コード 1）。
 
@@ -230,7 +230,7 @@ $ kotowari check | jq -c .guides
 
 ## ガイドを書く手順
 
-<!-- @kotowari[REQ-core-205:7110f061] -->
+<!-- @kotowari[docs/decisions/core/guides.md#the-occasions-for-writing-and-reviewing-guides-are-placed-in-the-kotowari-skill:cfbcc10a] -->
 
 1. IR を読んで、読み手に向けて節を書きます。
 2. その節が説明している項目とシナリオを挙げます。`kotowari query ID` で本文を読み、節が本当にその項目に基づいているかを確かめます。ID が分からなければ `kotowari list` で探します。
@@ -244,7 +244,7 @@ $ kotowari check | jq -c .guides
 
 ## ガイドを見直す手順
 
-<!-- @kotowari[REQ-core-205:7110f061, REQ-core-204:fa82249e] -->
+<!-- @kotowari[docs/decisions/core/guides.md#the-occasions-for-writing-and-reviewing-guides-are-placed-in-the-kotowari-skill:cfbcc10a, docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce] -->
 
 `guide_stale` が出たら、1件ごとに次のようにします。
 
@@ -260,7 +260,7 @@ $ kotowari check | jq -c .guides
 
 ### 印を書いたのに `marks` が 0
 
-<!-- @kotowari[REQ-core-200:97b3eb9b, EX-core-366:c019e492] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guide-markers-are-read-only-from-inside-html-comments:6ad1c700] -->
 
 印が HTML のコメントの外にあるか、コードブロックかコードスパンの中にあります。
 `<!--` と `-->` で囲み、コードの外に置きます。
@@ -268,7 +268,7 @@ $ kotowari check | jq -c .guides
 
 ### `guides` の `files` が 0
 
-<!-- @kotowari[REQ-core-198:253e79fd, EX-core-369:248c0ebf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8] -->
 
 設定に `guides.files` が無いか、glob がどのファイルにも当たっていません。
 `guides.files` が無いときは、ガイドに古い印があっても何も出ません。
@@ -280,14 +280,14 @@ guides files=0 marks=0
 
 ### 1件だけ直したのに、同じ印の他の1件も照合されない
 
-<!-- @kotowari[REQ-core-202:907dd989, EX-core-373:acd8d951] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 1つの印の中に形の誤った1件が1つでもあると、その印は丸ごと `invalid_marker` になり、正しい1件も照合されません。
 `invalid_marker` を先に直してから、`guide_stale` を見ます。
 
 ### ガイドとテストの置き場が重なって止まる
 
-<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 `tests.files` が広すぎて（`**/*` など）ガイドにも当たっています。
 問い合わせの無い言語のファイルでは `@kotowari[` を全部拾うので、ガイドの印がテストの印として読まれるのを防ぐために止まります。

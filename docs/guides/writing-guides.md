@@ -9,7 +9,7 @@ Sections that have gone stale because the IR changed are reported as `guide_stal
 
 ## Format
 
-<!-- @kotowari[REQ-core-201:82ef697c, TBL-core-036:96778f03] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 A guide mark is written inside an HTML comment, so it does not appear in the rendered guide.
 
@@ -34,7 +34,7 @@ A guide mark is written inside an HTML comment, so it does not appear in the ren
 
 ## Where marks are read
 
-<!-- @kotowari[REQ-core-200:97b3eb9b, EX-core-366:c019e492, EX-core-374:4cdeb739] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guide-markers-are-read-only-from-inside-html-comments:6ad1c700] -->
 
 Guides are read as CommonMark.
 Only an `@kotowari[` between the `<!--` and the `-->` of an HTML comment is read as a guide mark.
@@ -58,7 +58,7 @@ In the following guide, only the last entry is read as a mark.
 印は @kotowari[REQ-001] の形ではなく、`<!-- @kotowari[REQ-001:874e14a4] -->` の形で書きます。
 
 ```markdown
-<!-- @kotowari[REQ-001] -->
+<!-- @kotowari[:REQ-001] -->
 ```
 
 <!-- メモ --> @kotowari[REQ-001:00000000]
@@ -73,7 +73,7 @@ $ kotowari check | jq -c .guides
 
 ## Configuring where guides live
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c, EX-core-369:248c0ebf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 List the locations of guides as globs under `guides.files` in the configuration file.
 
@@ -95,7 +95,7 @@ guides:
 
 ## Fingerprints
 
-<!-- @kotowari[REQ-core-203:1fdc0443, TBL-core-026:382b0b95, EX-core-364:cc1080a1, EX-core-375:6d9bd3bb] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 A fingerprint is an 8-character lowercase hexadecimal value taken from the body of an item or scenario.
 It appears as `fingerprint` in the JSON of `kotowari list` and `kotowari query`.
@@ -132,7 +132,7 @@ The definition of the calculation is in [REQ-core-203](../ir/core/guides.md#REQ-
 
 ### The `guides` group
 
-<!-- @kotowari[REQ-core-206:e2f3dc5c, EX-core-371:f354c476] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7, docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 A `guides` group appears at the top level of the JSON of `kotowari check` and in `kotowari status`.
 
@@ -156,7 +156,7 @@ If a mistyped glob leaves you with zero guides, `files=0` lets you notice.
 
 ### `guide_stale` (notice)
 
-<!-- @kotowari[REQ-core-204:fa82249e, EX-core-363:9bff9f93, EX-core-365:542b2c69] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce] -->
 
 For each entry of a well-formed mark, one notice is reported when:
 
@@ -192,7 +192,7 @@ When two or more items with the same ID exist in the IR, the entry is not stale 
 
 ### `invalid_marker` (error)
 
-<!-- @kotowari[REQ-core-202:907dd989, EX-core-367:68e78a4a, EX-core-373:acd8d951] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 One finding per mark is reported (exit code 1) when:
 
@@ -230,7 +230,7 @@ $ kotowari check | jq -c .guides
 
 ## Steps for writing a guide
 
-<!-- @kotowari[REQ-core-205:7110f061] -->
+<!-- @kotowari[docs/decisions/core/guides.md#the-occasions-for-writing-and-reviewing-guides-are-placed-in-the-kotowari-skill:cfbcc10a] -->
 
 1. Read the IR and write a section for your readers.
 2. List the items and scenarios the section explains. Read their bodies with `kotowari query ID` and confirm that the section really is based on those items. If you do not know an ID, look it up with `kotowari list`.
@@ -244,7 +244,7 @@ Sections not tied to IR items, such as `## Related`, do not need a mark.
 
 ## Steps for reviewing a guide
 
-<!-- @kotowari[REQ-core-205:7110f061, REQ-core-204:fa82249e] -->
+<!-- @kotowari[docs/decisions/core/guides.md#the-occasions-for-writing-and-reviewing-guides-are-placed-in-the-kotowari-skill:cfbcc10a, docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce] -->
 
 When `guide_stale` appears, do the following for each finding.
 
@@ -260,7 +260,7 @@ Copying only the fingerprint without reading the section clears the notice while
 
 ### `marks` is 0 even though you wrote marks
 
-<!-- @kotowari[REQ-core-200:97b3eb9b, EX-core-366:c019e492] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guide-markers-are-read-only-from-inside-html-comments:6ad1c700] -->
 
 The mark is outside an HTML comment, or inside a code block or code span.
 Enclose it in `<!--` and `-->`, and keep it outside code.
@@ -268,7 +268,7 @@ A mark written after `-->` on the same line is not read either.
 
 ### `files` in `guides` is 0
 
-<!-- @kotowari[REQ-core-198:253e79fd, EX-core-369:248c0ebf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8] -->
 
 The configuration has no `guides.files`, or its globs match no files.
 Without `guides.files`, nothing is reported even if guides contain stale marks.
@@ -280,14 +280,14 @@ guides files=0 marks=0
 
 ### You fixed one entry, but the other entries of the same mark are still not checked
 
-<!-- @kotowari[REQ-core-202:907dd989, EX-core-373:acd8d951] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
 If even one entry in a mark is malformed, the whole mark becomes `invalid_marker`, and its well-formed entries are not checked either.
 Fix `invalid_marker` first, then look at `guide_stale`.
 
 ### Stopping because guide and test locations overlap
 
-<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 `tests.files` is too broad (such as `**/*`) and also matches guides.
 Files in languages without a query have every `@kotowari[` picked up, so kotowari stops to prevent guide marks from being read as test marks.

@@ -8,7 +8,7 @@ IR を書き終えたら既存のテストに印を付けていくと、どの�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-071:2eb26299, TBL-core-015:3a4c51ae, REQ-core-073:2133d014, REQ-core-074:e7275c62] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-ids-listed-with-commas-and-may-be-anywhere-in-a-line:74293754] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001]
@@ -28,7 +28,7 @@ IR を書き終えたら既存のテストに印を付けていくと、どの�
 
 ## まず1本付けてみる
 
-<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-026:382b0b95] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 例として、要求2つとシナリオ1つだけの小さな IR を用意しました。
 
@@ -89,7 +89,7 @@ fn req_156_item_has_body_and_referenced_by() {
 
 ## 印を置く場所
 
-<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-016:d4d7ced2, TBL-core-035:e8943c7c] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a, docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78] -->
 
 印が結び付くのは、テストの**直前のコメントの塊**にあるものだけです。
 塊は、テストの最初の行のすぐ上から上に向かって、空行が来るまで続くコメントの行です。
@@ -116,7 +116,7 @@ fn req_156_item_has_body_and_referenced_by() {
 
 ### Python と TypeScript の例
 
-<!-- @kotowari[EX-core-307:eb880f50, REQ-core-180:c597decc, EX-core-296:c2f1fd62] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78, docs/decisions/core/test-discovery.md#a-tests-name-is-taken-from-the-text-the-query-captured:a5dba3c1] -->
 
 Python では、印とテストの関数の間にデコレータがあっても結び付きます。
 
@@ -150,7 +150,7 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
 
 ### マクロの中のテスト
 
-<!-- @kotowari[TBL-core-017:aff9f804, EX-core-018:0b4c0d06] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868] -->
 
 `proptest!` のようなマクロの中でも、置き方は同じです。
 次はこのリポジトリの例で、説明の `///` と印の `//` がどちらもコメントの行として1つの塊になっています（`crates/kotowari-markdown-schema/tests/properties.rs` から）。
@@ -166,8 +166,6 @@ proptest! {
 マクロの中を読ませるには、設定の `tests.rust.macros` にマクロの名前が要ります（[つまずき](#マクロの中のテストが数えられない)）。
 
 ## 要求に付けるか、シナリオに付けるか
-
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8, EX-core-121:252c9340, EX-core-122:7a95532e] -->
 
 印に書く ID は、要求（`REQ-`）でもシナリオ（`EX-`）でもかまいません。
 `check` は2段で見ています。
@@ -203,7 +201,7 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 
 ### 検証が review の要求
 
-<!-- @kotowari[REQ-core-078:aec849b3, EX-core-123:18e5541b] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-that-points-at-a-line-checked-by-reading-is-not-an-error:e433e730] -->
 
 検証が `review` の要求（人か LLM が目で確かめる要求）にはテストは求められません。
 印で指しても誤りにはなりませんが、付けなくてもかまいません。
@@ -211,7 +209,7 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 
 ### `list` の `tests=0` は「テストが無い」とは限らない
 
-<!-- @kotowari[TBL-core-026:382b0b95, EX-core-122:7a95532e] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 `list` の `tests` は、その ID を**直接**書いた印だけを並べます。
 シナリオの ID だけを書いたとき、`list` では要求が `tests=0` に見えますが、`check` と `status` はテストありと数えます。
@@ -231,7 +229,7 @@ requirements unit=2 property=0 proof=0 review=0 with_tests=2 without_tests=0 rev
 
 ## どのテストが見つかるか
 
-<!-- @kotowari[REQ-core-079:589c548b, REQ-core-080:35cc39ab, REQ-core-081:d861bda1, TBL-core-031:aab33120] -->
+<!-- @kotowari[docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7, docs/decisions/core/test-discovery.md#tests-are-found-by-applying-queries-to-the-syntax-tree-not-by-searching-lines-with-regular-expressions:ce30c2d1, docs/decisions/core/test-discovery.md#the-correspondence-between-extensions-and-languages-is-the-same-as-ast-grep-and-is-case-sensitive:0894862d] -->
 
 kotowari は次の順でテストを見つけます。
 
@@ -243,7 +241,7 @@ kotowari は次の順でテストを見つけます。
 
 ### 同梱の問い合わせのある言語
 
-<!-- @kotowari[REQ-core-182:8ad61d2f, TBL-core-017:aff9f804, TBL-core-032:93a48eea, TBL-core-033:091add60, TBL-core-034:bf49690a, REQ-core-181:5c809bd5] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#queries-are-bundled-only-for-the-four-families-of-languages-the-user-uses:e806bd53, docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868, docs/decisions/core/test-queries.md#in-typescript-and-javascript-calls-of-it-and-test-are-counted:9a76e5a9, docs/decisions/core/test-queries.md#in-python-functions-and-methods-whose-names-start-with-test-are-counted:8ba7df8f, docs/decisions/core/test-queries.md#in-php-methods-and-calls-of-test-are-counted:a1039155, docs/decisions/core/test-discovery.md#overlapping-matches-on-the-same-node-count-as-one-and-a-test-inside-a-test-is-counted-separately:0ccd8b7a] -->
 
 | 言語 | テストと数えるもの | 全部の規則 |
 |---|---|---|
@@ -257,7 +255,7 @@ kotowari は次の順でテストを見つけます。
 
 ### 足りないときは設定で足す
 
-<!-- @kotowari[REQ-core-121:6502b5d5, REQ-core-186:cfb141ec] -->
+<!-- @kotowari[docs/decisions/core/query-rules.md#queries-are-added-with-testsrules-in-the-configuration-and-the-bundled-queries-cannot-be-removed:ec930518, docs/decisions/core/query-rules.md#a-rule-file-is-read-as-an-ast-grep-rule-yaml-as-it-is:10835ba2] -->
 
 | 足したいもの | 設定のキー |
 |---|---|
@@ -270,7 +268,7 @@ kotowari は次の順でテストを見つけます。
 
 ### 問い合わせの無い言語
 
-<!-- @kotowari[REQ-core-076:9413bda6, REQ-core-087:2c99751b, EX-core-124:5c88c586] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#in-files-of-a-language-without-a-query-all-markers-in-the-file-are-picked-up:d8565343, docs/decisions/core/coverage.md#markers-in-files-of-a-language-without-a-query-also-count-toward-satisfying-confirmation-rows:e4917759] -->
 
 Go や Java のように問い合わせの無い言語（拡張子の決まらないファイルを含む）では、kotowari は構文木を読みません。
 ファイルの中の印を、コメントかどうかも、どのテストの前かも問わずに全部拾い、要求とシナリオの「テストあり」に数えます。
@@ -294,7 +292,7 @@ docs/ir/discount.md:15 [error] requirement_without_test REQ-002
 
 ## 印に関わる指摘
 
-<!-- @kotowari[REQ-core-086:8035b3f8, REQ-core-072:0d066a71, REQ-core-077:082e5fe4, REQ-core-083:c11fae0c, REQ-core-118:2e6e1171] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
 
 | 指摘 | 重さ | 出る場面 | 行 | detail |
 |---|---|---|---|---|
@@ -315,7 +313,7 @@ docs/ir/discount.md:15 [error] requirement_without_test REQ-002
 
 ### 印とテストの間に空行がある
 
-<!-- @kotowari[EX-core-016:e63e6fd1, REQ-core-086:8035b3f8] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001]
@@ -337,7 +335,7 @@ tests/discount.rs:4 [error] test_without_id member_gets_ten_percent_off
 
 ### 関数の本体の中に書いた
 
-<!-- @kotowari[EX-core-306:e057840d, TBL-core-016:d4d7ced2] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a] -->
 
 ```rust
 #[test]
@@ -357,7 +355,7 @@ tests/discount.rs:2 [error] test_without_id member_gets_ten_percent_off
 
 ### 印とテストの間にコードの行がある
 
-<!-- @kotowari[EX-core-309:549f0665, TBL-core-035:e8943c7c] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78] -->
 
 ```ts
 describe('discount', () => {
@@ -378,7 +376,7 @@ TypeScript ではコメントの行以外が挟まると切れます。
 
 ### `describe` の上に書いた
 
-<!-- @kotowari[TBL-core-032:93a48eea, TBL-core-016:d4d7ced2] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-typescript-and-javascript-calls-of-it-and-test-are-counted:9a76e5a9, docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a] -->
 
 ```ts
 // @kotowari[REQ-002]
@@ -398,7 +396,7 @@ tests/discount.test.ts:3 [error] test_without_id non-member pays full price
 
 ### ID を書き間違えた
 
-<!-- @kotowari[REQ-core-077:082e5fe4, REQ-core-118:2e6e1171] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722] -->
 
 ```rust
 // @kotowari[REQ-010, EX-001]
@@ -423,7 +421,7 @@ tests/discount.rs:5 [error] unresolved_reference REQ002
 
 ### 印が閉じていない、中が空
 
-<!-- @kotowari[REQ-core-072:0d066a71, TBL-core-015:3a4c51ae] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#a-marker-is-ids-listed-with-commas-and-may-be-anywhere-in-a-line:74293754] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001
@@ -450,7 +448,7 @@ tests/discount.rs:5 [error] invalid_marker // @kotowari[]
 
 ### マクロの中のテストが数えられない
 
-<!-- @kotowari[REQ-core-082:2cab52bb, EX-core-018:0b4c0d06] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868] -->
 
 `proptest!` の中に印を付けても、設定が無ければマクロの中は読まれません。
 
@@ -479,7 +477,7 @@ tests:
 
 ### テストのファイルが `tests.files` に入っていない
 
-<!-- @kotowari[REQ-core-079:589c548b] -->
+<!-- @kotowari[docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7] -->
 
 テストを `spec/` に置いたまま、`tests.files` が `tests/**/*` だけのとき:
 
@@ -494,7 +492,7 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 
 ### 拡張子が大文字で、テストが見逃される
 
-<!-- @kotowari[REQ-core-081:d861bda1, EX-core-295:ac47cbef] -->
+<!-- @kotowari[docs/decisions/core/test-discovery.md#the-correspondence-between-extensions-and-languages-is-the-same-as-ast-grep-and-is-case-sensitive:0894862d] -->
 
 `test_discount.PY` に印の無い `def test_forgotten():` を足しても、何も言われません。
 

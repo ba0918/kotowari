@@ -2,7 +2,7 @@
 
 [English](cli.md) | 日本語
 
-<!-- @kotowari[REQ-core-001:4ea3a019] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-has-seven-commands-and-the-single-command-check-does-both-the-check-of-the-specification-and-the-check-of-the-correspondence-with-tests:d77a0bd7] -->
 
 kotowari の7つのコマンドに共通する決まりをまとめたページです。
 書式、共通のオプション、指摘の出し方、終了コード、止まったときの標準エラー、パスの基準を扱います。
@@ -10,7 +10,7 @@ kotowari の7つのコマンドに共通する決まりをまとめたページ�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-001:4ea3a019, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-has-seven-commands-and-the-single-command-check-does-both-the-check-of-the-specification-and-the-check-of-the-correspondence-with-tests:d77a0bd7, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
@@ -38,7 +38,7 @@ kotowari --version
 
 ## 共通のオプション
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/cli-environment.md#--help-and---version-are-taken-before-the-other-arguments-and-kotowari-outputs-the-usage-or-the-version-and-ends:f100d8c8, docs/decisions/core/overview-commands.md#overview-serve-writes-as-build-does-when-it-starts-and-serves-the-files-of-the-location-on-one-port-of-127001:dbf5bfdb] -->
 
 | 名前 | 値 | 既定 | 説明 | 受けるコマンド |
 |---|---|---|---|---|
@@ -65,7 +65,7 @@ kotowari --version
 
 ### JSON の指摘
 
-<!-- @kotowari[REQ-core-022:8e221eee, TBL-core-006:1b834d84, REQ-core-028:1c43e818] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/output.md#a-finding-is-output-with-the-five-keys-kind-severity-path-line-and-detail:ab004221, docs/decisions/core/finding-order.md#line-is-counted-from-1-and-a-finding-that-covers-the-whole-document-is-null:b98176aa] -->
 
 `--format json`（既定）では、標準出力に JSON を1つ出します。
 指摘の1件は次の5つの鍵を持つオブジェクトです。
@@ -83,7 +83,7 @@ JSON の最上位の鍵はコマンドごとに違います。
 
 ### text の指摘
 
-<!-- @kotowari[REQ-core-025:58025379, REQ-core-026:530a64e3] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 `--format text` では、1件を1行で出します。
 
@@ -99,7 +99,7 @@ JSON の最上位の鍵はコマンドごとに違います。
 
 ### 指摘の並び
 
-<!-- @kotowari[TBL-core-007:15954989, PROP-core-003:0d661079] -->
+<!-- @kotowari[docs/decisions/core/finding-order.md#findings-are-arranged-by-path-line-kind-and-detail-in-that-order:430be622] -->
 
 指摘は次の順に並びます。JSON でも text でも同じです。
 
@@ -115,7 +115,7 @@ JSON の最上位の鍵はコマンドごとに違います。
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-007:0f08bddc, TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 | コード | 意味 |
 |---|---|
@@ -129,7 +129,7 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ## 停止
 
-<!-- @kotowari[REQ-core-005:fee48254, REQ-core-109:4d28a72d] -->
+<!-- @kotowari[docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313, docs/decisions/core/cli-environment.md#unreadable-input-and-broken-input-become-a-stop-or-an-error-finding-and-are-not-silently-skipped:f1577593] -->
 
 入力を全体として読めないとき、kotowari は検査をせずに終了コード2で終わります。
 これを「停止」と呼びます。
@@ -143,7 +143,7 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 停止の理由
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57, TBL-core-001:0d8e4c30] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9, docs/decisions/core/cli-environment.md#the-details-of-a-stop-show-the-file-the-person-fixing-it-should-look-at-as-a-path-relative-to-the-base-directory:a832b365, docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313] -->
 
 | 1行目の文言 | 理由 | 詳細 | 主な場面 |
 |---|---|---|---|
@@ -161,7 +161,7 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 引数の誤り
 
-<!-- @kotowari[REQ-core-004:7719a0bd, EX-core-219:f17bce41, EX-core-241:6a451e97, REQ-core-304:e9cd623d] -->
+<!-- @kotowari[docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 次のどれかに当たると `argument error` で止まります（`--help` か `--version` があるときを除く）。
 
@@ -178,7 +178,7 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ## 基準のディレクトリ
 
-<!-- @kotowari[REQ-core-009:6b5a71a4, TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-010:5217a2ba] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba, docs/decisions/core/base-directory.md#paths-in-configuration-values-and-the-path-of-the-output-are-relative-to-the-base-directory:712ec2ff] -->
 
 kotowari の扱う相対パスには、基準が1つだけあります。
 それが「基準のディレクトリ」です。
@@ -201,7 +201,7 @@ kotowari の扱う相対パスには、基準が1つだけあります。
 
 ### パスの正規化
 
-<!-- @kotowari[REQ-core-110:04555fb0] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#paths-in-configuration-values-are-normalized-before-comparing-and-before-output:a1dd7f03] -->
 
 設定の値のパスと出典のパスは、比べる前と出力の前に次のように整えます。
 
@@ -214,7 +214,7 @@ kotowari の扱う相対パスには、基準が1つだけあります。
 
 ## 対象の環境
 
-<!-- @kotowari[REQ-core-108:8e9073d4] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#the-target-operating-systems-are-linux-and-macos-and-on-windows-only-the-normalization-of-path-separators-is-promised:03fcd5ae] -->
 
 kotowari は Linux と macOS を対象にしています。
 Windows では、パスの区切りの `\` を `/` に直すことだけを行い、それ以外の動作は約束していません。
@@ -225,7 +225,7 @@ Windows では、パスの区切りの `\` を `/` に直すことだけを行�
 
 ### 使い方と版を見る
 
-<!-- @kotowari[REQ-core-107:7c6198ca] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#--help-and---version-are-taken-before-the-other-arguments-and-kotowari-outputs-the-usage-or-the-version-and-ends:f100d8c8] -->
 
 ```console
 $ kotowari --version
@@ -254,7 +254,7 @@ Options:
 
 ### 引数を間違えて止まる
 
-<!-- @kotowari[REQ-core-004:7719a0bd, REQ-core-005:fee48254, EX-core-219:f17bce41] -->
+<!-- @kotowari[docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33, docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313] -->
 
 ```console
 $ kotowari
@@ -279,7 +279,7 @@ $ echo $?
 
 ### ファイルと設定の問題で止まる
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9, docs/decisions/core/cli-environment.md#the-details-of-a-stop-show-the-file-the-person-fixing-it-should-look-at-as-a-path-relative-to-the-base-directory:a832b365] -->
 
 ```console
 $ kotowari check --format text      # docs/decision/adr が無い
@@ -306,7 +306,7 @@ YAML の読み方に関わる設定の誤り（知らないキー、型の違い
 
 ### サブディレクトリから実行する
 
-<!-- @kotowari[TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-003:8ac6759c] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 `.kotowari/` のあるディレクトリの下の `tests/` で実行しても、基準は上の `.kotowari/` のあるディレクトリです。
 出力のパスは `tests/` からではなく、基準からの相対になります。
@@ -336,7 +336,7 @@ config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected 
 
 ### 終了コードが2で、標準出力に何も出ない
 
-<!-- @kotowari[REQ-core-005:fee48254, TBL-core-018:c435229b] -->
+<!-- @kotowari[docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313, docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9] -->
 
 検査を始める前に止まっています。
 標準出力ではなく、標準エラーの1行目を見てください。
@@ -345,14 +345,14 @@ JSON を `jq` に渡しているときは、`jq` が空の入力を受けて何�
 
 ### `--config` を付けたのに `config file not found` になる
 
-<!-- @kotowari[REQ-core-003:8ac6759c, PROP-core-001:9be33697] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba] -->
 
 `--config` のパスは、基準のディレクトリではなくカレントディレクトリからの相対で読みます。
 サブディレクトリで実行しているなら、`../` を付けるか絶対パスで指してください。
 
 ### 別の場所の `.kotowari/` が基準になっている
 
-<!-- @kotowari[REQ-core-009:6b5a71a4, TBL-core-003:603e9601] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba] -->
 
 基準のディレクトリは、カレントディレクトリから上へ探して最初に見つかった `.kotowari/` です。
 入れ子のリポジトリや、ホームディレクトリに `.kotowari/` があると、思わぬ所が基準になります。
@@ -360,7 +360,7 @@ JSON を `jq` に渡しているときは、`jq` が空の入力を受けて何�
 
 ### 注意（`[notice]`）が出ているのに終了コードが0
 
-<!-- @kotowari[TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 仕様どおりです。
 注意は終了コードを変えません。

@@ -2,7 +2,7 @@
 
 [English](check.md) | 日本語
 
-<!-- @kotowari[REQ-core-001:4ea3a019] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-has-seven-commands-and-the-single-command-check-does-both-the-check-of-the-specification-and-the-check-of-the-correspondence-with-tests:d77a0bd7] -->
 
 IR（仕様）の書き方の誤りと、IR とテストの対応の抜けを、1件ずつの指摘として挙げるコマンドです。
 IR やテストを書いたら実行し、指摘を直して、誤りが0件になるまで繰り返します。
@@ -10,7 +10,7 @@ IR の形の検査とテストとの対応の検査は、この1つのコマン�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:f86e2efd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
@@ -20,7 +20,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -34,7 +34,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/overview-toc.md#how-the-index-is-bundled-and-ordered-is-written-in-the-one-table-of-contents-file-that-overviewtoc-points-at:0883f676, docs/decisions/core/translation-pairs.md#guides-overview-source-data-and-the-table-of-contents-have-a-side-for-every-language-of-the-language-list:a581e9d7, docs/decisions/core/translation-pairs.md#the-sides-of-a-pair-are-told-apart-by-file-names-and-configuration-only:3c4056af] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
@@ -56,7 +56,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ### 設定ファイル
 
-<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 - `--config` が無ければ、基準のディレクトリの `.kotowari/config.yaml` を読みます。
 - そのファイルが無ければ、すべて既定の値で検査します。
@@ -66,7 +66,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:10278003] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46, docs/decisions/core/config.md#the-glob--is-read-recursively-and-hidden-directories-are-entered-only-when-named-by-a-path-component:6f67f22b] -->
 
 `ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
 どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
@@ -82,7 +82,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ### 文字コードと閉じないコードブロック
 
-<!-- @kotowari[REQ-core-111:a41af8e5, REQ-core-112:2fc914d5] -->
+<!-- @kotowari[docs/decisions/core/ir-input.md#a-leading-utf-8-bom-is-skipped-and-is-not-a-stop-as-a-file-that-is-not-utf-8:52a6c07c, docs/decisions/core/ir-input.md#an-unclosed-code-block-is-an-unclosed_code_block-error-and-from-its-start-to-the-end-of-the-document-is-not-read:c1db707e] -->
 
 読むファイルは UTF-8 である必要があります。
 先頭の BOM は読み飛ばすので、BOM 付きの UTF-8 でも止まりません。
@@ -95,7 +95,7 @@ IR の文書のコードブロックが閉じられずに文書が終わると�
 
 ### text
 
-<!-- @kotowari[REQ-core-025:58025379, REQ-core-026:530a64e3] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 1行が1件の指摘です。
 誤りも注意も無ければ、何も出しません。
@@ -121,7 +121,7 @@ text には、下の JSON の `files`、`lines`、`tests`、`guides`、`overview
 
 ### JSON
 
-<!-- @kotowari[REQ-core-022:8e221eee, TBL-core-005:73d0910b, PROP-core-002:35724b25, REQ-core-228:095b2109, REQ-core-288:0f3318d5] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7, docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9, docs/decisions/core/overview-output.md#the-json-of-check-carries-an-overview-group-of-the-same-form-as-guides:c1d88d3a] -->
 
 既定の出力です。
 標準出力に JSON のオブジェクトを1つ出します。
@@ -141,7 +141,7 @@ text には、下の JSON の `files`、`lines`、`tests`、`guides`、`overview
 
 ### JSON の `tests` と `guides`
 
-<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-206:e2f3dc5c] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-tests-of-checks-json-counts-the-test-files-read-per-extension:834f2486, docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7] -->
 
 `tests` と `guides` は、設定の glob が思った所に当たっているかを確かめるための数です。
 glob を書き間違えても指摘は出ないので、ここで確かめます。
@@ -161,7 +161,7 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ### 指摘の並びと行
 
-<!-- @kotowari[TBL-core-007:15954989, REQ-core-027:a594c5e0, TBL-core-019:d5c9adce] -->
+<!-- @kotowari[docs/decisions/core/finding-order.md#findings-are-arranged-by-path-line-kind-and-detail-in-that-order:430be622, docs/decisions/core/finding-order.md#line-is-counted-from-1-and-a-finding-that-covers-the-whole-document-is-null:b98176aa, docs/decisions/core/finding-order.md#the-line-of-findings-that-have-a-line-is-decided-per-kind-in-one-table:848f58fc] -->
 
 指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.ja.md#指摘の並び)）。
 同じ行の指摘は、種類の名前の順に並びます。
@@ -175,7 +175,7 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 | コード | 意味 |
 |---|---|
@@ -187,7 +187,7 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ## テストより先に仕様をコミットする
 
-<!-- @kotowari[REQ-core-357:352c971a, TBL-core-047:0a2c3aa9] -->
+<!-- @kotowari[docs/decisions/core/test-side-findings.md#with---allow-test-findings-check-does-not-count-test-side-findings-toward-the-exit-code:b75bbdf7, docs/decisions/core/test-side-findings.md#test-side-findings-are-limited-to-errors-caused-by-test-files-and-their-range-is-set-in-a-table:09dd0c43] -->
 
 仕様はふつう、それを確かめるテストを書くより先に承認してコミットします。
 そのコミットの時点では新しい要求とシナリオにまだテストが無いので、`check` は `requirement_without_test` と `scenario_without_test` を出し、終了コード1で終わります。
@@ -216,7 +216,7 @@ $ echo $?
 
 ### フックのどこで使うか
 
-<!-- @kotowari[REQ-core-358:879777ff] -->
+<!-- @kotowari[docs/decisions/core/test-side-findings.md#how-to-build-the-hooks-is-guided-in-the-skill-and-in-the-guide-of-check:3bde432b] -->
 
 - pre-commit のフックでは `kotowari check --allow-test-findings` を走らせます。仕様を承認するコミットが、テストより先だという理由で止まらないようにするためです。
 - pre-push のフックと CI では、オプションを付けずに `kotowari check` を走らせます。テストの無い要求やシナリオを残したまま共有のブランチに届けないためです。
@@ -237,7 +237,7 @@ tests/greet.rs                            テスト2本
 
 ### 書いたばかりの IR を検査する
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-086:8035b3f8, REQ-core-137:cb66f5a8] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 IR の本体（`docs/ir/greet/greet.md`）とテストは次のとおりです。
 
@@ -305,8 +305,6 @@ $ kotowari check | jq '.findings[0]'
 
 ### テストの印を直す
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8] -->
-
 `rejects_empty_name` に印を足し、`greets_with_name` の印をシナリオの ID に替えます。
 シナリオの印は、そのシナリオの `@about` の要求の分も満たします。
 今は作らないと決めた要求なら、印の代わりに[後回し](../deferred.ja.md)を宣言してもこの誤りは消えます。
@@ -330,7 +328,7 @@ docs/ir/greet/greet.md:21 [error] vague_word 必要に応じて
 
 ### IR を直して0件にする
 
-<!-- @kotowari[REQ-core-058:0012abf7, REQ-core-064:75e8708a, REQ-core-066:79261ab9] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#the-specification-lives-only-in-decision-documents-one-per-topic-holding-the-decisions-now-in-force:d2ea663b, docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b] -->
 
 出典を実在する `#A2` に直し、用語集に「停止」を足し、「必要に応じて」を具体的な文に書き替えます。
 
@@ -350,7 +348,7 @@ $ kotowari check | jq -c .
 
 ### 注意だけが出る
 
-<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/ir-document.md#the-line-count-and-requirement-count-limit-notices-too_many_lines-and-too_many_requirements-are-removed:776e616c, docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 `limits.lines` を20に下げた設定で試すと、行数の注意が出ます。
 注意だけなので終了コードは0です。
@@ -366,7 +364,7 @@ $ echo $?
 
 ### 設定ファイルを置いていないのに `unreadable file` で止まる
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46, docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 ```console
 $ kotowari check --format text
@@ -378,7 +376,7 @@ ADR を使わないなら、空の `docs/decision/adr/` を作るか、設定の
 
 ### テストを書いたのに `tests` が `{}` のまま
 
-<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-015:44b9e418] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-tests-of-checks-json-counts-the-test-files-read-per-extension:834f2486, docs/decisions/core/config.md#a-list-key-accepts-only-a-list-the-list-written-replaces-the-default-and-an-empty-list-is-a-list-with-no-elements:7c2ef13f] -->
 
 `tests.files` の glob がテストのファイルに当たっていません。
 既定は `src/**/*.rs` と `tests/**/*.rs` だけです。
@@ -387,14 +385,14 @@ Rust 以外のテストや、別の場所のテストは、設定の `tests.file
 
 ### ガイドを書いたのに `guides.files` が0
 
-<!-- @kotowari[REQ-core-206:e2f3dc5c] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7] -->
 
 `guides.files` の既定は空の一覧なので、設定に書くまでガイドは読まれません。
 設定に glob を書いてください（[writing-guides.md](../writing-guides.ja.md)）。
 
 ### 印を書いたのに `test_without_id` が消えない
 
-<!-- @kotowari[REQ-core-086:8035b3f8] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 印の位置が違う可能性があります。
 印はテストの直前のコメントの塊に書きます。

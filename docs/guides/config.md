@@ -7,7 +7,7 @@ kotowari runs with default values when the file is absent, so you write only the
 
 ## Format
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:4a231543, TBL-core-004:3b95b98e] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/config.md#configuration-keys-are-read-in-nested-form:362c94cc] -->
 
 Written out with every key at its default value, it looks like this.
 Keys are written nested (`records:` under `decisions:`).
@@ -57,7 +57,7 @@ The values in the example above show how to write them; they are not defaults.
 
 ## Key list
 
-<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/overview-toc.md#how-the-index-is-bundled-and-ordered-is-written-in-the-one-table-of-contents-file-that-overviewtoc-points-at:0883f676] -->
 
 | Key | Value type | Default | Description |
 |---|---|---|---|
@@ -86,7 +86,7 @@ The full definition is TBL-core-004 in [the config IR](../ir/core/config.md).
 
 ## Languages and pairs — `languages` and `labels`
 
-<!-- @kotowari[REQ-core-334:c2dc1692, REQ-core-335:b51997f0, REQ-core-336:03710aae, REQ-core-337:40375497, REQ-core-339:81c3b742, REQ-core-351:bfccf5f2, REQ-core-352:7b5a3a7f, TBL-core-046:105022e3] -->
+<!-- @kotowari[docs/decisions/core/translation-pairs.md#the-language-list-is-decided-by-the-configurations-languages:5f3acf76, docs/decisions/core/translation-pairs.md#if-a-language-tag-has-the-wrong-form-or-is-duplicated-it-stops:a295d74f, docs/decisions/core/translation-pairs.md#guides-overview-source-data-and-the-table-of-contents-have-a-side-for-every-language-of-the-language-list:a581e9d7, docs/decisions/core/translation-pairs.md#the-sides-of-a-pair-are-told-apart-by-file-names-and-configuration-only:3c4056af, docs/decisions/core/translation-pairs.md#the-agreement-record-holds-the-blob-hash-of-each-side-as-of-the-last-time-they-were-confirmed-to-have-the-same-content:f29e5af9, docs/decisions/core/overview-languages.md#kotowari-holds-the-english-ui-strings-and-other-languages-are-written-in-the-configurations-labels:5ea9a22b, docs/decisions/core/overview-languages.md#if-the-ui-string-configuration-is-missing-something-or-a-number-is-placed-wrongly-it-stops-with-a-configuration-error:0777130f] -->
 
 `languages` is a sequence of language tags (e.g. `[ja, en]`).
 A language tag consists only of lowercase English letters, digits and `-`; an empty string, a language tag containing other characters, or a second occurrence of the same language tag stops kotowari with a configuration error.
@@ -133,7 +133,7 @@ Even a project that does not use overviews needs `labels` for non-English langua
 
 ## Where the configuration file is
 
-<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c, REQ-core-020:2b67aa66] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | What you specify | File read |
 |---|---|
@@ -154,7 +154,7 @@ $ echo $?
 
 ## Base directory
 
-<!-- @kotowari[REQ-core-009:6b5a71a4, TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-010:5217a2ba] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba, docs/decisions/core/base-directory.md#paths-in-configuration-values-and-the-path-of-the-output-are-relative-to-the-base-directory:712ec2ff] -->
 
 Paths in configuration values, paths in sources, and the `path` in the output are all relative to the base directory.
 The base directory is determined in this order.
@@ -182,7 +182,7 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
 
 ### How to write paths
 
-<!-- @kotowari[REQ-core-110:04555fb0, REQ-core-010:5217a2ba] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#paths-in-configuration-values-are-normalized-before-comparing-and-before-output:a1dd7f03, docs/decisions/core/base-directory.md#paths-in-configuration-values-and-the-path-of-the-output-are-relative-to-the-base-directory:712ec2ff] -->
 
 Paths in configuration values are normalized before they are compared and before they are printed.
 A trailing `/` and a leading `./` are removed, `//` and `/./` are folded into a single `/`, `\` becomes `/`, and `a/..` is folded.
@@ -191,7 +191,7 @@ Absolute paths starting with `/` cannot be written ([Configuration errors](#conf
 
 ## When the file is missing or empty
 
-<!-- @kotowari[REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 | Situation | Behavior |
 |---|---|
@@ -201,7 +201,7 @@ Absolute paths starting with `/` cannot be written ([Configuration errors](#conf
 
 ## List keys
 
-<!-- @kotowari[REQ-core-015:44b9e418, REQ-core-016:cca736db] -->
+<!-- @kotowari[docs/decisions/core/config.md#a-list-key-accepts-only-a-list-the-list-written-replaces-the-default-and-an-empty-list-is-a-list-with-no-elements:7c2ef13f] -->
 
 List keys (`tests.files`, `guides.files`, `vague_words` and so on) take only lists.
 A list you write **replaces** the default list rather than being added to it.
@@ -218,7 +218,7 @@ With `vague_words: []`, the vague word check reports nothing.
 
 ## How globs are read
 
-<!-- @kotowari[REQ-core-019:10278003, REQ-core-079:589c548b] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-glob--is-read-recursively-and-hidden-directories-are-entered-only-when-named-by-a-path-component:6f67f22b, docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7] -->
 
 The globs of `tests.files`, `guides.files`, `surface.files` and `overview.files` are read as follows.
 
@@ -240,7 +240,7 @@ So even an unreadable directory in a place no glob matches stops kotowari.
 
 ### `ir`, `decisions.records`, `decisions.adr`
 
-<!-- @kotowari[REQ-core-018:6ea3e08f] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46] -->
 
 `kotowari check` stops with the unreadable file reason when the target does not exist, is not a directory, or cannot be read.
 
@@ -257,7 +257,7 @@ If the location exists but simply has no documents in it, the check runs without
 
 ### `tests.rust.attributes` and `tests.rust.macros`
 
-<!-- @kotowari[TBL-core-017:aff9f804, EX-core-017:d7ca524e, EX-core-018:0b4c0d06] -->
+<!-- @kotowari[docs/decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration:1e514868] -->
 
 | Key | How to write it | How it matches |
 |---|---|---|
@@ -269,7 +269,7 @@ For usage, see [Marking tests](marks.md#tests-inside-a-macro-are-not-counted).
 
 ### `tests.rules`
 
-<!-- @kotowari[REQ-core-121:6502b5d5, REQ-core-186:cfb141ec, REQ-core-187:a464f692, REQ-core-188:e1781d9c] -->
+<!-- @kotowari[docs/decisions/core/query-rules.md#queries-are-added-with-testsrules-in-the-configuration-and-the-bundled-queries-cannot-be-removed:ec930518, docs/decisions/core/query-rules.md#a-rule-file-is-read-as-an-ast-grep-rule-yaml-as-it-is:10835ba2, docs/decisions/core/query-rules.md#the-files-and-ignores-of-a-rule-are-honoured-with-the-same-reading-as-ast-grep:12882344, docs/decisions/core/query-rules.md#the-fix-message-severity-note-and-metadata-of-a-rule-are-not-used:701450c7] -->
 
 Adds, through ast-grep rules, tests of shapes the bundled queries do not find.
 The listed paths are relative to the base directory, and globs are not allowed.
@@ -323,7 +323,7 @@ You can try the rule file as is with `ast-grep scan -r rules/bench.yml`.
 
 ### `guides.files`
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
+<!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 Where the guides are. For how to write them, see [Writing guides](writing-guides.md).
 
@@ -334,7 +334,7 @@ Where the guides are. For how to write them, see [Writing guides](writing-guides
 
 ### `surface.files`, `surface.rules`, `surface.unspecified`
 
-<!-- @kotowari[REQ-core-224:f13b971e, REQ-core-225:be4cdd0b, REQ-core-229:7909d808] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surface-rules-and-surface-files-are-read-with-the-same-construction-as-testsrules-and-testsfiles:77fb35de, docs/decisions/core/surface.md#when-the-surface-configuration-keys-are-not-all-present-every-command-that-reads-the-configuration-stops:ab3a2fa6, docs/decisions/core/surface.md#only-check-and-status-read-surfaces:77268ec4] -->
 
 Settings for the check that takes user-visible surfaces (CLI subcommands and flags, configuration keys and so on) out of the code and confirms they are written in the IR.
 For usage, see [Surface check](surface.md).
@@ -354,7 +354,7 @@ config error: .kotowari/config.yaml: surface.rules is set but surface.files is e
 
 ### `mutants.equivalents`
 
-<!-- @kotowari[REQ-core-148:9dc7ec0a] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#judgments-of-equivalence-are-placed-in-the-yaml-list-that-mutantsequivalents-in-the-configuration-points-at:820edb3b] -->
 
 Points at the file of the list of equivalents. Only `kotowari mutants` reads it.
 `kotowari check` only checks the form of the value (that it is a string and not an absolute path), not whether the file exists.
@@ -362,7 +362,7 @@ For how to write the list, see [kotowari mutants](commands/mutants.md).
 
 ### `limits.lines`, `limits.requirements`, `vague_words`
 
-<!-- @kotowari[REQ-core-038:170fdd3e, REQ-core-039:f3d75ba1, REQ-core-066:79261ab9] -->
+<!-- @kotowari[docs/decisions/core/ir-document.md#the-line-count-and-requirement-count-limit-notices-too_many_lines-and-too_many_requirements-are-removed:776e616c, docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b] -->
 
 | Key | Finding when exceeded or matched | Severity |
 |---|---|---|
@@ -385,7 +385,7 @@ $ echo $?
 
 ## Configuration errors
 
-<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:34f4b3ee, TBL-core-004:3b95b98e, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-configuration-file-cannot-be-read-as-yaml-or-its-keys-and-values-do-not-follow-the-rules-kotowari-stops-with-a-configuration-error:586c1e39, docs/decisions/core/surface.md#when-the-surface-configuration-keys-are-not-all-present-every-command-that-reads-the-configuration-stops:ab3a2fa6, docs/decisions/core/overview-data.md#if-the-overview-source-data-overlaps-the-location-of-guides-or-tests-it-stops-with-a-configuration-error:297c8b21, docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/overview-toc.md#if-the-table-of-contents-file-is-also-in-the-location-of-source-data-guides-or-tests-it-stops-with-a-configuration-error:2c8a72ee, docs/decisions/core/translation-pairs.md#if-a-language-tag-has-the-wrong-form-or-is-duplicated-it-stops:a295d74f, docs/decisions/core/overview-languages.md#if-the-ui-string-configuration-is-missing-something-or-a-number-is-placed-wrongly-it-stops-with-a-configuration-error:0777130f] -->
 
 If any of the following is present, kotowari stops without checking (exit code 2).
 The first line of standard error starts with `config error: `, followed by the configuration file's path and the reason.
@@ -449,7 +449,7 @@ Other errors that come from reading the YAML (unknown key, wrong type, 0) are fo
 
 ### Errors in `tests.rules` files
 
-<!-- @kotowari[REQ-core-189:5b4f081a, EX-core-315:92402027, EX-core-378:e7924545, EX-core-379:8e774593] -->
+<!-- @kotowari[docs/decisions/core/query-rules.md#if-a-rule-file-has-an-error-it-stops-as-a-configuration-error:b29a5e1d] -->
 
 kotowari also stops with a configuration error when:
 
@@ -482,7 +482,7 @@ Duplicate rule `id`s are not an error.
 
 ### Stopping on an unknown key
 
-<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-configuration-file-cannot-be-read-as-yaml-or-its-keys-and-values-do-not-follow-the-rules-kotowari-stops-with-a-configuration-error:586c1e39] -->
 
 ```console
 $ cat .kotowari/config.yaml
@@ -507,7 +507,7 @@ Writing a nested key (`decisions.records`) on one line as `decisions.records:` a
 
 ### Adding a glob for tests stopped the original tests from being read
 
-<!-- @kotowari[REQ-core-015:44b9e418] -->
+<!-- @kotowari[docs/decisions/core/config.md#a-list-key-accepts-only-a-list-the-list-written-replaces-the-default-and-an-empty-list-is-a-list-with-no-elements:7c2ef13f] -->
 
 Writing `tests.files` removes the defaults `src/**/*.rs` and `tests/**/*.rs`.
 If you want the original locations read as well, list them all.
@@ -529,7 +529,7 @@ If it says `marks=0` with no per-extension counts, the globs matched nothing.
 
 ### Stopping because the guide and test locations overlap
 
-<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 ```console
 $ cat .kotowari/config.yaml
@@ -549,7 +549,7 @@ After fixing and running again, the next file is shown if there are other overla
 
 ### `kotowari.toml` is not read
 
-<!-- @kotowari[REQ-core-020:2b67aa66] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 The configuration is `.kotowari/config.yaml` only.
 A `kotowari.toml` at the top is not read even if its content has errors, and the check runs with the default values.

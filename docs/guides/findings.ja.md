@@ -2,7 +2,7 @@
 
 [English](findings.md) | 日本語
 
-<!-- @kotowari[REQ-core-029:f774ea58, REQ-core-030:4fe666c1, REQ-core-031:069a10b3] -->
+<!-- @kotowari[docs/decisions/core/findings.md#the-detail-of-a-finding-is-a-short-string-that-identifies-that-finding-decided-per-kind-in-a-table:9134c812, docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd] -->
 
 `kotowari check`、`kotowari mutants`、`kotowari plan` が出す指摘の種類を、すべて並べたページです。
 出力に知らない種類が出たら、まず下の一覧で引き、原因と直し方は種類をまとめた節で読んでください。
@@ -19,7 +19,7 @@
 
 ## 種類の一覧
 
-<!-- @kotowari[TBL-core-008:67ba1ee9, TBL-core-009:e3c60d7c, TBL-core-019:d5c9adce, REQ-core-027:a594c5e0] -->
+<!-- @kotowari[docs/decisions/core/findings.md#the-detail-of-a-finding-is-a-short-string-that-identifies-that-finding-decided-per-kind-in-a-table:9134c812, docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd, docs/decisions/core/finding-order.md#the-line-of-findings-that-have-a-line-is-decided-per-kind-in-one-table:848f58fc, docs/decisions/core/finding-order.md#line-is-counted-from-1-and-a-finding-that-covers-the-whole-document-is-null:b98176aa] -->
 
 「行」の列は、指摘の `line` が指す行です。
 「なし」は文書全体への指摘で、`line` は null、text では `-` になります。
@@ -111,7 +111,7 @@
 
 ### 文書の形
 
-<!-- @kotowari[REQ-core-034:085fbd4f, REQ-core-035:c0b9706a, REQ-core-036:cb09c25d, REQ-core-174:18bfdd84, REQ-core-112:2fc914d5] -->
+<!-- @kotowari[docs/decisions/core/ir-document.md#a-decision-document-has-one-title-and-each-title-from-the-second-on-is-a-multiple_titles-error:e414db7f, docs/decisions/core/ir-document.md#for-the-paragraph-after-the-title-only-its-presence-is-checked-not-its-content-line-count-or-separation-of-responsibilities:cfff5c08, docs/decisions/core/ir-input.md#an-unclosed-code-block-is-an-unclosed_code_block-error-and-from-its-start-to-the-end-of-the-document-is-not-read:c1db707e] -->
 
 ```text
 docs/ir/misc/notitle.md:- [error] missing_title notitle.md
@@ -133,7 +133,7 @@ docs/ir/misc/table.md:18 [error] unclosed_code_block ```gherkin
 
 ### 項目の見出しと行
 
-<!-- @kotowari[REQ-core-043:3153d158, REQ-core-044:a3667e95, REQ-core-045:d0c5af4a, REQ-core-098:1e550dfe] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 ```text
 docs/ir/shop/cart.md:12 [error] duplicate_field verification
@@ -154,7 +154,7 @@ docs/ir/shop/cart.md:47 [error] unknown_heading ### 備考
 
 ### 項目の値と文
 
-<!-- @kotowari[REQ-core-047:5359a274, REQ-core-099:05bae6bf, REQ-core-048:8122d6a7, REQ-core-049:741e10ff, REQ-core-050:bf67c1c1, REQ-core-051:84d0e9f4] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 ```text
 docs/ir/shop/cart.md:16 [error] algorithm_without_definition REQ-shop-002
@@ -174,7 +174,7 @@ docs/ir/misc/table.md:8 [error] missing_table TBL-misc-001
 
 ### 出典
 
-<!-- @kotowari[REQ-core-059:8ec34dd6, REQ-core-058:0012abf7, TBL-core-012:df66ea46, REQ-core-210:0772cc2a] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#the-specification-lives-only-in-decision-documents-one-per-topic-holding-the-decisions-now-in-force:d2ea663b, docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
 ```text
 docs/ir/shop/cart.md:22 [error] missing_source REQ-shop-003
@@ -192,7 +192,7 @@ kotowari が見るのは、出典の先が実在するかだけです。
 
 ### 用語と曖昧語
 
-<!-- @kotowari[REQ-core-064:75e8708a, REQ-core-065:e0fe5913, REQ-core-116:a444487b, REQ-core-066:79261ab9, REQ-core-070:08653b2b] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b, docs/decisions/core/decision-documents.md#to-refer-to-another-decision-link-to-its-heading:41ba3d75] -->
 
 ```text
 docs/ir/greet/greet.md:21 [error] unknown_term 停止
@@ -213,7 +213,7 @@ docs/ir/shop/cart.md:36 [error] missing_document price.md
 
 ### 用語集
 
-<!-- @kotowari[REQ-core-117:8d685215, REQ-core-122:6644ecb4, REQ-core-123:d1df9959, REQ-core-174:18bfdd84] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b] -->
 
 ```text
 docs/ir/misc/CONTEXT.md:- [error] glossary_invalid CONTEXT.md
@@ -231,7 +231,7 @@ docs/ir/shop/CONTEXT.md:7 [error] invalid_glossary_row | 在庫 | |
 
 ### ID と参照
 
-<!-- @kotowari[REQ-core-032:6a7acc09, REQ-core-054:cb34b375, REQ-core-114:85e0323f, REQ-core-167:33769b03] -->
+<!-- @kotowari[docs/decisions/core/findings.md#if-the-same-id-is-in-several-places-duplicate_id-is-reported-for-each-place-from-the-second-on:3c1e544c, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4, docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b, docs/decisions/core/findings.md#if-the-group-name-of-a-confirmation-id-does-not-match-the-group-folder-it-is-placed-in-it-is-an-id_domain_mismatch-error:cf755b08] -->
 
 ```text
 docs/ir/shop/cart.md:30 [error] duplicate_id REQ-shop-001
@@ -251,7 +251,7 @@ ID の形は [ir-references.md の REQ-core-124](../ir/core/ir-references.ja.md)
 
 ### シナリオ
 
-<!-- @kotowari[REQ-core-053:a27fbee7, REQ-core-052:20cc2383, REQ-core-113:5093fb04] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 ```text
 docs/ir/shop/cart.md:52 [error] unknown_tag @tags
@@ -267,7 +267,7 @@ docs/ir/shop/cart.md:64 [error] invalid_gherkin_line   Examples:
 
 ### 文書の大きさ
 
-<!-- @kotowari[REQ-core-038:170fdd3e, REQ-core-039:f3d75ba1] -->
+<!-- @kotowari[docs/decisions/core/ir-document.md#the-line-count-and-requirement-count-limit-notices-too_many_lines-and-too_many_requirements-are-removed:776e616c] -->
 
 この2つは注意で、終了コードを変えません。
 
@@ -288,7 +288,7 @@ docs/ir/shop/cart.md:- [notice] too_many_requirements 5
 
 ### テストとの対応
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8, REQ-core-086:8035b3f8, REQ-core-072:0d066a71, REQ-core-083:c11fae0c] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
 
 ```text
 docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
@@ -313,7 +313,7 @@ tests/broken.rs:- [error] unparsable_file tests/broken.rs
 
 ### 後回し
 
-<!-- @kotowari[REQ-core-211:e38f935b, REQ-core-212:070f1cfc] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
 ```text
 docs/ir/greet/greet.md:13 [notice] depends_on_deferred REQ-greet-001 REQ-greet-003
@@ -329,7 +329,7 @@ docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
 
 ### ガイドの印
 
-<!-- @kotowari[REQ-core-202:907dd989, REQ-core-204:fa82249e] -->
+<!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7, docs/decisions/core/guides.md#a-stale-marker-is-a-guide_stale-notice-and-does-not-change-the-exit-code-or-complete:7b8dc3ce] -->
 
 ```text
 guides/cart.md:3 [notice] guide_stale REQ-shop-001 00000000 b27eedf4
@@ -348,7 +348,7 @@ guides/cart.md:7 [error] invalid_marker <!-- @kotowari[REQ-shop-002] -->
 
 ### 面の検査
 
-<!-- @kotowari[REQ-core-227:9203538c, REQ-core-233:f788681d, REQ-core-234:8a2d9f6e, REQ-core-236:45fa5c5f] -->
+<!-- @kotowari[docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0, docs/decisions/core/surface-unspecified.md#a-malformed-entry-is-an-error-and-an-entry-no-longer-needed-is-a-notice:090bd4da, docs/decisions/core/surface.md#only-surface-files-in-the-languages-of-the-rules-are-read-and-parsed-into-syntax-trees-and-other-surface-files-are-not-read:82d0c416] -->
 
 設定の `surface.rules` を書いたプロジェクトでだけ出ます（[surface.md](surface.ja.md)）。
 
@@ -369,7 +369,7 @@ src/cli.rs:12 [error] surface_without_spec flag --verbose
 
 ### 判断の記録
 
-<!-- @kotowari[REQ-core-130:f72db551, REQ-core-131:f15cd286, REQ-core-132:cb010297] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#the-specification-lives-only-in-decision-documents-one-per-topic-holding-the-decisions-now-in-force:d2ea663b, docs/decisions/core/decision-documents.md#rewrite-when-a-fact-changes-when-overturning-a-decision-write-the-old-decision-in-rejected-options:371ec613] -->
 
 ```text
 docs/decision/records/2026-09-24-shop.md:10 [error] record_field_missing why
@@ -388,7 +388,7 @@ docs/decision/records/2026-09-24-shop.md:17 [error] revision_link_invalid #A9
 
 ### 対
 
-<!-- @kotowari[REQ-core-338:e8fc8d74, REQ-core-339:81c3b742, REQ-core-341:3b853a41, REQ-core-345:589adca5, REQ-core-346:80c8eb1e, REQ-core-347:9420480c, REQ-core-348:12801181, REQ-core-349:f2ae1da2, REQ-core-342:7087b408, REQ-core-343:4f2cb7d4] -->
+<!-- @kotowari[docs/decisions/core/translation-pairs.md#guides-overview-source-data-and-the-table-of-contents-have-a-side-for-every-language-of-the-language-list:a581e9d7, docs/decisions/core/translation-pairs.md#the-agreement-record-holds-the-blob-hash-of-each-side-as-of-the-last-time-they-were-confirmed-to-have-the-same-content:f29e5af9, docs/decisions/core/translation-pairs.md#if-a-side-is-changed-without-updating-the-agreement-record-that-side-is-stale:af90c9ef, docs/decisions/core/translation-structure.md#the-sides-of-a-pair-must-match-in-their-skeleton-everything-other-than-natural-language-sentences:ee743f40, docs/decisions/core/translation-structure.md#each-side-of-a-guide-pair-has-a-switcher-line-right-after-the-title:b65862b3, docs/decisions/core/translation-structure.md#links-inside-guides-and-overview-source-data-point-at-the-side-of-the-same-language:5e21d8c6, docs/decisions/core/translation-structure.md#links-from-decision-documents-and-their-paired-sides-to-the-frozen-tree-are-errors:f09f73fc, docs/decisions/core/translation-pairs.md#for-pairs-of-decision-documents-counting-and-output-are-done-on-the-first-languages-side-only:f5bf6692, docs/decisions/core/translation-pairs.md#the-staleness-of-guide-markers-is-reported-on-every-side-of-a-guide-pair:de48ce93] -->
 
 設定の `languages` に2つ以上の言語を書いたプロジェクトでだけ出ます（[言語と対](config.ja.md#言語と対--languages-と-labels)）。
 1つの対がIRとガイドのように2つの置き場から読まれても、同じ指摘は1回だけ出ます。translation_missing と translation_stale は側ごとに出ます。
@@ -419,7 +419,7 @@ guides/g.md:3 [error] link_to_record ../docs/decision/records/r.md#A1
 
 ### mutants と plan
 
-<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-140:49dd0d6f, REQ-core-142:3cafdd68, REQ-core-143:de58796f, REQ-core-193:ee3eed54] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315, docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c] -->
 
 この5種類は `kotowari check` では出ません。
 `kotowari mutants` と `kotowari plan` だけが出します。
@@ -507,7 +507,7 @@ $ echo $?
 
 ### 1か所の誤りから、同じ行に指摘がいくつも出る
 
-<!-- @kotowari[REQ-core-043:3153d158] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 形に合わない見出し（上の例の `### 備考`）の下も、項目の規則で読まれます。
 そのため `unknown_heading` と一緒に、`missing_source`、`missing_statement`、`verification_missing` などが並びます。
@@ -515,7 +515,7 @@ $ echo $?
 
 ### 印の ID を書き間違えたのに `test_without_id` にならない
 
-<!-- @kotowari[REQ-core-077:082e5fe4, REQ-core-054:cb34b375] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
 存在しない ID だけを指す印でも、そのテストは「印あり」と数えます。
 代わりに、印の行に `unresolved_reference` が、要求の側に `requirement_without_test` が出ます。
@@ -528,7 +528,7 @@ tests/greet.rs:5 [error] unresolved_reference REQ-greet-02
 
 ### 注意が残っているのに終了コードが0
 
-<!-- @kotowari[REQ-core-031:069a10b3] -->
+<!-- @kotowari[docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd] -->
 
 仕様どおりです。
 注意の8種類は、終了コードも `status` の `complete` も変えません。

@@ -2,7 +2,7 @@
 
 English | [日本語](list.ja.md)
 
-<!-- @kotowari[REQ-core-151:c8db3df3] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6] -->
 
 `kotowari list` lists the items and scenarios of the IR (the specification), together with the tests whose marks point at them.
 Use it when you want to see which tests are attached to which requirement, or when you want to hand the whole specification to an LLM in one go.
@@ -10,7 +10,7 @@ It reports no findings. To see findings, use [`kotowari check`](./check.md).
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 ```sh
 kotowari list [--format json|text] [--config <path>]
@@ -23,7 +23,7 @@ It takes no positional arguments.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-155:586b389e, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -45,7 +45,7 @@ Items come only from the first-language side of each pair.
 
 ### text
 
-<!-- @kotowari[REQ-core-155:586b389e, EX-core-248:6b0b85d0, EX-core-399:663dc658] -->
+<!-- @kotowari[docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
 
 Each entry is printed on one line, followed by its marked tests, one per line, indented.
 
@@ -76,7 +76,7 @@ docs/ir/a.md ja=78981922613b2afb6025042ff6bd878ac1994e85 en=-
 
 ### JSON
 
-<!-- @kotowari[TBL-core-026:382b0b95, REQ-core-153:513617dc, EX-core-288:4229c3fc, REQ-core-155:586b389e] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
 
 The top level is an object with `items`, plus `translations` only when `languages` lists two or more languages.
 `items` is an array of objects, one per entry, and the keys each one has depend on its kind. Keys an entry does not have are omitted.
@@ -115,14 +115,14 @@ Copy `blob` into the consistency record `<stem>.i18n.yaml` ([Languages and pairs
 
 ### Ordering
 
-<!-- @kotowari[REQ-core-154:1d379703] -->
+<!-- @kotowari[docs/decisions/core/list.md#the-order-is-by-path-and-by-line-within-the-same-path:37893e8e] -->
 
 `items` is in ascending `path` order, and within the same `path`, in ascending `line` order.
 The `tests` of each entry are likewise ordered by `path`, then `line`.
 
 ## Exit codes
 
-<!-- @kotowari[REQ-core-151:c8db3df3, REQ-core-152:04c37477] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6, docs/decisions/core/list.md#list-stops-under-the-same-conditions-as-check-and-does-not-read-guides-or-surfaces:7fe55f1b] -->
 
 | Code | Meaning |
 |---|---|
@@ -135,7 +135,7 @@ The reasons and messages for stopping are the same as for `check` ([CLI common r
 
 ## Example
 
-<!-- @kotowari[EX-core-245:37c957d4, EX-core-248:6b0b85d0] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
 
 This is the result of running it on a small IR with two requirements and one scenario, and a test with one mark (run on 2026-09-24).
 
@@ -215,7 +215,7 @@ REQ-002
 
 ### The exit code is 0 even though the IR has errors
 
-<!-- @kotowari[REQ-core-151:c8db3df3, EX-core-246:9b303051] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6] -->
 
 `list` is a read-only command: it reports no findings, and even when there are errors it outputs the items it could read and exits with 0.
 For example, if you delete the `- verification:` line of REQ-001 from the example IR, `check` reports an error and exits with 1, but `list` shows the verification field as `-` (`null` in JSON) and exits with 0 (run on 2026-09-24).
@@ -237,7 +237,7 @@ To fail CI on errors, use `kotowari check` or [`kotowari status`](./status.md).
 
 ### The test name is `-` (null in JSON)
 
-<!-- @kotowari[TBL-core-026:382b0b95, EX-core-247:e5b61ce9] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 In test files of a language without a query, kotowari picks up only the marks and does not obtain test names.
 `path` and `line` are the mark's position.
@@ -245,7 +245,7 @@ Which extensions have a query is shown by `query` under `tests` in the JSON of `
 
 ### A requirement with `tests=0` is counted as "with tests" in status
 
-<!-- @kotowari[TBL-core-026:382b0b95, TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 The `tests` in `list` are only the tests whose marks directly include that ID.
 `with_tests` in [`kotowari status`](./status.md) also counts tests attached to scenarios that have that requirement in `@about`.
@@ -254,7 +254,7 @@ A requirement whose `deferred` is true is counted in neither `with_tests` nor `w
 
 ### check and status stop on a configuration error, but list runs
 
-<!-- @kotowari[REQ-core-152:04c37477, REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-stops-under-the-same-conditions-as-check-and-does-not-read-guides-or-surfaces:7fe55f1b, docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 `list` does not read guides, so it does not stop for reasons tied to the guide locations (such as `guides.files` overlapping `tests.files`).
 However, when `languages` lists two or more languages, it walks the locations of guides, overview data and the table of contents, so stops caused by those locations and by reading them behave the same as in `check`.

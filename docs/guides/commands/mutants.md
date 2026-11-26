@@ -8,7 +8,7 @@ Use it after a mutation test run, to judge the results.
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-002:f86e2efd, EX-core-244:e4a4c37f] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-mutants-always-takes-the-tools-name-with---tool-and-takes-exactly-one-results-file:4fc5bc6e, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <結果のファイル>
@@ -19,7 +19,7 @@ Options may appear before the command or after the results file (`kotowari --too
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-021:ccedd28b, REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-mutants-always-takes-the-tools-name-with---tool-and-takes-exactly-one-results-file:4fc5bc6e, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -31,7 +31,7 @@ Options may appear before the command or after the results file (`kotowari --too
 
 ## What it reads
 
-<!-- @kotowari[REQ-core-147:7559338c, EX-core-210:e791ccb1] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#mutation-tests-run-outside-kotowari-and-kotowari-mutants-reads-their-results-file-and-turns-it-into-findings:0293ff69] -->
 
 Running the mutation tests happens outside kotowari.
 kotowari only reads the results file once the tool has finished writing it.
@@ -57,7 +57,7 @@ Tracing a miss back to a requirement is the job of the person or LLM investigati
 
 ## The results file
 
-<!-- @kotowari[TBL-core-024:17ed4a06, REQ-core-138:7c91c1d5] -->
+<!-- @kotowari[docs/decisions/core/mutants-input.md#mutation-outcomes-are-held-in-a-form-that-does-not-know-the-tool-and-the-results-file-of-cargo-mutants-is-mapped-as-in-the-table:13ad252a] -->
 
 With `--tool cargo-mutants`, kotowari reads a JSON document whose top level has an `outcomes` array.
 An entry whose `scenario` is the string `"Baseline"` is the baseline run, made without any mutation, and is not counted.
@@ -86,7 +86,7 @@ The four possible outcomes of one mutation mean the following.
 
 ### text
 
-<!-- @kotowari[REQ-core-146:5accc94e, REQ-core-026:530a64e3, EX-core-230:c8e82733, EX-core-209:a0577005] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#counts-are-always-output-and-the-number-excluded-as-equivalent-is-shown-every-time:f134f9eb, docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 Prints one finding per line, followed by a final line with the tally.
 Finding lines have the same form as in `check`: `path:line [error|notice] kind detail`.
@@ -103,7 +103,7 @@ The tally line has the form `mutants: caught=N survived=N timeout=N unviable=N e
 
 ### Finding kinds
 
-<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-140:49dd0d6f, REQ-core-142:3cafdd68, REQ-core-143:de58796f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315, docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2] -->
 
 | Kind | Severity | path | line | detail |
 |---|---|---|---|---|
@@ -118,7 +118,7 @@ Two misses with identical content are not merged; each is reported separately.
 
 ### JSON
 
-<!-- @kotowari[TBL-core-025:68fca5c5, PROP-core-005:80d67bc3, REQ-core-145:38dec30f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#counts-are-always-output-and-the-number-excluded-as-equivalent-is-shown-every-time:f134f9eb] -->
 
 The top level has exactly three keys: `findings`, `counts` and `mutants`.
 
@@ -139,7 +139,7 @@ A nonzero value is not an error, but a sudden increase is a signal to question w
 
 ## Exit codes
 
-<!-- @kotowari[TBL-core-002:36817bf5, REQ-core-139:5736cb73, REQ-core-140:49dd0d6f] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73, docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807] -->
 
 | Code | Meaning |
 |---|---|
@@ -151,7 +151,7 @@ On a stop, nothing is written to standard output and the reason is written on th
 
 ## The list of equivalents
 
-<!-- @kotowari[REQ-core-148:9dc7ec0a, REQ-core-143:de58796f] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#judgments-of-equivalence-are-placed-in-the-yaml-list-that-mutantsequivalents-in-the-configuration-points-at:820edb3b, docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2] -->
 
 The list of equivalents is a YAML file listing the misses you have judged to be "mutations that do not change any observable behaviour", each with its reason.
 A miss that matches the list does not become a finding; it is counted under `equivalent` in the tally.
@@ -197,7 +197,7 @@ An entry that is missing a key, has any other key, has a non-string value, has a
 
 ### How matching works
 
-<!-- @kotowari[REQ-core-141:07d68190, EX-core-212:cf501da6, EX-core-213:4f4e6142] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1] -->
 
 A miss and an entry in the list match when all three of the following are the same:
 
@@ -215,7 +215,7 @@ The list can remove only misses. Writing a timeout in the list does not remove i
 
 ## Example
 
-<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-141:07d68190, REQ-core-142:3cafdd68, EX-core-206:1d66c66f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315] -->
 
 This example feeds kotowari a results file for the source `src/price.rs` below, with 8 entries written by hand following the cargo-mutants format ([TBL-core-024](../../ir/core/mutants-input.md#TBL-core-024)).
 cargo mutants was not run. The output is what `kotowari mutants` actually printed for this input.
@@ -309,7 +309,7 @@ When you think a miss is equivalent, do not add it to the list right away; go th
 
 ### `argument error: mutants requires the option: --tool`
 
-<!-- @kotowari[REQ-core-149:1ac13c99, EX-core-218:a0656f36, EX-core-240:3f1d22d5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-mutants-always-takes-the-tools-name-with---tool-and-takes-exactly-one-results-file:4fc5bc6e] -->
 
 You forgot `--tool`.
 The format of the results file differs from tool to tool, so there is no default.
@@ -324,7 +324,7 @@ argument error: unknown tool: stryker
 
 ### `results error: ...`
 
-<!-- @kotowari[REQ-core-144:ad1689f2, EX-core-207:34357194, EX-core-208:e5d0458a] -->
+<!-- @kotowari[docs/decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error:16167069] -->
 
 The results file is in a form kotowari cannot read.
 It stops if any of the following holds: the JSON is broken, a required key is missing or has the wrong type, there is an unknown `summary` value, the baseline run failed, a line is less than 1, the prefix of `name` does not fit the expected form, or a file path is absolute or contains `..` (the full set of conditions is in [REQ-core-144](../../ir/core/mutants-input.md#REQ-core-144)).
@@ -342,7 +342,7 @@ Get the tests passing first, then run the mutation tests again.
 
 ### `equivalent_invalid` appears and misses that were removed come back
 
-<!-- @kotowari[REQ-core-143:de58796f, EX-core-215:60ee255d] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#a-malformed-entry-is-an-equivalent_invalid-error-and-removes-no-miss:78271fb2] -->
 
 An entry in the list is malformed, and that entry removes no misses.
 Here is the output when the `why` of the `clamp_index` entry in the example list above is set to `" "`.
@@ -361,7 +361,7 @@ Use the `file: change` in the detail to tell which entry it is.
 
 ### `equivalent_stale` appears
 
-<!-- @kotowari[REQ-core-142:3cafdd68, EX-core-213:4f4e6142] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315, docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1] -->
 
 No line in `file` has the same text as the entry's `text` any more.
 This happens when you rewrite the code or delete the whole function.
@@ -370,7 +370,7 @@ kotowari does not look at whether the mutation appears in the results file, so e
 
 ### A timeout does not go away even though it is in the list of equivalents
 
-<!-- @kotowari[REQ-core-140:49dd0d6f, EX-core-206:1d66c66f] -->
+<!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807] -->
 
 This is as specified.
 The list can remove only misses; timeouts are never matched against the list.
@@ -378,7 +378,7 @@ A timeout is a notice, so it does not change the exit code.
 
 ### It stops because the path to the list of equivalents does not exist
 
-<!-- @kotowari[REQ-core-148:9dc7ec0a, EX-core-217:41f2375e, EX-core-239:069fe928] -->
+<!-- @kotowari[docs/decisions/core/equivalents.md#judgments-of-equivalence-are-placed-in-the-yaml-list-that-mutantsequivalents-in-the-configuration-points-at:820edb3b] -->
 
 If the file that the configuration's `mutants.equivalents` points at does not exist, kotowari stops with `unreadable file`.
 If you do not use a list, remove the key entirely or put an empty file there.

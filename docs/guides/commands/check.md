@@ -2,7 +2,7 @@
 
 English | [日本語](check.ja.md)
 
-<!-- @kotowari[REQ-core-001:4ea3a019] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-has-seven-commands-and-the-single-command-check-does-both-the-check-of-the-specification-and-the-check-of-the-correspondence-with-tests:d77a0bd7] -->
 
 This command reports errors in how the IR (the specification) is written, and gaps in the correspondence between the IR and the tests, as one finding each.
 Run it after writing IR or tests, fix the findings, and repeat until there are zero errors.
@@ -10,7 +10,7 @@ This single command does both: it checks the form of the IR and checks its corre
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:f86e2efd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
@@ -20,7 +20,7 @@ It takes no positional arguments.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -34,7 +34,7 @@ The rules shared by all options (for example, that they can be written before or
 
 ## What it reads
 
-<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-keys-are-only-those-in-the-table-and-a-key-not-written-takes-the-default-value-in-the-table:122a3403, docs/decisions/core/overview-toc.md#how-the-index-is-bundled-and-ordered-is-written-in-the-one-table-of-contents-file-that-overviewtoc-points-at:0883f676, docs/decisions/core/translation-pairs.md#guides-overview-source-data-and-the-table-of-contents-have-a-side-for-every-language-of-the-language-list:a581e9d7, docs/decisions/core/translation-pairs.md#the-sides-of-a-pair-are-told-apart-by-file-names-and-configuration-only:3c4056af] -->
 
 `check` reads the following from the locations the configuration file points to.
 
@@ -56,7 +56,7 @@ All the keys are in [config.md](../config.md).
 
 ### The configuration file
 
-<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 - Without `--config`, kotowari reads `.kotowari/config.yaml` in the base directory.
 - If that file does not exist, everything is checked with default values.
@@ -66,7 +66,7 @@ How the base directory is determined is described in [cli.md](../cli.md#the-base
 
 ### When a location is missing
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:10278003] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46, docs/decisions/core/config.md#the-glob--is-read-recursively-and-hidden-directories-are-entered-only-when-named-by-a-path-component:6f67f22b] -->
 
 The three locations `ir`, `decisions.records` and `decisions.adr` must exist as directories, even when left at their defaults.
 If any of them is missing, is not a directory, or cannot be read, kotowari stops with `unreadable file`.
@@ -82,7 +82,7 @@ If a directory cannot be read during the scan, or a dangling symbolic link is en
 
 ### Encoding and unclosed code blocks
 
-<!-- @kotowari[REQ-core-111:a41af8e5, REQ-core-112:2fc914d5] -->
+<!-- @kotowari[docs/decisions/core/ir-input.md#a-leading-utf-8-bom-is-skipped-and-is-not-a-stop-as-a-file-that-is-not-utf-8:52a6c07c, docs/decisions/core/ir-input.md#an-unclosed-code-block-is-an-unclosed_code_block-error-and-from-its-start-to-the-end-of-the-document-is-not-read:c1db707e] -->
 
 Files that are read must be UTF-8.
 A leading BOM is skipped, so UTF-8 with a BOM does not cause a stop.
@@ -95,7 +95,7 @@ In that case, the part from the opening line to the end of the document is not c
 
 ### text
 
-<!-- @kotowari[REQ-core-025:58025379, REQ-core-026:530a64e3] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 Each line is one finding.
 If there are no errors and no notices, nothing is printed.
@@ -121,7 +121,7 @@ It is printed even when there are zero findings and even when the count is 0 ([S
 
 ### JSON
 
-<!-- @kotowari[REQ-core-022:8e221eee, TBL-core-005:73d0910b, PROP-core-002:35724b25, REQ-core-228:095b2109, REQ-core-288:0f3318d5] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7, docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9, docs/decisions/core/overview-output.md#the-json-of-check-carries-an-overview-group-of-the-same-form-as-guides:c1d88d3a] -->
 
 This is the default output.
 It prints a single JSON object to standard output.
@@ -141,7 +141,7 @@ The values in `counts` always match the number of findings of that kind in `find
 
 ### `tests` and `guides` in the JSON
 
-<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-206:e2f3dc5c] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-tests-of-checks-json-counts-the-test-files-read-per-extension:834f2486, docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7] -->
 
 `tests` and `guides` are counts for confirming that the globs in your configuration match where you expect.
 A mistyped glob produces no finding, so check it here.
@@ -161,7 +161,7 @@ Per-extension details are in [TBL-core-021 in output.md](../../ir/core/output.md
 
 ### Finding order and lines
 
-<!-- @kotowari[TBL-core-007:15954989, REQ-core-027:a594c5e0, TBL-core-019:d5c9adce] -->
+<!-- @kotowari[docs/decisions/core/finding-order.md#findings-are-arranged-by-path-line-kind-and-detail-in-that-order:430be622, docs/decisions/core/finding-order.md#line-is-counted-from-1-and-a-finding-that-covers-the-whole-document-is-null:b98176aa, docs/decisions/core/finding-order.md#the-line-of-findings-that-have-a-line-is-decided-per-kind-in-one-table:848f58fc] -->
 
 Findings are ordered by `path`, `line` (null first), `kind` and `detail` ([cli.md](../cli.md#order-of-findings)).
 Findings on the same line are ordered by the name of their kind.
@@ -175,7 +175,7 @@ The line for each kind is in the table in [findings.md](../findings.md#list-of-k
 
 ## Exit codes
 
-<!-- @kotowari[TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 | Code | Meaning |
 |---|---|
@@ -187,7 +187,7 @@ When kotowari stops, it prints nothing to standard output and prints the reason 
 
 ## Committing a specification before its tests
 
-<!-- @kotowari[REQ-core-357:352c971a, TBL-core-047:0a2c3aa9] -->
+<!-- @kotowari[docs/decisions/core/test-side-findings.md#with---allow-test-findings-check-does-not-count-test-side-findings-toward-the-exit-code:b75bbdf7, docs/decisions/core/test-side-findings.md#test-side-findings-are-limited-to-errors-caused-by-test-files-and-their-range-is-set-in-a-table:09dd0c43] -->
 
 A specification is usually approved and committed before the tests that cover it are written.
 At that commit every new requirement and scenario has no test yet, so `check` reports `requirement_without_test` and `scenario_without_test` and exits with 1.
@@ -216,7 +216,7 @@ $ echo $?
 
 ### Where to use it in hooks
 
-<!-- @kotowari[REQ-core-358:879777ff] -->
+<!-- @kotowari[docs/decisions/core/test-side-findings.md#how-to-build-the-hooks-is-guided-in-the-skill-and-in-the-guide-of-check:3bde432b] -->
 
 - In the pre-commit hook, run `kotowari check --allow-test-findings`, so that the commit approving a specification is not stopped before its tests exist.
 - In the pre-push hook and in CI, run `kotowari check` without the option, so that nothing reaches the shared branch with a requirement or scenario left untested.
@@ -239,7 +239,7 @@ tests/greet.rs                            テスト2本
 
 ### Checking freshly written IR
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-086:8035b3f8, REQ-core-137:cb66f5a8] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 The main IR document (`docs/ir/greet/greet.md`) and the tests are as follows.
 
@@ -307,8 +307,6 @@ $ kotowari check | jq '.findings[0]'
 
 ### Fixing the test marks
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8] -->
-
 Add a mark to `rejects_empty_name`, and change the mark on `greets_with_name` to the scenario's ID.
 A scenario mark also covers the requirement named in that scenario's `@about`.
 If you have decided not to build a requirement for now, declaring a [deferral](../deferred.md) instead of adding a mark also clears this error.
@@ -332,7 +330,7 @@ docs/ir/greet/greet.md:21 [error] vague_word 必要に応じて
 
 ### Fixing the IR down to zero findings
 
-<!-- @kotowari[REQ-core-058:0012abf7, REQ-core-064:75e8708a, REQ-core-066:79261ab9] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#the-specification-lives-only-in-decision-documents-one-per-topic-holding-the-decisions-now-in-force:d2ea663b, docs/decisions/core/decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check:270bb62b] -->
 
 Change the source to `#A2`, which exists; add "停止" (stop) to the glossary; and rewrite "必要に応じて" (as needed) as a concrete statement.
 
@@ -352,7 +350,7 @@ How to fix each finding is described in [findings.md](../findings.md).
 
 ### Only notices
 
-<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/ir-document.md#the-line-count-and-requirement-count-limit-notices-too_many_lines-and-too_many_requirements-are-removed:776e616c, docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 If you try a configuration with `limits.lines` lowered to 20, a notice about the line count appears.
 Since there are only notices, the exit code is 0.
@@ -368,7 +366,7 @@ $ echo $?
 
 ### It stops with `unreadable file` even though there is no configuration file
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-012:50c68e4b] -->
+<!-- @kotowari[docs/decisions/core/config.md#if-the-location-of-decision-documents-does-not-exist-is-not-a-directory-or-cannot-be-read-kotowari-stops-with-unreadable-file:a2064f46, docs/decisions/core/config.md#when-the-configuration-file-is-missing-or-empty-kotowari-runs-with-the-default-values:d78fb03e] -->
 
 ```console
 $ kotowari check --format text
@@ -380,7 +378,7 @@ If you do not use ADRs, create an empty `docs/decision/adr/`, or point the confi
 
 ### `tests` stays `{}` even though tests are written
 
-<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-015:44b9e418] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-tests-of-checks-json-counts-the-test-files-read-per-extension:834f2486, docs/decisions/core/config.md#a-list-key-accepts-only-a-list-the-list-written-replaces-the-default-and-an-empty-list-is-a-list-with-no-elements:7c2ef13f] -->
 
 The globs in `tests.files` do not match your test files.
 The defaults are only `src/**/*.rs` and `tests/**/*.rs`.
@@ -389,14 +387,14 @@ The list you write replaces the defaults, so if you still need the two defaults,
 
 ### `guides.files` is 0 even though guides are written
 
-<!-- @kotowari[REQ-core-206:e2f3dc5c] -->
+<!-- @kotowari[docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7] -->
 
 The default for `guides.files` is an empty list, so no guides are read until you set it in the configuration.
 Write globs in the configuration ([writing-guides.md](../writing-guides.md)).
 
 ### `test_without_id` does not go away even though a mark is written
 
-<!-- @kotowari[REQ-core-086:8035b3f8] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 The mark may be in the wrong place.
 A mark goes in the comment block immediately before the test.

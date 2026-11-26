@@ -7,7 +7,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari plan [--format json|text] <計画書のファイル>
@@ -18,7 +18,7 @@ kotowari plan [--format json|text] <計画書のファイル>
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd, REQ-core-021:ccedd28b] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -28,7 +28,7 @@ kotowari plan [--format json|text] <計画書のファイル>
 
 ## 読むもの
 
-<!-- @kotowari[REQ-core-196:283ed4cd, REQ-core-191:162de9ae, EX-core-359:67cce6be, EX-core-345:bdb6abae] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/plan.md#kotowari-plan-checks-the-form-of-a-plan-against-the-schema-bundled-in-the-binary:8c47a326] -->
 
 `plan` が読むのは、渡した計画書のファイルだけです。
 設定ファイル、IR、判断の記録、テストのファイルは読みません。
@@ -40,7 +40,7 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 
 ## 計画書の形
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-337:5f0d07c9] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f] -->
 
 計画書は1行ずつ読まれ、次の形を満たすときだけ誤りがありません。
 
@@ -75,7 +75,7 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 
 ### 計画全体の節
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-339:c1d921ec, EX-core-353:6b1ad7b6, EX-core-348:33e00663] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
 `## Steps` 以外の節の下に置けるもの・置けないものです。
 
@@ -88,7 +88,7 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 
 ### ステップ
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-340:bd7dd866] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
 `## Steps` の節の決まりです。
 
@@ -102,7 +102,7 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 
 ### 検査しないこと
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-341:274e4805] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#the-order-of-sections-the-step-numbers-and-the-names-in-step-headings-are-not-checked:172d9d8f] -->
 
 次のことは検査しません。
 
@@ -117,7 +117,7 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 
 ### text
 
-<!-- @kotowari[REQ-core-193:ee3eed54, REQ-core-207:1f5ede36, REQ-core-025:58025379, EX-core-381:a4b8c124, EX-core-382:a36d81e7] -->
+<!-- @kotowari[docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c, docs/decisions/core/plan.md#the-output-of-kotowari-plan-uses-the-same-finding-keys-as-check-and-the-json-has-only-findings-and-counts:b227d6e0, docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 指摘を1件1行で `パス:行 [error] invalid_plan 詳細` の形で出し、ほかの行は出しません。
 指摘が0件のときは何も出しません（集計の行はありません）。
@@ -144,7 +144,7 @@ docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when
 
 ### JSON
 
-<!-- @kotowari[REQ-core-194:beb92c09, EX-core-346:ecaa0604] -->
+<!-- @kotowari[docs/decisions/core/plan.md#the-output-of-kotowari-plan-uses-the-same-finding-keys-as-check-and-the-json-has-only-findings-and-counts:b227d6e0] -->
 
 最上位は `findings` と `counts` の2つの鍵だけです。
 `check` の `files`、`lines`、`tests`、`guides` はありません。
@@ -156,7 +156,7 @@ docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:36817bf5, REQ-core-193:ee3eed54] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c] -->
 
 | コード | 意味 |
 |---|---|
@@ -174,7 +174,7 @@ docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when
 
 ## 例
 
-<!-- @kotowari[EX-core-332:680b57dc, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-348:33e00663] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#findings-on-the-form-are-gathered-into-the-single-kind-invalid_plan-with-the-schema-sides-kind-and-details-in-detail:1608f12c] -->
 
 形の揃った計画書です。
 
@@ -330,7 +330,7 @@ $ kotowari plan docs/plans/broken.md | jq .
 
 ### 欄の値を2行に折り返したら `undeclared_line` が出る
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-340:bd7dd866] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
 計画書は1行ずつ読まれるので、欄の値の続きの行は欄の一部になりません。
 ステップの下に置けない行として誤りになります。
@@ -346,7 +346,7 @@ docs/plans/wrapped.md:66 [error] invalid_plan undeclared_line: undeclared statem
 
 ### 番号付きの一覧が `undeclared ordered list` になる
 
-<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-353:6b1ad7b6] -->
+<!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
 計画全体の節には番号付きの一覧を置けません（上の例の28行目は `1. S1 before S2: ...`）。
 `-` の箇条書きか文に書き換えます。
@@ -354,7 +354,7 @@ docs/plans/wrapped.md:66 [error] invalid_plan undeclared_line: undeclared statem
 
 ### `argument error: unexpected option for plan: --config`
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, EX-core-343:af29bce2] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955] -->
 
 `plan` は設定を読まないので、`--config` を受けません。
 付けていたら外します。
@@ -366,7 +366,7 @@ argument error: unexpected option for plan: --config
 
 ### `argument error: plan expects exactly one plan file path`
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, EX-core-342:7e4f1631, EX-core-357:d71d499d] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955] -->
 
 計画書は1回に1つだけ渡せます。
 複数を検査するときは、1つずつ実行します。
@@ -380,7 +380,7 @@ argument error: plan expects exactly one plan file path, got 2
 
 ### `unreadable file: ...`
 
-<!-- @kotowari[REQ-core-197:2fbfa51a, EX-core-344:9b05eb1b] -->
+<!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955] -->
 
 パスはカレントディレクトリからの相対で読みます。
 基準のディレクトリ（`.kotowari/` のあるディレクトリ）からではありません。

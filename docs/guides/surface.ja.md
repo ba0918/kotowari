@@ -2,7 +2,7 @@
 
 [English](surface.md) | 日本語
 
-<!-- @kotowari[REQ-core-223:418e5055, REQ-core-227:9203538c] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surfaces-are-taken-out-of-the-code-with-surfacefiles-and-surfacerules-in-the-configuration-as-nodes-matched-by-ast-grep-rules:0cbadb0d, docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0] -->
 
 IR に書かないまま作った機能を見つけるための検査です。
 利用者から見える振る舞い（CLI のサブコマンドやフラグ、設定の鍵、HTTP のルートなど）を、設定に書いた ast-grep の規則でコードから取り出します。
@@ -13,7 +13,7 @@ IR に書かないまま作った機能を見つけるための検査です。
 
 ## 設定
 
-<!-- @kotowari[REQ-core-224:f13b971e, REQ-core-225:be4cdd0b] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surface-rules-and-surface-files-are-read-with-the-same-construction-as-testsrules-and-testsfiles:77fb35de, docs/decisions/core/surface.md#when-the-surface-configuration-keys-are-not-all-present-every-command-that-reads-the-configuration-stops:ab3a2fa6] -->
 
 ```yaml
 surface:
@@ -37,7 +37,7 @@ surface:
 
 ## 面の規則を書く
 
-<!-- @kotowari[REQ-core-223:418e5055, REQ-core-224:f13b971e, REQ-core-236:45fa5c5f] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surfaces-are-taken-out-of-the-code-with-surfacefiles-and-surfacerules-in-the-configuration-as-nodes-matched-by-ast-grep-rules:0cbadb0d, docs/decisions/core/surface.md#surface-rules-and-surface-files-are-read-with-the-same-construction-as-testsrules-and-testsfiles:77fb35de, docs/decisions/core/surface.md#only-surface-files-in-the-languages-of-the-rules-are-read-and-parsed-into-syntax-trees-and-other-surface-files-are-not-read:82d0c416] -->
 
 面の規則は、テストを見つける `tests.rules` と同じ ast-grep のルールです（[テストに印を付ける](marks.ja.md)）。
 ただしテストの問い合わせには加わらず、別に当てます。
@@ -91,7 +91,7 @@ IR には取り出した名前のとおりに `"format"` と書くか、`--forma
 
 ## IR にあるとする場所
 
-<!-- @kotowari[REQ-core-226:86d88ed4, EX-core-410:d4987877, EX-core-411:0e1012fa, EX-core-429:1a617a65] -->
+<!-- @kotowari[docs/decisions/core/surface.md#if-the-name-of-a-surface-is-quoted-in-decision-or-confirmations-of-a-decision-that-surface-is-in-the-specification:6c702ea9] -->
 
 面の名前が、話題ごとの文書の次のどこかに、二重引用符の対かバッククォートの対で囲んだ中身として出てくれば、その面は IR にあります。
 
@@ -108,7 +108,7 @@ IR には取り出した名前のとおりに `"format"` と書くか、`--forma
 
 ## 指摘
 
-<!-- @kotowari[REQ-core-227:9203538c, EX-core-408:eaffb4f4, EX-core-409:4eb051b9] -->
+<!-- @kotowari[docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0] -->
 
 上の例の CLI に、`"check"` と `"--format"` を要求の文に書いた IR を合わせた結果です。
 
@@ -133,7 +133,7 @@ $ echo $?
 
 ## 未記載の面の一覧
 
-<!-- @kotowari[REQ-core-231:d03e71cc, REQ-core-232:3989b803, REQ-core-233:f788681d, REQ-core-234:8a2d9f6e] -->
+<!-- @kotowari[docs/decisions/core/surface-unspecified.md#if-the-list-file-is-missing-or-cannot-be-read-check-and-status-stop:83dd3917, docs/decisions/core/surface-unspecified.md#a-surface-not-yet-made-part-of-the-specification-is-not-an-error-if-it-is-put-on-the-list-of-unspecified-surfaces-with-a-reason:0989b365, docs/decisions/core/surface-unspecified.md#a-malformed-entry-is-an-error-and-an-entry-no-longer-needed-is-a-notice:090bd4da] -->
 
 `surface.unspecified` が指す YAML のファイルです。
 1件は `kind`、`name`、`why` のちょうど3つの鍵を持ち、値はどれも文字列で、`why` は空にできません。
@@ -173,7 +173,7 @@ surface: unspecified=1
 
 ## 外した数を見る
 
-<!-- @kotowari[REQ-core-228:095b2109, REQ-core-229:7909d808, TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9, docs/decisions/core/surface.md#only-check-and-status-read-surfaces:77268ec4, docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 一覧は借りで、置き場ではありません。
 借りた量が毎回見えるように、`surface.rules` を書いたプロジェクトでは、`check` が一覧で外した面の数を出します。
@@ -204,7 +204,7 @@ surface total=4 specified=1 unspecified=1
 
 ## 既存のプロジェクトに入れる
 
-<!-- @kotowari[REQ-core-228:095b2109] -->
+<!-- @kotowari[docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9] -->
 
 面の規則を初めて書くと、まだ IR に書いていない面がまとめて `surface_without_spec` になります。
 そのときは、出た面をすべて理由付きで未記載の面の一覧に載せ、話題ごとに要求を書くたびに一覧から外していきます。

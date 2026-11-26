@@ -2,7 +2,7 @@
 
 English | [日本語](surface.ja.md)
 
-<!-- @kotowari[REQ-core-223:418e5055, REQ-core-227:9203538c] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surfaces-are-taken-out-of-the-code-with-surfacefiles-and-surfacerules-in-the-configuration-as-nodes-matched-by-ast-grep-rules:0cbadb0d, docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0] -->
 
 This check finds features that were built without being written into the IR.
 It takes user-visible behaviour (CLI subcommands and flags, configuration keys, HTTP routes and so on) out of the code using ast-grep rules you write in the configuration.
@@ -13,7 +13,7 @@ In a project that writes no surface rules, this check does nothing.
 
 ## Configuration
 
-<!-- @kotowari[REQ-core-224:f13b971e, REQ-core-225:be4cdd0b] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surface-rules-and-surface-files-are-read-with-the-same-construction-as-testsrules-and-testsfiles:77fb35de, docs/decisions/core/surface.md#when-the-surface-configuration-keys-are-not-all-present-every-command-that-reads-the-configuration-stops:ab3a2fa6] -->
 
 ```yaml
 surface:
@@ -37,7 +37,7 @@ All keys are listed in [the configuration file](config.md).
 
 ## Writing surface rules
 
-<!-- @kotowari[REQ-core-223:418e5055, REQ-core-224:f13b971e, REQ-core-236:45fa5c5f] -->
+<!-- @kotowari[docs/decisions/core/surface.md#surfaces-are-taken-out-of-the-code-with-surfacefiles-and-surfacerules-in-the-configuration-as-nodes-matched-by-ast-grep-rules:0cbadb0d, docs/decisions/core/surface.md#surface-rules-and-surface-files-are-read-with-the-same-construction-as-testsrules-and-testsfiles:77fb35de, docs/decisions/core/surface.md#only-surface-files-in-the-languages-of-the-rules-are-read-and-parsed-into-syntax-trees-and-other-surface-files-are-not-read:82d0c416] -->
 
 Surface rules are the same kind of ast-grep rule as `tests.rules`, which finds tests ([marking tests](marks.md)).
 However, they are not added to the queries for tests; they are applied separately.
@@ -91,7 +91,7 @@ Checking a rule's matches with `ast-grep scan -r rules/surface.yml src/main.rs` 
 
 ## Where a surface counts as being in the IR
 
-<!-- @kotowari[REQ-core-226:86d88ed4, EX-core-410:d4987877, EX-core-411:0e1012fa, EX-core-429:1a617a65] -->
+<!-- @kotowari[docs/decisions/core/surface.md#if-the-name-of-a-surface-is-quoted-in-decision-or-confirmations-of-a-decision-that-surface-is-in-the-specification:6c702ea9] -->
 
 A surface is in the IR if its name appears, as the contents of a pair of double quotes or a pair of backquotes, in any of the following places in a topic document.
 
@@ -108,7 +108,7 @@ A name does not count if it appears in a property's statements, in the scope lin
 
 ## Findings
 
-<!-- @kotowari[REQ-core-227:9203538c, EX-core-408:eaffb4f4, EX-core-409:4eb051b9] -->
+<!-- @kotowari[docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0] -->
 
 This is the result of combining the CLI from the example above with an IR whose requirement statements contain `"check"` and `"--format"`.
 
@@ -133,7 +133,7 @@ There are two ways to fix it.
 
 ## List of unspecified surfaces
 
-<!-- @kotowari[REQ-core-231:d03e71cc, REQ-core-232:3989b803, REQ-core-233:f788681d, REQ-core-234:8a2d9f6e] -->
+<!-- @kotowari[docs/decisions/core/surface-unspecified.md#if-the-list-file-is-missing-or-cannot-be-read-check-and-status-stop:83dd3917, docs/decisions/core/surface-unspecified.md#a-surface-not-yet-made-part-of-the-specification-is-not-an-error-if-it-is-put-on-the-list-of-unspecified-surfaces-with-a-reason:0989b365, docs/decisions/core/surface-unspecified.md#a-malformed-entry-is-an-error-and-an-entry-no-longer-needed-is-a-notice:090bd4da] -->
 
 This is the YAML file that `surface.unspecified` points at.
 Each entry has exactly the three keys `kind`, `name` and `why`; every value is a string, and `why` cannot be empty.
@@ -173,7 +173,7 @@ If the target does not exist or cannot be read, kotowari stops with `unreadable 
 
 ## Seeing how many are excluded
 
-<!-- @kotowari[REQ-core-228:095b2109, REQ-core-229:7909d808, TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9, docs/decisions/core/surface.md#only-check-and-status-read-surfaces:77268ec4, docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 The list is a debt, not a storage place.
 So that the amount borrowed is visible every time, in a project that sets `surface.rules`, `check` reports how many surfaces the list excluded.
@@ -204,7 +204,7 @@ Only `check` and `status` read surface files, surface rule files and the list of
 
 ## Bringing it into an existing project
 
-<!-- @kotowari[REQ-core-228:095b2109] -->
+<!-- @kotowari[docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9] -->
 
 When you first write surface rules, every surface not yet written into the IR shows up as `surface_without_spec` at once.
 In that case, put all the reported surfaces in the list of unspecified surfaces with reasons, and remove them from the list as you write the requirements for each topic.

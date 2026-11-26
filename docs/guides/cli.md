@@ -2,7 +2,7 @@
 
 English | [日本語](cli.ja.md)
 
-<!-- @kotowari[REQ-core-001:4ea3a019] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-has-seven-commands-and-the-single-command-check-does-both-the-check-of-the-specification-and-the-check-of-the-correspondence-with-tests:d77a0bd7] -->
 
 This page collects the rules shared by kotowari's seven commands.
 It covers the syntax, the common options, how findings are printed, the exit codes, the standard error output when kotowari stops, and the base for paths.
@@ -10,7 +10,7 @@ For the details of each command, see its own page.
 
 ## Syntax
 
-<!-- @kotowari[REQ-core-001:4ea3a019, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[docs/decisions/core/cli.md#kotowari-has-seven-commands-and-the-single-command-check-does-both-the-check-of-the-specification-and-the-check-of-the-correspondence-with-tests:d77a0bd7, docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
@@ -38,7 +38,7 @@ The order of positional arguments and options does not matter for any command ei
 
 ## Common options
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/cli-environment.md#--help-and---version-are-taken-before-the-other-arguments-and-kotowari-outputs-the-usage-or-the-version-and-ends:f100d8c8, docs/decisions/core/overview-commands.md#overview-serve-writes-as-build-does-when-it-starts-and-serves-the-files-of-the-location-on-one-port-of-127001:dbf5bfdb] -->
 
 | Name | Value | Default | Description | Accepted by |
 |---|---|---|---|---|
@@ -65,7 +65,7 @@ What each kind means and how to fix it is in [findings.md](findings.md).
 
 ### Findings in JSON
 
-<!-- @kotowari[REQ-core-022:8e221eee, TBL-core-006:1b834d84, REQ-core-028:1c43e818] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-accepts-json-and-text-with-json-as-the-default:811394a9, docs/decisions/core/output.md#a-finding-is-output-with-the-five-keys-kind-severity-path-line-and-detail:ab004221, docs/decisions/core/finding-order.md#line-is-counted-from-1-and-a-finding-that-covers-the-whole-document-is-null:b98176aa] -->
 
 With `--format json` (the default), one JSON value is printed to standard output.
 One finding is an object with these five keys.
@@ -83,7 +83,7 @@ See each command's page.
 
 ### Findings in text
 
-<!-- @kotowari[REQ-core-025:58025379, REQ-core-026:530a64e3] -->
+<!-- @kotowari[docs/decisions/core/output.md#--format-text-outputs-one-finding-per-line:b093e38d] -->
 
 With `--format text`, each finding is printed on one line.
 
@@ -101,7 +101,7 @@ With `--format text`, each finding is printed on one line.
 
 ### Order of findings
 
-<!-- @kotowari[TBL-core-007:15954989, PROP-core-003:0d661079] -->
+<!-- @kotowari[docs/decisions/core/finding-order.md#findings-are-arranged-by-path-line-kind-and-detail-in-that-order:430be622] -->
 
 Findings are sorted in the following order, the same in JSON and text.
 
@@ -117,7 +117,7 @@ You can diff it or compare it with the previous output.
 
 ## Exit codes
 
-<!-- @kotowari[REQ-core-007:0f08bddc, TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 | Code | Meaning |
 |---|---|
@@ -131,7 +131,7 @@ In CI, the exit code alone tells you whether something needs fixing.
 
 ## Stopping
 
-<!-- @kotowari[REQ-core-005:fee48254, REQ-core-109:4d28a72d] -->
+<!-- @kotowari[docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313, docs/decisions/core/cli-environment.md#unreadable-input-and-broken-input-become-a-stop-or-an-error-finding-and-are-not-silently-skipped:f1577593] -->
 
 When the input cannot be read as a whole, kotowari ends with exit code 2 without checking.
 This is called a "stop".
@@ -145,7 +145,7 @@ Anything that breaks the premise of reading a file or the configuration as a who
 
 ### Reasons for stopping
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57, TBL-core-001:0d8e4c30] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9, docs/decisions/core/cli-environment.md#the-details-of-a-stop-show-the-file-the-person-fixing-it-should-look-at-as-a-path-relative-to-the-base-directory:a832b365, docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313] -->
 
 | Text on the first line | Reason | Detail | Typical situations |
 |---|---|---|---|
@@ -163,7 +163,7 @@ All the situations are in [TBL-core-001 of cli.md](../ir/core/cli.md) and [TBL-c
 
 ### Argument errors
 
-<!-- @kotowari[REQ-core-004:7719a0bd, EX-core-219:f17bce41, EX-core-241:6a451e97, REQ-core-304:e9cd623d] -->
+<!-- @kotowari[docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 kotowari stops with `argument error` when any of the following applies (unless `--help` or `--version` is present).
 
@@ -180,7 +180,7 @@ The argument rules of `mutants` are in [commands/mutants.md](commands/mutants.md
 
 ## The base directory
 
-<!-- @kotowari[REQ-core-009:6b5a71a4, TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-010:5217a2ba] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba, docs/decisions/core/base-directory.md#paths-in-configuration-values-and-the-path-of-the-output-are-relative-to-the-base-directory:712ec2ff] -->
 
 The relative paths kotowari handles have exactly one base.
 That is the "base directory".
@@ -203,7 +203,7 @@ The `--config` path itself is read relative to the current directory.
 
 ### Path normalization
 
-<!-- @kotowari[REQ-core-110:04555fb0] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#paths-in-configuration-values-are-normalized-before-comparing-and-before-output:a1dd7f03] -->
 
 Paths in configuration values and in sources are tidied as follows before they are compared and before they are printed.
 
@@ -216,7 +216,7 @@ So `docs/decision/../decision/records` and `docs/decision/records` are treated a
 
 ## Target environments
 
-<!-- @kotowari[REQ-core-108:8e9073d4] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#the-target-operating-systems-are-linux-and-macos-and-on-windows-only-the-normalization-of-path-separators-is-promised:03fcd5ae] -->
 
 kotowari targets Linux and macOS.
 On Windows it only converts the path separator `\` to `/`; nothing else about its behavior is promised.
@@ -227,7 +227,7 @@ The examples were run in a small repository with a `.kotowari/config.yaml`.
 
 ### Showing usage and the version
 
-<!-- @kotowari[REQ-core-107:7c6198ca] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#--help-and---version-are-taken-before-the-other-arguments-and-kotowari-outputs-the-usage-or-the-version-and-ends:f100d8c8] -->
 
 ```console
 $ kotowari --version
@@ -256,7 +256,7 @@ Options:
 
 ### Stopping on a wrong argument
 
-<!-- @kotowari[REQ-core-004:7719a0bd, REQ-core-005:fee48254, EX-core-219:f17bce41] -->
+<!-- @kotowari[docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33, docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313] -->
 
 ```console
 $ kotowari
@@ -281,7 +281,7 @@ $ echo $?
 
 ### Stopping on file and configuration problems
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57] -->
+<!-- @kotowari[docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9, docs/decisions/core/cli-environment.md#the-details-of-a-stop-show-the-file-the-person-fixing-it-should-look-at-as-a-path-relative-to-the-base-directory:a832b365] -->
 
 In the example below, the comments mean, in order: `docs/decision/adr` does not exist; `docs/ir/greet/bad.md` is not UTF-8; `limits` was mistyped as `limit`; the `language` of `rules/c.yml` is `cobol`.
 
@@ -310,7 +310,7 @@ Only the form of the first line is fixed.
 
 ### Running from a subdirectory
 
-<!-- @kotowari[TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-003:8ac6759c] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 Even when you run it in `tests/` below the directory that has `.kotowari/`, the base is the directory above that has `.kotowari/`.
 Paths in the output are relative to the base, not to `tests/`.
@@ -340,7 +340,7 @@ The `bad.yaml` in the second detail is written as a path relative to the base di
 
 ### Exit code 2 and nothing on standard output
 
-<!-- @kotowari[REQ-core-005:fee48254, TBL-core-018:c435229b] -->
+<!-- @kotowari[docs/decisions/core/cli.md#when-kotowari-stops-it-outputs-nothing-to-standard-output-and-outputs-the-reason-and-the-details-on-the-first-line-of-standard-error:90b03313, docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9] -->
 
 It stopped before starting the check.
 Look at the first line of standard error, not standard output.
@@ -349,14 +349,14 @@ When you pipe the JSON into `jq`, `jq` gets empty input and prints nothing, whic
 
 ### `config file not found` even though you passed `--config`
 
-<!-- @kotowari[REQ-core-003:8ac6759c, PROP-core-001:9be33697] -->
+<!-- @kotowari[docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47, docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba] -->
 
 The `--config` path is read relative to the current directory, not the base directory.
 If you are running in a subdirectory, add `../` or use an absolute path.
 
 ### A `.kotowari/` somewhere else has become the base
 
-<!-- @kotowari[REQ-core-009:6b5a71a4, TBL-core-003:603e9601] -->
+<!-- @kotowari[docs/decisions/core/base-directory.md#the-base-of-relative-paths-is-the-first-directory-with-kotowari-found-by-searching-upward:e421eeba] -->
 
 The base directory is the first `.kotowari/` found searching upward from the current directory.
 With nested repositories, or a `.kotowari/` in your home directory, an unexpected place can become the base.
@@ -364,7 +364,7 @@ If the `path` in the output does not look the way you expect, check for a `.koto
 
 ### Notices (`[notice]`) appear but the exit code is 0
 
-<!-- @kotowari[TBL-core-002:36817bf5] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-exit-code-is-0-when-there-is-no-error-1-when-there-is-an-error-and-2-when-kotowari-stops:3dc67d73] -->
 
 This is as specified.
 Notices do not change the exit code.

@@ -2,7 +2,7 @@
 
 [English](list.md) | 日本語
 
-<!-- @kotowari[REQ-core-151:c8db3df3] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6] -->
 
 `kotowari list` は、IR（仕様）の項目とシナリオを、それを指す印の付いたテストと一緒に一覧で出すコマンドです。
 どの要求にどのテストが付いているかを見たいときや、LLM に仕様の全体を一度で渡したいときに使います。
@@ -10,7 +10,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 ```sh
 kotowari list [--format json|text] [--config <path>]
@@ -23,7 +23,7 @@ kotowari list --version
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-155:586b389e, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -45,7 +45,7 @@ kotowari list --version
 
 ### text
 
-<!-- @kotowari[REQ-core-155:586b389e, EX-core-248:6b0b85d0, EX-core-399:663dc658] -->
+<!-- @kotowari[docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
 
 1件を1行で出し、その下に印の付いたテストを1件ずつ字下げして続けます。
 
@@ -76,7 +76,7 @@ docs/ir/a.md ja=78981922613b2afb6025042ff6bd878ac1994e85 en=-
 
 ### JSON
 
-<!-- @kotowari[TBL-core-026:382b0b95, REQ-core-153:513617dc, EX-core-288:4229c3fc, REQ-core-155:586b389e] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
 
 最上位は `items` と、`languages` に2つ以上の言語を書いたときだけ `translations` を持つオブジェクトです。
 `items` は1件ずつのオブジェクトの並びで、種類によって持つ鍵が違います。持たない鍵は出ません。
@@ -115,14 +115,14 @@ docs/ir/a.md ja=78981922613b2afb6025042ff6bd878ac1994e85 en=-
 
 ### 並び順
 
-<!-- @kotowari[REQ-core-154:1d379703] -->
+<!-- @kotowari[docs/decisions/core/list.md#the-order-is-by-path-and-by-line-within-the-same-path:37893e8e] -->
 
 `items` は `path` の昇順、同じ `path` の中は `line` の昇順です。
 1件の `tests` も同じく `path`、`line` の順に並びます。
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-151:c8db3df3, REQ-core-152:04c37477] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6, docs/decisions/core/list.md#list-stops-under-the-same-conditions-as-check-and-does-not-read-guides-or-surfaces:7fe55f1b] -->
 
 | コード | 意味 |
 |---|---|
@@ -135,7 +135,7 @@ IR の誤りの有無で終了コードを変えるのは `check` と `status` �
 
 ## 例
 
-<!-- @kotowari[EX-core-245:37c957d4, EX-core-248:6b0b85d0] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
 
 要求 2 つとシナリオ 1 つを持つ小さな IR と、印を1つ付けたテストで実行した結果です（2026-09-24 に実行）。
 
@@ -215,7 +215,7 @@ REQ-002
 
 ### IR に誤りがあるのに終了コードが 0 になる
 
-<!-- @kotowari[REQ-core-151:c8db3df3, EX-core-246:9b303051] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6] -->
 
 `list` は読み取りのコマンドで、指摘を出さず、誤りがあっても読めた項目を出して 0 で終わります。
 例えば例の IR から REQ-001 の `- verification:` の行を消すと、`check` は誤りを出して 1 で終わりますが、`list` は検証の欄を `-`（JSON では `null`）にして 0 で終わります（2026-09-24 に実行）。
@@ -237,7 +237,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### テストの名前が `-`（JSON では null）になる
 
-<!-- @kotowari[TBL-core-026:382b0b95, EX-core-247:e5b61ce9] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
 問い合わせの無い言語のテストのファイルでは、kotowari は印だけを拾い、テストの名前は取りません。
 `path` と `line` は印の位置です。
@@ -245,7 +245,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### `tests=0` の要求が status では「テストあり」に数えられている
 
-<!-- @kotowari[TBL-core-026:382b0b95, TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 `list` の `tests` は、その ID を直接印に含むテストだけです。
 [`kotowari status`](./status.ja.md) の `with_tests` は、その要求を `@about` に持つシナリオに付いたテストも数えます。
@@ -254,7 +254,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### check や status は設定の誤りで止まるのに、list は動く
 
-<!-- @kotowari[REQ-core-152:04c37477, REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
+<!-- @kotowari[docs/decisions/core/list.md#list-stops-under-the-same-conditions-as-check-and-does-not-read-guides-or-surfaces:7fe55f1b, docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 `list` はガイドを読まないので、ガイドの置き場に関わる停止（`guides.files` と `tests.files` の重なりなど）はしません。
 ただし `languages` に2つ以上の言語を書いたときは、ガイド、全体像の元データ、目次の置き場を辿るので、その置き場と読み込みによる停止は `check` と同じにします。

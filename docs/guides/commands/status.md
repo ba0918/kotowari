@@ -2,14 +2,14 @@
 
 English | [日本語](status.ja.md)
 
-<!-- @kotowari[REQ-core-162:896047ff] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
 `kotowari status` answers whether the IR (the specification) and the tests are "in place right now", with counts and a single true/false.
 Add one line to your CI, and it stops changes that slip in specification gaps or requirements without tests.
 
 ## Where it sits among the three read commands
 
-<!-- @kotowari[REQ-core-162:896047ff] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
 kotowari's tools for reading the IR are arranged in tiers.
 
@@ -28,7 +28,7 @@ So `check` and `status` never disagree.
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
+<!-- @kotowari[docs/decisions/core/cli.md#the-options-each-command-accepts-are-fixed-and-options-and-positional-arguments-may-be-written-in-any-order:94339fbd, docs/decisions/core/cli.md#an-option-not-accepted-an-unknown-command-an-extra-positional-argument-or-an-option-with-a-wrong-value-stops-with-an-argument-error:11a07c33] -->
 
 ```sh
 kotowari status [--format json|text] [--config <path>]
@@ -41,7 +41,7 @@ It takes no positional arguments.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d, docs/decisions/core/config.md#the-configuration-file-is-placed-at-kotowariconfigyaml-in-the-base-directory-and---config-can-point-at-another-file:7c217b47] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -59,7 +59,7 @@ It does not print the findings themselves, only counts and `complete`.
 
 ### text
 
-<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d] -->
 
 Each group is printed on one line in the form `group key=value key=value …`.
 The key words are the same as in JSON; values are separated by single spaces with no column alignment.
@@ -69,7 +69,7 @@ Only the `tests` line expands JSON's `files` into `extension=number-of-files` pa
 
 ### JSON
 
-<!-- @kotowari[TBL-core-028:9645c008, REQ-core-164:c48d77e2, EX-core-398:4b7f4c92] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 The top level is an object with only the following group keys, with `complete` last.
 All keys are defined in TBL-core-028 of the [status IR](../../ir/core/status.md).
@@ -95,7 +95,7 @@ All keys are defined in TBL-core-028 of the [status IR](../../ir/core/status.md)
 
 ### Numbers to watch
 
-<!-- @kotowari[TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 Here are just the numbers you will look at most often.
 
@@ -112,7 +112,7 @@ Here are just the numbers you will look at most often.
 
 ### When `complete` is true
 
-<!-- @kotowari[REQ-core-165:1c91b003, EX-core-259:6583a1e7, EX-core-260:73c20b9a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
 
 `complete` is true only when both of the following hold.
 
@@ -124,7 +124,7 @@ The distinction is that notices are clues worth fixing, but not a reason to hold
 
 ## Exit codes
 
-<!-- @kotowari[REQ-core-165:1c91b003, REQ-core-163:9cf2f990, EX-core-262:c1a7983a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed, docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
 The exit code mirrors the `complete` answer directly.
 
@@ -140,7 +140,7 @@ The reasons and messages for stopping are the same as for `check` ([CLI basics](
 
 ### Trying it out
 
-<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-output-is-json-or-text-and-text-has-one-line-per-group:7b83738d] -->
 
 Run it at the repository root.
 For reading it yourself, `--format text` is handy.
@@ -173,7 +173,7 @@ true
 
 ### Using it in CI
 
-<!-- @kotowari[REQ-core-165:1c91b003] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
 
 The exit code is the verdict itself, so adding it as one step of a job is all you need.
 
@@ -190,7 +190,7 @@ For the detailed reasons, run `kotowari check --format text` in the same checkou
 
 ### `without_tests` is not 0
 
-<!-- @kotowari[TBL-core-028:9645c008, TBL-core-026:382b0b95, EX-core-263:f86b1e4a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae] -->
 
 Some requirements have no marks (`@kotowari[REQ-...]`) on their tests.
 `kotowari list --format text | grep 'tests=0$'` finds items with no marked tests.
@@ -201,21 +201,21 @@ If you decided not to build the requirement for now, making it [deferred](../def
 
 ### `review_without_how_to_verify` is not 0
 
-<!-- @kotowari[REQ-core-098:1e550dfe, EX-core-259:6583a1e7] -->
+<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 A requirement that cannot be checked by tests (`verification: review`) has no `- how_to_verify:` line.
 Without a procedure, neither a person nor an LLM can check it, so `check` treats this as an error.
 
 ### `flag` is not 0
 
-<!-- @kotowari[REQ-core-165:1c91b003, EX-core-260:73c20b9a] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
 
 Unresolved points written in `FLAGS.md` remain.
 `complete` will not be true until you fill in the specification and remove the record.
 
 ### The sum of `unit`, `property`, `proof` and `review` is less than `requirement`
 
-<!-- @kotowari[TBL-core-028:9645c008] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
 
 Some requirements have no `- verification:` line. Such requirements are not counted in any per-verification count.
 This is also an error in `check`, so `complete` is false.
@@ -223,7 +223,7 @@ This is also an error in `check`, so `complete` is false.
 
 ### Stopping with `config error: ...: matched by both guides.files and tests.files`
 
-<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:f1e4cc8c] -->
+<!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
 Like `check`, `status` also reads guides, so it stops when the `guides.files` and `tests.files` globs in the configuration match the same file.
 `list` and `query` do not read guides and do not stop this way, which is why you may see "list works but status stops".

@@ -6,7 +6,7 @@ This is the procedure for validating the real archives and independent consumers
 
 ## Local validation
 
-<!-- @kotowari[REQ-core-309:6d260573, docs/decisions/schema/library.md#internal-implementation-types-do-not-appear-in-public-signatures:151573ff] -->
+<!-- @kotowari[docs/decisions/core/library-crates.md#whether-something-is-public-is-decided-by-whether-external-users-rely-on-it-and-kotowari-re-exports-as-the-same-types-only-the-lower-types-reachable-from-its-entry-points:86d0d335, docs/decisions/schema/library.md#internal-implementation-types-do-not-appear-in-public-signatures:151573ff] -->
 
 Use Cargo 1.98 or later and Python 3.11 or later (which provides safe tar extraction), and run it in a clean working tree with your changes committed.
 
@@ -23,7 +23,7 @@ The output keeps the commands and exit codes, the manifests, locks and dependenc
 
 ## Future publishing order
 
-<!-- @kotowari[TBL-core-040:4f46993e] -->
+<!-- @kotowari[docs/decisions/core/library-crates.md#packages-are-split-by-purpose-and-users-choose-a-package-by-purpose:9a903158] -->
 
 Whoever publishes runs this on the same change that has passed validation and independent review, after bumping the version of each product.
 Crates that others depend on are published first.

@@ -2,7 +2,7 @@
 
 English | [日本語](deferred.ja.md)
 
-<!-- @kotowari[REQ-core-208:eb40fd95] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
 This is how you declare a deferral: a requirement you wrote into the specification but decided not to build yet.
 For a requirement under deferral, and for a scenario that points only at such requirements, `requirement_without_test` and `scenario_without_test` no longer appear even when there are no tests.
@@ -13,7 +13,7 @@ Once you declare the deferral, only the genuinely unfinished work remains among 
 
 ## Format
 
-<!-- @kotowari[REQ-core-208:eb40fd95, REQ-core-209:bc5f958e, REQ-core-210:0772cc2a, TBL-core-011:245eca98, REQ-core-046:0ee3c10b] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
 
 The value is a source.
 Write the decision to defer, together with its reason, in a decision record, and point at it in the same `path#decision-number` form as `- source:`.
@@ -55,7 +55,7 @@ To defer every requirement in a document, write one line after the title and bef
 
 ## What changes and what does not
 
-<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8, REQ-core-208:eb40fd95] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
 If you remove the `- deferred:` line from `REQ-greet-003` above, the missing tests for that requirement and for the scenario `EX-greet-002` that points at it become errors.
 
@@ -90,7 +90,7 @@ For scenarios, likewise, the `@about` of the first scenario decides.
 
 ## status, list and query
 
-<!-- @kotowari[TBL-core-028:9645c008, TBL-core-026:382b0b95, REQ-core-155:586b389e, TBL-core-027:24f0de66, REQ-core-161:4580b6c0] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7, docs/decisions/core/query.md#query-receives-one-id-and-outputs-the-decision-or-confirmation-row-with-that-id-as-a-list-entry-with-the-body-added:4b2043e7, docs/decisions/core/query.md#the-output-is-json-or-text-and-text-follows-the-list-line-with-the-body-lines:d37342f5] -->
 
 `status` reports the number of deferred requirements as `deferred` under `requirements`, and the number of deferred scenarios as `deferred` under `scenarios`.
 Deferred ones count toward neither `with_tests` nor `without_tests`, so `without_tests` is the number of genuinely unfinished items.
@@ -131,7 +131,7 @@ $ kotowari list | jq -r '.items[] | select(.tests == [] and .verification != "re
 
 ## Notices for mismatches with deferral
 
-<!-- @kotowari[REQ-core-211:e38f935b, REQ-core-212:070f1cfc, TBL-core-009:e3c60d7c] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/findings.md#findings-are-divided-into-errors-and-notices-and-only-the-kinds-in-the-table-are-notices:d2f0a1cd] -->
 
 When a deferral disagrees with test marks or references, two kinds of notice appear.
 Being notices, they change neither the exit code nor `complete` in `status`.
@@ -159,7 +159,7 @@ Each of these is a specification decision.
 
 ## Errors in the declaration
 
-<!-- @kotowari[REQ-core-209:bc5f958e, REQ-core-210:0772cc2a, REQ-core-115:117f839a, TBL-core-008:67ba1ee9, TBL-core-019:d5c9adce] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/decision-documents.md#the-specification-lives-only-in-decision-documents-one-per-topic-holding-the-decisions-now-in-force:d2ea663b, docs/decisions/core/findings.md#the-detail-of-a-finding-is-a-short-string-that-identifies-that-finding-decided-per-kind-in-a-table:9134c812, docs/decisions/core/finding-order.md#the-line-of-findings-that-have-a-line-is-decided-per-kind-in-one-table:848f58fc] -->
 
 The value of `- deferred:` is checked by the same rules as `- source:`.
 The line of the error is that `- deferred:` line.
@@ -184,7 +184,7 @@ Until you fix the error, the source error appears in place of the missing-test e
 
 ## Fingerprints and guides
 
-<!-- @kotowari[REQ-core-203:1fdc0443] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f] -->
 
 Unlike `- source:`, the `- deferred:` line under a requirement's heading is part of the requirement's fingerprint.
 In a document with a document-level declaration, the first such line is prepended to the fingerprint of every requirement in that document.
