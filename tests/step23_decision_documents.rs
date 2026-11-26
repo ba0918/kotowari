@@ -1440,3 +1440,40 @@ fn list_includes_each_decision_with_its_fingerprint() {
          C-greet-1 - 挨拶が出る docs/decisions/greet.md:19 tests=0\n"
     );
 }
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn a_decision_entry_outside_a_markdown_path_or_with_a_second_hash_or_a_space_is_an_invalid_mark() {
+    let tmp = TempDir::new().unwrap();
+    make_guided_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    write(
+        tmp.path(),
+        "guides/a.md",
+        "# ガイド\n\n<!-- @kotowari[docs/decisions/greet.txt#挨拶する:0c16c2c1] -->\n\n\
+         <!-- @kotowari[docs/decisions/greet.md#挨拶#する:0c16c2c1] -->\n\n\
+         <!-- @kotowari[docs/decisions/greet.md#挨拶 する:0c16c2c1] -->\n",
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        guide_findings(&value)
+            .into_iter()
+            .map(|(kind, line, _)| (kind, line))
+            .collect::<Vec<_>>(),
+        vec![
+            ("invalid_marker".to_string(), 3),
+            ("invalid_marker".to_string(), 5),
+            ("invalid_marker".to_string(), 7),
+        ],
+        "{value}"
+    );
+}
