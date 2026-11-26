@@ -337,8 +337,8 @@ When the name is empty, the command stops and prints the reason to standard erro
 $ kotowari check --format text
 $ echo $?
 0
-$ kotowari check | jq -c '{findings, counts, tests, guides, decisions}'
-{"findings":[],"counts":{},"tests":{"rs":{"files":1,"query":true}},"guides":{"files":0,"marks":0},"decisions":{"documents":1,"decisions":2,"confirmations":2}}
+$ kotowari check
+{"findings":[],"counts":{},"tests":{"rs":{"files":1,"query":true}},"guides":{"files":0,"marks":0},"overview":{"files":0,"marks":0},"decisions":{"documents":1,"decisions":2,"confirmations":2}}
 ```
 
 How to fix each finding is described in [findings.md](../findings.md).

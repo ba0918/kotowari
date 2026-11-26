@@ -76,7 +76,7 @@ All keys are defined in [the status decisions](../../decisions/core/status.md).
 
 | Group | Keys | Type | Description |
 |---|---|---|---|
-| `documents` | `files`, `lines` | number | The number of documents read, and their total line count |
+| `documents` | `files`, `lines` | number | The number of decision documents read (the glossary not counted), and their total line count |
 | `tests` | `marks` | number | The number of mark occurrences. A mark with several IDs counts once per ID |
 | `tests` | `files` | object | The same as `tests` in the JSON of `check`. Keys are extensions; values are `files` (the number of files) and `query` (whether it is a language with a query) |
 | `guides` | `files`, `marks` | number | The number of guides read and the number of guide marks (the same as `guides` in `check`) |
@@ -137,10 +137,11 @@ The reasons and messages for stopping are the same as for `check` ([CLI basics](
 
 Run it at the repository root.
 For reading it yourself, `--format text` is handy.
-This is the result for the decision document of [the `kotowari list` example](./list.md#example) with a test for each of its two rows checked by tests (only the groups described above are shown).
+This is the result for the decision document of [the `kotowari list` example](./list.md#example) with a test for each of its two rows checked by tests.
 
 ```console
-$ kotowari status --format text | grep -E '^(tests|guides|overview|surface|decisions|confirmations|findings|complete)'
+$ kotowari status --format text
+documents files=1 lines=36
 tests marks=2 rs=1
 guides files=0 marks=0
 overview files=0 marks=0

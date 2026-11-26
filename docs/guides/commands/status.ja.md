@@ -76,7 +76,7 @@ kotowari status --version
 
 | 群 | 鍵 | 型 | 説明 |
 |---|---|---|---|
-| `documents` | `files`、`lines` | 数 | 読んだ文書の数と、行数の合計 |
+| `documents` | `files`、`lines` | 数 | 読んだ決定の文書の数（用語集は数えない）と、行数の合計 |
 | `tests` | `marks` | 数 | 印の出現の数。1つの印に ID が複数あれば ID ごとに1つ |
 | `tests` | `files` | オブジェクト | `check` の JSON の `tests` と同じ。鍵は拡張子、値は `files`（ファイルの数）と `query`（問い合わせのある言語か） |
 | `guides` | `files`、`marks` | 数 | 読んだガイドの数と、ガイドの印の数（`check` の `guides` と同じ） |
@@ -137,10 +137,11 @@ kotowari status --version
 
 リポジトリの直下で実行します。
 人が読むなら `--format text` が便利です。
-[`kotowari list` の例](./list.ja.md#例)の決定の文書で、テストで確かめる2つの行の両方にテストを付けたときの結果です（上で説明した群だけを示します）。
+[`kotowari list` の例](./list.ja.md#例)の決定の文書で、テストで確かめる2つの行の両方にテストを付けたときの結果です。
 
 ```console
-$ kotowari status --format text | grep -E '^(tests|guides|overview|surface|decisions|confirmations|findings|complete)'
+$ kotowari status --format text
+documents files=1 lines=36
 tests marks=2 rs=1
 guides files=0 marks=0
 overview files=0 marks=0
