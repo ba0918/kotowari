@@ -22,7 +22,7 @@ The other problem is on the reading side. The user opens the documents and reads
 
 The specification is held only in decision documents, one per topic. One file is one topic, and it lists that topic's decisions now in force. Records added with each brainstorm, and an IR that restates them, are not kept. Source lines and the cross-check are not kept either.
 
-A decision document contains only what people decided. Details that the implementing side decided with a reason (numeric limits, the order of output, the position of the line where an error is reported, and so on) are not written. The source of truth for details is the code and the tests, and the reasons for them are in the commit body and the pull request body ([Details found during implementation are decided by the implementing side](workflow.md#details-found-during-implementation-are-decided-by-the-implementing-side)).
+A decision document contains only what people decided. Details that the implementing side decided with a reason (for example numeric limits, the order of output, the position of the line where an error is reported) are not written. The source of truth for details is the code and the tests, and the reasons for them are in the commit body and the pull request body ([Details found during implementation are decided by the implementing side](workflow.md#details-found-during-implementation-are-decided-by-the-implementing-side)).
 
 "Decision" always describes the current state. History such as "previously" or "changed to ..." is not written. The history is in git. Only the history needed to convey why it was decided that way is written, in "Problem" and "Rejected options".
 
