@@ -407,7 +407,7 @@ How lines are read when reading by line (block quote, thematic break, HTML and i
 
 ## An unclosed fence is an unclosed_codeblock finding with every schema
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

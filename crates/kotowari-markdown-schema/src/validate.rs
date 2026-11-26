@@ -140,6 +140,15 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         }
     }
 
+    // 閉じないフェンスは、スキーマにも開いた世界にも関わらず指摘にする
+    for &line in &document.unclosed_fences {
+        findings.push(Finding::at(
+            FindingKind::UnclosedCodeblock,
+            line,
+            "the fenced code block is not closed before the end of the document".into(),
+        ));
+    }
+
     // 行を持つ指摘には、その行の生の文字をそのまま添える（REQ-schema-008）
     for finding in &mut findings {
         if let Some(line) = finding.line {
@@ -1140,6 +1149,8 @@ fn check_occurrence(
     });
 }
 
+#[cfg(test)]
+mod fence_tests;
 #[cfg(test)]
 mod open_tests;
 #[cfg(test)]

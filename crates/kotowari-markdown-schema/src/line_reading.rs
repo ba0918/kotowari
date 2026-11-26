@@ -46,7 +46,9 @@ impl Document {
             index = reader.read(lines, index);
         }
         reader.close_list();
+        let unclosed_fences = reader.unclosed_fences;
         let mut doc = reader.tree.into_document();
+        doc.unclosed_fences = unclosed_fences;
         doc.lines = self.lines.clone();
         doc.frontmatter_lines = self.frontmatter_lines;
         doc
@@ -65,6 +67,8 @@ struct LineReader {
     tree: TreeBuilder,
     /// 開いている一覧の行。先頭が最も浅い
     open: Vec<OpenItem>,
+    /// 閉じの行に届かずに文書の終わりまで読んだフェンスの開きの行
+    unclosed_fences: Vec<usize>,
 }
 
 impl LineReader {
@@ -77,7 +81,7 @@ impl LineReader {
             return index + 1;
         }
         if let Some(fence) = Fence::open(text) {
-            let (block, next) = fence.read(lines, index);
+            let (block, next) = self.read_fence(fence, lines, index);
             self.attach(block, indent_width(text), next);
             return next;
         }
@@ -97,7 +101,7 @@ impl LineReader {
             // 項目として読む。一覧の行として読むと、閉じの行を次のフェンスの開始と取り違える
             if let Some(mut fence) = Fence::open(&marker.content) {
                 fence.indent = marker.content_column;
-                let (block, next) = fence.read(lines, index);
+                let (block, next) = self.read_fence(fence, lines, index);
                 self.attach(block, marker.indent, next);
                 return next;
             }
@@ -115,6 +119,15 @@ impl LineReader {
             }],
         }]);
         index + 1
+    }
+
+    /// フェンスを読み、閉じの行が無ければその開きの行を控える。
+    fn read_fence(&mut self, fence: Fence, lines: &[String], index: usize) -> (Block, usize) {
+        let (block, next, closed) = fence.read(lines, index);
+        if !closed {
+            self.unclosed_fences.push(index + 1);
+        }
+        (block, next)
     }
 
     /// 一覧の行を開く。字下げが開いている行の中身の桁に届けば、その行の子になる。
@@ -317,14 +330,16 @@ impl Fence {
             && body.chars().all(|c| c == self.mark)
     }
 
-    /// 開始の行 `index` から閉じの行までを読み、コードブロックと次の行の位置を返す。
-    /// 閉じの行が無ければ文書の最後の行まで。
-    fn read(self, lines: &[String], index: usize) -> (Block, usize) {
+    /// 開始の行 `index` から閉じの行までを読み、コードブロックと次の行の位置と、閉じの行が
+    /// あったかを返す。閉じの行が無ければ文書の最後の行まで。
+    fn read(self, lines: &[String], index: usize) -> (Block, usize, bool) {
         let mut body: Vec<&str> = Vec::new();
         let mut next = lines.len();
+        let mut closed = false;
         for (offset, text) in lines[index + 1..].iter().enumerate() {
             if self.closes(text) {
                 next = index + 1 + offset + 1;
+                closed = true;
                 break;
             }
             body.push(strip_indent(text, self.indent));
@@ -334,7 +349,7 @@ impl Fence {
             value: body.join("\n"),
             line: index + 1,
         };
-        (block, next)
+        (block, next, closed)
     }
 }
 

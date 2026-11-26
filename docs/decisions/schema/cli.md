@@ -119,7 +119,7 @@ The kinds of findings are classified into the following five by what they find.
 |---|---|
 | Title | The title is missing, there are two or more, or it does not match the regular expression |
 | Missing | A required node is absent |
-| Violation of form | A value does not match the regular expression or the allowed list, the depth of a heading does not match, the form of an item ID does not match, the order of field lines does not match, the header of a table does not match, or the language of a code block does not match |
+| Violation of form | A value does not match the regular expression or the allowed list, the depth of a heading does not match, the form of an item ID does not match, the order of field lines does not match, the header of a table does not match, the language of a code block does not match, or a fenced code block is not closed |
 | Cardinality | Below the lower bound of cardinality, or above the upper bound |
 | Closed world | There are undeclared headings and lines |
 

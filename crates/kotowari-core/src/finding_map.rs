@@ -258,6 +258,9 @@ fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Option<Findin
             // RuleKind と EngineKind は別クレートの #[non_exhaustive]。既知の変種を並べたうえで _ が要る
             RuleKind::Section | RuleKind::Item | _ => Err(no_row(engine)),
         },
+        // 閉じないコードブロックは、読み取りが自分で unclosed_code_block にし、開きから後ろを
+        // 検査から外す（REQ-core-112）。写すと同じ指摘が2つになるので、写さずに捨てる
+        EngineKind::UnclosedCodeblock => Ok(None),
         EngineKind::MissingRequiredField => {
             let node = node_of(engine)?;
             let id = || -> Result<String, StopReason> {
@@ -430,6 +433,20 @@ mod tests {
     }
 
     // --- TBL-core-030 の写し先を持つ 25 行 ---
+
+    // @kotowari[REQ-core-171, REQ-core-112]
+    #[test]
+    fn an_unclosed_codeblock_is_not_mapped_because_the_reader_reports_it_itself() {
+        for doc_kind in [DocKind::Topic, DocKind::Glossary] {
+            let mut e = engine(EngineKind::UnclosedCodeblock, Some(7));
+            e.raw = Some("```".to_string());
+            assert!(
+                map_finding(&ctx(doc_kind), &e)
+                    .expect("写せるはず")
+                    .is_none()
+            );
+        }
+    }
 
     // @kotowari[REQ-core-171]
     #[test]

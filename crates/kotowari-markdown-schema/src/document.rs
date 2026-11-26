@@ -29,6 +29,8 @@ pub struct Document {
     pub(crate) lines: Vec<String>,
     /// 文書の先頭の frontmatter が占める行数。無ければ 0。行の読み方はこの次の行から読む
     pub(crate) frontmatter_lines: usize,
+    /// 閉じないフェンスの開きの行。閉じないコードブロックは、それを囲むものの終わりまでを呑む
+    pub(crate) unclosed_fences: Vec<usize>,
 }
 
 impl Document {
@@ -231,6 +233,10 @@ impl Document {
         let mut tree = TreeBuilder::default();
         let mut frontmatter_lines = 0;
 
+        let mut unclosed_fences = Vec::new();
+        for child in &root.children {
+            collect_unclosed_fences(child, src, &mut unclosed_fences);
+        }
         for child in root.children {
             let line = child.position().map(|p| p.start.line).unwrap_or(1);
             #[expect(
@@ -248,6 +254,7 @@ impl Document {
         let mut doc = tree.doc;
         doc.lines = lines;
         doc.frontmatter_lines = frontmatter_lines;
+        doc.unclosed_fences = unclosed_fences;
         Ok(doc)
     }
 }
@@ -376,6 +383,36 @@ fn split_lines(src: &str) -> Vec<String> {
     }
     lines.push(current);
     lines
+}
+
+/// 閉じないフェンスの開きの行を、木の全体（一覧の項目と引用の中を含む）から集める。囲みの
+/// 開き方は Markdown の読み手に任せ（字下げのコードブロックは囲みを持たないので見ない）、閉じたかは、
+/// コードブロックの元の文字の最後の行が、開きと同じ文字の、開き以上の長さの並びだけかで見る。
+fn collect_unclosed_fences(node: &Node, src: &str, out: &mut Vec<usize>) {
+    if let Node::Code(_) = node
+        && let Some(position) = node.position()
+        && let Some(source) = src.get(position.start.offset..position.end.offset)
+    {
+        let fence = source.chars().next().filter(|c| matches!(c, '`' | '~'));
+        let length = fence.map_or(0, |fence| {
+            source.chars().take_while(|&c| c == fence).count()
+        });
+        if let Some(fence) = fence.filter(|_| length >= 3) {
+            let source_lines = split_lines(source.trim_end());
+            let closing = source_lines
+                .last()
+                .map(|last| last.trim_start_matches(['>', ' ', '\t']).trim_end())
+                .filter(|_| source_lines.len() > 1)
+                .unwrap_or_default();
+            let closed = closing.chars().count() >= length && closing.chars().all(|c| c == fence);
+            if !closed {
+                out.push(position.start.line);
+            }
+        }
+    }
+    for child in node.children().into_iter().flatten() {
+        collect_unclosed_fences(child, src, out);
+    }
 }
 
 /// 1始まりの行番号の生の行。範囲の外は空文字列。

@@ -2678,3 +2678,17 @@ fn check_json_gives_a_missing_named_item_the_first_name_of_its_list_as_node() {
     assert_eq!(findings[0]["kind"], "repeat_min_not_met");
     assert_eq!(findings[0]["node"], "問題");
 }
+
+// @kotowari[C-schema-block-38]
+#[test]
+fn check_json_reports_an_unclosed_fence_at_its_opening_line_and_exits_with_one() {
+    let schema = "document:\n  sections:\n    - name: 節\n      open: true\n      statement: { repeat: { min: 1 } }\n";
+    let (code, json, stderr) = mds_json(schema, "## 節\n\n本文。\n\n```\n閉じない\n", "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings = all_findings(&json);
+    assert_eq!(findings.len(), 1, "{json}");
+    assert_eq!(findings[0]["kind"], "unclosed_codeblock");
+    // 本文の前に frontmatter の3行がある
+    assert_eq!(findings[0]["line"], 8);
+    assert_eq!(findings[0]["text"], "```");
+}

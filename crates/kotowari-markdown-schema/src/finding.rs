@@ -29,6 +29,7 @@ pub enum FindingKind {
     RepeatMinNotMet,
     RepeatMaxExceeded,
     SubheadingPatternMismatch,
+    UnclosedCodeblock,
 }
 
 impl FindingKind {
@@ -60,6 +61,7 @@ impl FindingKind {
             FindingKind::RepeatMinNotMet => "repeat_min_not_met",
             FindingKind::RepeatMaxExceeded => "repeat_max_exceeded",
             FindingKind::SubheadingPatternMismatch => "subheading_pattern_mismatch",
+            FindingKind::UnclosedCodeblock => "unclosed_codeblock",
         }
     }
 }
