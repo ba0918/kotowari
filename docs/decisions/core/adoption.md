@@ -2,7 +2,7 @@
 
 English | [日本語](adoption.ja.md)
 
-This document covers how the workflow skill kotowari-adopt, which brings kotowari into an existing project midway, compares the legacy material, the implementation and the tests for one topic, sorts them, and writes them into the decision documents. How the scope is decided and how the rows of the list are made is decided in [Adoption scope and how rows are made](adoption-scope.md). Writing behaviour the person has ratified as a decision whose state is "implemented", writing no per-intake record, and not writing behaviour the person has not ratified and not inventing reasons are decided in the workflow topic's [When taking in existing code, behaviour the person has ratified is written as "When taking in existing code, behaviour the person has ratified is written as "implemented""](workflow.md#when-taking-in-existing-code-behaviour-the-person-has-ratified-is-written-as-implemented). This document holds only decisions that a person or an LLM checks by reading the skill's text.
+This document covers how the workflow skill kotowari-adopt, which brings kotowari into an existing project midway, compares the legacy material, the implementation and the tests for one topic, sorts them, and writes them into the decision documents. How the scope is decided and how the rows of the list are made is decided in [Adoption scope and how rows are made](adoption-scope.md). Writing behaviour the person has ratified as a decision whose state is "implemented", writing no per-intake record, and not writing behaviour the person has not ratified and not inventing reasons are decided in the workflow topic's [When taking in existing code, behaviour the person has ratified is written as "implemented"](workflow.md#when-taking-in-existing-code-behaviour-the-person-has-ratified-is-written-as-implemented). This document holds only decisions that a person or an LLM checks by reading the skill's text.
 
 ## Adoption is done by the workflow skill kotowari-adopt, and approval follows the brainstorm's approval procedure
 
@@ -143,7 +143,7 @@ For the person to find the rows in the list that feel wrong, what the legacy mat
 
 ### Decision
 
-A behaviour row of the list sets out the legacy statement, the implementation's behaviour, where the grounds test is ("none" if there is none), and how that row is checked ([A confirmation row written by ratification is not made "A confirmation row written by ratification is not made "(by reading)" because it has no test" because it has no test](#a-confirmation-row-written-by-ratification-is-not-made-by-reading-because-it-has-no-test)).
+A behaviour row of the list sets out the legacy statement, the implementation's behaviour, where the grounds test is ("none" if there is none), and how that row is checked ([A confirmation row written by ratification is not made "(by reading)" because it has no test](#a-confirmation-row-written-by-ratification-is-not-made-by-reading-because-it-has-no-test)).
 
 The rows that become "Open" items and the breakdown of test destinations are only shown in the list; the person is not asked about them. The diff of the decision documents the person reads at approval is the final version of the list.
 
@@ -324,7 +324,7 @@ A confirmation row with no grounds test remains a check error until its test is 
 
 kotowari-adopt tells the user the following two things.
 
-- A confirmation row with no grounds test keeps a confirmation_without_test error until its test is written. A project that requires `kotowari check` on push or in CI is stopped by it, so the adoption and the later test work proceed on the same branch. Commits pass with the pre-commit hook that runs `kotowari check --allow-test-findings` (this handling is decided in [When taking in existing code, behaviour the person has ratified is written as "When taking in existing code, behaviour the person has ratified is written as "implemented""](workflow.md#when-taking-in-existing-code-behaviour-the-person-has-ratified-is-written-as-implemented))
+- A confirmation row with no grounds test keeps a confirmation_without_test error until its test is written. A project that requires `kotowari check` on push or in CI is stopped by it, so the adoption and the later test work proceed on the same branch. Commits pass with the pre-commit hook that runs `kotowari check --allow-test-findings` (this handling is decided in [When taking in existing code, behaviour the person has ratified is written as "implemented"](workflow.md#when-taking-in-existing-code-behaviour-the-person-has-ratified-is-written-as-implemented))
 - While "Open" items remain, complete in `kotowari status` is false. That is the list of what awaits a decision, and it is intended
 
 ### Confirmations
@@ -363,3 +363,10 @@ When, in adoption, the "Decision" or the "Confirmations" of a ratified decision 
 ### Confirmations
 
 - C-core-adopt-22 (by reading) The kotowari-adopt skill says that when a ratified decision quotes the name of a surface of the topic, that surface's entry is removed from the list in the same run, and the entry of a surface that became "Open" or that the person removed stays
+
+## Open
+
+- What the "Problem" of a ratified decision says when the candidate has no legacy material. The one sentence decided for ratified decisions says that the legacy material and the implementation agreed, which is not true for such a candidate. The user decides, at the next brainstorm of this topic.
+- How a decision taken from the legacy decision records that agrees with the implementation is written: what its "Problem" holds, how its confirmation rows are checked, and whether its row appears in the list. It is written as "implemented" without being asked for ratification, while the workflow topic says behaviour the person has not ratified is not written; whether such a decision counts as already ratified is not stated. The user decides, at the next brainstorm of this topic.
+- Where a row goes when the topic already has a decision for it and that decision is still "proposed". The table has no row for this case. The user decides, at the next brainstorm of this topic.
+- Which steps of the brainstorm's approval procedure an adoption follows. The procedure has steps made for a brainstorm (showing the scene, rebuilding the overview, the list of decisions to build, cutting the branch and the working tree). The user decides, at the next brainstorm of this topic.
