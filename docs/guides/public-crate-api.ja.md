@@ -9,7 +9,7 @@
 <!-- @kotowari[docs/decisions/core/library-crates.md#packages-are-split-by-purpose-and-users-choose-a-package-by-purpose:9a903158, docs/decisions/core/library-crates.md#the-judgement-of-test-correspondence-receives-the-found-tests-and-markers-and-does-not-analyse-sources:66da2e57] -->
 
 リポジトリの操作には`kotowari`、メモリだけの計算には`kotowari-core`を使います。
-`kotowari-source-analysis`は文字列からテストや面を発見し、元の文字列と診断を含むcoreの型を返します。ファイル取得やIRとの対応づけは行いません。
+`kotowari-source-analysis`は文字列からテストや面を発見し、元の文字列と診断を含むcoreの型を返します。ファイル取得や決定の文書との対応づけは行いません。
 `kotowari-overview`はメモリ上の全体像の元データを検査し、参照の表・古い節・描画の入力を作ります。`kotowari-markdown-view`は描画の入力から全体像のページをメモリ上に作り、workspaceのほかのパッケージに依存しません。
 スキーマの計算には`kotowari-markdown-schema`、取得には`kotowari-markdown-schema-io`を使います。
 CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。全体像を配る`serve`は`kotowari-cli`にあり、ライブラリにはありません。
@@ -23,7 +23,7 @@ CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。全体像を配�
 `overview_prepare`は全体像の元データを検査して描画し、ファイルを書きません。返った結果の`write()`で`.kotowari/cache/overview/`の下へ書きます。`overview_build`はこの2つを続けて行い、書いたファイル・消したファイルの一覧と書かなかったファイルの数を返します。`AsyncProject`にも同じ2つがあります。
 完了した指摘は結果の`findings()`で読み、読めないファイルや設定の誤りは`Error`と`ErrorKind`で区別します。
 `read()`と`inspect()`の結果は保持して再利用でき、後からファイルが変わっても自動更新されません。読み直す場合はProjectを再度呼びます。
-`plan`や`mutants`はIRを読みません。
+`plan`や`mutants`は決定の文書を読みません。
 
 ## メモリ入力とパス
 
@@ -32,7 +32,7 @@ CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。全体像を配�
 `SourceText`は相対の論理パスと元の文字列を保持します。区切りやドット成分を正規化し、絶対パスと空のパスを拒否します。入力群の構築では同一群の重複も拒否します。親相対パスは使えます。
 別の有効な入力群で同じパスを使う場合、文字列も一致させます。
 入力の`None`は未提供、`Some(vec![])`は提供したが空、という意味です。設定で有効な群は必須で、無効な群は無視します。
-`ir::parse`は不正・欠落したIDを持つ項目も、得られた位置や指摘とともに返します。CLIの一覧対象とは異なります。
+`kotowari-core`の`parse_decision_document`は、1つの決定の文書の文字と論理パスだけを受け取り、その決定と確認することを元の文書の行とともに返します。形の誤りのある文書でも、得られたものを形の誤りの指摘とともに返します。ほかの入力の群は要りません。
 ProjectとSchemaLoaderの開始点、Loaderのキャッシュ基準は絶対パスです。構築後に呼出側のカレントディレクトリが変わっても解決基準は変わりません。
 
 ## スキーマと値の抽出

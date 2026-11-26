@@ -9,7 +9,7 @@ This page explains how to use specification checks and Markdown value extraction
 <!-- @kotowari[docs/decisions/core/library-crates.md#packages-are-split-by-purpose-and-users-choose-a-package-by-purpose:9a903158, docs/decisions/core/library-crates.md#the-judgement-of-test-correspondence-receives-the-found-tests-and-markers-and-does-not-analyse-sources:66da2e57] -->
 
 Use `kotowari` for operations on a repository, and `kotowari-core` for in-memory computation only.
-`kotowari-source-analysis` discovers tests and surfaces from strings and returns core types that include the original strings and diagnostics. It does not fetch files or match them against the IR.
+`kotowari-source-analysis` discovers tests and surfaces from strings and returns core types that include the original strings and diagnostics. It does not fetch files or match them against the decision documents.
 `kotowari-overview` checks in-memory overview data and builds the reference table, the stale sections and the rendering input. `kotowari-markdown-view` builds overview pages in memory from the rendering input, and depends on no other package in the workspace.
 Use `kotowari-markdown-schema` for schema computation and `kotowari-markdown-schema-io` for loading.
 The CLI packages are `kotowari-cli` and `kotowari-mds`. `serve`, which serves the overview, lives in `kotowari-cli`, not in the libraries.
@@ -23,7 +23,7 @@ State the starting point explicitly with `Project::new(ProjectOptions::new(absol
 `overview_prepare` checks and renders the overview data without writing files. `write()` on the returned result writes under `.kotowari/cache/overview/`. `overview_build` does both in sequence and returns the lists of files written and files removed, and the number of files not written. `AsyncProject` has the same two.
 Read the findings of a completed run with `findings()` on the result; unreadable files and configuration errors are told apart by `Error` and `ErrorKind`.
 The results of `read()` and `inspect()` can be kept and reused, and are not updated automatically when files change later. To read again, call Project again.
-`plan` and `mutants` do not read the IR.
+`plan` and `mutants` do not read the decision documents.
 
 ## In-memory input and paths
 
@@ -32,7 +32,7 @@ The results of `read()` and `inspect()` can be kept and reused, and are not upda
 `SourceText` holds a relative logical path and the original string. It normalizes separators and dot components, and rejects absolute and empty paths. Building an input group also rejects duplicates within the same group. Parent-relative paths are allowed.
 When the same path is used in another enabled input group, the strings must match too.
 `None` for an input means not provided, and `Some(vec![])` means provided but empty. Groups enabled in the configuration are required, and disabled groups are ignored.
-`ir::parse` also returns items with invalid or missing IDs, together with the positions and findings it obtained. This differs from what the CLI lists.
+`parse_decision_document` in `kotowari-core` takes only the string of one decision document with its logical path, and returns its decisions and confirmations with their lines in the original document. For a document with form errors it also returns what it obtained, together with the findings on the form errors. It needs no other input group.
 The starting points of Project and SchemaLoader, and the Loader's cache base, are absolute paths. If the caller's current directory changes after construction, the resolution base does not change.
 
 ## Schemas and value extraction
