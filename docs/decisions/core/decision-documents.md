@@ -81,7 +81,7 @@ A decision table (a table of condition and result pairs) is written as a Markdow
 
 ## Rewrite when a fact changes; when overturning a decision, write the old decision in Rejected options
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -130,7 +130,7 @@ How links to headings are written follows GitHub's rules for rendering Markdown.
 
 ## When the same decision appears in two topics, write it on the side where the behaviour is visible
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -172,7 +172,7 @@ The glossary is kept as a document that people read. Its location is `CONTEXT.md
 
 ## Write questions handed back to people in the "Open" section of the topic document
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
