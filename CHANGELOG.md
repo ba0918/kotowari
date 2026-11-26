@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-27
+
 ### Added
 
 - `kotowari check` reads decision documents as the specification from the place `decisions.documents` names (default `docs/decisions`): one topic per Markdown file, each decision a `## ` heading with a state line (`状態: 提案` or `状態: 実装済み`) and `### 問題`, `### 決めたこと` sections, and the rows of `### 確認すること` carrying IDs of the form `C-<name>-<number>`. It reports a state other than those two (decision_state_invalid), a missing problem or decided section (decision_section_missing), a document without the paragraph after its title (topic_lead_missing), malformed and repeated row IDs (invalid_id, duplicate_id), a link inside the place to a document or heading that does not exist, with heading anchors following GitHub's rule (link_target_missing), and a row of an implemented decision that no test's mark points at (confirmation_without_test, a test-side finding), except a row that starts with `（読んで確認）`. Marks may point at the row IDs; a mark pointing at an ID in no document is still unresolved_reference. The JSON of check carries `decisions` with the numbers of documents, decisions and rows read. An item under a `## 未決` heading makes `complete` of `kotowari status` false. Files under `docs/frozen/` are not read. A fenced code block that is never closed hides what follows it, so it is an error at its opening line (unclosed_code_block), and each `# ` title after the first is multiple_titles, on every language side of a document. Likewise, on every side, a block the form has no place for is an error instead of being skipped: a `###` heading inside a decision that is not one of its keyword sections, and a `###` or deeper heading before the first decision, are unknown_heading, and so is each block under such a heading, block by block, as unknown_line; a second line in the paragraph of a decision's state line, a block other than the state line between a decision's heading and its first `###` section, a block under `### 確認すること` that is not a list (an ordered list included), and a block under `## 未決` that is not a list, are unknown_line (unknown_heading for a heading), so an open question written as a paragraph no longer leaves `complete` true. Link reference definitions are allowed in both places, and further paragraphs, lists, tables and code blocks between the title and the first decision are allowed.
@@ -188,7 +190,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.7.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.0...HEAD
+[0.8.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.7.0...kotowari-v0.8.0
 [0.7.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.6.0...kotowari-v0.7.0
 [0.6.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.5.0...kotowari-v0.6.0
 [0.5.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.4.0...kotowari-v0.5.0
