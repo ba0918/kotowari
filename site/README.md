@@ -50,8 +50,8 @@ section anchors. These browser checks supplement `check.py`.
 
 ## Content boundary
 
-Latest product release: `kotowari-v0.5.0`. Guide, README and API guide links target the
-v0.5.0 tag; the guides are English with Japanese pairs.
+Latest product release: `kotowari-v0.8.0`. Guide, README and API guide links target the
+v0.8.0 tag; the guides are English with Japanese pairs.
 
 Sources: README, CHANGELOG, PROJECT, `docs/decisions/core/{decision-documents,confirmations,coverage,
 test-discovery,test-queries,overview-commands,library-api}.md`, `docs/guides/commands/{check,query,status}.md`,
