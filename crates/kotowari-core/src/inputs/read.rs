@@ -334,6 +334,14 @@ impl ReadModel {
         }
         Ok(QueryReport(crate::query::QueryResult { items }))
     }
+    /// 決定の文書の置き場から読んだ、`先頭の言語`の`側`の話題の文書。パスのバイト順に並ぶ。
+    /// 形の誤りは check の指摘にあるので、ここの findings は空
+    pub fn decision_documents(&self) -> Vec<crate::ParsedDecisionDocument> {
+        self.decisions
+            .iter()
+            .map(|document| crate::decision_parse::parsed(document, Vec::new()))
+            .collect()
+    }
     /// 読んだ`IR`の文書。パスのバイト順に並ぶ
     pub fn documents(&self) -> &[crate::ir::IrDocument] {
         &self.docs

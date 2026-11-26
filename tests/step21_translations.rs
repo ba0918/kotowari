@@ -72,6 +72,50 @@ fn make_project(tmp: &Path, languages: Option<&[&str]>, extra: &str) {
         "docs/decision/records/r.md",
         "# Records\n\n## Context\n\nc\n\n## Agreements\n\n- A1 Agreement\n  - why: because\n",
     );
+    if extra.contains("decisions:") {
+        decision_sides(tmp, languages);
+    }
+}
+
+/// 全体像が扱う決定の文書 docs/decisions/a.md を、言語ごとの`側`と一致の記録とともに書く。
+/// 決めたことは日本語の側が「文。」、ほかの側が「Text.」
+fn decision_sides(tmp: &Path, languages: Option<&[&str]>) {
+    let tags = languages.unwrap_or(&["en"]);
+    let file = |index: usize| match index {
+        0 => "a.md".to_string(),
+        _ => format!("a.{}.md", tags[index]),
+    };
+    let name = |tag: &str| if tag == "en" { "English" } else { "日本語" };
+    let mut record = String::new();
+    for (index, tag) in tags.iter().enumerate() {
+        let switcher: Vec<String> = tags
+            .iter()
+            .enumerate()
+            .map(|(other, other_tag)| match other == index {
+                true => name(other_tag).to_string(),
+                false => format!("[{}]({})", name(other_tag), file(other)),
+            })
+            .collect();
+        let switcher = match languages {
+            Some(_) => format!("{}\n\n", switcher.join(" | ")),
+            None => String::new(),
+        };
+        let body = if *tag == "ja" {
+            "挨拶を決める。\n\n## 挨拶する\n\n状態: 提案\n\n### 問題\n\n困っていた。\n\n### 決めたこと\n\n文。\n\n### 確認すること\n\n- C-a-1 出る\n"
+        } else {
+            "Decides greetings.\n\n## Greet\n\nStatus: proposed\n\n### Problem\n\nTrouble.\n\n### Decision\n\nText.\n\n### Confirmations\n\n- C-a-1 Shown\n"
+        };
+        let text = format!("# A\n\n{switcher}{body}");
+        record.push_str(&format!(
+            "{}: {}\n",
+            file(index),
+            kotowari_core::translations::blob_hash(text.as_bytes())
+        ));
+        write(tmp, &format!("docs/decisions/{}", file(index)), &text);
+    }
+    if languages.is_some() {
+        write(tmp, "docs/decisions/a.i18n.yaml", &record);
+    }
 }
 
 const JA_EN: Option<&[&str]> = Some(&["ja", "en"]);
@@ -501,13 +545,13 @@ fn ex_core_524_a_stale_guide_mark_is_reported_on_every_side() {
     );
 }
 
-const OVERVIEW: &str =
-    "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n";
+const OVERVIEW: &str = "decisions:\n  documents: docs/decisions\n\
+    overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n";
 
 /// 正しい全体像の元データ
 fn overview_data(title: &str) -> String {
     format!(
-        "---\nir:\n  - docs/ir/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n{title}\n"
+        "---\ndocuments:\n  - docs/decisions/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n{title}\n"
     )
 }
 
@@ -757,7 +801,7 @@ fn an_inaccessible_language_cache_reports_a_cache_error() {
         tmp.path(),
         ".kotowari/config.yaml",
         &format!(
-            "{}tests:\n  files: []\noverview:\n  files: ['notes/*.md']\n  toc: .kotowari/toc.yaml\n",
+            "{}tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['notes/*.md']\n  toc: .kotowari/toc.yaml\n",
             language_config(JA_EN)
         ),
     );
@@ -808,7 +852,7 @@ fn req_core_343_overview_and_contents_forms_are_checked_on_every_side() {
     write(
         tmp.path(),
         ".kotowari/overview/a.en.md",
-        "---\nir:\n  - docs/ir/a.md\n---\n\n# Title\n\n## Title\n\nText.\n",
+        "---\ndocuments:\n  - docs/decisions/a.md\n---\n\n# Title\n\n## Title\n\nText.\n",
     );
     write(tmp.path(), ".kotowari/toc.en.yaml", "items: []\n");
     let report = check(tmp.path());
@@ -899,7 +943,7 @@ fn ex_core_527_a_different_source_is_reported_on_its_line() {
 /// status の部品を持つ全体像の元データ
 fn overview_with_status(title: &str, state: &str, text: &str) -> String {
     format!(
-        "---\nir:\n  - docs/ir/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n```view status\nitems:\n  - state: {state}\n    text: {text}\n```\n"
+        "---\ndocuments:\n  - docs/decisions/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n```view status\nitems:\n  - state: {state}\n    text: {text}\n```\n"
     )
 }
 
@@ -1133,7 +1177,7 @@ fn ex_core_535_a_link_to_a_decision_record_is_an_error() {
 /// 参照を持つ steps の部品を持つ全体像の元データ
 fn overview_with_refs(title: &str, refs: &str) -> String {
     format!(
-        "---\nir:\n  - docs/ir/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n```view steps\nitems:\n  - title: {title}\n    refs: [{refs}]\n```\n"
+        "---\ndocuments:\n  - docs/decisions/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n```view steps\nitems:\n  - title: {title}\n    refs: [{refs}]\n```\n"
     )
 }
 
@@ -1241,12 +1285,12 @@ fn ex_core_541_one_language_writes_no_language_directory() {
     assert!(index.contains("1 ページ"), "{index}");
 }
 
-// @kotowari[REQ-core-354, EX-core-542]
+// @kotowari[C-core-ovlang-11, REQ-core-354, EX-core-542]
 #[test]
-fn ex_core_542_english_pages_take_ir_bodies_from_the_english_side_and_no_record_bodies() {
+fn english_pages_take_reference_bodies_from_the_english_side_of_the_decision_document() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
-    let refs = "REQ-001, docs/decision/records/r.md#A1";
+    let refs = "\"docs/decisions/a.md#挨拶する\", C-a-1";
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
@@ -1261,19 +1305,25 @@ fn ex_core_542_english_pages_take_ir_bodies_from_the_english_side_and_no_record_
     assert_eq!(code, Some(0), "{stdout}");
     let root = built(tmp.path(), "a.html");
     let english = built(tmp.path(), "en/a.html");
-    assert!(
-        english.contains("Text.") && !english.contains("文。"),
-        "{english}"
-    );
-    assert!(
-        english.contains("r A1") && !english.contains("Agreement"),
-        "{english}"
-    );
-    assert!(root.contains("文。") && !root.contains("Text."), "{root}");
-    assert!(
-        root.contains("r A1") && root.contains("Agreement"),
-        "{root}"
-    );
+    for (page, own, other) in [
+        (
+            &english,
+            ["Greet", "Text.", "C-a-1 Shown"],
+            ["挨拶する", "文。", "出る"],
+        ),
+        (
+            &root,
+            ["挨拶する", "文。", "C-a-1 出る"],
+            ["Greet", "Text.", "Shown"],
+        ),
+    ] {
+        for text in own {
+            assert!(page.contains(text), "{text}: {page}");
+        }
+        for text in other {
+            assert!(!page.contains(text), "{text}: {page}");
+        }
+    }
 }
 
 // @kotowari[REQ-core-294, C-core-ovcmd-26]

@@ -102,6 +102,7 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
         for path in [
             ".kotowari/overview",
             "docs/ir",
+            "docs/decisions",
             "docs/decision/records",
             "docs/decision/adr",
         ] {
@@ -109,18 +110,18 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
         }
         std::fs::write(
             dir.path().join(".kotowari/config.yaml"),
-            "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+            "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
         )
         .unwrap();
         for name in ["a", "b"] {
             std::fs::write(
                 dir.path().join(format!(".kotowari/overview/{name}.md")),
-                format!("---\nir:\n  - docs/ir/{name}.md\n---\n\n# {name}\n\n```view lead\nconclusion: c\n```\n"),
+                format!("---\ndocuments:\n  - docs/decisions/{name}.md\n---\n\n# {name}\n\n```view lead\nconclusion: c\n```\n"),
             )
             .unwrap();
             std::fs::write(
-                dir.path().join(format!("docs/ir/{name}.md")),
-                "# Topic\n\nScope.\n",
+                dir.path().join(format!("docs/decisions/{name}.md")),
+                "# Topic\n\nDecides the topic.\n",
             )
             .unwrap();
         }

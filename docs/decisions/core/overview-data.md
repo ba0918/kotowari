@@ -93,7 +93,7 @@ The composition of an overview (the kinds of diagrams and tables used and how th
 
 Overview source data is written as frontmatter at the start and a Markdown body.
 
-The frontmatter has one key only, "ir", which lists the paths of the documents that overview covers, relative to the base directory (what the list points at is decision documents, as decided in [The overview's source data points at decision documents](languages-and-guides.md#the-overviews-source-data-points-at-decision-documents); the key's name is [to be renamed](#the-list-key-ir-of-the-overview-source-data-and-the-findings-overview_ir_missing-and-overview_ir_shared-are-renamed)). An unknown key is an error. The title is not put in the frontmatter; the "# " heading of the body is used.
+The frontmatter has one key only, "documents", which lists the paths of the documents that overview covers, relative to the base directory (what the list points at is decision documents, as decided in [The overview's source data points at decision documents](languages-and-guides.md#the-overviews-source-data-points-at-decision-documents); the key's name is [to be renamed](#the-list-key-ir-of-the-overview-source-data-and-the-findings-overview_ir_missing-and-overview_ir_shared-are-renamed)). An unknown key is an error. The title is not put in the frontmatter; the "# " heading of the body is used.
 
 A part is written in YAML inside a fenced code block whose info string is "view <kind>". Inside a fence, other Markdown tools see it as a plain code block. Markers are written, as in guides, in HTML comments next to section headings.
 
@@ -101,7 +101,7 @@ The check of the form as Markdown is done by kotowari-markdown-schema, and what 
 
 ### Confirmations
 
-- C-core-ovdata-5 For source data whose frontmatter has a key other than "ir", check reports an overview_form_invalid error
+- C-core-ovdata-5 For source data whose frontmatter has a key other than "documents", check reports an overview_form_invalid error
 - C-core-ovdata-6 For source data with no "# " heading for the title, check reports an overview_form_invalid error
 - C-core-ovdata-7 check reads a fenced code block whose info string is "view" and a kind name as a part, and checks its kind and contents
 
@@ -151,7 +151,7 @@ The first part right after the title of overview source data must be the part of
 
 ## One decision document is in the list of at most one piece of overview source data
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -159,17 +159,17 @@ When a brainstorm changes a decision document, the overview to fix is to be dete
 
 ### Decision
 
-The list in the frontmatter of the source data (the key is now "ir") holds the decision documents that overview covers. One decision document is put in the list of at most one piece of overview source data. If it is in the lists of two or more pieces of source data, check reports an overview_ir_shared error. The case where an entry of the list points at a decision document that does not exist (overview_ir_missing) is decided in [The overview's source data points at decision documents](languages-and-guides.md#the-overviews-source-data-points-at-decision-documents). The key and the names of the two findings are [to be renamed](#the-list-key-ir-of-the-overview-source-data-and-the-findings-overview_ir_missing-and-overview_ir_shared-are-renamed).
+The list in the frontmatter of the source data (the key "documents") holds the decision documents that overview covers. One decision document is put in the list of at most one piece of overview source data. If it is in the lists of two or more pieces of source data, check reports an overview_document_shared error. The case where an entry of the list points at a decision document that does not exist (overview_document_missing) is decided in [The overview's source data points at decision documents](languages-and-guides.md#the-overviews-source-data-points-at-decision-documents). The key and the names of the two findings are [to be renamed](#the-list-key-ir-of-the-overview-source-data-and-the-findings-overview_ir_missing-and-overview_ir_shared-are-renamed).
 
 No check is made that reports a decision document that is in no overview's list.
 
 ### Confirmations
 
-- C-core-ovdata-12 If one decision document is in the lists of two pieces of overview source data, check reports an overview_ir_shared error
+- C-core-ovdata-12 If one decision document is in the lists of two pieces of overview source data, check reports an overview_document_shared error
 
 ## The list key ir of the overview source data and the findings overview_ir_missing and overview_ir_shared are renamed
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

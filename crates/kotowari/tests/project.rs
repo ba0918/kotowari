@@ -237,13 +237,19 @@ fn project_check_status_and_inspect_include_the_overview_group() {
     let dir = project();
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+        "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.path().join("docs/decisions")).unwrap();
+    std::fs::write(
+        dir.path().join("docs/decisions/topic.md"),
+        "# Topic\n\nDecides the topic.\n\n## Do it\n\nStatus: proposed\n\n### Problem\n\nP.\n\n### Decision\n\nD.\n",
     )
     .unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
     std::fs::write(
         dir.path().join(".kotowari/overview/a.md"),
-        "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n## no lead\n",
+        "---\ndocuments:\n  - docs/decisions/topic.md\n---\n\n# a\n\n## no lead\n",
     )
     .unwrap();
     std::fs::write(
@@ -273,7 +279,13 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     let dir = project();
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+        "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.path().join("docs/decisions")).unwrap();
+    std::fs::write(
+        dir.path().join("docs/decisions/topic.md"),
+        "# Topic\n\nDecides the topic.\n\n## Do it\n\nStatus: proposed\n\n### Problem\n\nP.\n\n### Decision\n\nD.\n",
     )
     .unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
@@ -284,7 +296,9 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     };
     std::fs::write(
         dir.path().join(".kotowari/overview/a.md"),
-        format!("---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n{lead}\n## s\n\ntext\n"),
+        format!(
+            "---\ndocuments:\n  - docs/decisions/topic.md\n---\n\n# a\n\n{lead}\n## s\n\ntext\n"
+        ),
     )
     .unwrap();
     std::fs::write(

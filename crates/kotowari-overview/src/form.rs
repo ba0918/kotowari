@@ -39,8 +39,11 @@ impl Form {
 /// 当てはまる種類の名前が無い（TBL-core-038）
 const FRONTMATTER: &str = "frontmatter";
 
-/// frontmatter の "ir" の一覧と、形の違反。一覧は "ir" そのものが1件以上の文字列の一覧のときだけ返し、
-/// ほかの鍵の違反があっても返す（REQ-core-284 の検査を続けるため）
+/// 扱う決定の文書の一覧の鍵（C-core-ovdata-23）
+const DOCUMENTS: &str = "documents";
+
+/// frontmatter の、扱う決定の文書の一覧（鍵 "documents"）と、形の違反。一覧は "documents" そのものが
+/// 1件以上の文字列の一覧のときだけ返し、ほかの鍵の違反があっても返す（一覧の検査を続けるため）
 pub(crate) fn frontmatter(yaml: Option<&str>) -> (Option<Vec<String>>, Vec<FormFinding>) {
     let violation: FormFinding = (None, FRONTMATTER);
     let Some(yaml) = yaml else {
@@ -51,20 +54,20 @@ pub(crate) fn frontmatter(yaml: Option<&str>) -> (Option<Vec<String>>, Vec<FormF
     };
     let mut findings: Vec<FormFinding> = map
         .keys()
-        .filter(|key| key.as_str() != "ir")
+        .filter(|key| key.as_str() != DOCUMENTS)
         .map(|_| violation)
         .collect();
-    let ir = match map.get("ir") {
+    let documents = match map.get(DOCUMENTS) {
         Some(Value::Array(items)) if !items.is_empty() => items
             .iter()
             .map(|item| item.as_str().map(str::to_string))
             .collect::<Option<Vec<_>>>(),
         _ => None,
     };
-    if ir.is_none() {
+    if documents.is_none() {
         findings.push(violation);
     }
-    (ir, findings)
+    (documents, findings)
 }
 
 #[cfg(test)]

@@ -10,12 +10,16 @@ use tempfile::TempDir;
 
 const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
 
+/// 全体像の元データが扱う決定の文書
+const DECISION: &str = "# CLI\n\nDecides the commands.\n\n## Run\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun.\n";
+
 /// 誤りの無い IR と判断の記録と、`config` を設定に持つプロジェクト
 fn make_project(tmp: &Path, config: &str) {
     for dir in [".kotowari", "docs/decision/adr", "tests"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     write(tmp, "docs/ir/cli.md", IR);
+    write(tmp, "docs/decisions/cli.md", DECISION);
     write(
         tmp,
         "docs/decision/records/r.md",
@@ -24,7 +28,9 @@ fn make_project(tmp: &Path, config: &str) {
     write(
         tmp,
         ".kotowari/config.yaml",
-        &format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{config}"),
+        &format!(
+            "tests:\n  files:\n    - \"tests/**/*.rs\"\ndecisions:\n  documents: docs/decisions\n{config}"
+        ),
     );
 }
 
@@ -58,13 +64,13 @@ const OVERVIEW: &str =
 /// 正しい全体像の元データ
 fn valid(title: &str) -> String {
     format!(
-        "---\nir:\n  - docs/ir/cli.md\n---\n\n# {title}\n\n```view lead\nconclusion: 結論\n```\n\n## 節\n\n文。\n"
+        "---\ndocuments:\n  - docs/decisions/cli.md\n---\n\n# {title}\n\n```view lead\nconclusion: 結論\n```\n\n## 節\n\n文。\n"
     )
 }
 
 /// 冒頭が lead でない全体像の元データ
 fn without_lead(ir: &str) -> String {
-    format!("---\nir:\n  - {ir}\n---\n\n# 題名\n\n## 節\n\n文。\n")
+    format!("---\ndocuments:\n  - {ir}\n---\n\n# 題名\n\n## 節\n\n文。\n")
 }
 
 fn kinds_on(value: &serde_json::Value, path: &str) -> Vec<String> {
@@ -108,14 +114,14 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
     write_toc(tmp.path(), &["cli", "r"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let value = json(&stdout);
     assert!(kinds_on(&value, ".kotowari/overview/a.md").is_empty());
-    // 当たるのは docs/ の下の IR と判断の記録の2つだけ
-    assert_eq!(value["overview"]["files"], 2);
+    // 当たるのは docs/ の下の IR と判断の記録と決定の文書の3つだけ
+    assert_eq!(value["overview"]["files"], 3);
 
     let tmp = TempDir::new().unwrap();
     make_project(
@@ -127,7 +133,7 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
     write(
         tmp.path(),
         ".kotowari/overview/.hidden/c.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
     write_toc(tmp.path(), &["a", "b"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
@@ -164,10 +170,14 @@ fn ex_core_545_a_hidden_directory_named_only_inside_braces_is_not_entered() {
     write(
         tmp.path(),
         ".overview/a.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
     // 同じ中身の元データは、波括弧の中の隠しディレクトリでない置き場では読まれて誤りになる
-    write(tmp.path(), "other/b.md", &without_lead("docs/ir/cli.md"));
+    write(
+        tmp.path(),
+        "other/b.md",
+        &without_lead("docs/decisions/cli.md"),
+    );
     write_toc(tmp.path(), &["b"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let value = json(&stdout);
@@ -295,7 +305,7 @@ fn ex_core_472_errors_in_overview_data_join_findings_counts_and_the_exit_code() 
     write(
         tmp.path(),
         ".kotowari/overview/b.md",
-        &without_lead("docs/ir/other.md"),
+        &without_lead("docs/decisions/other.md"),
     );
     write_toc(tmp.path(), &["a", "b"]);
     let (code, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
@@ -313,7 +323,7 @@ fn ex_core_472_errors_in_overview_data_join_findings_counts_and_the_exit_code() 
     assert_eq!(lead[0]["line"], serde_json::Value::Null);
     assert_eq!(lead[0]["detail"], "b.md");
     assert_eq!(value["counts"]["overview_lead_missing"], 1);
-    assert_eq!(value["counts"]["overview_ir_missing"], 1);
+    assert_eq!(value["counts"]["overview_document_missing"], 1);
 }
 
 // @kotowari[REQ-core-290, REQ-core-024, C-core-forder-1, C-core-ovout-3]
@@ -324,10 +334,18 @@ fn req_core_290_overview_findings_are_sorted_with_the_other_findings() {
         tmp.path(),
         "overview:\n  files: ['docs/a.md', 'docs/z.md']\n  toc: .kotowari/toc.yaml\n",
     );
-    write(tmp.path(), "docs/a.md", &without_lead("docs/ir/cli.md"));
+    write(
+        tmp.path(),
+        "docs/a.md",
+        &without_lead("docs/decisions/cli.md"),
+    );
     // docs/ir/ の IR の誤りより docs/a.md が先、docs/z.md は後に並ぶ
     write(tmp.path(), "docs/ir/bad.md", "no title\n");
-    write(tmp.path(), "docs/z.md", &without_lead("docs/ir/none.md"));
+    write(
+        tmp.path(),
+        "docs/z.md",
+        &without_lead("docs/decisions/none.md"),
+    );
     write_toc(tmp.path(), &["a", "z"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let paths: Vec<String> = json(&stdout)["findings"]
@@ -383,7 +401,7 @@ fn ex_core_473_an_error_in_overview_data_keeps_status_from_complete() {
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
-        &without_lead("docs/ir/cli.md"),
+        &without_lead("docs/decisions/cli.md"),
     );
     write_toc(tmp.path(), &["a"]);
     let (code, stdout, _) = run(tmp.path(), &["status", "--format", "json"]);
@@ -585,8 +603,8 @@ fn ex_core_511_an_unreadable_yaml_part_points_at_the_line_of_the_yaml_error() {
     make_project(tmp.path(), OVERVIEW);
     let lines = [
         "---",
-        "ir:",
-        "  - docs/ir/cli.md",
+        "documents:",
+        "  - docs/decisions/cli.md",
         "---",
         "# 題名",
         "```view lead",

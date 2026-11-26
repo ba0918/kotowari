@@ -77,8 +77,8 @@ The "Line" column is the line that the finding's `line` points at.
 | `overview_part_unknown` | Error | Name of the part kind | Opening line of the part's fence | [Overview data](../ir/core/overview-data.md) |
 | `overview_part_invalid` | Error | Name of the part kind, a single space, and the place that did not match (`(root)` for the whole value, `(yaml)` when it cannot be read as YAML) | Opening line of the part's fence. When it cannot be read as YAML, the error line the YAML reader returned (or the fence's opening line if none is returned) | [Overview data](../ir/core/overview-data.md) |
 | `overview_lead_missing` | Error | Document name (file name without directories) | None | [Overview data](../ir/core/overview-data.md) |
-| `overview_ir_missing` | Error | Text of the `ir` entry | None | [Overview data](../ir/core/overview-data.md) |
-| `overview_ir_shared` | Error | Path of an IR document listed in the `ir` of two or more overview data files | None | [Overview data](../ir/core/overview-data.md) |
+| `overview_document_missing` | Error | Text of the `documents` entry | None | [Overview data](../decisions/core/overview-data.md) |
+| `overview_document_shared` | Error | Path of a decision document listed in the `documents` of two or more overview data files | None | [Overview data](../decisions/core/overview-data.md) |
 | `overview_ref_unresolved` | Error | The reference text | Opening line of the part's fence | [Overview data](../ir/core/overview-data.md) |
 | `overview_name_conflict` | Error | File name without `.md` | None | [Overview data](../ir/core/overview-data.md) |
 | `overview_toc_invalid` | Error | The place in the table of contents that did not match (written as for `overview_part_invalid`: `(root)` for the whole value, `(yaml)` when it cannot be read as YAML) | None | [Table of contents check](../ir/core/overview-toc.md) |

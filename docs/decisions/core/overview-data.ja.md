@@ -93,7 +93,7 @@
 
 全体像の元データは、先頭の frontmatter と、本文の Markdown で書く。
 
-frontmatter の鍵は "ir" の1つだけで、その全体像が扱う文書のパスを、基準のディレクトリからの相対で並べる（一覧が指すのは決定の文書で、[全体像の元データは、決定の文書を指す](languages-and-guides.ja.md#全体像の元データは決定の文書を指す)で決める。鍵の名前は[改名する](#全体像の元データの一覧の鍵-ir-と指摘-overview_ir_missingoverview_ir_shared-は改名する)）。知らない鍵は誤りにする。題名は frontmatter に入れず、本文の "# " の見出しを使う。
+frontmatter の鍵は "documents" の1つだけで、その全体像が扱う文書のパスを、基準のディレクトリからの相対で並べる（一覧が指すのは決定の文書で、[全体像の元データは、決定の文書を指す](languages-and-guides.ja.md#全体像の元データは決定の文書を指す)で決める。鍵の名前は[改名する](#全体像の元データの一覧の鍵-ir-と指摘-overview_ir_missingoverview_ir_shared-は改名する)）。知らない鍵は誤りにする。題名は frontmatter に入れず、本文の "# " の見出しを使う。
 
 部品は、情報文字列を "view <種類>" にしたフェンスのコードブロックの中に、YAML で書く。フェンスの中なら、ほかの Markdown の道具からは、ただのコードブロックに見える。マーカーは、ガイドと同じく、節の見出しの隣に HTML のコメントで書く。
 
@@ -101,7 +101,7 @@ Markdown としての形の検査は kotowari-markdown-schema が行い、形に
 
 ### 確認すること
 
-- C-core-ovdata-5 frontmatter に "ir" のほかの鍵がある元データには、check が overview_form_invalid の誤りを出す
+- C-core-ovdata-5 frontmatter に "documents" のほかの鍵がある元データには、check が overview_form_invalid の誤りを出す
 - C-core-ovdata-6 題名の "# " の見出しが無い元データには、check が overview_form_invalid の誤りを出す
 - C-core-ovdata-7 情報文字列が "view" と種類の名前のフェンスのコードブロックを、check が部品として読み、その種類と中身を検査する
 
@@ -151,7 +151,7 @@ kotowari-markdown-schema が元データの Markdown としての形を検査し
 
 ## 1つの決定の文書は、多くても1つの全体像の元データの一覧に入れる
 
-状態: 提案
+状態: 実装済み
 
 ### 問題
 
@@ -159,17 +159,17 @@ kotowari-markdown-schema が元データの Markdown としての形を検査し
 
 ### 決めたこと
 
-元データの frontmatter の一覧（今の鍵は "ir"）には、その全体像が扱う決定の文書を書く。1つの決定の文書は、多くても1つの全体像の元データの一覧に入れる。2つ以上の元データの一覧にあれば、check が overview_ir_shared の誤りを出す。一覧の1件が無い決定の文書を指すとき（overview_ir_missing）は、[全体像の元データは、決定の文書を指す](languages-and-guides.ja.md#全体像の元データは決定の文書を指す)で決める。鍵と2つの指摘の名前は[改名する](#全体像の元データの一覧の鍵-ir-と指摘-overview_ir_missingoverview_ir_shared-は改名する)。
+元データの frontmatter の一覧（鍵は "documents"）には、その全体像が扱う決定の文書を書く。1つの決定の文書は、多くても1つの全体像の元データの一覧に入れる。2つ以上の元データの一覧にあれば、check が overview_document_shared の誤りを出す。一覧の1件が無い決定の文書を指すとき（overview_document_missing）は、[全体像の元データは、決定の文書を指す](languages-and-guides.ja.md#全体像の元データは決定の文書を指す)で決める。鍵と2つの指摘の名前は[改名する](#全体像の元データの一覧の鍵-ir-と指摘-overview_ir_missingoverview_ir_shared-は改名する)。
 
 どの全体像の一覧にも入っていない決定の文書を指摘する検査は、作らない。
 
 ### 確認すること
 
-- C-core-ovdata-12 1つの決定の文書が2つの全体像の元データの一覧にあると、check が overview_ir_shared の誤りを出す
+- C-core-ovdata-12 1つの決定の文書が2つの全体像の元データの一覧にあると、check が overview_document_shared の誤りを出す
 
 ## 全体像の元データの一覧の鍵 ir と、指摘 overview_ir_missing、overview_ir_shared は改名する
 
-状態: 提案
+状態: 実装済み
 
 ### 問題
 

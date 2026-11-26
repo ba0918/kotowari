@@ -36,7 +36,7 @@ kotowari itself keeps English as the first language and has Japanese pairs. For 
 
 ## The overview's source data points at decision documents
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

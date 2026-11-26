@@ -77,8 +77,8 @@
 | `overview_part_unknown` | 誤り | 部品の種類の名前 | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.ja.md) |
 | `overview_part_invalid` | 誤り | 部品の種類の名前、半角空白1つ、合わなかった場所（値の全体は `(root)`、YAML として読めないときは `(yaml)`） | 部品のフェンスの開始の行。YAML として読めないときは、YAML の読み取りが返した誤りの行（返らなければフェンスの開始の行） | [全体像の元データ](../ir/core/overview-data.ja.md) |
 | `overview_lead_missing` | 誤り | 文書名（ディレクトリを除いたファイル名） | なし | [全体像の元データ](../ir/core/overview-data.ja.md) |
-| `overview_ir_missing` | 誤り | `ir` の1件の文字 | なし | [全体像の元データ](../ir/core/overview-data.ja.md) |
-| `overview_ir_shared` | 誤り | 2つ以上の全体像の元データの `ir` にある IR の文書のパス | なし | [全体像の元データ](../ir/core/overview-data.ja.md) |
+| `overview_document_missing` | 誤り | `documents` の1件の文字 | なし | [全体像の元データ](../decisions/core/overview-data.ja.md) |
+| `overview_document_shared` | 誤り | 2つ以上の全体像の元データの `documents` にある決定の文書のパス | なし | [全体像の元データ](../decisions/core/overview-data.ja.md) |
 | `overview_ref_unresolved` | 誤り | 参照の文字 | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.ja.md) |
 | `overview_name_conflict` | 誤り | `.md` を除いたファイル名 | なし | [全体像の元データ](../ir/core/overview-data.ja.md) |
 | `overview_toc_invalid` | 誤り | 目次の合わなかった場所（`overview_part_invalid` と同じ書き方。値の全体は `(root)`、YAML として読めないときは `(yaml)`） | なし | [目次の検査](../ir/core/overview-toc.ja.md) |

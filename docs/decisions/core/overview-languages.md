@@ -118,7 +118,7 @@ It stops with a configuration error in the following cases.
 
 ## On another language's page, the body of a reference is taken from the decision document on that page's language side
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

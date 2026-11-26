@@ -13,6 +13,9 @@ use tempfile::TempDir;
 
 const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
 
+/// 全体像の元データが扱う決定の文書
+const DECISION: &str = "# CLI\n\nDecides the commands.\n\n## Run\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun.\n";
+
 fn write(tmp: &Path, rel: &str, content: &str) {
     let path = tmp.join(rel);
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -25,6 +28,7 @@ fn make_project(config: &str, lead: bool) -> TempDir {
         std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
     }
     write(tmp.path(), "docs/ir/cli.md", IR);
+    write(tmp.path(), "docs/decisions/cli.md", DECISION);
     write(
         tmp.path(),
         "docs/decision/records/r.md",
@@ -33,7 +37,7 @@ fn make_project(config: &str, lead: bool) -> TempDir {
     write(
         tmp.path(),
         ".kotowari/config.yaml",
-        &format!("tests:\n  files: []\n{config}"),
+        &format!("tests:\n  files: []\ndecisions:\n  documents: docs/decisions\n{config}"),
     );
     let lead = if lead {
         "```view lead\nconclusion: 結論\n```\n"
@@ -43,7 +47,9 @@ fn make_project(config: &str, lead: bool) -> TempDir {
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
-        &format!("---\nir:\n  - docs/ir/cli.md\n---\n\n# A\n\n{lead}\n## 節\n\n文。\n"),
+        &format!(
+            "---\ndocuments:\n  - docs/decisions/cli.md\n---\n\n# A\n\n{lead}\n## 節\n\n文。\n"
+        ),
     );
     write(
         tmp.path(),

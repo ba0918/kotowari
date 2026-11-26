@@ -89,8 +89,8 @@ kotowari のコマンドが出す指摘の種類ごとに、重さ（誤りか�
 | overview_part_unknown | 全体像の元データの、知らない種類の部品 | [部品の中身は、kotowari の側が view の部品のスキーマで検査する](overview-data.ja.md#部品の中身はkotowari-の側が-view-の部品のスキーマで検査する) |
 | overview_part_invalid | 全体像の元データの、読めないか形の合わない部品 | 同上 |
 | overview_lead_missing | 冒頭の部品の無い全体像の元データ | [題名の直後の最初の部品は、lead にする](overview-data.ja.md#題名の直後の最初の部品はlead-にする) |
-| overview_ir_missing | 全体像の元データの一覧の、無い決定の文書を指す1件（今の名前。改名する） | [全体像の元データは、決定の文書を指す](languages-and-guides.ja.md#全体像の元データは決定の文書を指す) |
-| overview_ir_shared | 2つ以上の全体像の元データの一覧にある決定の文書（今の名前。改名する） | [1つの決定の文書は、多くても1つの全体像の元データの一覧に入れる](overview-data.ja.md#1つの決定の文書は多くても1つの全体像の元データの一覧に入れる) |
+| overview_document_missing | 全体像の元データの一覧の、無い決定の文書を指す1件 | [全体像の元データは、決定の文書を指す](languages-and-guides.ja.md#全体像の元データは決定の文書を指す) |
+| overview_document_shared | 2つ以上の全体像の元データの一覧にある決定の文書 | [1つの決定の文書は、多くても1つの全体像の元データの一覧に入れる](overview-data.ja.md#1つの決定の文書は多くても1つの全体像の元データの一覧に入れる) |
 | overview_ref_unresolved | 全体像の部品の中の、解決できない参照 | [部品の中の参照は、refs と ref の欄に書く](overview-data.ja.md#部品の中の参照はrefs-と-ref-の欄に書く) |
 | overview_name_conflict | 名前が重なる全体像の元データ | [overview build は、毎回すべてを描き、中身の違うファイルだけを書き、作られなくなったファイルを消す](overview-commands.ja.md#overview-build-は毎回すべてを描き中身の違うファイルだけを書き作られなくなったファイルを消す) |
 | translation_missing | 対のどれかの言語の側が無い文書 | [ガイド、全体像の元データ、目次は、言語の一覧のすべての言語の側を持つ](translation-pairs.ja.md#ガイド全体像の元データ目次は言語の一覧のすべての言語の側を持つ) |

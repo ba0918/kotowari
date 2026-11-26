@@ -28,8 +28,8 @@ Without the key nothing here applies: check and status read no overview data, an
 ## The unit of an overview
 
 - One overview per product topic, a feature the user calls by one name (guide marks, adoption, mutation tests). Something that cuts across features, such as the output format or the configuration, is not an overview of its own; mention it in the overview of each feature it touches.
-- The frontmatter `ir` of each overview lists the topic documents of the IR it covers. One topic document belongs to at most one overview, so changing a topic document in a brainstorm decides mechanically which overview to revise.
-- When a brainstorm changes a topic document that no overview's `ir` lists, propose either adding it to an existing overview or starting a new one, and let the person decide. The first time overviews are made, propose the units and let the person decide.
+- The frontmatter `documents` of each overview lists the decision documents it covers. One decision document belongs to at most one overview, so changing a decision document in a brainstorm decides mechanically which overview to revise.
+- When a brainstorm changes a decision document that no overview's `documents` lists, propose either adding it to an existing overview or starting a new one, and let the person decide. The first time overviews are made, propose the units and let the person decide.
 - Once decided, keep the units. Split or merge overviews only when a brainstorm decides to.
 - Do not make overviews for topics the brainstorm did not touch. Existing topics get an overview the first time a brainstorm touches their IR, not all at once.
 - Add the `overview` key to the configuration only together with the first overview data and its contents file. With the key and no overview data, no contents file passes check: a missing file stops, an empty outermost group is `overview_toc_group_empty`, and any name is `overview_toc_page_unknown`.
@@ -70,9 +70,9 @@ The index shows each group with its page count and the totals of sections not ye
 
 ````markdown
 ---
-ir:
-  - docs/ir/core/mutants.md
-  - docs/ir/core/mutants-input.md
+documents:
+  - docs/decisions/core/mutants.md
+  - docs/decisions/core/mutants-input.md
 ---
 
 # Mutation tests
@@ -100,7 +100,7 @@ columns:
 
 | Part | Form |
 |---|---|
-| Frontmatter | YAML at the top with exactly one key, `ir`: a list of one or more paths of topic documents, relative to the base directory |
+| Frontmatter | YAML at the top with exactly one key, `documents`: a list of one or more paths of decision documents (first-language topic documents in the place of decision documents), relative to the base directory |
 | Title | Exactly one `# ` heading |
 | After the title | Before the first `## ` heading, only parts and HTML comments. The first block that is neither a comment nor a blank line must be a `lead` part. Parts after the lead are drawn after it, in order, before the first section |
 | Sections | `## ` headings, with any Markdown text below: paragraphs, bullet lists (nested too), numbered lists, tables, code blocks, HTML comments and `### ` headings. Raw HTML is shown as text and HTML comments are not shown |
@@ -123,18 +123,18 @@ The kinds of part are fixed; a new kind is a change to the specification, decide
 
 ## References
 
-Put references only in fields named `refs` (a list of strings) or `ref` (one string), at any depth of a part. A reference is either an ID of an item or scenario in the IR (`REQ-core-139`, `EX-core-207`, `FLAG-core-001`), or a source in the same form as `- source:` (`docs/decision/records/2026-09-17-mutation-tests.md#A2`, or a heading of an ADR or another Markdown file in the place for records). On the page a reference shows its label and, when chosen, opens its body in place: the statements of a requirement, the `Scenario:` line and steps of a scenario, or the text of the decision line. A decision with a non-empty `- superseded_by:` line is marked superseded, and a deferred requirement or deferred scenario is marked deferred. No reference links out of the page.
+Put references only in fields named `refs` (a list of strings) or `ref` (one string), at any depth of a part. A reference is either a decision, written as the target a guide mark uses (`docs/decisions/core/mutants.md#<anchor of its heading>`, quoted in YAML because of `#`), or a confirmation ID (`C-core-mutants-3`). IR IDs and decision-record sources are not references. On the page a reference shows its label (the decision's heading, or the row's ID) and, when chosen, opens its body in place: every line of the decision, or the row as written. A reference to a decision whose state is proposed, or to one of its rows, is marked deferred; nothing is marked superseded. No reference links out of the page.
 
 ## Scene: writing overview data
 
 Write it at the brainstorm approval, in the steps of kotowari-brainstorm, only in a project whose configuration has the `overview` key.
 
-1. Find the overviews whose `ir` lists a topic document this brainstorm changed. For a changed topic document no overview lists, propose adding it to an existing overview or starting a new one, and let the person decide (the unit rules above).
+1. Find the overviews whose `documents` lists a decision document this brainstorm changed. For a changed decision document no overview lists, propose adding it to an existing overview or starting a new one, and let the person decide (the unit rules above).
 2. Revise the previous overview data; do not write it again from nothing. Start from the file as it is, keep what still holds, and change what the brainstorm changed. A new overview starts from an empty file.
 3. Put a `lead` part right after the title: the conclusion first, then its points.
 4. Choose the parts and their order to suit the subject; there is no fixed layout. Use figures, tables and decorations rather than paragraphs of explanation. Show both how the product behaves as the result of the decisions, briefly (flow, steps, cards, compare), and how the decisions lead to one another (decisions). Leave usage to the guides (above).
 5. Show the current state together with what is planned, deferred or undecided (status), so the page stays true right after the brainstorm.
-6. Put references to the IR items and decisions each part rests on in its `refs` and `ref` fields.
+6. Put references to the decisions and confirmation rows each part rests on in its `refs` and `ref` fields.
 7. Give each `## ` section a guide mark on the line right after its heading, on a line of its own, with an entry per IR item the section explains and the fingerprint from `kotowari query ID | jq -r '.items[0].fingerprint'` (guides.md).
 8. Revise the table of contents: place each new overview where a reader would look for it, keeping the order of each level meaningful, and split a group only once it has grown large. Do not ask the person.
 9. Run `kotowari overview build` and fix every error until it exits 0; the errors are listed by `kotowari check`.
@@ -143,7 +143,7 @@ Write it at the brainstorm approval, in the steps of kotowari-brainstorm, only i
 
 `kotowari overview build` checks the overview data, renders every page in memory, and writes under `.kotowari/cache/overview/` of the base directory: `index.html` (every overview's title and conclusion, nested and ordered as the table of contents says), `<name>.html` per overview data file (its file name with `.html` for `.md`) and `style.css`. Only pages whose bytes changed are written, and files no longer produced are removed. Nothing else is written, and the place cannot be changed. It takes `--format` (`json`, the default, or `text`) and `--config`. The JSON has exactly `written` and `removed` (paths relative to the base directory, in byte order) and `unchanged` (the number of pages not rewritten); text writes one `written <path>` line per written file, then one `removed <path>` line per removed file. Do not commit the pages: they are rebuilt from the data whenever needed.
 
-With two or more languages in `languages`, every overview data file and the table of contents are pairs like the IR (translations.md): `a.md` and `a.en.md`, `toc.yaml` and `toc.en.yaml`, with a consistency record each. build and serve render one set of pages per language from that language's sides: the first language's pages where they always were, every other language's pages under `<tag>/` with the same names (`en/a.html`, `en/index.html`, `en/style.css`). Every page links the same page in each other language, named by that language's `language_name`. The text the pages write themselves (counts, marks, column headings, status labels) is that language's UI text: English is built in, other languages come from `labels.<tag>` (config.md). A reference to an IR item opens that language's side of the item; a reference to a decision record, an ADR or other Markdown in the place for records opens its text only on the first language's pages, and is a label only on the others. Write the other languages' overview data as translations of the first language's: only the sentences differ (the fields that are sentences are listed per part kind in translations.md).
+With two or more languages in `languages`, every overview data file and the table of contents are pairs like the IR (translations.md): `a.md` and `a.en.md`, `toc.yaml` and `toc.en.yaml`, with a consistency record each. build and serve render one set of pages per language from that language's sides: the first language's pages where they always were, every other language's pages under `<tag>/` with the same names (`en/a.html`, `en/index.html`, `en/style.css`). Every page links the same page in each other language, named by that language's `language_name`. The text the pages write themselves (counts, marks, column headings, status labels) is that language's UI text: English is built in, other languages come from `labels.<tag>` (config.md). A reference opens the same decision or row on that language's side of the decision document; when that side is missing, it is a label only. Write the other languages' overview data as translations of the first language's: only the sentences differ (the fields that are sentences are listed per part kind in translations.md).
 
 `kotowari overview serve` does the same check, then takes the port `--port` (default 4590) on 127.0.0.1, writes the pages, prints one line `http://127.0.0.1:<port>/` and serves the files under `.kotowari/cache/overview/` until interrupted with Ctrl-C, which ends it with exit code 0. `/` is `index.html`. A path leaving that place (`..`, an absolute path, a symbolic link leading outside) and a directory get 404. It takes `--port` and `--config`, not `--format`, and prints nothing per request.
 
@@ -151,7 +151,7 @@ Both stop with exit code 2 and write nothing when the data or the table of conte
 
 ## Findings on overview data
 
-The findings are in the kinds table of findings.md: overview_form_invalid, overview_part_unknown, overview_part_invalid, overview_lead_missing, overview_ir_missing, overview_ir_shared, overview_ref_unresolved and overview_name_conflict, plus invalid_marker and guide_stale on the guide marks of overview data, with `path` the overview data file. A file named `index.md` or `style.md`, or two files with the same name in different directories, give overview_name_conflict, because the page names would collide.
+The findings are in the kinds table of findings.md: overview_form_invalid, overview_part_unknown, overview_part_invalid, overview_lead_missing, overview_document_missing, overview_document_shared, overview_ref_unresolved and overview_name_conflict, plus invalid_marker and guide_stale on the guide marks of overview data, with `path` the overview data file. A file named `index.md` or `style.md`, or two files with the same name in different directories, give overview_name_conflict, because the page names would collide.
 
 The table of contents has its own kinds, with `path` the table of contents and a null line: overview_toc_invalid when it cannot be read as YAML or does not have the form above (detail is the place, written as for overview_part_invalid), and, only when its form is correct, overview_toc_page_missing (detail is the page name), overview_toc_page_unknown, overview_toc_page_duplicate (the second and later places, in written order depth first) and overview_toc_group_empty (detail is the JSON Pointer of the item or group, `(root)` for the outermost group).
 

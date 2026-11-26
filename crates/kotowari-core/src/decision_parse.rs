@@ -34,6 +34,7 @@ pub struct ParsedDecision {
     line: usize,
     end_line: usize,
     state: Option<&'static str>,
+    lines: Vec<String>,
     confirmations: Vec<ParsedConfirmation>,
 }
 
@@ -58,6 +59,10 @@ impl ParsedDecision {
     pub fn state(&self) -> Option<&'static str> {
         self.state
     }
+    /// 見出しの行から最後の行までの、書いたままの行。後ろの空行は除く
+    pub fn lines(&self) -> &[String] {
+        &self.lines
+    }
     /// 確認することの行。文書の順
     pub fn confirmations(&self) -> &[ParsedConfirmation] {
         &self.confirmations
@@ -71,6 +76,7 @@ pub struct ParsedConfirmation {
     line: usize,
     by_reading: bool,
     name: String,
+    lines: Vec<String>,
 }
 
 impl ParsedConfirmation {
@@ -90,6 +96,10 @@ impl ParsedConfirmation {
     pub fn name(&self) -> &str {
         &self.name
     }
+    /// 行の、書いたままの行。折り返した行と、行の下のブロックも含む
+    pub fn lines(&self) -> &[String] {
+        &self.lines
+    }
 }
 
 /// 決定の文書の文字を読み、決定と確認することの行を元の文書の行とともに返す（C-core-libinputs-14、
@@ -100,30 +110,40 @@ pub fn parse_decision_document(source: &SourceText) -> Result<ParsedDecisionDocu
     let document = crate::decisions::parse(source.path(), source.text(), &[], &mut findings)
         .map_err(|stop| InputError::InvalidInput(stop.to_string()))?;
     crate::sort_findings(&mut findings);
+    Ok(parsed(&document, findings))
+}
+
+/// 読んだ決定の文書を、公開の形にする
+pub(crate) fn parsed(
+    document: &crate::decisions::Document,
+    findings: Vec<Finding>,
+) -> ParsedDecisionDocument {
     let decisions = document
         .decisions
-        .into_iter()
+        .iter()
         .map(|decision| ParsedDecision {
-            heading: decision.heading,
-            anchor: decision.anchor,
+            heading: decision.heading.clone(),
+            anchor: decision.anchor.clone(),
             line: decision.line,
             end_line: decision.end,
             state: decision.state.map(crate::decisions::State::as_str),
+            lines: decision.whole.clone(),
             confirmations: decision
                 .confirmations
-                .into_iter()
+                .iter()
                 .map(|row| ParsedConfirmation {
-                    id: row.id,
+                    id: row.id.clone(),
                     line: row.line,
                     by_reading: row.by_reading,
-                    name: row.name,
+                    name: row.name.clone(),
+                    lines: row.body.clone(),
                 })
                 .collect(),
         })
         .collect();
-    Ok(ParsedDecisionDocument {
-        path: source.path().to_owned(),
+    ParsedDecisionDocument {
+        path: document.path.clone(),
         decisions,
         findings,
-    })
+    }
 }

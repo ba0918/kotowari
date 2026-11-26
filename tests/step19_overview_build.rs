@@ -9,6 +9,9 @@ use tempfile::TempDir;
 
 const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
 
+/// 全体像の元データが扱う決定の文書
+const DECISION: &str = "# CLI\n\nDecides the commands.\n\n## Run\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun.\n";
+
 const OVERVIEW: &str =
     "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n";
 
@@ -17,7 +20,9 @@ fn make_project(tmp: &Path, config: &str) {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     write(tmp, "docs/ir/cli.md", IR);
+    write(tmp, "docs/decisions/cli.md", DECISION);
     write(tmp, "docs/ir/other.md", &IR.replace("REQ-001", "REQ-002"));
+    write(tmp, "docs/decisions/other.md", DECISION);
     write(
         tmp,
         "docs/decision/records/r.md",
@@ -26,7 +31,9 @@ fn make_project(tmp: &Path, config: &str) {
     write(
         tmp,
         ".kotowari/config.yaml",
-        &format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{config}"),
+        &format!(
+            "tests:\n  files:\n    - \"tests/**/*.rs\"\ndecisions:\n  documents: docs/decisions\n{config}"
+        ),
     );
 }
 
@@ -56,7 +63,7 @@ fn json(stdout: &str) -> serde_json::Value {
 
 fn data(ir: &str, title: &str, text: &str) -> String {
     format!(
-        "---\nir:\n  - {ir}\n---\n\n# {title}\n\n```view lead\nconclusion: 結論\n```\n\n## 節\n\n{text}\n"
+        "---\ndocuments:\n  - {ir}\n---\n\n# {title}\n\n```view lead\nconclusion: 結論\n```\n\n## 節\n\n{text}\n"
     )
 }
 
@@ -67,12 +74,12 @@ fn two_documents() -> TempDir {
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
-        &data("docs/ir/cli.md", "A", "a の文"),
+        &data("docs/decisions/cli.md", "A", "a の文"),
     );
     write(
         tmp.path(),
         ".kotowari/overview/b.md",
-        &data("docs/ir/other.md", "B", "b の文"),
+        &data("docs/decisions/other.md", "B", "b の文"),
     );
     write(tmp.path(), TOC, "title: 目次\nitems: [a, b]\n");
     tmp
@@ -149,7 +156,7 @@ fn ex_core_475_a_second_build_writes_only_the_changed_page() {
     write(
         tmp.path(),
         ".kotowari/overview/b.md",
-        &data("docs/ir/other.md", "B", "b の新しい文"),
+        &data("docs/decisions/other.md", "B", "b の新しい文"),
     );
     let (code, stdout, stderr) = run(tmp.path(), &["overview", "build", "--format", "json"]);
     assert_eq!(code, Some(0), "{stderr}");
@@ -234,7 +241,7 @@ fn ex_core_477_errors_in_overview_data_stop_the_build_without_writing() {
     write(
         tmp.path(),
         ".kotowari/overview/b.md",
-        "---\nir:\n  - docs/ir/other.md\n---\n\n# B\n\n## 節\n\n文。\n",
+        "---\ndocuments:\n  - docs/decisions/other.md\n---\n\n# B\n\n## 節\n\n文。\n",
     );
     let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
     assert_eq!(code, Some(2));
@@ -275,7 +282,11 @@ fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
         "tests:\n  files: ['tests/**']\noverview:\n  files: ['tests/**/*.md']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
-    write(tmp.path(), "tests/a.md", &data("docs/ir/cli.md", "A", "a"));
+    write(
+        tmp.path(),
+        "tests/a.md",
+        &data("docs/decisions/cli.md", "A", "a"),
+    );
     let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
     assert_eq!(code, Some(2));
     assert_eq!(
@@ -294,7 +305,11 @@ fn req_core_280_build_judges_the_guides_and_tests_overlap_first() {
         "tests:\n  files: ['tests/**']\nguides:\n  files: ['tests/**']\noverview:\n  files: ['tests/**']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
-    write(tmp.path(), "tests/a.md", &data("docs/ir/cli.md", "A", "a"));
+    write(
+        tmp.path(),
+        "tests/a.md",
+        &data("docs/decisions/cli.md", "A", "a"),
+    );
     let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
     assert_eq!(code, Some(2));
     assert_eq!(
@@ -562,7 +577,7 @@ fn req_core_324_a_link_above_the_cache_place_also_stops() {
         write(
             tmp.path(),
             ".kotowari/config.yaml",
-            "tests:\n  files: []\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
+            "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
         );
         let outside = TempDir::new().unwrap();
         if linked == ".kotowari" {
@@ -623,10 +638,11 @@ fn ex_core_508_build_on_toc_errors_writes_nothing() {
         "docs/ir/third.md",
         &IR.replace("REQ-001", "REQ-003"),
     );
+    write(tmp.path(), "docs/decisions/third.md", DECISION);
     write(
         tmp.path(),
         ".kotowari/overview/c.md",
-        &data("docs/ir/third.md", "C", "c の文"),
+        &data("docs/decisions/third.md", "C", "c の文"),
     );
     write(tmp.path(), TOC, "title: 目次\nitems: [a, z, a]\n");
     let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
@@ -672,7 +688,7 @@ fn ex_core_546_a_cache_place_that_cannot_be_enumerated_stops_with_a_cache_error(
     write(
         tmp.path(),
         ".kotowari/config.yaml",
-        "tests:\n  files: []\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
+        "tests:\n  files: []\ndecisions:\n  documents: docs/decisions\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
     );
     let locked = tmp.path().join(CACHE).join("locked");
     std::fs::create_dir_all(&locked).unwrap();

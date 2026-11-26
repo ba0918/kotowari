@@ -2,7 +2,7 @@
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
 )]
-use kotowari_core::{Finding, ReadInputs, ReadModel, SourceText};
+use kotowari_core::{Finding, NativeSourceText, ReadModel, RepositoryReadPreparation, SourceText};
 use kotowari_markdown_view::ReferenceState;
 use kotowari_overview::{Overview, inspect};
 
@@ -22,29 +22,56 @@ const OTHER: &str = "# Other\n\nScope.\n\n## Requirements\n\n### REQ-core-010: O
 
 const FLAGS: &str = "# 問題の記録\n\nなし。\n\n## Flags\n\n### FLAG-core-001: 抜け\n\n- kind: gap\n- related: REQ-core-001\n- source: docs/decision/records/2026-01-01-x.md#A2\n\n本文の行。\n";
 
+/// 決定の文書。実装済みの決定と、提案の決定を持つ
+const CLI_DECISIONS: &str = "# CLI\n\nDecides the commands.\n\n\
+## Run commands\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun them.\n\n\
+### Confirmations\n\n- C-core-cli-1 A command runs\n  and ends\n\n\
+## Later\n\nStatus: proposed\n\n### Problem\n\nTrouble.\n\n### Decision\n\nLater.\n\n\
+### Confirmations\n\n- C-core-cli-2 Later runs\n";
+
+const OTHER_DECISIONS: &str = "# Other\n\nDecides the rest.\n\n## Rest\n\nStatus: implemented\n\n\
+### Problem\n\nTrouble.\n\n### Decision\n\nRest.\n\n### Confirmations\n\n- C-core-other-1 Rest\n";
+
 const DECISIONS: &str = "# X\n\n## Context\n\nc\n\n## Agreements\n\n- A1 古い決定\n  - why: w\n  - superseded_by: [A2](#A2)\n- A2 新しい決定\n  - why: w\n";
 
 fn model() -> ReadModel {
-    let mut inputs = ReadInputs::default();
-    inputs.config.tests.files.clear();
-    let text = |path: &str, text: &str| SourceText::new(path, text).unwrap();
-    inputs.ir = Some(vec![
-        text("docs/ir/core/cli.md", CLI),
-        text("docs/ir/core/other.md", OTHER),
-        text("docs/ir/core/FLAGS.md", FLAGS),
-    ]);
-    inputs.records = Some(vec![
-        text(RECORD, DECISIONS),
-        text(
-            "docs/decision/records/notes.md",
-            "# Notes\n\n## 背景\n\n一行目\n二行目\n",
-        ),
-    ]);
-    inputs.adr = Some(vec![text(
-        "docs/decision/adr/0001-a.md",
-        "# ADR\n\n## Decision\n\n決めた\n",
-    )]);
-    ReadModel::build(inputs).unwrap()
+    let mut config = kotowari_core::config::Config::default();
+    config.tests.files.clear();
+    config.decisions.documents = Some("docs/decisions".into());
+    let native = |path: &str, text: &str| NativeSourceText::new(path, path, text);
+    let mut preparation = RepositoryReadPreparation::new(config).unwrap();
+    for (path, text) in [
+        ("core/cli.md", CLI),
+        ("core/other.md", OTHER),
+        ("core/FLAGS.md", FLAGS),
+    ] {
+        preparation.push_ir(native(path, text)).unwrap();
+    }
+    for (path, text) in [
+        ("docs/decisions/core/cli.md", CLI_DECISIONS),
+        ("docs/decisions/core/other.md", OTHER_DECISIONS),
+        ("docs/decisions/core/CONTEXT.md", "# Glossary\n"),
+    ] {
+        preparation
+            .push_decision_document(native(path, text))
+            .unwrap();
+    }
+    preparation
+        .finish(
+            vec![
+                native(RECORD, DECISIONS),
+                native(
+                    "docs/decision/records/notes.md",
+                    "# Notes\n\n## 背景\n\n一行目\n二行目\n",
+                ),
+            ],
+            vec![native(
+                "docs/decision/adr/0001-a.md",
+                "# ADR\n\n## Decision\n\n決めた\n",
+            )],
+            Vec::new(),
+        )
+        .unwrap()
 }
 
 fn fingerprint(model: &ReadModel, id: &str) -> String {
@@ -91,7 +118,7 @@ fn run_with_toc(model: &ReadModel, files: &[(&str, &str)], toc: &str) -> Overvie
     inspect(model, &sources, &SourceText::new(TOC, toc).unwrap())
 }
 
-const FRONT: &str = "---\nir:\n  - docs/ir/core/cli.md\n---\n";
+const FRONT: &str = "---\ndocuments:\n  - docs/decisions/core/cli.md\n---\n";
 const LEAD: &str = "```view lead\nconclusion: 結論\npoints: [要点]\n```\n";
 
 /// frontmatter、題名、lead に続けて body を置いた元データ
@@ -244,14 +271,14 @@ fn req_core_283_comments_and_blank_lines_before_the_lead_are_skipped() {
     );
 }
 
-// @kotowari[EX-core-468, REQ-core-284, REQ-core-027, C-core-forder-4]
+// @kotowari[EX-core-468, REQ-core-284, REQ-core-027, C-core-forder-4, C-core-lang-7, C-core-ovdata-12, C-core-ovdata-23]
 #[test]
-fn ex_core_468_a_missing_ir_document_and_one_shared_by_two_overviews_are_errors() {
+fn ex_core_468_a_missing_decision_document_and_one_shared_by_two_overviews_are_errors() {
     let model = model();
     let a = format!(
-        "---\nir:\n  - docs/ir/core/cli.md\n  - docs/ir/core/none.md\n---\n\n# a\n\n{LEAD}"
+        "---\ndocuments:\n  - docs/decisions/core/cli.md\n  - docs/decisions/core/none.md\n---\n\n# a\n\n{LEAD}"
     );
-    let b = format!("---\nir:\n  - docs/ir/core/cli.md\n---\n\n# b\n\n{LEAD}");
+    let b = format!("---\ndocuments:\n  - docs/decisions/core/cli.md\n---\n\n# b\n\n{LEAD}");
     let overview = run(&model, &[(A, &a), (B, &b)]);
     assert_eq!(
         found(&overview),
@@ -259,14 +286,14 @@ fn ex_core_468_a_missing_ir_document_and_one_shared_by_two_overviews_are_errors(
             (
                 A.into(),
                 None,
-                "overview_ir_missing".into(),
-                "docs/ir/core/none.md".into()
+                "overview_document_missing".into(),
+                "docs/decisions/core/none.md".into()
             ),
             (
                 B.into(),
                 None,
-                "overview_ir_shared".into(),
-                "docs/ir/core/cli.md".into()
+                "overview_document_shared".into(),
+                "docs/decisions/core/cli.md".into()
             ),
         ]
     );
@@ -274,30 +301,30 @@ fn ex_core_468_a_missing_ir_document_and_one_shared_by_two_overviews_are_errors(
 
 // @kotowari[REQ-core-284, REQ-core-281]
 #[test]
-fn req_core_284_a_valid_ir_list_is_checked_beside_other_frontmatter_violations() {
+fn req_core_284_a_valid_documents_list_is_checked_beside_other_frontmatter_violations() {
     let model = model();
     let text = format!(
-        "---\nir:\n  - docs/ir/core/cli.md\n  - docs/ir/core/none.md\ntitle: x\n---\n\n# a\n\n{LEAD}"
+        "---\ndocuments:\n  - docs/decisions/core/cli.md\n  - docs/decisions/core/none.md\ntitle: x\n---\n\n# a\n\n{LEAD}"
     );
     let overview = run(&model, &[(A, &text)]);
     assert_eq!(of_kind(&overview, "overview_form_invalid").len(), 1);
     assert_eq!(
-        of_kind(&overview, "overview_ir_missing"),
+        of_kind(&overview, "overview_document_missing"),
         [(
             A.into(),
             None,
-            "overview_ir_missing".into(),
-            "docs/ir/core/none.md".into()
+            "overview_document_missing".into(),
+            "docs/decisions/core/none.md".into()
         )]
     );
 }
 
 // @kotowari[REQ-core-284]
 #[test]
-fn req_core_284_only_topic_documents_count_as_ir_documents() {
+fn req_core_284_a_glossary_does_not_count_as_a_decision_document() {
     let model = model();
     let text = format!(
-        "---\nir:\n  - docs/ir/core/FLAGS.md\n  - docs/ir/core/other.md\n---\n\n# a\n\n{LEAD}"
+        "---\ndocuments:\n  - docs/decisions/core/CONTEXT.md\n  - docs/decisions/core/other.md\n---\n\n# a\n\n{LEAD}"
     );
     let overview = run(&model, &[(A, &text)]);
     assert_eq!(
@@ -305,19 +332,19 @@ fn req_core_284_only_topic_documents_count_as_ir_documents() {
         [(
             A.into(),
             None,
-            "overview_ir_missing".into(),
-            "docs/ir/core/FLAGS.md".into()
+            "overview_document_missing".into(),
+            "docs/decisions/core/CONTEXT.md".into()
         )]
     );
 }
 
-// @kotowari[EX-core-469, REQ-core-285, REQ-core-027, C-core-ovdata-13]
+// @kotowari[EX-core-469, REQ-core-285, REQ-core-027, C-core-ovdata-13, C-core-lang-8]
 #[test]
 fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
     let model = model();
     let text = data(
         "a",
-        "## 節\n\n```view steps\nitems:\n  - title: t\n    refs: [REQ-core-001, REQ-core-999, docs/decision/records/records.md#A9999, foo]\n```\n",
+        "## 節\n\n```view steps\nitems:\n  - title: t\n    refs: [C-core-cli-1, \"docs/decisions/core/cli.md#run-commands\", C-core-cli-999, \"docs/decisions/core/cli.md#none\", REQ-core-001, \"docs/decision/records/2026-01-01-x.md#A2\", foo]\n```\n",
     );
     let overview = run(&model, &[(A, &text)]);
     let line = Some(line_of(&text, "```view steps"));
@@ -328,13 +355,25 @@ fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
                 A.into(),
                 line,
                 "overview_ref_unresolved".into(),
-                "REQ-core-999".into()
+                "C-core-cli-999".into()
             ),
             (
                 A.into(),
                 line,
                 "overview_ref_unresolved".into(),
-                "docs/decision/records/records.md#A9999".into()
+                "REQ-core-001".into()
+            ),
+            (
+                A.into(),
+                line,
+                "overview_ref_unresolved".into(),
+                "docs/decision/records/2026-01-01-x.md#A2".into()
+            ),
+            (
+                A.into(),
+                line,
+                "overview_ref_unresolved".into(),
+                "docs/decisions/core/cli.md#none".into()
             ),
             (
                 A.into(),
@@ -394,7 +433,8 @@ fn req_core_286_a_malformed_guide_mark_in_overview_data_is_an_invalid_marker() {
 #[test]
 fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
     let model = model();
-    let text = format!("---\nir:\n  - docs/ir/core/cli.md\ntitle: x\n---\n\n# a\n\n{LEAD}");
+    let text =
+        format!("---\ndocuments:\n  - docs/decisions/core/cli.md\ntitle: x\n---\n\n# a\n\n{LEAD}");
     let overview = run(&model, &[(A, &text)]);
     assert_eq!(
         of_kind(&overview, "overview_form_invalid"),
@@ -407,18 +447,20 @@ fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
     );
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027, C-core-forder-4, C-core-ovdata-5]
+// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027, C-core-forder-4, C-core-ovdata-5, C-core-ovdata-23]
 #[test]
-fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_ir_list_of_strings() {
+fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_documents_list_of_strings() {
     let model = model();
     for front in [
         "",
         "---\n- a\n---\n",
-        "---\nir: [\n---\n",
+        "---\ndocuments: [\n---\n",
         "---\nother: 1\n---\n",
-        "---\nir: []\n---\n",
-        "---\nir: docs/ir/core/cli.md\n---\n",
-        "---\nir:\n  - 1\n---\n",
+        "---\ndocuments: []\n---\n",
+        "---\ndocuments: docs/decisions/core/cli.md\n---\n",
+        "---\ndocuments:\n  - 1\n---\n",
+        // 古い鍵 "ir" は知らない鍵で、一覧も無い（C-core-ovdata-23）
+        "---\nir:\n  - docs/decisions/core/cli.md\n---\n",
     ] {
         let text = format!("{front}\n# a\n\n{LEAD}");
         let forms = of_kind(&run(&model, &[(A, &text)]), "overview_form_invalid");
@@ -498,9 +540,11 @@ fn tbl_core_038_a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
 #[test]
 fn req_core_305_duplicated_names_and_index_and_style_are_errors() {
     let model = model();
-    let one = |ir: &str, title: &str| format!("---\nir:\n  - {ir}\n---\n\n# {title}\n\n{LEAD}");
-    let a1 = one("docs/ir/core/cli.md", "a1");
-    let a2 = one("docs/ir/core/other.md", "a2");
+    let one = |document: &str, title: &str| {
+        format!("---\ndocuments:\n  - {document}\n---\n\n# {title}\n\n{LEAD}")
+    };
+    let a1 = one("docs/decisions/core/cli.md", "a1");
+    let a2 = one("docs/decisions/core/other.md", "a2");
     let overview = run(
         &model,
         &[
@@ -508,11 +552,11 @@ fn req_core_305_duplicated_names_and_index_and_style_are_errors() {
             (".kotowari/overview/sub/a.md", &a2),
             (
                 ".kotowari/overview/index.md",
-                &one("docs/ir/core/none1.md", "i"),
+                &one("docs/decisions/core/none1.md", "i"),
             ),
             (
                 ".kotowari/overview/style.md",
-                &one("docs/ir/core/none2.md", "s"),
+                &one("docs/decisions/core/none2.md", "s"),
             ),
         ],
     );
@@ -557,155 +601,95 @@ fn with_refs(refs: &str) -> String {
     )
 }
 
-// @kotowari[EX-core-474, REQ-core-291, TBL-core-039]
+// @kotowari[C-core-ovcmd-29, REQ-core-291, TBL-core-039, EX-core-474]
 #[test]
-fn ex_core_474_superseded_decisions_and_deferred_requirements_carry_their_states() {
+fn references_to_proposed_decisions_and_their_rows_are_deferred_and_the_rest_current() {
     let model = model();
-    let text = with_refs("\"docs/decision/records/2026-01-01-x.md#A1\", REQ-core-900");
+    let text = with_refs(
+        "\"docs/decisions/core/cli.md#run-commands\", C-core-cli-1, \"docs/decisions/core/cli.md#later\", C-core-cli-2",
+    );
     let overview = run(&model, &[(A, &text)]);
     assert_eq!(found(&overview), []);
-    let decision = reference(&overview, "docs/decision/records/2026-01-01-x.md#A1");
+    let states: Vec<(&str, ReferenceState)> = overview
+        .render_input()
+        .references
+        .iter()
+        .map(|reference| (reference.key.as_str(), reference.state))
+        .collect();
     assert_eq!(
-        (decision.label.as_str(), decision.state),
-        ("x A1", ReferenceState::Superseded)
-    );
-    let requirement = reference(&overview, "REQ-core-900");
-    assert_eq!(
-        (requirement.label.as_str(), requirement.state),
-        ("REQ-core-900", ReferenceState::Deferred)
-    );
-}
-
-// @kotowari[REQ-core-291, TBL-core-039]
-#[test]
-fn tbl_core_039_requirements_show_their_statements_or_their_definition() {
-    let model = model();
-    let overview = run(&model, &[(A, &with_refs("REQ-core-001, REQ-core-002"))]);
-    let plain = reference(&overview, "REQ-core-001");
-    assert_eq!(
-        (plain.body.as_deref().unwrap(), plain.state),
-        (
-            "The first statement.\nThe second statement.",
-            ReferenceState::Current
-        )
-    );
-    assert_eq!(
-        reference(&overview, "REQ-core-002").body.as_deref(),
-        Some("Algorithm\nTBL-core-001")
-    );
-}
-
-// @kotowari[REQ-core-291, TBL-core-039]
-#[test]
-fn tbl_core_039_tables_show_their_name_and_properties_their_statements() {
-    let model = model();
-    let overview = run(&model, &[(A, &with_refs("TBL-core-001, PROP-core-001"))]);
-    let table = reference(&overview, "TBL-core-001");
-    assert_eq!(
-        (
-            table.label.as_str(),
-            table.body.as_deref().unwrap(),
-            table.state
-        ),
-        ("TBL-core-001", "Table name", ReferenceState::Current)
-    );
-    assert_eq!(
-        reference(&overview, "PROP-core-001").body.as_deref(),
-        Some("Property statement.")
-    );
-}
-
-// @kotowari[REQ-core-291, TBL-core-039]
-#[test]
-fn tbl_core_039_scenarios_show_the_scenario_line_and_steps_and_their_deferral() {
-    let model = model();
-    let overview = run(&model, &[(A, &with_refs("EX-core-001, EX-core-002"))]);
-    let scenario = reference(&overview, "EX-core-001");
-    assert_eq!(
-        (scenario.body.as_deref().unwrap(), scenario.state),
-        (
-            "Scenario: a scenario\n  Given g\n  When w\n  Then t",
-            ReferenceState::Current
-        )
-    );
-    assert_eq!(
-        reference(&overview, "EX-core-002").state,
-        ReferenceState::Deferred
-    );
-}
-
-// @kotowari[REQ-core-291, TBL-core-039]
-#[test]
-fn tbl_core_039_decisions_show_the_text_after_the_number() {
-    let model = model();
-    let overview = run(
-        &model,
-        &[(
-            A,
-            &with_refs("\"docs/decision/records/2026-01-01-x.md#A2\""),
-        )],
-    );
-    let decision = reference(&overview, "docs/decision/records/2026-01-01-x.md#A2");
-    assert_eq!(
-        (
-            decision.label.as_str(),
-            decision.body.as_deref().unwrap(),
-            decision.state
-        ),
-        ("x A2", "新しい決定", ReferenceState::Current)
-    );
-}
-
-// @kotowari[REQ-core-291, TBL-core-039]
-#[test]
-fn tbl_core_039_flag_items_show_their_body_lines() {
-    let model = model();
-    let overview = run(&model, &[(A, &with_refs("FLAG-core-001"))]);
-    let flag = reference(&overview, "FLAG-core-001");
-    assert_eq!(
-        (
-            flag.label.as_str(),
-            flag.body.as_deref().unwrap(),
-            flag.state
-        ),
-        ("FLAG-core-001", "本文の行。", ReferenceState::Current)
-    );
-}
-
-// @kotowari[REQ-core-291, TBL-core-039]
-#[test]
-fn tbl_core_039_headings_of_other_markdown_files_show_their_section() {
-    let model = model();
-    let overview = run(
-        &model,
-        &[(
-            A,
-            &with_refs(
-                "\"docs/decision/records/notes.md#背景\", \"docs/decision/adr/0001-a.md#Decision\"",
+        states,
+        [
+            ("C-core-cli-1", ReferenceState::Current),
+            ("C-core-cli-2", ReferenceState::Deferred),
+            ("docs/decisions/core/cli.md#later", ReferenceState::Deferred),
+            (
+                "docs/decisions/core/cli.md#run-commands",
+                ReferenceState::Current
             ),
-        )],
-    );
-    let note = reference(&overview, "docs/decision/records/notes.md#背景");
-    assert_eq!(
-        (
-            note.label.as_str(),
-            note.body.as_deref().unwrap(),
-            note.state
-        ),
-        ("notes 背景", "一行目\n二行目", ReferenceState::Current)
-    );
-    assert_eq!(
-        reference(&overview, "docs/decision/adr/0001-a.md#Decision").label,
-        "0001-a Decision"
+        ]
     );
 }
 
-// @kotowari[REQ-core-291]
+// @kotowari[C-core-ovcmd-14, REQ-core-291, TBL-core-039]
+#[test]
+fn a_reference_to_a_decision_or_a_row_carries_the_contents_of_its_target() {
+    let model = model();
+    let text = with_refs("\"docs/decisions/core/cli.md#run-commands\", C-core-cli-1");
+    let overview = run(&model, &[(A, &text)]);
+    let decision = reference(&overview, "docs/decisions/core/cli.md#run-commands");
+    assert_eq!(decision.label, "Run commands");
+    assert_eq!(
+        decision.body.as_deref(),
+        Some(
+            "## Run commands\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun them.\n\n\
+             ### Confirmations\n\n- C-core-cli-1 A command runs\n  and ends"
+        )
+    );
+    let row = reference(&overview, "C-core-cli-1");
+    assert_eq!(row.label, "C-core-cli-1");
+    assert_eq!(
+        row.body.as_deref(),
+        Some("- C-core-cli-1 A command runs\n  and ends")
+    );
+}
+
+// @kotowari[C-core-lang-9, C-core-ovcmd-15]
+#[test]
+fn a_section_is_stale_when_the_decision_its_mark_points_at_changes() {
+    let model = model();
+    let target = "docs/decisions/core/cli.md#run-commands";
+    let listed = model.list();
+    let current = listed
+        .items()
+        .iter()
+        .find_map(|item| {
+            let kotowari_core::ListItem::Decision(decision) = item else {
+                return None;
+            };
+            (decision.id() == target).then(|| decision.fingerprint().to_string())
+        })
+        .unwrap();
+    let text = data(
+        "a",
+        &format!(
+            "## 今の節\n<!-- @kotowari[{target}:{current}] -->\n\n文。\n\n## 古い節\n<!-- @kotowari[{target}:00000000] -->\n\n文。\n"
+        ),
+    );
+    let overview = run(&model, &[(A, &text)]);
+    let sections: Vec<(&str, bool)> = overview.render_input().documents[0]
+        .sections
+        .iter()
+        .map(|section| (section.heading.as_str(), section.stale))
+        .collect();
+    assert_eq!(sections, [("今の節", false), ("古い節", true)]);
+}
+
+// @kotowari[REQ-core-291, C-core-ovcmd-13]
 #[test]
 fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
     let model = model();
-    let a = with_refs("REQ-core-001, REQ-core-001");
-    let b = "---\nir:\n  - docs/ir/core/other.md\n---\n\n# b\n\n```view quiz\nitems:\n  - q: q\n    a: a\n    refs: [REQ-core-001, REQ-core-010]\n```\n".to_string();
+    let a = with_refs("C-core-cli-1, C-core-cli-1");
+    let b = "---\ndocuments:\n  - docs/decisions/core/other.md\n---\n\n# b\n\n```view quiz\nitems:\n  - q: q\n    a: a\n    refs: [C-core-cli-1, C-core-other-1]\n```\n".to_string();
     let overview = run(&model, &[(A, &a), (B, &b)]);
     let keys: Vec<&str> = overview
         .render_input()
@@ -713,7 +697,7 @@ fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
         .iter()
         .map(|reference| reference.key.as_str())
         .collect();
-    assert_eq!(keys, ["REQ-core-001", "REQ-core-010"]);
+    assert_eq!(keys, ["C-core-cli-1", "C-core-other-1"]);
 }
 
 // @kotowari[REQ-core-292, C-core-ovcmd-15]
@@ -758,9 +742,9 @@ fn valid_data_renders_into_the_pages_the_view_returns_for_its_input() {
     let model = model();
     let a = data(
         "一つ目",
-        "## 節\n\n文。\n\n```view steps\nitems:\n  - title: 段階\n    refs: [REQ-core-001]\n```\n\n後の文。\n",
+        "## 節\n\n文。\n\n```view steps\nitems:\n  - title: 段階\n    refs: [C-core-cli-1]\n```\n\n後の文。\n",
     );
-    let b = format!("---\nir:\n  - docs/ir/core/other.md\n---\n\n# 二つ目\n\n{LEAD}");
+    let b = format!("---\ndocuments:\n  - docs/decisions/core/other.md\n---\n\n# 二つ目\n\n{LEAD}");
     let overview = run(&model, &[(A, &a), (B, &b)]);
     let pages = overview.pages().expect("no errors");
     let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();
@@ -862,10 +846,11 @@ fn req_core_283_a_second_title_before_the_lead_is_the_first_block_after_the_titl
 #[test]
 fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
     let model = model();
-    let text =
-        format!("---\nir:\n  - docs/ir/core/cli.md\n  - docs/ir/core/cli.md\n---\n\n# a\n\n{LEAD}");
+    let text = format!(
+        "---\ndocuments:\n  - docs/decisions/core/cli.md\n  - docs/decisions/core/cli.md\n---\n\n# a\n\n{LEAD}"
+    );
     let overview = run(&model, &[(A, &text)]);
-    assert_eq!(of_kind(&overview, "overview_ir_shared"), []);
+    assert_eq!(of_kind(&overview, "overview_document_shared"), []);
 }
 
 // @kotowari[REQ-core-288, TBL-core-042, C-core-ovout-1]
@@ -873,7 +858,7 @@ fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
 fn req_core_288_the_number_of_files_counts_every_overview_data_file() {
     let model = model();
     let a = data("a", "## 節\n\n文。\n");
-    let b = format!("---\nir:\n  - docs/ir/core/other.md\n---\n\n# b\n\n{LEAD}");
+    let b = format!("---\ndocuments:\n  - docs/decisions/core/other.md\n---\n\n# b\n\n{LEAD}");
     assert_eq!(run(&model, &[]).files(), 0);
     assert_eq!(run(&model, &[(A, &a), (B, &b)]).files(), 2);
 }
@@ -897,7 +882,7 @@ fn run_named(names: &[&'static str], toc: &str) -> Overview {
         .iter()
         .map(|(path, text)| (path.as_str(), text.as_str()))
         .collect();
-    // 元データは別の IR の文書を持たないので、2つ目以降は overview_ir_shared になる。目次の指摘だけを見る
+    // 元データは別の IR の文書を持たないので、2つ目以降は overview_document_shared になる。目次の指摘だけを見る
     run_with_toc(&model(), &files, toc)
 }
 

@@ -87,8 +87,8 @@ finding_kinds! {
     OverviewPartUnknown => "overview_part_unknown",
     OverviewPartInvalid => "overview_part_invalid",
     OverviewLeadMissing => "overview_lead_missing",
-    OverviewIrMissing => "overview_ir_missing",
-    OverviewIrShared => "overview_ir_shared",
+    OverviewDocumentMissing => "overview_document_missing",
+    OverviewDocumentShared => "overview_document_shared",
     OverviewRefUnresolved => "overview_ref_unresolved",
     OverviewNameConflict => "overview_name_conflict",
     // 目次の指摘（TBL-core-008）。全体像の元データの指摘と同じく kotowari-overview が作る
@@ -175,8 +175,8 @@ impl FindingKind {
             | FindingKind::OverviewPartUnknown
             | FindingKind::OverviewPartInvalid
             | FindingKind::OverviewLeadMissing
-            | FindingKind::OverviewIrMissing
-            | FindingKind::OverviewIrShared
+            | FindingKind::OverviewDocumentMissing
+            | FindingKind::OverviewDocumentShared
             | FindingKind::OverviewRefUnresolved
             | FindingKind::OverviewNameConflict
             | FindingKind::OverviewTocInvalid

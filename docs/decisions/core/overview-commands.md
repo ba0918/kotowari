@@ -123,7 +123,7 @@ When "kotowari overview build" has finished writing, it reports, following "--fo
 
 ## The reference table holds, for each reference, the body of what it points at
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

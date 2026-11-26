@@ -97,8 +97,8 @@ fn translations(
                 language: language.clone(),
                 files,
                 toc: side(toc.path(), language)?,
-                // REQ-core-354: その言語のページの`IR`の本文はその言語の`側`から取る
-                ir: kotowari_core::translations::side_documents(
+                // C-core-ovlang-11: その言語のページの参照の本文は、決定の文書のその言語の`側`から取る
+                decisions: kotowari_core::translations::decision_side_documents(
                     assembly.pairs(),
                     config,
                     language,

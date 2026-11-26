@@ -72,8 +72,8 @@ fn condition(kind: FindingKind) -> Condition {
         | FindingKind::OverviewPartUnknown
         | FindingKind::OverviewPartInvalid
         | FindingKind::OverviewLeadMissing
-        | FindingKind::OverviewIrMissing
-        | FindingKind::OverviewIrShared
+        | FindingKind::OverviewDocumentMissing
+        | FindingKind::OverviewDocumentShared
         | FindingKind::OverviewRefUnresolved
         | FindingKind::OverviewNameConflict
         | FindingKind::OverviewTocInvalid
