@@ -37,7 +37,7 @@ ProjectとSchemaLoaderの開始点、Loaderのキャッシュ基準は絶対パ�
 
 ## スキーマと値の抽出
 
-<!-- @kotowari[REQ-schema-068:a2ca7ddc, REQ-schema-069:61fa2bf9, REQ-schema-070:ff5208d1] -->
+<!-- @kotowari[docs/decisions/schema/library-extraction.md#a-schema-is-returned-only-after-it-passes-semantic-validation-and-a-parsed-schema-can-be-reused:ae534266, docs/decisions/schema/library-extraction.md#the-normal-entry-point-for-value-extraction-returns-values-only-from-a-document-with-no-violation:9379fe8e, docs/decisions/schema/library-extraction.md#validation-in-the-library-does-not-cancel-the-schemas-open:142c086d] -->
 
 `Schema::parse`で構文と意味を検証し、`Document::parse`の結果と再利用します。
 `extract_validated`は成功した値だけを返します。指摘があっても値を読む場合は`extract_partial`で値と指摘を両方確認します。
@@ -47,7 +47,7 @@ SchemaLoaderの`load`はスキーマと文書の組を返し、再度取得せ�
 
 ## Tokioから待つ
 
-<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:e186fe7a, REQ-core-321:5a28ec39, REQ-schema-075:a82f0403] -->
+<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:e186fe7a, REQ-core-321:5a28ec39, docs/decisions/schema/library-io.md#a-call-that-selects-the-tokio-feature-also-gets-the-same-results-as-the-synchronous-one:3539145a] -->
 
 高水準の2ライブラリで、既定で無効な`tokio` featureを有効にすると`AsyncProject`と`AsyncSchemaLoader`を使えます。
 呼出側のTokioランタイムで待ち、内部ランタイムは作りません。ランタイム不在やタスクの失敗も型で返します。

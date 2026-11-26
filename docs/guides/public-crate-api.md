@@ -37,7 +37,7 @@ The starting points of Project and SchemaLoader, and the Loader's cache base, ar
 
 ## Schemas and value extraction
 
-<!-- @kotowari[REQ-schema-068:a2ca7ddc, REQ-schema-069:61fa2bf9, REQ-schema-070:ff5208d1] -->
+<!-- @kotowari[docs/decisions/schema/library-extraction.md#a-schema-is-returned-only-after-it-passes-semantic-validation-and-a-parsed-schema-can-be-reused:ae534266, docs/decisions/schema/library-extraction.md#the-normal-entry-point-for-value-extraction-returns-values-only-from-a-document-with-no-violation:9379fe8e, docs/decisions/schema/library-extraction.md#validation-in-the-library-does-not-cancel-the-schemas-open:142c086d] -->
 
 `Schema::parse` validates syntax and meaning, and the result is reused with the result of `Document::parse`.
 `extract_validated` returns values only on success. To read values even when there are findings, use `extract_partial` and look at both the values and the findings.
@@ -47,7 +47,7 @@ SchemaLoader's `load` returns the schema and document as a pair, so you can vali
 
 ## Awaiting from Tokio
 
-<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:e186fe7a, REQ-core-321:5a28ec39, REQ-schema-075:a82f0403] -->
+<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:e186fe7a, REQ-core-321:5a28ec39, docs/decisions/schema/library-io.md#a-call-that-selects-the-tokio-feature-also-gets-the-same-results-as-the-synchronous-one:3539145a] -->
 
 In the two high-level libraries, enabling the `tokio` feature (disabled by default) gives you `AsyncProject` and `AsyncSchemaLoader`.
 They await on the caller's Tokio runtime and create no internal runtime. A missing runtime and task failures are also returned as types.
