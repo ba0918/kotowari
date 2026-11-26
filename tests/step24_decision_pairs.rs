@@ -380,7 +380,7 @@ fn a_different_confirmation_id_or_reading_flag_is_a_structure_mismatch() {
     );
 }
 
-// @kotowari[C-core-lang-4]
+// @kotowari[C-core-lang-4, C-core-formc-7]
 #[test]
 fn a_missing_or_different_heading_on_the_japanese_side_is_a_structure_mismatch() {
     let first = english("greet", "proposed", &["C-greet-1 Shown"]);
@@ -402,6 +402,7 @@ fn a_missing_or_different_heading_on_the_japanese_side_is_a_structure_mismatch()
         vec![
             finding("translation_structure_mismatch", side, Some(11), "heading"),
             finding("unknown_heading", side, Some(11), "### 背景"),
+            finding("unknown_line", side, Some(13), "困っていた。"),
         ]
     );
 }
@@ -697,7 +698,7 @@ fn a_leading_byte_order_mark_on_either_side_is_skipped() {
     assert_eq!(value["decisions"]["decisions"], 1);
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-formc-7]
 #[test]
 fn a_section_with_an_unknown_name_on_both_sides_is_an_error_on_each_side() {
     let tmp = TempDir::new().unwrap();
@@ -725,10 +726,22 @@ fn a_section_with_an_unknown_name_on_both_sides_is_an_error_on_each_side() {
                 "### 補足"
             ),
             finding(
+                "unknown_line",
+                "docs/decisions/greet/greet.ja.md",
+                Some(25),
+                "メモ。"
+            ),
+            finding(
                 "unknown_heading",
                 "docs/decisions/greet/greet.md",
                 Some(23),
                 "### Notes"
+            ),
+            finding(
+                "unknown_line",
+                "docs/decisions/greet/greet.md",
+                Some(25),
+                "A note."
             ),
         ]
     );

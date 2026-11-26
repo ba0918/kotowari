@@ -41,6 +41,17 @@ pub fn plan_schema() -> Result<Schema, SchemaError> {
     parse_schema(PLAN)
 }
 
+/// 決定の文書のスキーマ（docs/decisions/core/form-contract.md）。形の語の一覧は
+/// `crate::decisions` の綴りの表と同じでなければならない
+pub(crate) const DECISION: &str = include_str!("../schemas/decision.yaml");
+
+/// 決定の文書のスキーマ。最初に要ったときに1回だけ読む
+pub(crate) fn decision_schema() -> Result<&'static Schema, &'static SchemaError> {
+    static DECISION_SCHEMA: LazyLock<Result<Schema, SchemaError>> =
+        LazyLock::new(|| parse_schema(DECISION));
+    DECISION_SCHEMA.as_ref()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

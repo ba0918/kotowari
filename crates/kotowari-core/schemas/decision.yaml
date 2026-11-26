@@ -1,0 +1,54 @@
+# kotowari の決定の文書の形（docs/decisions/core/decision-documents.md、docs/decisions/core/form-contract.md）。
+# 形の語は日本語と英語のどちらの綴りも受け、1つの文書の中で混ぜてもよい。
+# 切り替えの行は、kotowari が読む前に空けておく。
+# 形の語は crates/kotowari-core/src/decisions.rs の KEYWORDS と同じでなければならない（テストが照らす）。
+name: decision-document
+document:
+  title:
+    extract: { path: title, value: text, of: { line: line } }
+  # 話題の段落。題名と最初の決定の間に段落が1つ以上要る。一覧や表もその文に数える
+  preamble:
+    open: true
+    statement: { repeat: { min: 1 } }
+  sections:
+    # 同じ名前の節や "###" の節が2つあっても誤りにしない。項目はそれぞれの節から読む
+    - name: [未決, Open]
+      repeat: { min: 0 }
+      bullets:
+        repeat: { min: 0 }
+        children: { open: true }
+        extract: { path: open_items, of: { line: line } }
+    # ほかの "##" の見出しは1つずつ1つの決定
+    - pattern: ""
+      repeat: { min: 0 }
+      extract: { path: decisions, of: { name: name, line: line, end: end } }
+      # 状態の行。最初の "###" の節より前には、これのほか何も置かない
+      statement:
+        repeat: { min: 1, max: 1 }
+        pattern: "^(?:状態|Status):[ \\t]*(?:提案|実装済み|proposed|implemented)[ \\t]*$"
+        extract: { path: states, of: { line: line, raw: raw } }
+      items:
+        - name: [問題, Problem]
+          repeat: { min: 1 }
+          open: true
+          subheading: { repeat: { min: 0 } }
+        - name: [決めたこと, Decision]
+          repeat: { min: 1 }
+          open: true
+          subheading: { repeat: { min: 0 } }
+          extract: { path: decided, of: { line: line, end: end } }
+        - name: [見送った案, Rejected options]
+          repeat: { min: 0 }
+          open: true
+          subheading: { repeat: { min: 0 } }
+        - name: [確認すること, Confirmations]
+          repeat: { min: 0 }
+          subheading: { repeat: { min: 0 } }
+          bullets:
+            repeat: { min: 0 }
+            pattern: "^(?P<id>C-[a-z][a-z0-9-]*-[1-9][0-9]*)(?:$|\\s+(?:(?P<reading>（読んで確認）|\\(by reading\\))\\s*)?(?P<name>.*)$)"
+            children: { open: true }
+            extract:
+              path: rows
+              of: { id: { group: id }, by_reading: { group: reading }, name: { group: name }, line: line, end: end }
+          extract: { path: confirmations, of: { line: line, end: end } }

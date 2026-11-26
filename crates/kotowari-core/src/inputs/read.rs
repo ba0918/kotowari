@@ -27,7 +27,7 @@ impl ReadPreparation {
     /// 決定の文書の置き場の1つのファイルを読む。`先頭の言語`の`側`の話題の文書だけを話題の文書として
     /// 読み、ほかの言語の`側`はリンクの行き先とリンクだけを読む（C-core-lang-3）。`切り替えの行`は
     /// 題名のあとの段落に数えない
-    pub(super) fn parse_decisions(&mut self, source: &Text) {
+    pub(super) fn parse_decisions(&mut self, source: &Text) -> Result<(), crate::StopReason> {
         let config = &self.policy.config;
         let languages = config.languages();
         let (directory, name) = source.path.rsplit_once('/').unwrap_or(("", &source.path));
@@ -49,12 +49,16 @@ impl ReadPreparation {
         if glossary || language != languages[0] {
             // C-core-docs-20: 用語集は中身を検査しないので、その中のリンクも見ない
             let content = (!glossary).then_some(&mut self.decision_findings);
-            self.decision_targets
-                .push(crate::decisions::parse_target(&source.path, text, content));
-            return;
+            self.decision_targets.push(crate::decisions::parse_target(
+                &source.path,
+                text,
+                content,
+            )?);
+            return Ok(());
         }
-        let document = crate::decisions::parse(&source.path, text, &mut self.decision_findings);
+        let document = crate::decisions::parse(&source.path, text, &mut self.decision_findings)?;
         self.decisions.push(document);
+        Ok(())
     }
     pub(super) fn parse_ir(
         &mut self,
@@ -203,8 +207,7 @@ impl RepositoryReadPreparation {
             .originals
             .admit([&source])
             .map_err(|error| native_error(&error))?;
-        self.inner.parse_decisions(&source);
-        Ok(())
+        self.inner.parse_decisions(&source)
     }
     pub fn finish(
         self,

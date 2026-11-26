@@ -1,7 +1,13 @@
 //! 決定の文書の読み取りと検査（docs/decisions/core/decision-documents.md、docs/decisions/core/confirmations.md）。
-//! 古い形の IR とは別の経路で読み、古い形の検査には確認することの ID だけを渡す
+//! 古い形の IR とは別の経路で読み、古い形の検査には確認することの ID だけを渡す。
+//!
+//! 形は本体に埋め込んだスキーマ（`schemas/decision.yaml`）で mds のエンジンが読み分け、ここは
+//! エンジンの抽出の値を決定ごとにまとめ、エンジンの指摘を kotowari の指摘に写す
+//! （docs/decisions/core/form-contract.md）。エンジンの外に残すのは、見出しのアンカーとリンクの検査、
+//! 対の骨組み、ガイドの印の指紋、面の名前の引用、確認することの ID とテストの印の照合である
 
-use crate::{Finding, FindingKind};
+use crate::{Finding, FindingKind, StopReason};
+use kotowari_markdown_schema::finding::{FindingKind as EngineKind, RuleKind};
 use markdown::mdast::Node;
 use std::collections::BTreeSet;
 
@@ -54,8 +60,6 @@ pub(crate) struct Decision {
     pub(crate) quotable: Vec<String>,
     /// 状態が「提案」でも「実装済み」でもなければ None
     pub(crate) state: Option<State>,
-    /// 状態の行。無ければ見出しの行
-    pub(crate) state_line: usize,
     pub(crate) confirmations: Vec<Confirmation>,
 }
 
@@ -69,6 +73,18 @@ pub(crate) struct Document {
     /// 見出しへのリンクの行き先になる名前（GitHub の規則）
     pub(crate) anchors: BTreeSet<String>,
     pub(crate) links: Vec<crate::translations::MarkdownLink>,
+}
+
+impl Document {
+    fn empty(path: &str) -> Self {
+        Self {
+            path: path.to_owned(),
+            decisions: Vec::new(),
+            open_items: 0,
+            anchors: BTreeSet::new(),
+            links: Vec::new(),
+        }
+    }
 }
 
 /// 決定の文書の置き場から読んだものの数（check の "decisions"）
@@ -94,7 +110,8 @@ impl DecisionStates {
     readonly!(copy proposed: usize, implemented: usize);
 }
 
-/// 形の語の、1つの言語での綴り。どちらの言語の綴りも、どの文書でも同じ意味に読む
+/// 形の語の、1つの言語での綴り。どちらの言語の綴りも、どの文書でも同じ意味に読む。
+/// 埋め込んだスキーマの名前の一覧と正規表現は、この表と同じ語を持つ（C-core-formc-4）
 struct Keywords {
     /// 状態の行の頭
     state: &'static str,
@@ -106,7 +123,14 @@ struct Keywords {
     confirmations: &'static str,
     /// 文書の最後に置く、決定として扱わない見出し
     open: &'static str,
-    /// テストを求めない行の頭の印
+    /// テストを求めない行の頭の印。行を読み分けるのはスキーマの正規表現で、ここではそれと照らすだけ
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "the row pattern of the embedded schema tells it apart; the parity test compares the schema with this spelling"
+        )
+    )]
     by_reading: &'static str,
 }
 
@@ -147,6 +171,13 @@ enum Section {
 }
 
 impl Section {
+    const ALL: [Self; 4] = [
+        Self::Problem,
+        Self::Decided,
+        Self::Rejected,
+        Self::Confirmations,
+    ];
+
     fn spelled(self, keywords: &Keywords) -> &'static str {
         match self {
             Self::Problem => keywords.problem,
@@ -159,14 +190,7 @@ impl Section {
     /// 見出しの文がどれかの言語の節の名前なら、その節
     fn of(heading: &str) -> Option<Self> {
         let heading = heading.trim();
-        [
-            Self::Problem,
-            Self::Decided,
-            Self::Rejected,
-            Self::Confirmations,
-        ]
-        .into_iter()
-        .find(|section| {
+        Self::ALL.into_iter().find(|section| {
             KEYWORDS
                 .iter()
                 .any(|keywords| section.spelled(keywords) == heading)
@@ -181,7 +205,7 @@ fn is_open(heading: &str) -> bool {
         .any(|keywords| keywords.open == heading.trim())
 }
 
-/// 状態の行の値を状態にする。どれかの言語の「提案」か「実装済み」でなければ None
+/// 状態の値を状態にする。どれかの言語の「提案」か「実装済み」でなければ None
 fn state_of(value: &str) -> Option<State> {
     KEYWORDS.iter().find_map(|keywords| {
         if value == keywords.proposed {
@@ -194,136 +218,509 @@ fn state_of(value: &str) -> Option<State> {
     })
 }
 
-/// 段落の最初の行が状態の行なら、その綴りの組と、頭のあとの値
-fn state_line(first: &str) -> Option<(&'static Keywords, &str)> {
+/// エンジンが状態の行として返した行の、書いた綴りの組と頭のあとの値。頭が無ければ None
+fn state_value(raw: &str) -> Option<(&'static Keywords, &str)> {
+    let raw = raw.trim();
     KEYWORDS.iter().find_map(|keywords| {
-        first
-            .strip_prefix(keywords.state)
+        raw.strip_prefix(keywords.state)
             .map(|value| (*keywords, value.trim()))
     })
 }
 
-/// 確認することの行の ID のあとの文から、頭の「（読んで確認）」をどれかの言語の綴りで外す
-fn strip_by_reading(rest: &str) -> Option<&str> {
-    KEYWORDS
-        .iter()
-        .find_map(|keywords| rest.strip_prefix(keywords.by_reading))
+/// エンジンの抽出の値（`schemas/decision.yaml` の extract）。知らない鍵があれば、スキーマと
+/// 読み手が食い違っている
+#[derive(Debug, Default, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Values {
+    title: Option<Title>,
+    #[serde(default)]
+    decisions: Vec<Span>,
+    #[serde(default)]
+    states: Vec<StateLine>,
+    #[serde(default)]
+    decided: Vec<Span>,
+    #[serde(default)]
+    confirmations: Vec<Confirmations>,
+    #[serde(default)]
+    open_items: Vec<Line>,
 }
 
-/// 1つの決定を読んでいる途中のもの
-struct Building {
-    heading_line: usize,
-    heading: String,
-    anchor: String,
-    /// 指紋に入れる節の (見出しの行, 最後のブロックの最後の行)
-    fingerprinted: Vec<(usize, usize)>,
-    /// 今の "###" の節が指紋に入れる節か
-    in_fingerprinted: bool,
-    quotable: Vec<String>,
-    /// 状態の行を探すのは、見出しの直後の段落だけ。(行, 書いた綴りの組, 値)
-    state_line: Option<(usize, &'static Keywords, String)>,
-    awaiting_state: bool,
-    /// 最初の "###" の見出しより前か。状態の行と最初の節の間には、リンクの参照の定義のほか何も置けない
-    before_sections: bool,
-    sections: BTreeSet<Section>,
-    section: Option<Section>,
-    confirmations: Vec<Confirmation>,
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Title {
+    text: String,
+    line: usize,
 }
 
-impl Building {
-    fn new(heading_line: usize, heading: String, anchor: String) -> Self {
-        Self {
-            heading_line,
-            heading,
-            anchor,
-            fingerprinted: Vec::new(),
-            in_fingerprinted: false,
-            quotable: Vec::new(),
-            state_line: None,
-            awaiting_state: true,
-            before_sections: true,
-            sections: BTreeSet::new(),
-            section: None,
-            confirmations: Vec::new(),
-        }
+/// 見出しで始まる要素と、その最後の行
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Span {
+    #[serde(default)]
+    name: String,
+    line: usize,
+    end: usize,
+}
+
+/// 状態の行の場所の文の1行
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct StateLine {
+    line: usize,
+    raw: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Confirmations {
+    #[serde(default)]
+    rows: Vec<Row>,
+    line: usize,
+    end: usize,
+}
+
+/// 確認することの1行。行の形が違えば、キャプチャの鍵が無い
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Row {
+    id: Option<String>,
+    by_reading: Option<String>,
+    name: Option<String>,
+    line: usize,
+    end: usize,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Line {
+    #[expect(
+        dead_code,
+        reason = "only the number of open items is used; the line keeps the element an object as the schema extracts it"
+    )]
+    line: usize,
+}
+
+/// エンジンで読んだ文書
+struct Reading {
+    document: kotowari_markdown_schema::Document,
+    values: Values,
+    findings: Vec<EngineFinding>,
+}
+
+impl Reading {
+    /// 1始まりの行番号の生の行
+    fn raw(&self, line: usize) -> &str {
+        self.document.raw_line(line).unwrap_or_default()
     }
 
-    fn finish(self, path: &str, lines: &[&str], findings: &mut Vec<Finding>) -> Decision {
-        let state = match &self.state_line {
-            Some((_, _, value)) if state_of(value).is_some() => state_of(value),
-            Some((line, _, value)) => {
-                findings.push(Finding::new(
-                    FindingKind::DecisionStateInvalid,
-                    path.to_owned(),
-                    Some(*line),
-                    value.clone(),
-                ));
-                None
-            }
-            None => {
-                findings.push(Finding::new(
-                    FindingKind::DecisionStateInvalid,
-                    path.to_owned(),
-                    Some(self.heading_line),
-                    String::new(),
-                ));
-                None
-            }
-        };
-        // 欠けた節の名前は、状態の行を書いた言語の綴りで出す
-        let keywords = self
-            .state_line
-            .as_ref()
-            .map_or(KEYWORDS[0], |(_, keywords, _)| *keywords);
-        for required in [Section::Problem, Section::Decided] {
-            if !self.sections.contains(&required) {
-                findings.push(Finding::new(
-                    FindingKind::DecisionSectionMissing,
-                    path.to_owned(),
-                    Some(self.heading_line),
-                    required.spelled(keywords).to_owned(),
-                ));
-            }
-        }
-        let fingerprinted: Vec<String> = self
-            .fingerprinted
-            .iter()
-            .flat_map(|&(first, last)| {
-                let mut section = lines
-                    .get(first - 1..last.min(lines.len()))
-                    .unwrap_or_default();
-                // 一覧の最後の行の位置は、続く空行まで届くことがある
-                while let [rest @ .., last] = section
-                    && last.trim().is_empty()
-                {
-                    section = rest;
-                }
-                section.iter().map(|line| (*line).to_owned())
-            })
+    /// line から end までの生の行。後ろの空行は除く
+    fn lines(&self, line: usize, end: usize) -> Vec<String> {
+        let mut lines: Vec<String> = (line..=end)
+            .map_while(|line| self.document.raw_line(line))
+            .map(str::to_owned)
             .collect();
-        Decision {
-            heading: self.heading,
-            line: self.heading_line,
-            anchor: self.anchor,
-            fingerprint: crate::fingerprint::digest(&fingerprinted),
-            fingerprinted,
-            state,
-            state_line: self
-                .state_line
-                .as_ref()
-                .map_or(self.heading_line, |(line, _, _)| *line),
-            confirmations: self.confirmations,
-            quotable: self.quotable,
+        while lines.last().is_some_and(|line| line.trim().is_empty()) {
+            lines.pop();
+        }
+        lines
+    }
+}
+
+/// エンジンの指摘のうち、写すのに要るもの。エンジンの指摘は crate の外で作れないので、
+/// 写しはこの形で受ける
+#[derive(Debug, Clone)]
+struct EngineFinding {
+    kind: EngineKind,
+    line: Option<usize>,
+    node: Option<String>,
+    raw: Option<String>,
+    rule_kind: Option<RuleKind>,
+}
+
+impl From<&kotowari_markdown_schema::finding::Finding> for EngineFinding {
+    fn from(value: &kotowari_markdown_schema::finding::Finding) -> Self {
+        Self {
+            kind: value.kind(),
+            line: value.line(),
+            node: value.node().map(str::to_owned),
+            raw: value.raw().map(str::to_owned),
+            rule_kind: value.rule_kind(),
         }
     }
 }
 
-/// どこを読んでいるか
-enum Place {
-    /// 題名より前か、題名と最初の決定の間
-    Head,
-    Decision(Box<Building>),
-    Open,
+/// 埋め込んだスキーマで文書を読み、抽出の値と指摘を返す
+fn read_with_engine(path: &str, text: &str) -> Result<Reading, StopReason> {
+    let schema = crate::schema::decision_schema()
+        .map_err(|error| StopReason::MappingError(format!("{path}: schema: {}", error.0)))?;
+    let document = kotowari_markdown_schema::Document::parse(text)
+        .map_err(|error| StopReason::MappingError(format!("{path}: document: {error}")))?;
+    let extraction = kotowari_markdown_schema::extract_partial(
+        schema,
+        &document,
+        kotowari_markdown_schema::ValidationOptions::default(),
+    );
+    let values = serde_json::from_value(extraction.values().clone())
+        .map_err(|error| StopReason::MappingError(format!("{path}: values: {error}")))?;
+    let findings = extraction
+        .findings()
+        .iter()
+        .map(EngineFinding::from)
+        .collect();
+    Ok(Reading {
+        document,
+        values,
+        findings,
+    })
+}
+
+/// 1つの決定に属する抽出の値
+struct Grouped<'a> {
+    span: &'a Span,
+    states: Vec<&'a StateLine>,
+    decided: Vec<&'a Span>,
+    confirmations: Vec<&'a Confirmations>,
+}
+
+impl Grouped<'_> {
+    /// 状態の行の場所の最初の行
+    fn state_line(&self) -> Option<&StateLine> {
+        self.states.first().copied()
+    }
+
+    /// 状態の行を書いた綴りの組。状態の行が無ければ None
+    fn keywords(&self) -> Option<&'static Keywords> {
+        self.state_line()
+            .and_then(|state| state_value(&state.raw))
+            .map(|(keywords, _)| keywords)
+    }
+
+    fn state(&self) -> Option<State> {
+        self.state_line()
+            .and_then(|state| state_value(&state.raw))
+            .and_then(|(_, value)| state_of(value))
+    }
+}
+
+/// 抽出の値を、決定の見出しの行の範囲で決定ごとにまとめる
+fn group(values: &Values) -> Vec<Grouped<'_>> {
+    let inside = |span: &Span, line: usize| (span.line..=span.end).contains(&line);
+    values
+        .decisions
+        .iter()
+        .map(|span| Grouped {
+            span,
+            states: values
+                .states
+                .iter()
+                .filter(|state| inside(span, state.line))
+                .collect(),
+            decided: values
+                .decided
+                .iter()
+                .filter(|decided| inside(span, decided.line))
+                .collect(),
+            confirmations: values
+                .confirmations
+                .iter()
+                .filter(|confirmations| inside(span, confirmations.line))
+                .collect(),
+        })
+        .collect()
+}
+
+/// 写した指摘と、それをほかの言語の側にも出すか
+struct Mapped {
+    finding: Finding,
+    /// 読み飛ばされる中身を作る誤り。ほかの言語の側は骨組みでしか比べないので、その側にも出す
+    every_side: bool,
+}
+
+/// エンジンの指摘を kotowari の指摘に写す。写し先の無い種類は停止する（C-core-formc-3）
+fn map_findings(
+    path: &str,
+    reading: &Reading,
+    grouped: &[Grouped<'_>],
+) -> Result<Vec<Mapped>, StopReason> {
+    let missing_title = reading
+        .findings
+        .iter()
+        .any(|engine| engine.kind == EngineKind::MissingTitle);
+    // 閉じないコードブロックは unclosed_code_block だけにする。置き場所の無いブロックとしても数えない
+    let unclosed: BTreeSet<usize> = reading
+        .findings
+        .iter()
+        .filter(|engine| engine.kind == EngineKind::UnclosedCodeblock)
+        .filter_map(|engine| engine.line)
+        .collect();
+    let mut mapped = Vec::new();
+    for engine in &reading.findings {
+        if engine.kind == EngineKind::UndeclaredLine
+            && engine.line.is_some_and(|line| unclosed.contains(&line))
+        {
+            continue;
+        }
+        if let Some(finding) = map_one(path, reading, grouped, missing_title, engine)? {
+            mapped.push(finding);
+        }
+    }
+    for decision in grouped {
+        for state in misplaced_state_lines(decision) {
+            mapped.push(Mapped {
+                finding: Finding::new(
+                    FindingKind::UnknownLine,
+                    path.to_owned(),
+                    Some(state.line),
+                    state.raw.clone(),
+                ),
+                every_side: true,
+            });
+        }
+    }
+    Ok(mapped)
+}
+
+/// 状態の行の場所の、置き場所の無い行。2つ目からの段落はその最初の行を、状態の行の段落の
+/// 2行目からはその2行目を返す。エンジンは2つ目の段落を1度だけ数えて指摘し、段落の中の行は
+/// 指摘しないので、抽出した行で見る
+fn misplaced_state_lines<'a>(decision: &Grouped<'a>) -> Vec<&'a StateLine> {
+    let mut misplaced = Vec::new();
+    let mut previous: Option<&StateLine> = None;
+    for state in &decision.states {
+        let continues = previous.is_some_and(|previous| previous.line + 1 == state.line);
+        match previous {
+            // 2つ目からの段落の最初の行
+            Some(_) if !continues => misplaced.push(*state),
+            // 状態の行の段落の2行目。頭のある状態の行に続くときだけ
+            Some(first)
+                if first.line == decision.states[0].line && state_value(&first.raw).is_some() =>
+            {
+                misplaced.push(*state);
+            }
+            Some(_) | None => {}
+        }
+        previous = Some(state);
+    }
+    misplaced
+}
+
+/// 1件のエンジンの指摘の写し先。捨てる指摘は None
+fn map_one(
+    path: &str,
+    reading: &Reading,
+    grouped: &[Grouped<'_>],
+    missing_title: bool,
+    engine: &EngineFinding,
+) -> Result<Option<Mapped>, StopReason> {
+    let at = |kind: FindingKind, line: Option<usize>, detail: String, every_side: bool| {
+        Some(Mapped {
+            finding: Finding::new(kind, path.to_owned(), line, detail),
+            every_side,
+        })
+    };
+    let raw = || {
+        engine
+            .raw
+            .clone()
+            .or_else(|| engine.line.map(|line| reading.raw(line).to_owned()))
+            .unwrap_or_default()
+    };
+    let decision = || {
+        engine.line.and_then(|line| {
+            grouped
+                .iter()
+                .find(|decision| (decision.span.line..=decision.span.end).contains(&line))
+        })
+    };
+    // エンジンの指摘の種類は crate の外の non_exhaustive な列挙。埋め込んだスキーマが出さない種類は、
+    // 写し先の無い種類として停止する
+    let mapped = match (engine.kind, engine.rule_kind) {
+        (EngineKind::MissingTitle, _) => at(FindingKind::MissingTitle, None, String::new(), false),
+        // 古い形と同じく、line は持たず、detail はその行から "#" を除き前後の空白を除いた文字
+        (EngineKind::MultipleTitles, _) => {
+            let raw = raw();
+            let title = raw.strip_prefix('#').unwrap_or(&raw).trim().to_owned();
+            at(FindingKind::MultipleTitles, None, title, true)
+        }
+        (EngineKind::UnclosedCodeblock, _) => {
+            at(FindingKind::UnclosedCodeBlock, engine.line, raw(), true)
+        }
+        (EngineKind::UndeclaredHeading | EngineKind::HeadingLevelMismatch, _) => {
+            at(FindingKind::UnknownHeading, engine.line, raw(), true)
+        }
+        (EngineKind::UndeclaredLine, _) => at(FindingKind::UnknownLine, engine.line, raw(), true),
+        // 状態の行の場所の2つ目からの段落。段落ごとの unknown_line を抽出した行から出している
+        (EngineKind::RepeatMaxExceeded, Some(RuleKind::Statement)) if decision().is_some() => None,
+        // 話題の段落が無い。題名も無ければ missing_title だけにする
+        (EngineKind::RepeatMinNotMet, Some(RuleKind::Statement)) if engine.line.is_none() => {
+            match &reading.values.title {
+                Some(title) if !missing_title => at(
+                    FindingKind::TopicLeadMissing,
+                    Some(title.line),
+                    title.text.clone(),
+                    false,
+                ),
+                Some(_) | None => None,
+            }
+        }
+        (EngineKind::RepeatMinNotMet, Some(RuleKind::Statement)) => at(
+            FindingKind::DecisionStateInvalid,
+            engine.line,
+            String::new(),
+            false,
+        ),
+        // 欠けた節の名前は、状態の行を書いた言語の綴りで出す
+        (EngineKind::RepeatMinNotMet, Some(RuleKind::Item)) => {
+            let Some(section) = engine.node.as_deref().and_then(Section::of) else {
+                return Err(no_row(engine));
+            };
+            let keywords = decision()
+                .and_then(Grouped::keywords)
+                .unwrap_or(KEYWORDS[0]);
+            at(
+                FindingKind::DecisionSectionMissing,
+                engine.line,
+                section.spelled(keywords).to_owned(),
+                false,
+            )
+        }
+        (EngineKind::StatementPatternMismatch, _) => {
+            let Some(decision) = decision() else {
+                return Err(no_row(engine));
+            };
+            let first = decision.state_line();
+            if first.is_none_or(|first| Some(first.line) != engine.line) {
+                // 状態の行の場所の2つ目からの文は、抽出した行から unknown_line にしている
+                return Ok(None);
+            }
+            match state_value(&raw()) {
+                // 1行の状態の行のあとに行が続く。2行目を抽出した行から unknown_line にしている
+                Some((_, value)) if state_of(value).is_some() => None,
+                Some((_, value)) => at(
+                    FindingKind::DecisionStateInvalid,
+                    engine.line,
+                    value.to_owned(),
+                    false,
+                ),
+                None => at(
+                    FindingKind::DecisionStateInvalid,
+                    Some(decision.span.line),
+                    String::new(),
+                    false,
+                ),
+            }
+        }
+        // 確認することの行の ID の形が違う。detail は行の最初の語
+        (EngineKind::BulletPatternMismatch, _) => at(
+            FindingKind::InvalidId,
+            engine.line,
+            first_word(&raw()),
+            false,
+        ),
+        _ => return Err(no_row(engine)),
+    };
+    Ok(mapped)
+}
+
+/// 写し先の無いエンジンの指摘で停止する
+fn no_row(engine: &EngineFinding) -> StopReason {
+    let what = match (&engine.node, engine.rule_kind) {
+        (Some(node), _) => format!(" {node}"),
+        (None, Some(rule)) => format!(" {}", rule.as_str()),
+        (None, None) => String::new(),
+    };
+    StopReason::MappingError(format!(
+        "no mapping for decision document finding {}{what}",
+        engine.kind.as_str()
+    ))
+}
+
+/// 一覧の行の、印のあとの最初の語。形の違う ID の行の、指摘の detail と骨組みの要素に使う
+fn first_word(raw: &str) -> String {
+    let item = raw.trim_start();
+    let item = item
+        .strip_prefix(['-', '*', '+'])
+        .map_or(item, str::trim_start);
+    item.split_whitespace()
+        .next()
+        .unwrap_or_default()
+        .to_owned()
+}
+
+/// 行の名前の Markdown の書式を除いた文字。前と同じく、書式の無い文字を1つの空白でつなぐ
+fn plain(text: &str) -> String {
+    let plain =
+        crate::markdown::parse(text).map_or_else(|_| text.to_owned(), |root| root.to_string());
+    plain.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// 確認することの行を、抽出の値から作る
+fn confirmation(reading: &Reading, row: &Row) -> Confirmation {
+    Confirmation {
+        id: row
+            .id
+            .clone()
+            .unwrap_or_else(|| first_word(reading.raw(row.line))),
+        line: row.line,
+        by_reading: row.by_reading.is_some(),
+        name: row.name.as_deref().map(plain).unwrap_or_default(),
+        body: reading.lines(row.line, row.end),
+    }
+}
+
+/// 抽出の値から決定を作る。anchored は見出しの行からリンクの行き先の名前、blocks は文書の直下のブロック
+fn decision(
+    reading: &Reading,
+    grouped: &Grouped<'_>,
+    anchored: &std::collections::BTreeMap<usize, String>,
+    text: &str,
+    blocks: &[Node],
+) -> Decision {
+    // 指紋に入れるのは「決めたこと」と「確認すること」の節で、文書の順
+    let mut sections: Vec<(usize, usize)> = grouped
+        .decided
+        .iter()
+        .map(|span| (span.line, span.end))
+        .chain(
+            grouped
+                .confirmations
+                .iter()
+                .map(|confirmations| (confirmations.line, confirmations.end)),
+        )
+        .collect();
+    sections.sort_unstable();
+    let fingerprinted: Vec<String> = sections
+        .iter()
+        .flat_map(|&(line, end)| reading.lines(line, end))
+        .collect();
+    let mut quotable = Vec::new();
+    for node in blocks {
+        let line = line_of(node);
+        if sections
+            .iter()
+            .any(|&(heading, end)| heading < line && line <= end)
+        {
+            quotable_texts(node, text, &mut quotable);
+        }
+    }
+    Decision {
+        heading: grouped.span.name.trim().to_owned(),
+        line: grouped.span.line,
+        anchor: anchored
+            .get(&grouped.span.line)
+            .cloned()
+            .unwrap_or_default(),
+        fingerprint: crate::fingerprint::digest(&fingerprinted),
+        fingerprinted,
+        quotable,
+        state: grouped.state(),
+        confirmations: grouped
+            .confirmations
+            .iter()
+            .flat_map(|confirmations| &confirmations.rows)
+            .map(|row| confirmation(reading, row))
+            .collect(),
+    }
 }
 
 fn line_of(node: &Node) -> usize {
@@ -331,7 +728,11 @@ fn line_of(node: &Node) -> usize {
 }
 
 /// 話題の文書を読み、形の誤りを findings に積む
-pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Document {
+pub(crate) fn parse(
+    path: &str,
+    text: &str,
+    findings: &mut Vec<Finding>,
+) -> Result<Document, StopReason> {
     let root = match crate::markdown::parse(text) {
         Ok(root) => root,
         Err(detail) => {
@@ -341,176 +742,29 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
                 None,
                 detail,
             ));
-            return Document {
-                path: path.to_owned(),
-                decisions: Vec::new(),
-                open_items: 0,
-                anchors: BTreeSet::new(),
-                links: Vec::new(),
-            };
+            return Ok(Document::empty(path));
         }
     };
-    let mut skipped = Vec::new();
-    let document = read(path, text, &root, findings, &mut skipped);
-    findings.append(&mut skipped);
-    document
-}
-
-/// 読んだ文書の木から話題の文書を作る。決定の形の誤りは form に、読み飛ばされる中身を作る誤り
-/// （閉じないコードブロック、2つ目からの題名、形の置き場所の無いブロック）は skipped に積む。
-/// ほかの言語の側は骨組みでしか比べないので、skipped だけをその側の指摘にする
-fn read(
-    path: &str,
-    text: &str,
-    root: &Node,
-    form: &mut Vec<Finding>,
-    skipped: &mut Vec<Finding>,
-) -> Document {
-    let mut decisions = Vec::new();
-    let mut place = Place::Head;
-    let mut title: Option<(usize, String)> = None;
-    let mut lead = false;
-    let mut open_items = 0;
-    // 行の区切りは kotowari のほかの文書と同じ（"\n"、"\r\n"、単独の "\r"）。Markdown の読み手の行の番号もそう数える
-    let lines = crate::ir::split_lines(text);
-    unclosed_code_blocks(path, root, text, &lines, skipped);
-    extra_titles(path, root, &lines, skipped);
-    let anchored = heading_anchors(root);
+    let reading = read_with_engine(path, text)?;
+    let grouped = group(&reading.values);
+    findings.extend(
+        map_findings(path, &reading, &grouped)?
+            .into_iter()
+            .map(|mapped| mapped.finding),
+    );
+    let anchored = heading_anchors(&root);
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
-    for node in blocks {
-        if let Node::Heading(heading) = node
-            && heading.depth <= 2
-        {
-            if let Place::Decision(building) = std::mem::replace(&mut place, Place::Head) {
-                decisions.push(building.finish(path, &lines, form));
-            }
-            if heading.depth == 1 {
-                if title.is_none() {
-                    title = Some((line_of(node), node.to_string()));
-                }
-            } else if is_open(&node.to_string()) {
-                place = Place::Open;
-            } else {
-                let line = line_of(node);
-                place = Place::Decision(Box::new(Building::new(
-                    line,
-                    node.to_string().trim().to_owned(),
-                    anchored.get(&line).cloned().unwrap_or_default(),
-                )));
-            }
-            continue;
-        }
-        match &mut place {
-            // 題名と最初の決定の間は話題の段落で、一覧や表もその文として読む。"###" とそれより深い見出しは
-            // 形に無い
-            Place::Head => {
-                if let Node::Heading(_) = node {
-                    misplaced(path, node, &lines, skipped);
-                } else if title.is_some() && matches!(node, Node::Paragraph(_)) {
-                    lead = true;
-                }
-            }
-            Place::Decision(building) => {
-                read_decision_block(path, node, text, &lines, building, skipped);
-            }
-            // 「未決」の節に置けるのは一覧と、リンクの検査が読むリンクの参照の定義だけ
-            Place::Open => {
-                if let Node::List(list) = node {
-                    open_items += list.children.len();
-                } else if !matches!(node, Node::Definition(_)) {
-                    misplaced(path, node, &lines, skipped);
-                }
-            }
-        }
-    }
-    if let Place::Decision(building) = place {
-        decisions.push(building.finish(path, &lines, form));
-    }
-    match title {
-        None => form.push(Finding::new(
-            FindingKind::MissingTitle,
-            path.to_owned(),
-            None,
-            String::new(),
-        )),
-        Some((line, title)) if !lead => form.push(Finding::new(
-            FindingKind::TopicLeadMissing,
-            path.to_owned(),
-            Some(line),
-            title,
-        )),
-        Some(_) => {}
-    }
-    Document {
+    let decisions = grouped
+        .iter()
+        .map(|grouped| decision(&reading, grouped, &anchored, text, blocks))
+        .collect();
+    Ok(Document {
         path: path.to_owned(),
         decisions,
-        open_items,
+        open_items: reading.values.open_items.len(),
         anchors: anchored.into_values().collect(),
-        links: crate::translations::markdown_links(root),
-    }
-}
-
-/// 2つ目からの題名（文書の直下の "#" の見出し）を1つずつ multiple_titles にする。古い形と同じく、
-/// line は持たず、detail はその行から "#" を除き前後の空白を除いた文字
-fn extra_titles(path: &str, root: &Node, lines: &[&str], findings: &mut Vec<Finding>) {
-    let titles = root
-        .children()
-        .into_iter()
-        .flatten()
-        .filter(|node| matches!(node, Node::Heading(heading) if heading.depth == 1));
-    for title in titles.skip(1) {
-        let line = lines.get(line_of(title) - 1).copied().unwrap_or_default();
-        findings.push(Finding::new(
-            FindingKind::MultipleTitles,
-            path.to_owned(),
-            None,
-            line.strip_prefix('#').unwrap_or(line).trim().to_owned(),
-        ));
-    }
-}
-
-/// 閉じないコードブロックを、開きの行とその行の文字で unclosed_code_block にする。閉じないコードブロックは
-/// それを囲むもの（文書か一覧の項目）の終わりまでを呑むので、その後ろの決定と行は読まれない。
-/// 囲みの開き方は Markdown の読み手に任せ（字下げのコードブロックは囲みを持たないので見ない）、閉じたかは、コードブロックの元の文字の最後の行が、開きと同じ
-/// 文字の、開き以上の長さの並びだけかで見る
-fn unclosed_code_blocks(
-    path: &str,
-    node: &Node,
-    text: &str,
-    lines: &[&str],
-    findings: &mut Vec<Finding>,
-) {
-    if let Node::Code(_) = node
-        && let Some(position) = node.position()
-        && let Some(source) = text.get(position.start.offset..position.end.offset)
-    {
-        // 囲みのコードブロックの元の文字は囲みの文字から始まり、字下げのコードブロックは空白から始まる
-        let fence = source.chars().next().filter(|c| matches!(c, '`' | '~'));
-        let length = fence.map_or(0, |fence| {
-            source.chars().take_while(|&c| c == fence).count()
-        });
-        if let Some(fence) = fence.filter(|_| length >= 3) {
-            let source_lines = crate::ir::split_lines(source.trim_end());
-            let closing = source_lines
-                .last()
-                .map(|last| last.trim_start_matches(['>', ' ', '\t']).trim_end())
-                .filter(|_| source_lines.len() > 1)
-                .unwrap_or_default();
-            let closed = closing.chars().count() >= length && closing.chars().all(|c| c == fence);
-            if !closed {
-                let line = position.start.line;
-                findings.push(Finding::new(
-                    FindingKind::UnclosedCodeBlock,
-                    path.to_owned(),
-                    Some(line),
-                    lines.get(line - 1).copied().unwrap_or_default().to_owned(),
-                ));
-            }
-        }
-    }
-    for child in node.children().into_iter().flatten() {
-        unclosed_code_blocks(path, child, text, lines, findings);
-    }
+        links: crate::translations::markdown_links(&root),
+    })
 }
 
 /// `対`の`側`の`骨組み`（C-core-lang-4）。見出しは深さと、形の語の見出しならその節の種類だけで、文は
@@ -545,26 +799,43 @@ pub(crate) fn skeleton(text: &str, root: Option<&Node>) -> crate::skeleton::Skel
     if let Some(root) = root {
         walk(root, &mut headings);
     }
-    let document = parse("", text, &mut Vec::new());
-    let states = document
-        .decisions
+    // 骨組みは指摘を出さないので、写しは使わず抽出の値だけを見る。スキーマは本体に固定なので
+    // 読めないことは無く、そのときは状態と行を空にする
+    let reading = read_with_engine("", text).ok();
+    let grouped = reading
+        .as_ref()
+        .map(|reading| group(&reading.values))
+        .unwrap_or_default();
+    let states = grouped
         .iter()
         .map(|decision| Element {
-            value: decision.state.map_or("invalid", State::as_str).to_owned(),
-            line: Some(decision.state_line),
+            value: decision.state().map_or("invalid", State::as_str).to_owned(),
+            line: Some(
+                decision
+                    .state_line()
+                    .map_or(decision.span.line, |state| state.line),
+            ),
         })
         .collect();
-    let rows = document
-        .decisions
-        .iter()
-        .flat_map(|decision| &decision.confirmations)
-        .map(|row| Element {
-            value: if row.by_reading {
-                format!("{} (by reading)", row.id)
-            } else {
-                row.id.clone()
-            },
-            line: Some(row.line),
+    let rows = reading
+        .as_ref()
+        .into_iter()
+        .flat_map(|reading| {
+            grouped
+                .iter()
+                .flat_map(|decision| &decision.confirmations)
+                .flat_map(|confirmations| &confirmations.rows)
+                .map(move |row| {
+                    let row = confirmation(reading, row);
+                    Element {
+                        value: if row.by_reading {
+                            format!("{} (by reading)", row.id)
+                        } else {
+                            row.id
+                        },
+                        line: Some(row.line),
+                    }
+                })
         })
         .collect();
     vec![
@@ -586,15 +857,26 @@ pub(crate) fn is_glossary(path: &str, place: &str) -> bool {
 
 /// リンクの行き先としてだけ読む文書。決定の形を検査せず、見出しの行き先の名前だけを持つ。
 /// content があれば（ほかの言語の側）その文書の中のリンクも持ち、check_links がその行き先を確かめる。
-/// そのときは、読み飛ばされる中身を作る誤り（`read` の skipped）を content に積む。決定の形のほかの
+/// そのときは、読み飛ばされる中身を作る誤りだけを content に積む。決定の形のほかの
 /// 誤りは、骨組みの比較が先頭の言語の側との違いとして出す
-pub(crate) fn parse_target(path: &str, text: &str, content: Option<&mut Vec<Finding>>) -> Document {
+pub(crate) fn parse_target(
+    path: &str,
+    text: &str,
+    content: Option<&mut Vec<Finding>>,
+) -> Result<Document, StopReason> {
     let root = crate::markdown::parse(text).ok();
     let links = content.is_some();
-    if let (Some(findings), Some(root)) = (content, &root) {
-        read(path, text, root, &mut Vec::new(), findings);
+    if let (Some(findings), Some(_)) = (content, &root) {
+        let reading = read_with_engine(path, text)?;
+        let grouped = group(&reading.values);
+        findings.extend(
+            map_findings(path, &reading, &grouped)?
+                .into_iter()
+                .filter(|mapped| mapped.every_side)
+                .map(|mapped| mapped.finding),
+        );
     }
-    Document {
+    Ok(Document {
         path: path.to_owned(),
         decisions: Vec::new(),
         open_items: 0,
@@ -607,7 +889,7 @@ pub(crate) fn parse_target(path: &str, text: &str, content: Option<&mut Vec<Find
             .filter(|_| links)
             .map(crate::translations::markdown_links)
             .unwrap_or_default(),
-    }
+    })
 }
 
 /// 文書のすべての見出しの、リンクの行き先になる名前を見出しの行から引く。
@@ -742,128 +1024,6 @@ pub(crate) fn has_open_items(documents: &[Document]) -> bool {
     documents.iter().any(|doc| doc.open_items > 0)
 }
 
-/// 形が置き場所を持たないブロックを、見出しなら unknown_heading、ほかは unknown_line にする。古い形と
-/// 同じく、line はブロックの最初の行、detail はその行の書いたままの文字
-fn misplaced(path: &str, node: &Node, lines: &[&str], findings: &mut Vec<Finding>) {
-    let kind = if let Node::Heading(_) = node {
-        FindingKind::UnknownHeading
-    } else {
-        FindingKind::UnknownLine
-    };
-    let line = line_of(node);
-    findings.push(Finding::new(
-        kind,
-        path.to_owned(),
-        Some(line),
-        lines.get(line - 1).copied().unwrap_or_default().to_owned(),
-    ));
-}
-
-/// 決定の見出しの下の1つのブロックを読む
-fn read_decision_block(
-    path: &str,
-    node: &Node,
-    text: &str,
-    lines: &[&str],
-    building: &mut Building,
-    skipped: &mut Vec<Finding>,
-) {
-    let awaiting_state = std::mem::replace(&mut building.awaiting_state, false);
-    if matches!(node, Node::Heading(heading) if heading.depth == 3) {
-        building.before_sections = false;
-    } else if building.before_sections && !awaiting_state && !matches!(node, Node::Definition(_)) {
-        // 状態の行の場所の最初のブロックが状態の行でなければ、decision_state_invalid が出ている
-        misplaced(path, node, lines, skipped);
-    }
-    read_fingerprinted(node, text, building);
-    #[expect(
-        clippy::wildcard_enum_match_arm,
-        reason = "markdown::mdast::Node is a foreign enum: blocks other than headings, paragraphs and lists carry nothing a decision is read from"
-    )]
-    match node {
-        // 節を始めるのは "###" の見出しだけ。"####" より深い見出しは、形の語の名前でも今の節の中にある
-        Node::Heading(heading) if heading.depth == 3 => {
-            let section = Section::of(&node.to_string());
-            if section.is_none() {
-                misplaced(path, node, lines, skipped);
-            }
-            building.sections.extend(section);
-            building.section = section;
-        }
-        Node::Paragraph(_) if awaiting_state => {
-            let text = node.to_string();
-            let first = crate::ir::split_lines(&text)
-                .first()
-                .copied()
-                .unwrap_or_default();
-            if let Some((keywords, value)) = state_line(first) {
-                let line = line_of(node);
-                building.state_line = Some((line, keywords, value.to_owned()));
-                // 状態の行の段落の2行目からは、状態の行と最初の節の間のブロックと同じく置き場所が無い
-                if node
-                    .position()
-                    .is_some_and(|position| position.end.line > line)
-                {
-                    skipped.push(Finding::new(
-                        FindingKind::UnknownLine,
-                        path.to_owned(),
-                        Some(line + 1),
-                        lines.get(line).copied().unwrap_or_default().to_owned(),
-                    ));
-                }
-            }
-        }
-        Node::List(list) if building.section == Some(Section::Confirmations) => {
-            for item in &list.children {
-                building.confirmations.push(confirmation(item, lines));
-            }
-        }
-        _ => {}
-    }
-}
-
-/// 確認することの1行。ID は行の最初の語。ID と名前は行の最初の段落だけから取り、その下に置いた
-/// コードブロックなどは名前に入れない。行の body は書いたままの行なので、それも入れる
-fn confirmation(item: &Node, lines: &[&str]) -> Confirmation {
-    let text = first_paragraph(item)
-        .map(Node::to_string)
-        .unwrap_or_default();
-    let text = text.trim_start();
-    let (id, rest) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
-    let rest = rest.trim_start();
-    let (by_reading, rest) = strip_by_reading(rest).map_or((false, rest), |after| (true, after));
-    let line = line_of(item);
-    let end = item.position().map_or(line, |position| position.end.line);
-    let mut body: Vec<String> = lines
-        .get(line.saturating_sub(1)..end.min(lines.len()))
-        .unwrap_or_default()
-        .iter()
-        .map(|line| (*line).to_owned())
-        .collect();
-    // 一覧の最後の行の位置は、続く空行まで届くことがある
-    while body.last().is_some_and(|line| line.trim().is_empty()) {
-        body.pop();
-    }
-    Confirmation {
-        id: id.to_owned(),
-        line,
-        by_reading,
-        name: rest.split_whitespace().collect::<Vec<_>>().join(" "),
-        body,
-    }
-}
-
-/// ノードの中の、文書の順で最初の段落
-fn first_paragraph(node: &Node) -> Option<&Node> {
-    if let Node::Paragraph(_) = node {
-        return Some(node);
-    }
-    node.children()
-        .into_iter()
-        .flatten()
-        .find_map(first_paragraph)
-}
-
 /// 提案の決定と実装済みの決定を分けて数える
 pub(crate) fn states(documents: &[Document]) -> DecisionStates {
     let mut states = DecisionStates::default();
@@ -920,23 +1080,19 @@ pub(crate) fn known_ids(documents: &[Document]) -> impl Iterator<Item = String> 
         .filter(|id| is_confirmation_id(id))
 }
 
-/// 形の誤った ID と、同じ ID の2つ目以降の行を指摘する。documents はパスの順
+/// 同じ ID の2つ目以降の行を指摘する。documents はパスの順。形の誤った ID は、エンジンの指摘を
+/// 写して invalid_id にしている
 pub(crate) fn check_ids(documents: &[Document], findings: &mut Vec<Finding>) {
     let mut seen = BTreeSet::new();
     for (doc, _, row) in rows(documents) {
-        let kind = if !is_confirmation_id(&row.id) {
-            FindingKind::InvalidId
-        } else if !seen.insert(row.id.as_str()) {
-            FindingKind::DuplicateId
-        } else {
-            continue;
-        };
-        findings.push(Finding::new(
-            kind,
-            doc.path.clone(),
-            Some(row.line),
-            row.id.clone(),
-        ));
+        if is_confirmation_id(&row.id) && !seen.insert(row.id.as_str()) {
+            findings.push(Finding::new(
+                FindingKind::DuplicateId,
+                doc.path.clone(),
+                Some(row.line),
+                row.id.clone(),
+            ));
+        }
     }
 }
 
@@ -1041,33 +1197,6 @@ pub(crate) fn query_items(
     items
 }
 
-/// 「決めたこと」と「確認すること」の節を、指紋の行の範囲と引用を探す文字に加える。
-/// 節は "###" の見出しから、次の "###" か "##" の見出しまで。"####" より深い見出しは節の中にある
-fn read_fingerprinted(node: &Node, text: &str, building: &mut Building) {
-    let line = line_of(node);
-    let end = node.position().map_or(line, |position| position.end.line);
-    if let Node::Heading(heading) = node
-        && heading.depth == 3
-    {
-        let name = node.to_string();
-        building.in_fingerprinted = matches!(
-            Section::of(&name),
-            Some(Section::Decided | Section::Confirmations)
-        );
-        if building.in_fingerprinted {
-            building.fingerprinted.push((line, end));
-        }
-        return;
-    }
-    if !building.in_fingerprinted {
-        return;
-    }
-    if let Some(section) = building.fingerprinted.last_mut() {
-        section.1 = end;
-    }
-    quotable_texts(node, text, &mut building.quotable);
-}
-
 /// ブロックの元の文字。表はセルごとに分け、コードブロックは入れない。一覧と引用の中の
 /// ブロックも1つずつ同じく見る
 fn quotable_texts(node: &Node, text: &str, out: &mut Vec<String>) {
@@ -1158,4 +1287,132 @@ fn decision_items(documents: &[Document]) -> Vec<crate::list::ListItem> {
             })
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 埋め込んだスキーマを、検査を通さずに値として読む
+    fn schema_value() -> serde_json::Value {
+        serde_saphyr::from_str(crate::schema::DECISION).unwrap()
+    }
+
+    /// 正規表現の中で文字どおりに読ませる
+    fn escaped(text: &str) -> String {
+        text.replace('(', "\\(").replace(')', "\\)")
+    }
+
+    // @kotowari[C-core-formc-4]
+    #[test]
+    fn the_embedded_schema_loads_as_an_mds_schema() {
+        assert_eq!(
+            crate::schema::decision_schema().unwrap().name(),
+            Some("decision-document")
+        );
+    }
+
+    // @kotowari[C-core-formc-4]
+    #[test]
+    fn the_form_words_of_the_embedded_schema_equal_the_keyword_table() {
+        let schema = schema_value();
+        let sections = &schema["document"]["sections"];
+        let names = |keywords: fn(&Keywords) -> &'static str| {
+            serde_json::json!(KEYWORDS.iter().map(|k| keywords(k)).collect::<Vec<_>>())
+        };
+        assert_eq!(sections[0]["name"], names(|k| k.open));
+        let items = sections[1]["items"].as_array().unwrap();
+        assert_eq!(items.len(), Section::ALL.len());
+        for (item, section) in items.iter().zip(Section::ALL) {
+            assert_eq!(
+                item["name"],
+                serde_json::json!(
+                    KEYWORDS
+                        .iter()
+                        .map(|k| section.spelled(k))
+                        .collect::<Vec<_>>()
+                ),
+                "{section:?}"
+            );
+        }
+        let heads: Vec<&str> = KEYWORDS
+            .iter()
+            .map(|k| k.state.strip_suffix(':').unwrap())
+            .collect();
+        let values: Vec<&str> = KEYWORDS
+            .iter()
+            .flat_map(|k| [k.proposed, k.implemented])
+            .collect();
+        assert_eq!(
+            sections[1]["statement"]["pattern"],
+            format!(
+                "^(?:{}):[ \\t]*(?:{})[ \\t]*$",
+                heads.join("|"),
+                values.join("|")
+            )
+        );
+        let rows = items[3]["bullets"]["pattern"].as_str().unwrap();
+        let reading: Vec<String> = KEYWORDS.iter().map(|k| escaped(k.by_reading)).collect();
+        assert!(
+            rows.contains(&format!("(?P<reading>{})", reading.join("|"))),
+            "{rows}"
+        );
+    }
+
+    // @kotowari[C-core-formc-4]
+    #[test]
+    fn the_row_pattern_of_the_embedded_schema_accepts_the_ids_is_confirmation_id_accepts() {
+        let ids = [
+            "C-a-1",
+            "C-core-docs-12",
+            "C-a--1",
+            "C-a1-b2-30",
+            "C-a-01",
+            "C-a-0",
+            "C-A-1",
+            "C-1-1",
+            "c-a-1",
+            "C-a-1:",
+            "C-a",
+            "C--1",
+        ];
+        let rows: String = ids.iter().map(|id| format!("- {id} 文\n")).collect();
+        let text = format!(
+            "# 題\n\n段落。\n\n## 決定\n\n状態: 提案\n\n### 問題\n\n問題。\n\n### 決めたこと\n\n決めた。\n\n\
+             ### 確認すること\n\n{rows}"
+        );
+        let reading = read_with_engine("x.md", &text).unwrap();
+        let read: Vec<(String, bool)> = reading.values.confirmations[0]
+            .rows
+            .iter()
+            .map(|row| (first_word(reading.raw(row.line)), row.id.is_some()))
+            .collect();
+        let expected: Vec<(String, bool)> = ids
+            .iter()
+            .map(|id| ((*id).to_owned(), is_confirmation_id(id)))
+            .collect();
+        assert_eq!(read, expected);
+    }
+
+    // @kotowari[C-core-formc-3]
+    #[test]
+    fn an_engine_finding_without_a_mapping_stops_with_a_mapping_error() {
+        let reading = read_with_engine("x.md", "# 題\n\n段落。\n").unwrap();
+        let grouped = group(&reading.values);
+        let engine = EngineFinding {
+            kind: EngineKind::FieldEnumInvalid,
+            line: Some(3),
+            node: Some("状態".to_owned()),
+            raw: None,
+            rule_kind: None,
+        };
+        let stop = map_one("x.md", &reading, &grouped, false, &engine).err();
+        assert_eq!(
+            stop.map(|stop| stop.to_string()),
+            Some(
+                "mapping error: no mapping for decision document finding field_enum_invalid 状態"
+                    .to_owned()
+            )
+        );
+    }
 }

@@ -206,7 +206,7 @@ fn check_stops_when_the_configured_place_does_not_exist() {
     assert!(stderr.contains("specs"), "{stderr}");
 }
 
-// @kotowari[C-core-docs-5]
+// @kotowari[C-core-docs-5, C-core-formc-6]
 #[test]
 fn a_state_that_is_neither_proposed_nor_implemented_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -232,7 +232,7 @@ fn a_state_that_is_neither_proposed_nor_implemented_is_an_error() {
     );
 }
 
-// @kotowari[C-core-docs-5]
+// @kotowari[C-core-docs-5, C-core-formc-6]
 #[test]
 fn a_decision_without_a_state_line_is_an_error_at_its_heading() {
     let tmp = TempDir::new().unwrap();
@@ -280,7 +280,7 @@ fn a_decision_without_the_problem_section_is_an_error() {
     );
 }
 
-// @kotowari[C-core-docs-6]
+// @kotowari[C-core-docs-6, C-core-formc-6]
 #[test]
 fn a_decision_without_the_decided_section_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -563,7 +563,7 @@ fn two_confirmations_with_the_same_id_are_an_error() {
     );
 }
 
-// @kotowari[C-core-confirm-3, C-core-findings-4]
+// @kotowari[C-core-confirm-3, C-core-findings-4, C-core-formc-6]
 #[test]
 fn a_confirmation_row_without_a_well_formed_id_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -1631,7 +1631,7 @@ fn a_missing_section_is_named_in_the_language_of_the_state_line() {
     );
 }
 
-// @kotowari[C-core-docs-5]
+// @kotowari[C-core-docs-5, C-core-formc-6]
 #[test]
 fn an_english_state_line_with_another_value_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -1752,7 +1752,7 @@ fn implemented_after(english: bool, before: &str) -> String {
     }
 }
 
-// @kotowari[C-core-docs-1, C-core-input-3, C-core-input-4]
+// @kotowari[C-core-docs-1, C-core-input-3, C-core-input-4, C-core-formc-6]
 #[test]
 fn an_unclosed_code_block_is_an_error_at_its_opening_line_and_check_fails() {
     for english in [false, true] {
@@ -1952,7 +1952,7 @@ fn a_state_line_wrapped_by_a_lone_carriage_return_is_read() {
     }
 }
 
-// @kotowari[C-core-docs-1, C-core-forder-4, C-core-findings-13, C-core-document-5]
+// @kotowari[C-core-docs-1, C-core-forder-4, C-core-findings-13, C-core-document-5, C-core-formc-6]
 #[test]
 fn each_title_after_the_first_is_an_error_without_a_line() {
     for english in [false, true] {
@@ -2091,10 +2091,11 @@ fn a_fence_on_the_last_line_of_a_document_is_unclosed() {
     );
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-formc-7]
 #[test]
-fn a_section_of_a_decision_with_an_unknown_name_is_an_error_at_its_heading() {
-    for (text, heading) in [
+fn a_section_of_a_decision_with_an_unknown_name_is_an_error_at_its_heading_and_at_each_block_under_it()
+ {
+    for (text, heading, block) in [
         (
             topic(&[decision(
                 "挨拶する",
@@ -2106,12 +2107,14 @@ fn a_section_of_a_decision_with_an_unknown_name_is_an_error_at_its_heading() {
                 ],
             )]),
             "### 補足",
+            "メモ。",
         ),
         (
             "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n\
              ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n### Notes\n\nA note.\n"
                 .to_string(),
             "### Notes",
+            "A note.",
         ),
     ] {
         let tmp = TempDir::new().unwrap();
@@ -2121,12 +2124,10 @@ fn a_section_of_a_decision_with_an_unknown_name_is_an_error_at_its_heading() {
         let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
         assert_eq!(
             findings(&value),
-            vec![finding(
-                "unknown_heading",
-                "docs/decisions/greet.md",
-                17,
-                heading
-            )]
+            vec![
+                finding("unknown_heading", "docs/decisions/greet.md", 17, heading),
+                finding("unknown_line", "docs/decisions/greet.md", 19, block),
+            ]
         );
         assert_eq!(code, Some(1), "{heading}");
     }
@@ -2394,5 +2395,103 @@ fn more_lines_in_the_state_paragraph_are_an_error_at_the_second_line() {
             "english={english}"
         );
         assert_eq!(value["decisions"]["decisions"], 1, "english={english}");
+    }
+}
+
+// @kotowari[C-core-formc-5]
+#[test]
+fn a_document_with_japanese_and_english_form_words_mixed_has_no_form_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        "# 挨拶\n\nDecides how to greet.\n\n## 挨拶する\n\n状態: implemented\n\n\
+         ### Problem\n\n困っていた。\n\n### 決めたこと\n\nDo this.\n\n### Rejected options\n\n\
+         - 黙る。\n\n### 確認すること\n\n- C-greet-1 (by reading) 挨拶が出る\n\
+         - C-greet-2 （読んで確認）A greeting is shown\n\n## Greet at night\n\n\
+         Status: 提案\n\n### 問題\n\nTrouble.\n\n### Decision\n\nこうする。\n\n\
+         ### Confirmations\n\n- C-greet-3 出る\n\n## Open\n\n- 夜の挨拶をどうするか。\n",
+    );
+    let value = check(tmp.path());
+    assert_eq!(findings(&value), vec![], "{value}");
+    assert_eq!(value["decisions"]["decisions"], 2);
+    assert_eq!(value["decisions"]["confirmations"], 3);
+    let (_, stdout, _) = run(tmp.path(), &["list"]);
+    let list: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let rows: Vec<(String, String, bool)> = list["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["kind"] == "confirmation")
+        .map(|item| {
+            (
+                item["id"].as_str().unwrap().to_string(),
+                item["state"].as_str().unwrap().to_string(),
+                item["by_reading"].as_bool().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            ("C-greet-1".to_string(), "implemented".to_string(), true),
+            ("C-greet-2".to_string(), "implemented".to_string(), true),
+            ("C-greet-3".to_string(), "proposed".to_string(), false),
+        ]
+    );
+}
+
+// @kotowari[C-core-formc-7]
+#[test]
+fn a_paragraph_and_a_bullet_under_an_unknown_section_are_each_an_error_at_their_first_line() {
+    for (english, heading) in [(false, "### 補足"), (true, "### Notes")] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &proposed_with_preamble(english, "").replace(
+                if english { "### Problem" } else { "### 問題" },
+                &format!(
+                    "{heading}\n\n補足の段落で、\n二行にわたる。\n\n- 補足の一覧\n  の続き\n\n{}",
+                    if english { "### Problem" } else { "### 問題" }
+                ),
+            ),
+        );
+        let path = "docs/decisions/greet.md";
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![
+                finding("unknown_heading", path, 11, heading),
+                finding("unknown_line", path, 13, "補足の段落で、"),
+                finding("unknown_line", path, 16, "- 補足の一覧"),
+            ],
+            "english={english}"
+        );
+    }
+}
+
+// @kotowari[C-core-formc-8]
+#[test]
+fn a_section_heading_before_the_first_decision_and_the_paragraph_under_it_are_errors() {
+    for english in [false, true] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &implemented_after(english, "### 背景\n\n前からあった。"),
+        );
+        marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1"]);
+        let path = "docs/decisions/greet.md";
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![
+                finding("unknown_heading", path, 5, "### 背景"),
+                finding("unknown_line", path, 7, "前からあった。"),
+            ],
+            "english={english}"
+        );
     }
 }

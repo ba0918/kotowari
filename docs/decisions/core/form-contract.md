@@ -38,7 +38,7 @@ kotowari does not use external processes as a step before the check. Reading doc
 
 ## Decision documents are read by the mds engine with a schema embedded in the binary
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -75,7 +75,7 @@ The following five are handled by kotowari outside the engine.
 
 ## A depth-3 heading with an unknown name in a decision is an error, and so is the content under it, block by block
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
