@@ -690,7 +690,8 @@ fn read_fingerprinted(node: &Node, text: &str, building: &mut Building) {
     quotable_texts(node, text, &mut building.quotable);
 }
 
-/// ブロックの元の文字。表はセルごとに分け、コードブロックは入れない
+/// ブロックの元の文字。表はセルごとに分け、コードブロックは入れない。一覧と引用の中の
+/// ブロックも1つずつ同じく見る
 fn quotable_texts(node: &Node, text: &str, out: &mut Vec<String>) {
     let source = |node: &Node| {
         node.position()
@@ -699,11 +700,15 @@ fn quotable_texts(node: &Node, text: &str, out: &mut Vec<String>) {
     };
     #[expect(
         clippy::wildcard_enum_match_arm,
-        reason = "markdown::mdast::Node is a foreign enum: every block other than a table and code is read as written"
+        reason = "markdown::mdast::Node is a foreign enum: every block other than code and the containers of blocks is read as written"
     )]
     match node {
         Node::Code(_) => {}
-        Node::Table(_) | Node::TableRow(_) => {
+        Node::Table(_)
+        | Node::TableRow(_)
+        | Node::List(_)
+        | Node::ListItem(_)
+        | Node::Blockquote(_) => {
             for child in node.children().into_iter().flatten() {
                 quotable_texts(child, text, out);
             }

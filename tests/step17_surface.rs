@@ -1162,3 +1162,43 @@ fn req_226_a_name_quoted_in_a_decision_is_counted_as_specified_by_status() {
         "{v}"
     );
 }
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_a_name_in_a_decision_cell_counts_even_after_a_stray_quote_in_another_cell() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "| 鍵 | 値 |\n|---|---|\n| x\" | \"--format\" |\n| `--verbose` | y |",
+            ),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
+}
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_a_code_block_inside_a_row_or_a_quote_of_a_decision_is_not_read() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "> \"--format\" を受ける。\n>\n> ```\n> \"--verbose\"\n> ```",
+            ),
+            (
+                "確認すること",
+                "- C-flags-1 次を受ける\n\n  ```\n  \"--verbose\"\n  ```",
+            ),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
