@@ -107,7 +107,7 @@ pub(super) fn input_stop(error: crate::StopReason) -> InputError {
 #[derive(Debug, Clone, Default)]
 pub struct ReadInputs {
     pub config: crate::config::Config,
-    /// 決定の文書。パスは`基準のディレクトリ`からの相対で、決定の文書の置き場の下にある
+    /// 決定の文書。パスは`基準のディレクトリ`からの相対
     pub decisions: Option<Vec<SourceText>>,
     pub tests: Option<Vec<TestAnalysis>>,
 }

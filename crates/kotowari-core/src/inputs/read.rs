@@ -183,13 +183,7 @@ pub(super) fn logical_read(inputs: ReadInputs, policy: Policy) -> Result<ReadMod
     preparation
         .originals
         .admit(tests.iter().map(|file| &file.source))?;
-    let place = crate::normalize_path(&preparation.policy.config.decisions.documents);
     for source in &documents {
-        if crate::decisions::relative_to_place(&source.path, &place).is_none() {
-            return Err(InputError::InvalidInput(
-                "decision document must be under its configured place".into(),
-            ));
-        }
         preparation.parse_decisions(source).map_err(input_stop)?;
     }
     Ok(preparation.calculate(&tests))
