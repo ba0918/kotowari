@@ -12,7 +12,7 @@ fn send<T: Send>(value: T) -> T {
     value
 }
 
-// @kotowari[REQ-schema-075, REQ-core-318, REQ-core-321, EX-schema-092, EX-core-492, EX-core-495]
+// @kotowari[REQ-schema-075, REQ-core-318, REQ-core-321, EX-schema-092, EX-core-492, EX-core-495, C-schema-io-6]
 #[test]
 fn loader_futures_and_results_are_send_and_match_sync_operations() {
     let dir = tempfile::tempdir().unwrap();

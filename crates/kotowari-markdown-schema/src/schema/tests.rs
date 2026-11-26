@@ -55,7 +55,7 @@ document:
             when: { field: 種類, eq: algorithm }
 "#;
 
-// @kotowari[REQ-schema-016, REQ-schema-017]
+// @kotowari[REQ-schema-016, REQ-schema-017, C-schema-lang-1]
 #[test]
 fn loads_a_schema_with_all_rule_kinds() {
     let schema = parse_schema(ADR_LIKE).unwrap();
@@ -80,7 +80,7 @@ fn loads_a_schema_with_all_rule_kinds() {
     );
 }
 
-// @kotowari[REQ-schema-029]
+// @kotowari[REQ-schema-029, C-schema-block-5]
 #[test]
 fn csv_is_a_shorthand_for_comma_separator() {
     let yaml = r#"
@@ -95,7 +95,7 @@ document:
     assert_eq!(field.effective_separator(), Some(","));
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-7]
 #[test]
 fn extract_accepts_the_shorthand_and_the_named_group() {
     // 略記（`extract: <名前>`）は `{ path: <名前> }` と同じに読む（REQ-schema-048）
@@ -122,42 +122,42 @@ document:
     assert_eq!(field_extract.group(), None);
 }
 
-// @kotowari[REQ-schema-018, EX-schema-008]
+// @kotowari[REQ-schema-018, EX-schema-008, C-schema-lang-3]
 #[test]
 fn unknown_key_is_an_error() {
     let yaml = "document:\n  bogus: 1\n";
     assert_rejected(yaml, "unknown field `bogus`");
 }
 
-// @kotowari[REQ-schema-018]
+// @kotowari[REQ-schema-018, C-schema-lang-4]
 #[test]
 fn type_violation_is_an_error() {
     let yaml = "open: not-a-bool\ndocument:\n  title:\n    pattern: x\n";
     assert_rejected(yaml, "invalid boolean");
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[REQ-schema-019, C-schema-lang-4]
 #[test]
 fn min_greater_than_max_is_an_error() {
     let yaml = "document:\n  sections:\n    - name: x\n      repeat: { min: 3, max: 1 }\n";
     assert_rejected(yaml, "repeat min is greater than max");
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[REQ-schema-019, C-schema-lang-4]
 #[test]
 fn negative_repeat_is_an_error() {
     let yaml = "document:\n  sections:\n    - name: x\n      repeat: { min: -1 }\n";
     assert_rejected(yaml, "invalid u64");
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[REQ-schema-019, C-schema-lang-4]
 #[test]
 fn non_integer_repeat_is_an_error() {
     let yaml = "document:\n  sections:\n    - name: x\n      repeat: { min: 1.5 }\n";
     assert_rejected(yaml, "invalid u64");
 }
 
-// @kotowari[REQ-schema-020]
+// @kotowari[REQ-schema-020, C-schema-lang-4]
 #[test]
 fn when_with_both_operators_is_an_error() {
     let yaml = r#"
@@ -170,7 +170,7 @@ document:
     assert_rejected(yaml, "when must have exactly one of eq or ne");
 }
 
-// @kotowari[REQ-schema-020]
+// @kotowari[REQ-schema-020, C-schema-lang-4]
 #[test]
 fn when_with_no_operator_is_an_error() {
     let yaml = r#"
@@ -183,21 +183,21 @@ document:
     assert_rejected(yaml, "when must have exactly one of eq or ne");
 }
 
-// @kotowari[REQ-schema-016]
+// @kotowari[REQ-schema-016, C-schema-lang-4]
 #[test]
 fn invalid_regex_pattern_is_an_error() {
     let yaml = "document:\n  title:\n    pattern: \"(\"\n";
     assert_rejected(yaml, "regex parse error");
 }
 
-// @kotowari[REQ-schema-016, REQ-schema-025]
+// @kotowari[REQ-schema-016, REQ-schema-025, C-schema-lang-4]
 #[test]
 fn invalid_item_id_regex_is_an_error() {
     let yaml = "document:\n  sections:\n    - name: x\n      item:\n        id: \"(\"\n";
     assert_rejected(yaml, "regex parse error");
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-9]
 #[test]
 fn capture_extract_outside_title_is_schema_invalid() {
     // `group` の宣言（名前付きキャプチャ）は題名にだけ使える。題名以外のノードで
@@ -241,7 +241,7 @@ fn capture_extract_outside_title_is_schema_invalid() {
     }
 }
 
-// @kotowari[REQ-schema-036, TBL-schema-009]
+// @kotowari[REQ-schema-036, TBL-schema-009, C-schema-cli-22]
 #[test]
 fn an_empty_name_in_the_value_or_an_of_key_of_an_element_object_is_schema_invalid() {
     // "value" と "of" の鍵も同じ置き場の配置パスに数える（TBL-schema-009）ので、
@@ -266,7 +266,7 @@ fn an_empty_name_in_the_value_or_an_of_key_of_an_element_object_is_schema_invali
     }
 }
 
-// @kotowari[REQ-schema-039]
+// @kotowari[REQ-schema-039, C-schema-extract-19]
 #[test]
 fn item_internal_extract_without_item_extract_is_schema_invalid() {
     let yaml = r#"
@@ -284,7 +284,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-039]
+// @kotowari[REQ-schema-039, C-schema-extract-20]
 #[test]
 fn item_child_field_extract_without_item_extract_is_schema_invalid() {
     // item の bullets.children.fields も「項目の内部のフィールド行」なので、
@@ -308,7 +308,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-039]
+// @kotowari[REQ-schema-039, C-schema-extract-20]
 #[test]
 fn item_deep_child_field_extract_without_item_extract_is_schema_invalid() {
     // 再帰的な入れ子（item の bullets.children.bullets.children.fields）も
@@ -335,7 +335,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-9]
 #[test]
 fn capture_extract_without_pattern_is_schema_invalid() {
     // `group` を宣言した抽出は pattern の名前付きキャプチャを取る。pattern が無い
@@ -348,7 +348,7 @@ document:
     assert_rejected(yaml, "title capture extract requires a pattern");
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-9]
 #[test]
 fn capture_extract_with_pattern_missing_the_group_is_schema_invalid() {
     // pattern が指定の名前付きキャプチャを含まない題名も schema_invalid（TBL-schema-008）。
@@ -364,14 +364,14 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-016]
+// @kotowari[REQ-schema-016, C-schema-lang-4]
 #[test]
 fn not_yaml_is_an_error() {
     // 鍵も値の型も正しく、YAML の構文だけが壊れている
     assert_rejected("name: \"unterminated", "unclosed quote");
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[REQ-schema-031, C-schema-block-21]
 #[test]
 fn bullets_with_children_loads() {
     let yaml = r#"
@@ -402,7 +402,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[REQ-schema-031, C-schema-block-21]
 #[test]
 fn item_bullets_can_have_children() {
     let yaml = r#"
@@ -427,14 +427,14 @@ document:
     assert!(bullets.children.is_some());
 }
 
-// @kotowari[REQ-schema-018]
+// @kotowari[REQ-schema-018, C-schema-lang-3]
 #[test]
 fn unknown_key_under_bullets_is_an_error() {
     let yaml = "document:\n  sections:\n    - name: 理由\n      bullets:\n        bogus: 1\n";
     assert_rejected(yaml, "unknown field `bogus`");
 }
 
-// @kotowari[REQ-schema-018]
+// @kotowari[REQ-schema-018, C-schema-lang-4]
 #[test]
 fn type_violation_under_children_is_an_error() {
     let yaml =
@@ -442,7 +442,7 @@ fn type_violation_under_children_is_an_error() {
     assert_rejected(yaml, "expected mapping");
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-block-22]
 #[test]
 fn children_bullets_with_extract_is_schema_invalid() {
     let yaml = r#"
@@ -458,7 +458,7 @@ document:
     assert_rejected(yaml, "children bullets cannot declare extract");
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-block-22]
 #[test]
 fn deep_children_bullets_with_extract_is_schema_invalid() {
     let yaml = r#"
@@ -476,7 +476,7 @@ document:
     assert_rejected(yaml, "children bullets cannot declare extract");
 }
 
-// @kotowari[REQ-schema-035, REQ-schema-036]
+// @kotowari[REQ-schema-035, REQ-schema-036, C-schema-block-21]
 #[test]
 fn child_field_can_have_extract() {
     let yaml = r#"
@@ -495,7 +495,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-039, EX-schema-014]
+// @kotowari[REQ-schema-039, EX-schema-014, C-schema-extract-19]
 #[test]
 fn item_table_extract_without_item_extract_is_rejected() {
     let yaml = r#"
@@ -514,7 +514,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-039]
+// @kotowari[REQ-schema-039, C-schema-extract-19]
 #[test]
 fn item_codeblock_extract_without_item_extract_is_rejected() {
     let yaml = r#"
@@ -533,7 +533,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[REQ-schema-019, C-schema-lang-10]
 #[test]
 fn repeat_with_equal_min_and_max_is_accepted() {
     let yaml = r#"
@@ -550,7 +550,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[REQ-schema-019, C-schema-lang-4]
 #[test]
 fn item_table_invalid_repeat_is_rejected() {
     let yaml = r#"
@@ -566,7 +566,7 @@ document:
     assert_rejected(yaml, "repeat min is greater than max");
 }
 
-// @kotowari[REQ-schema-019]
+// @kotowari[REQ-schema-019, C-schema-lang-4]
 #[test]
 fn item_codeblock_invalid_repeat_is_rejected() {
     let yaml = r#"
@@ -582,7 +582,7 @@ document:
     assert_rejected(yaml, "repeat min is greater than max");
 }
 
-// @kotowari[REQ-schema-035, REQ-schema-048]
+// @kotowari[REQ-schema-035, REQ-schema-048, C-schema-extract-23]
 #[test]
 fn of_id_outside_an_item_is_rejected() {
     let yaml = r#"
@@ -597,7 +597,7 @@ document:
     assert_rejected(yaml, "field extract cannot use \"id\" in of");
 }
 
-// @kotowari[REQ-schema-035, REQ-schema-048]
+// @kotowari[REQ-schema-035, REQ-schema-048, C-schema-extract-22]
 #[test]
 fn unknown_of_value_is_rejected() {
     let yaml = r#"
@@ -612,7 +612,7 @@ document:
     assert_rejected(yaml, "unknown variant `column`");
 }
 
-// @kotowari[REQ-schema-039, REQ-schema-047]
+// @kotowari[REQ-schema-039, REQ-schema-047, C-schema-extract-19]
 #[test]
 fn item_internal_extract_with_item_extract_loads() {
     let yaml = r#"
@@ -635,7 +635,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-035, REQ-schema-048]
+// @kotowari[REQ-schema-035, REQ-schema-048, C-schema-extract-5]
 #[test]
 fn nested_extract_declaration_loads() {
     // 抽出の宣言は path・value・of・group を持つ1つの入れ子である（REQ-schema-048）
@@ -664,7 +664,7 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-5]
 #[test]
 fn legacy_sequence_extract_is_schema_invalid() {
     // 書式の並びは受けない（REQ-schema-048）
@@ -682,7 +682,7 @@ document:
     assert_rejected(yaml, "expected an extract path, or a mapping with \"path\"");
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-5]
 #[test]
 fn extract_without_a_path_is_schema_invalid() {
     let yaml = r#"
@@ -697,7 +697,7 @@ document:
     assert_rejected(yaml, "extract requires \"path\"");
 }
 
-// @kotowari[REQ-schema-042, REQ-schema-048]
+// @kotowari[REQ-schema-042, REQ-schema-048, C-schema-cli-18]
 #[test]
 fn duplicate_key_between_an_inner_node_and_a_derived_value_is_schema_invalid() {
     // 項目のオブジェクトの中で、内側のフィールド行の配置パスと外側の
@@ -716,7 +716,7 @@ document:
     assert_rejected(yaml, "has the key \"line\" twice");
 }
 
-// @kotowari[REQ-schema-042, REQ-schema-048]
+// @kotowari[REQ-schema-042, REQ-schema-048, C-schema-cli-18]
 #[test]
 fn duplicate_key_between_value_and_a_derived_value_is_schema_invalid() {
     let yaml = r#"
@@ -731,7 +731,7 @@ document:
     assert_rejected(yaml, "has the key \"cells\" twice");
 }
 
-// @kotowari[REQ-schema-042, REQ-schema-048]
+// @kotowari[REQ-schema-042, REQ-schema-048, C-schema-cli-18, C-schema-cli-19]
 #[test]
 fn a_parent_key_is_a_duplicate_but_a_sibling_key_is_not() {
     // 判定は配置パス全体で行う。a と a.b は親子で重複、a.b と a.c は別の鍵（TBL-schema-009）

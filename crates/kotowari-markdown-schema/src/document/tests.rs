@@ -5,7 +5,7 @@ fn section_blocks(doc: &Document) -> &[Block] {
     &doc.sections[0].blocks
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[REQ-schema-031, C-schema-block-21]
 #[test]
 fn nested_list_items_become_children_of_the_parent_bullet() {
     let doc = Document::parse("## 理由\n\n- 親\n  - 子\n    - 孫\n").unwrap();
@@ -27,7 +27,7 @@ fn nested_list_items_become_children_of_the_parent_bullet() {
     assert_eq!(text, "孫");
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[REQ-schema-031, C-schema-block-21]
 #[test]
 fn nested_list_children_keep_their_indentation() {
     let doc = Document::parse("## 理由\n\n- 親\n  - 子\n    - 孫\n").unwrap();
@@ -56,7 +56,7 @@ fn nested_list_children_keep_their_indentation() {
     assert_eq!(line_text, "    - 孫");
 }
 
-// @kotowari[REQ-schema-030]
+// @kotowari[REQ-schema-030, C-schema-block-15]
 #[test]
 fn continuation_paragraph_attaches_to_the_parent_bullet() {
     let doc = Document::parse("## 理由\n\n- 親\n\n  続きの段落\n  - 子\n").unwrap();
@@ -73,7 +73,7 @@ fn continuation_paragraph_attaches_to_the_parent_bullet() {
     assert_eq!(children.len(), 1);
 }
 
-// @kotowari[REQ-schema-031, REQ-schema-034]
+// @kotowari[REQ-schema-031, REQ-schema-034, C-schema-block-20]
 #[test]
 fn code_block_child_of_bullet_remains_a_block() {
     let doc = Document::parse("## 理由\n\n- 親\n\n  ```python\n  x = 1\n  ```\n").unwrap();
@@ -84,7 +84,7 @@ fn code_block_child_of_bullet_remains_a_block() {
     assert!(matches!(children[0], Block::Code { lang: Some(ref l), .. } if l == "python"));
 }
 
-// @kotowari[REQ-schema-031, REQ-schema-033]
+// @kotowari[REQ-schema-031, REQ-schema-033, C-schema-block-20]
 #[test]
 fn table_child_of_bullet_remains_a_block() {
     let doc =
@@ -98,7 +98,7 @@ fn table_child_of_bullet_remains_a_block() {
     );
 }
 
-// @kotowari[REQ-schema-032]
+// @kotowari[REQ-schema-032, C-schema-block-16]
 #[test]
 fn statement_after_code_block_lead_is_a_statement() {
     let doc = Document::parse("## 理由\n\n- ```python\n  x = 1\n  ```\n\n  後続の段落\n").unwrap();
@@ -107,7 +107,7 @@ fn statement_after_code_block_lead_is_a_statement() {
     assert!(matches!(blocks[1], Block::Statement { ref text, .. } if text == "後続の段落"));
 }
 
-// @kotowari[REQ-schema-031]
+// @kotowari[REQ-schema-031, C-schema-block-20]
 #[test]
 fn field_line_with_children_keeps_children() {
     let doc = Document::parse("## 理由\n\n- 状態: 承認済み\n  - 子\n").unwrap();
@@ -126,7 +126,7 @@ fn field_line_with_children_keeps_children() {
     assert_eq!(children.len(), 1);
 }
 
-// @kotowari[REQ-schema-028]
+// @kotowari[REQ-schema-028, C-schema-block-3]
 #[test]
 fn ordered_list_item_children_are_not_attached() {
     let doc = Document::parse("## 理由\n\n1. 順序付き\n   - 箇条書き\n").unwrap();
@@ -137,7 +137,7 @@ fn ordered_list_item_children_are_not_attached() {
         "順序付きの入れ子は対象外でトップレベルに残る"
     );
 }
-// @kotowari[REQ-schema-008]
+// @kotowari[REQ-schema-008, C-schema-cli-12]
 #[test]
 fn title_heading_keeps_the_raw_line_including_inline_code() {
     let src = "# 題名 `インライン` と [リンク](https://example.com/)\n";
@@ -153,7 +153,7 @@ fn title_heading_keeps_the_raw_line_including_inline_code() {
     );
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-29]
 #[test]
 fn statement_keeps_each_raw_line_with_its_line_number() {
     let src = "## 節\n\n 文の1行目\n  字下げの2行目\n   3行目\n";
@@ -171,7 +171,7 @@ fn statement_keeps_each_raw_line_with_its_line_number() {
     assert_eq!(raw_lines[2].text, "   3行目");
 }
 
-// @kotowari[REQ-schema-048]
+// @kotowari[REQ-schema-048, C-schema-extract-25]
 #[test]
 fn table_keeps_the_line_number_of_each_data_row() {
     let src = "## 節\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n";
@@ -195,7 +195,7 @@ fn table_keeps_the_line_number_of_each_data_row() {
     );
 }
 
-// @kotowari[REQ-schema-062]
+// @kotowari[REQ-schema-062, C-schema-extract-27]
 #[test]
 fn end_line_does_not_count_a_heading_shaped_line_inside_a_code_block() {
     let src = "## 節\n\n### A-1: a\n\n```\n## 中\n```\n\n### A-2: b\n";
@@ -214,7 +214,7 @@ fn end_line_does_not_count_a_heading_shaped_line_inside_a_code_block() {
     assert_eq!(by_line.end_line(3, 3), 8, "行の読み方でも同じ");
 }
 
-// @kotowari[REQ-schema-062]
+// @kotowari[REQ-schema-062, C-schema-extract-27]
 #[test]
 fn end_line_is_the_last_line_when_the_document_does_not_end_with_a_break() {
     let doc = Document::parse("## 節\n\n### A-1: a\n\n本文").unwrap();
@@ -226,7 +226,7 @@ fn end_line_is_the_last_line_when_the_document_does_not_end_with_a_break() {
     assert_eq!(doc.read_by_line().end_line(3, 3), 5, "行の読み方でも同じ");
 }
 
-// @kotowari[REQ-schema-030]
+// @kotowari[REQ-schema-030, C-schema-block-15]
 #[test]
 fn a_continuation_paragraph_of_an_ordered_item_belongs_to_that_item() {
     let doc = Document::parse("## 理由\n\n1. 順序付き\n\n   続きの段落\n").unwrap();
@@ -238,7 +238,7 @@ fn a_continuation_paragraph_of_an_ordered_item_belongs_to_that_item() {
     );
 }
 
-// @kotowari[REQ-schema-035]
+// @kotowari[REQ-schema-035, C-schema-extract-29]
 #[test]
 fn a_lone_cr_breaks_a_line_the_same_way_as_lf_and_crlf() {
     let statement_lines = |src: &str| {
