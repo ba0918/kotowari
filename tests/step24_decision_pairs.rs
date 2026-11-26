@@ -714,3 +714,32 @@ fn a_paragraph_after_the_state_line_on_the_japanese_side_only_is_an_error_on_tha
         )]
     );
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_paragraph_in_the_open_section_on_the_japanese_side_only_is_an_error_on_that_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &format!(
+            "{}\n## Open\n",
+            english("greet", "proposed", &["C-greet-1 Shown"])
+        ),
+        &format!(
+            "{}\n## 未決\n\n夜の挨拶をどうするか。\n",
+            japanese("greet", "提案", &["C-greet-1 出る"])
+        ),
+    );
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![finding(
+            "unknown_line",
+            "docs/decisions/greet/greet.ja.md",
+            Some(25),
+            "夜の挨拶をどうするか。"
+        )]
+    );
+}

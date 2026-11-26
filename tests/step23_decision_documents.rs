@@ -2195,3 +2195,36 @@ fn a_link_reference_definition_after_the_state_line_is_no_error() {
     );
     assert_eq!(findings(&check(tmp.path())), vec![]);
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_block_in_the_open_section_that_is_not_a_list_is_an_error_and_status_is_incomplete() {
+    for (open, english, anchor) in [("未決", false, "挨拶する"), ("Open", true, "greet")] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        let decided = if english {
+            "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n\
+             ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n"
+                .to_string()
+        } else {
+            topic(&[bare("挨拶する", "提案")])
+        };
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &format!(
+                "{decided}## {open}\n\n夜の挨拶をどうするか。\n\n### 細目\n\n[挨拶]: #{anchor}\n"
+            ),
+        );
+        let path = "docs/decisions/greet.md";
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![
+                finding("unknown_line", path, 19, "夜の挨拶をどうするか。"),
+                finding("unknown_heading", path, 21, "### 細目"),
+            ],
+            "{open}"
+        );
+        assert!(!complete(tmp.path()), "{open}");
+    }
+}

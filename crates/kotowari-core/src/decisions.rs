@@ -409,9 +409,12 @@ fn read(
             Place::Decision(building) => {
                 read_decision_block(path, node, text, &lines, building, skipped);
             }
+            // 「未決」の節に置けるのは一覧と、リンクの検査が読むリンクの参照の定義だけ
             Place::Open => {
                 if let Node::List(list) = node {
                     open_items += list.children.len();
+                } else if !matches!(node, Node::Definition(_)) {
+                    misplaced(path, node, &lines, skipped);
                 }
             }
         }
