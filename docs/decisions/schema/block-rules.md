@@ -132,7 +132,7 @@ In either reading mode, list lines themselves are told apart as in [A list line 
 | A non-list line directly following a list line with no blank line between | Part of the preceding list line (for a field line, it goes into the value) | Statement |
 | An indented non-list line following a list line after a blank line | Continuation paragraph | Statement |
 | An indented list line following a list line | List line | List line |
-| A quote, thematic break, HTML or image line | Not counted as a statement, and not made a finding | Statement |
+| A quote, thematic break, HTML or image line | A quote, a thematic break and an HTML block are undeclared_line inside a node that does not declare "open: true" ([When reading by paragraph, block quotes, HTML blocks and thematic breaks inside a node that does not declare "open: true" are findings](#when-reading-by-paragraph-block-quotes-html-blocks-and-thematic-breaks-inside-a-node-that-does-not-declare-open-true-are-findings)); an image line is not counted as a statement, and not made a finding | Statement |
 | A line indented by four or more spaces after a blank line, not following a list line | Indented code block | Statement (a line opening a fence is as in the next row) |
 | A block enclosed in a "```" or "~~~" fence | Code block | Code block (whatever the indentation depth of the opening line) |
 | A GFM table (a run with a header row and a delimiter row; it need not start with a vertical bar; it ends as GFM specifies) | Table | Table |
@@ -182,11 +182,11 @@ How statements are counted when reading by paragraph needs to be decided. In Com
 
 ### Decision
 
-While reading by paragraph, a paragraph delimited by blank lines counts as one statement. Lines of only a quote, a thematic break, HTML or an image are not counted as statements, and are not made findings even in the closed world.
+While reading by paragraph, a paragraph delimited by blank lines counts as one statement. Lines of only an image are not counted as statements, and are not made findings even in the closed world. How quotes, thematic breaks and HTML blocks are treated is decided in [When reading by paragraph, block quotes, HTML blocks and thematic breaks inside a node that does not declare "open: true" are findings](#when-reading-by-paragraph-block-quotes-html-blocks-and-thematic-breaks-inside-a-node-that-does-not-declare-open-true-are-findings).
 
 ### Confirmations
 
-- C-schema-block-16 When reading by paragraph, several consecutive lines not separated by blank lines count as one statement, and lines of only a quote, a thematic break, HTML or an image are not counted as statements and are not findings even in the closed world
+- C-schema-block-16 When reading by paragraph, several consecutive lines not separated by blank lines count as one statement, and lines of only an image are not counted as statements and are not findings even in the closed world
 
 ## Headings and tables are read as CommonMark and GFM specify in either reading mode
 
@@ -379,7 +379,7 @@ The regular expression of a bullet and its named captures ([Named captures are w
 
 ## When reading by paragraph, block quotes, HTML blocks and thematic breaks inside a node that does not declare "open: true" are findings
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

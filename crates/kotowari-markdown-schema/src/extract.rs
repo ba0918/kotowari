@@ -274,7 +274,8 @@ fn extract_statement(
                 | Block::OrderedList { .. }
                 | Block::Table { .. }
                 | Block::Code { .. }
-                | Block::Other { .. } => &[],
+                | Block::Other { .. }
+                | Block::Unruled { .. } => &[],
             })
             .map(|raw| {
                 element_value(
@@ -486,7 +487,8 @@ fn list_item_pieces(block: &Block, children: Option<&Children>, doc: &Document) 
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. } => {}
+            | Block::Other { .. }
+            | Block::Unruled { .. } => {}
         }
     }
     pieces
@@ -640,7 +642,8 @@ fn extract_codeblock(
                 | Block::OrderedList { .. }
                 | Block::Statement { .. }
                 | Block::Table { .. }
-                | Block::Other { .. } => Value::Null,
+                | Block::Other { .. }
+                | Block::Unruled { .. } => Value::Null,
             };
             element_value(extract, doc, value, &Derived::at(b.line()))
         })
@@ -748,7 +751,8 @@ fn body_from_blocks(
         | Block::OrderedList { .. }
         | Block::Table { .. }
         | Block::Code { .. }
-        | Block::Other { .. } => Vec::new(),
+        | Block::Other { .. }
+        | Block::Unruled { .. } => Vec::new(),
     });
     render(pieces, doc)
 }

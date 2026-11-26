@@ -18,8 +18,8 @@ fn lines_of(findings: &[Finding], kind: FindingKind) -> Vec<usize> {
         .collect()
 }
 
-/// 規則の無い段落、順序付きリスト、表、コードブロックを持つ項目。
-const FREE_ITEM_DOC: &str = "## 節\n\n### A-1: 名前\n\n段落。\n\n1. 順序\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```\ncode\n```\n";
+/// 規則の無い段落、順序付きリスト、表、コードブロック、引用を持つ項目。
+const FREE_ITEM_DOC: &str = "## 節\n\n### A-1: 名前\n\n段落。\n\n1. 順序\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```\ncode\n```\n\n> 引用\n";
 
 fn item_schema(open: &str) -> String {
     format!("document:\n  sections:\n    - name: 節\n      item:\n        id: \"^A-\"\n{open}")
@@ -38,7 +38,7 @@ fn the_same_item_without_open_makes_each_block_without_a_rule_an_undeclared_line
     let findings = validate_src(&item_schema(""), FREE_ITEM_DOC);
     assert_eq!(
         lines_of(&findings, FindingKind::UndeclaredLine),
-        vec![5, 7, 9, 13],
+        vec![5, 7, 9, 13, 17],
         "{findings:?}"
     );
 }

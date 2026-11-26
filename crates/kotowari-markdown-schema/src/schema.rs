@@ -321,7 +321,8 @@ impl Table {
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. } => None,
+            | Block::Other { .. }
+            | Block::Unruled { .. } => None,
         }))
     }
 }

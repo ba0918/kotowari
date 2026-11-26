@@ -76,6 +76,9 @@ pub enum RuleKind {
     Statement,
     Table,
     CodeBlock,
+    BlockQuote,
+    Html,
+    ThematicBreak,
 }
 
 impl RuleKind {
@@ -90,6 +93,9 @@ impl RuleKind {
             RuleKind::Statement => "statement",
             RuleKind::Table => "table",
             RuleKind::CodeBlock => "codeblock",
+            RuleKind::BlockQuote => "block_quote",
+            RuleKind::Html => "html",
+            RuleKind::ThematicBreak => "thematic_break",
         }
     }
 }

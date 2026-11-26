@@ -1,6 +1,7 @@
 //! mdast から正規化した文書の木を作る。検証と抽出の共通の入力。
 
 use crate::ast::parse_mdast;
+use crate::finding::RuleKind;
 use markdown::mdast::Node;
 
 /// 検証・抽出の対象にする文書の木。
@@ -200,8 +201,12 @@ pub enum Block {
         value: String,
         line: usize,
     },
-    /// どの規則種別にも当てはまらないブロック（引用、水平線など）
+    /// 文に数えず、指摘にもしないブロック（画像だけの段落、リンクの参照定義、HTML の
+    /// コメントだけのブロックなど）
     Other { line: usize },
+    /// 規則の種類が無く、"open: true" を宣言しないノードの中では undeclared_line になる
+    /// ブロック（段落の読み方の引用、HTML のブロック、水平線）
+    Unruled { rule_kind: RuleKind, line: usize },
 }
 
 impl Document {
@@ -413,8 +418,33 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
             value: code.value.clone(),
             line,
         }],
+        Node::Blockquote(_) => vec![Block::Unruled {
+            rule_kind: RuleKind::BlockQuote,
+            line,
+        }],
+        Node::ThematicBreak(_) => vec![Block::Unruled {
+            rule_kind: RuleKind::ThematicBreak,
+            line,
+        }],
+        Node::Html(html) if !is_only_html_comments(&html.value) => vec![Block::Unruled {
+            rule_kind: RuleKind::Html,
+            line,
+        }],
         _ => vec![Block::Other { line }],
     }
+}
+
+/// HTML のブロックが、空白を挟んだ HTML のコメントだけでできているか。コメントは文書を書く
+/// 人やツールのための書き込みで、文書の中身ではない
+fn is_only_html_comments(html: &str) -> bool {
+    let mut rest = html.trim_start();
+    while let Some(after_open) = rest.strip_prefix("<!--") {
+        let Some(close) = after_open.find("-->") else {
+            return false;
+        };
+        rest = after_open[close + 3..].trim_start();
+    }
+    rest.is_empty()
 }
 
 /// 表のノードを表のブロックにする。`line_offset` はノードの行番号に足す行数で、
@@ -520,9 +550,7 @@ fn blocks_from_list_item(
                     _ => extra.extend(nested),
                 }
             }
-            // コードブロック・表などのブロックは捨てず、子のブロックとして残す。
-            // 引用・水平線などは blocks_from_node が Block::Other にして閉じた
-            // 世界でも無視される（REQ-schema-032）。
+            // コードブロック・表・引用などのブロックは捨てず、子のブロックとして残す。
             other => {
                 let blocks = blocks_from_node(other, src, lines);
                 match &mut lead_block {
@@ -663,7 +691,8 @@ impl Block {
             | Block::Statement { line, .. }
             | Block::Table { line, .. }
             | Block::Code { line, .. }
-            | Block::Other { line } => *line,
+            | Block::Other { line }
+            | Block::Unruled { line, .. } => *line,
         }
     }
 
@@ -676,7 +705,8 @@ impl Block {
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. } => &[],
+            | Block::Other { .. }
+            | Block::Unruled { .. } => &[],
         }
     }
 }

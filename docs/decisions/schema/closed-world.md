@@ -59,7 +59,7 @@ If findings on undeclared lines have only one kind, the caller has to tell wheth
 
 ### Decision
 
-A finding on an undeclared line carries, as structure, which of these the line was read as: a list line of the name-and-value form (a field line), a bullet, an ordered list, a statement, a table or a code block.
+A finding on an undeclared line carries, as structure, which of these the line was read as: a list line of the name-and-value form (a field line), a bullet, an ordered list, a statement, a table, a code block, a block quote, an HTML block or a thematic break.
 
 ### Rejected options
 

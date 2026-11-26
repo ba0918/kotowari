@@ -1275,16 +1275,6 @@ document:
 
 // @kotowari[REQ-schema-032, C-schema-block-16]
 #[test]
-fn blockquote_and_thematic_break_lines_are_ignored_in_closed_world() {
-    let schema =
-        "document:\n  sections:\n    - name: 状況\n      statement:\n        required: false\n";
-    let doc = "## 状況\n\n> 引用\n\n---\n\n本文。\n";
-    let findings = validate_src(schema, doc, false);
-    assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
-}
-
-// @kotowari[REQ-schema-032, C-schema-block-16]
-#[test]
 fn image_only_line_is_not_counted_as_statement() {
     let schema =
         "document:\n  sections:\n    - name: 状況\n      statement:\n        required: true\n";

@@ -1652,9 +1652,9 @@ fn req_schema_065_an_of_word_not_accepted_by_the_node_names_it_and_the_accepted_
     }
 }
 
-// @kotowari[EX-schema-035, C-schema-block-15, C-schema-block-16]
+// @kotowari[C-schema-block-15]
 #[test]
-fn ex_schema_035_paragraph_reading_absorbs_following_lines_and_ignores_quotes() {
+fn paragraph_reading_absorbs_the_following_line_and_the_continuation_paragraph() {
     let schema = r#"
 document:
   sections:
@@ -1666,7 +1666,7 @@ document:
         bullets:
           required: false
 "#;
-    let doc = "## 要求\n\n### REQ-1: 例\n\n- 種類: ubiquitous\n続く行\n\n  字下げした継続段落\n\n> 引用の行\n";
+    let doc = "## 要求\n\n### REQ-1: 例\n\n- 種類: ubiquitous\n続く行\n\n  字下げした継続段落\n";
     let (code, json, stderr) = mds_json(schema, doc, "check");
     assert_eq!(code, Some(0), "stderr: {stderr} json: {json}");
     assert!(all_findings(&json).is_empty(), "{json}");

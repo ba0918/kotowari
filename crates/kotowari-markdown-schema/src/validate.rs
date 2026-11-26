@@ -360,6 +360,11 @@ fn undeclared_line_for_block(block: &Block) -> Option<Finding> {
             *line,
             RuleKind::CodeBlock,
         ),
+        Block::Unruled { rule_kind, line } => (
+            format!("undeclared {}", rule_kind.as_str().replace('_', " ")),
+            *line,
+            *rule_kind,
+        ),
         Block::Other { .. } => return None,
     };
     Some(Finding::at(FindingKind::UndeclaredLine, line, detail).of_rule(rule_kind))
@@ -460,7 +465,8 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. }) => {
+            | Block::Other { .. }
+            | Block::Unruled { .. }) => {
                 if !children.open {
                     push_undeclared_line(findings, other);
                     push_undeclared_children(findings, other);
@@ -554,7 +560,8 @@ impl<'a> BulletLine<'a> {
             | Block::Statement { .. }
             | Block::Table { .. }
             | Block::Code { .. }
-            | Block::Other { .. } => return None,
+            | Block::Other { .. }
+            | Block::Unruled { .. } => return None,
         };
         Some(Self { block, text, line })
     }
@@ -689,8 +696,14 @@ fn validate_container(
                     }
                 }
             },
-            // ブロック引用・水平線・画像などの文の対象外の行種別は閉じた世界でも無視する（REQ-schema-032）
+            // 画像だけの段落・リンクの参照定義・HTML のコメントは、どのノードの中でも無視する
             Block::Other { .. } => {}
+            // 段落の読み方の引用・HTML のブロック・水平線には規則の種類が無い
+            Block::Unruled { .. } => {
+                if !open {
+                    push_undeclared_line(findings, block);
+                }
+            }
             // 順序付きリストはどの規則種別にも属さない。閉じた世界では undeclared_line にする（TBL-schema-007）
             Block::OrderedList { .. } => {
                 if !open {
@@ -982,7 +995,8 @@ fn when_allows(when: Option<&When>, fields: &[Field], blocks: &[Block]) -> bool 
         | Block::Statement { .. }
         | Block::Table { .. }
         | Block::Code { .. }
-        | Block::Other { .. } => None,
+        | Block::Other { .. }
+        | Block::Unruled { .. } => None,
     });
     match value {
         Some(value) => match (&when.eq, &when.ne) {
@@ -1072,5 +1086,7 @@ fn check_occurrence(
 
 #[cfg(test)]
 mod open_tests;
+#[cfg(test)]
+mod quote_tests;
 #[cfg(test)]
 mod tests;
