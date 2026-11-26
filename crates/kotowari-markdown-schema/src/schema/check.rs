@@ -120,6 +120,7 @@ fn validate_preamble(preamble: &Preamble) -> Result<(), SchemaError> {
     validate_bullets(preamble.bullets.as_ref(), false)?;
     validate_table(preamble.table.as_ref())?;
     validate_codeblock(preamble.codeblock.as_ref())?;
+    validate_subheading(preamble.subheading.as_ref())?;
     Ok(())
 }
 
@@ -135,6 +136,7 @@ fn validate_section(section: &Section) -> Result<(), SchemaError> {
     validate_bullets(section.bullets.as_ref(), false)?;
     validate_table(section.table.as_ref())?;
     validate_codeblock(section.codeblock.as_ref())?;
+    validate_subheading(section.subheading.as_ref())?;
     if let Some(item) = &section.item {
         validate_item(item)?;
     }
@@ -158,6 +160,7 @@ fn validate_item(item: &Item) -> Result<(), SchemaError> {
     reject_duplicate_element_keys(item.extract.as_ref(), "item", &internal)?;
     validate_table(item.table.as_ref())?;
     validate_codeblock(item.codeblock.as_ref())?;
+    validate_subheading(item.subheading.as_ref())?;
     validate_fields(&item.fields)?;
     validate_statement(item.statement.as_ref())?;
     validate_bullets(item.bullets.as_ref(), false)?;
@@ -221,6 +224,14 @@ fn is_ancestor_path(outer: &str, inner: &str) -> bool {
     inner
         .strip_prefix(outer)
         .is_some_and(|rest| rest.starts_with('.'))
+}
+
+/// 深さ4以上の見出しの規則を検査する。
+fn validate_subheading(subheading: Option<&Subheading>) -> Result<(), SchemaError> {
+    match subheading.and_then(|s| s.repeat.as_ref()) {
+        Some(repeat) => repeat.validate(),
+        None => Ok(()),
+    }
 }
 
 /// コードブロックの規則を検査する。

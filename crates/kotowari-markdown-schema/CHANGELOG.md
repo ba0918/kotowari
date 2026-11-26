@@ -6,6 +6,14 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ## [Unreleased]
 
+### Added
+
+- A preamble, a section and an item can declare `subheading`, a rule for headings of depth 4 or more, with `required`, `repeat` and `pattern` (no `extract`). A heading that does not match the pattern is the new finding `subheading_pattern_mismatch`; a count outside the bounds is `repeat_min_not_met` or `repeat_max_exceeded` with the rule kind `subheading`.
+
+### Changed
+
+- A heading of depth 4 or more is now read as a line of the preamble, section or item that contains it: it no longer ends that node for anything that follows it, and the lines after it are checked and extracted with the same node. Without a `subheading` rule it is still `heading_level_mismatch`, also inside a node that declares `open: true` and inside an undeclared section in the open world. Findings come out in document order, so a `heading_level_mismatch` is no longer listed after all other findings.
+
 ## [0.2.1] - 2026-11-25
 
 ### Changed

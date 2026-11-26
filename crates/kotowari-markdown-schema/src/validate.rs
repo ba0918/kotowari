@@ -4,7 +4,7 @@ use crate::document::{Block, Document, Heading, Item};
 use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
     Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
-    Statement, Table, Title, When, is_declared_field,
+    Statement, Subheading, Table, Title, When, is_declared_field,
 };
 use std::collections::HashMap;
 
@@ -87,6 +87,12 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                     for item in &section.items {
                         push_undeclared_item(&mut findings, item.line, &item.id, &item.blocks);
                     }
+                } else {
+                    // 開いた世界でも、深さ4以上の見出しは宣言していない構造の内側で指摘にする
+                    push_subheadings(&mut findings, &section.blocks);
+                    for item in &section.items {
+                        push_subheadings(&mut findings, &item.blocks);
+                    }
                 }
             }
         }
@@ -138,11 +144,9 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                 &stray.heading.text,
                 &stray.blocks,
             );
+        } else {
+            push_subheadings(&mut findings, &stray.blocks);
         }
-    }
-
-    for heading in &document.stray_headings {
-        validate_stray_heading(heading, &mut findings);
     }
 
     // 行を持つ指摘には、その行の生の文字をそのまま添える（REQ-schema-008）
@@ -260,14 +264,22 @@ fn push_undeclared_item(findings: &mut Vec<Finding>, line: usize, name: &str, bl
     }
 }
 
-fn validate_stray_heading(heading: &Heading, findings: &mut Vec<Finding>) {
-    // 文書の木は深さ1〜3の見出しをそれぞれの場所に置くので、ここには深さ4以上の見出しだけが来る
-    // （REQ-schema-026）。深さ4以上は常に heading_level_mismatch
-    findings.push(Finding::at(
+/// "subheading" の規則の無いノードの中の、深さ4以上の見出しの指摘。
+fn heading_level_mismatch(depth: u8, line: usize) -> Finding {
+    Finding::at(
         FindingKind::HeadingLevelMismatch,
-        heading.line,
-        format!("heading at depth {} is not allowed", heading.depth),
-    ));
+        line,
+        format!("heading at depth {depth} is not allowed"),
+    )
+}
+
+/// 開いた世界で許す宣言していない構造の内側でも、深さ4以上の見出しは指摘にする。
+fn push_subheadings(findings: &mut Vec<Finding>, blocks: &[Block]) {
+    for block in blocks {
+        if let Block::Subheading { depth, line, .. } = block {
+            findings.push(heading_level_mismatch(*depth, *line));
+        }
+    }
 }
 
 /// 1つの前置部・節・項目の中の行の規則。規則種別ごとの判定に使う。
@@ -278,6 +290,7 @@ struct ContainerRules<'a> {
     bullets: Option<&'a Bullets>,
     table: Option<&'a Table>,
     codeblock: Option<&'a CodeBlock>,
+    subheading: Option<&'a Subheading>,
 }
 
 impl<'a> ContainerRules<'a> {
@@ -290,6 +303,7 @@ impl<'a> ContainerRules<'a> {
                 bullets: p.bullets.as_ref(),
                 table: p.table.as_ref(),
                 codeblock: p.codeblock.as_ref(),
+                subheading: p.subheading.as_ref(),
             },
             None => Self::empty(),
         }
@@ -303,6 +317,7 @@ impl<'a> ContainerRules<'a> {
             bullets: section.bullets.as_ref(),
             table: section.table.as_ref(),
             codeblock: section.codeblock.as_ref(),
+            subheading: section.subheading.as_ref(),
         }
     }
 
@@ -314,6 +329,7 @@ impl<'a> ContainerRules<'a> {
             bullets: item.bullets.as_ref(),
             table: item.table.as_ref(),
             codeblock: item.codeblock.as_ref(),
+            subheading: item.subheading.as_ref(),
         }
     }
 
@@ -325,6 +341,7 @@ impl<'a> ContainerRules<'a> {
             bullets: None,
             table: None,
             codeblock: None,
+            subheading: None,
         }
     }
 }
@@ -334,6 +351,10 @@ impl<'a> ContainerRules<'a> {
 fn undeclared_line_for_block(block: &Block) -> Option<Finding> {
     // 呼ぶ側が生の行を読み直して種別を決めずに済むよう、読んだ規則種別を添える（REQ-schema-055）
     let (detail, line, rule_kind) = match block {
+        // 深さ4以上の見出しは行の指摘でなく、見出しの深さの指摘にする
+        Block::Subheading { depth, line, .. } => {
+            return Some(heading_level_mismatch(*depth, *line));
+        }
         Block::Field { name, line, .. } => (
             format!("undeclared field line \"{name}\""),
             *line,
@@ -466,7 +487,8 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
             | Block::Table { .. }
             | Block::Code { .. }
             | Block::Other { .. }
-            | Block::Unruled { .. }) => {
+            | Block::Unruled { .. }
+            | Block::Subheading { .. }) => {
                 if !children.open {
                     push_undeclared_line(findings, other);
                     push_undeclared_children(findings, other);
@@ -561,7 +583,8 @@ impl<'a> BulletLine<'a> {
             | Block::Table { .. }
             | Block::Code { .. }
             | Block::Other { .. }
-            | Block::Unruled { .. } => return None,
+            | Block::Unruled { .. }
+            | Block::Subheading { .. } => return None,
         };
         Some(Self { block, text, line })
     }
@@ -615,6 +638,7 @@ struct ContainerOccurrences<'a> {
     bullets: Vec<usize>,
     tables: Vec<usize>,
     codeblocks: Vec<usize>,
+    subheadings: Vec<usize>,
     ordered_fields: Vec<(usize, usize)>,
 }
 
@@ -695,6 +719,25 @@ fn validate_container(
                         push_undeclared_line(findings, block);
                     }
                 }
+            },
+            // 深さ4以上の見出しは、"open: true" のノードの中でも "subheading" の規則が無ければ指摘にする
+            Block::Subheading { text, depth, line } => match rules.subheading {
+                Some(subheading) => {
+                    seen.subheadings.push(*line);
+                    if let Some(pattern) = &subheading.pattern
+                        && !pattern.is_match(text)
+                    {
+                        findings.push(Finding::at(
+                            FindingKind::SubheadingPatternMismatch,
+                            *line,
+                            format!(
+                                "subheading \"{text}\" does not match pattern \"{}\"",
+                                pattern.source()
+                            ),
+                        ));
+                    }
+                }
+                None => findings.push(heading_level_mismatch(*depth, *line)),
             },
             // 画像だけの段落・リンクの参照定義・HTML のコメントは、どのノードの中でも無視する
             Block::Other { .. } => {}
@@ -808,6 +851,22 @@ fn check_container_occurrences(
             bounds(table.required, table.repeat.as_ref()),
             table.repeat.is_some(),
             FindingKind::MissingTable,
+            findings,
+        );
+    }
+    if let Some(subheading) = rules.subheading {
+        // 欠落の専用の種類は無いので、項目と同じく下限の指摘にする
+        check_occurrence(
+            &Occurrence {
+                lines: &seen.subheadings,
+                name: None,
+                what: "subheading".to_string(),
+                container_line,
+                rule_kind: RuleKind::Subheading,
+            },
+            bounds(subheading.required, subheading.repeat.as_ref()),
+            true,
+            FindingKind::RepeatMinNotMet,
             findings,
         );
     }
@@ -996,7 +1055,8 @@ fn when_allows(when: Option<&When>, fields: &[Field], blocks: &[Block]) -> bool 
         | Block::Table { .. }
         | Block::Code { .. }
         | Block::Other { .. }
-        | Block::Unruled { .. } => None,
+        | Block::Unruled { .. }
+        | Block::Subheading { .. } => None,
     });
     match value {
         Some(value) => match (&when.eq, &when.ne) {
@@ -1088,5 +1148,7 @@ fn check_occurrence(
 mod open_tests;
 #[cfg(test)]
 mod quote_tests;
+#[cfg(test)]
+mod subheading_tests;
 #[cfg(test)]
 mod tests;

@@ -28,7 +28,7 @@ Items directly under the document are declared in "document.item", in the same s
 
 - C-schema-lang-1 A YAML schema that declares a title, a preamble, sections and the rule kinds under them is loaded as declared
 
-## There are nine rule kinds, each with the places it can be placed
+## There are ten rule kinds, each with the places it can be placed
 
 Status: implemented
 
@@ -40,7 +40,7 @@ No reason survives for deciding the other rule kinds and where they can be place
 
 ### Decision
 
-One element of the schema tree is called a node, and is the unit of validation and extraction. The kinds of node (rule kinds) are the following nine.
+One element of the schema tree is called a node, and is the unit of validation and extraction. The kinds of node (rule kinds) are the following ten.
 
 | Rule kind | What it validates | Where it can be placed |
 |---|---|---|
@@ -53,12 +53,9 @@ One element of the schema tree is called a node, and is the unit of validation a
 | Bullet | A list line that is not a field line | Preamble, section, item, child of a bullet |
 | Table | A Markdown table | Preamble, section, item |
 | Code block | A block enclosed by a fence | Preamble, section, item |
+| Subheading ("subheading") | Headings of depth 4 or more | Preamble, section, item |
 
 A table and a code block declared on an item have the same rule content, default cardinality and error kinds as when declared on a section. That the preamble itself declares no extraction is decided in [For the preamble, rules and extraction are declared on the nodes inside it](document-structure.md#for-the-preamble-rules-and-extraction-are-declared-on-the-nodes-inside-it).
-
-### Confirmations
-
-- C-schema-lang-2 (by reading) The public structs of `crates/kotowari-markdown-schema/src/schema.rs` correspond one to one with the rule kinds of the table, no rule kind outside the table exists, and where each struct can be placed matches the table's "Where it can be placed" column
 
 ## A schema with an unknown key or a value that does not fit its shape stops without checking
 
@@ -268,7 +265,7 @@ Even on a node that declares "open: true", the rules declared on that node keep 
 
 ## A rule for headings of depth 4 or more, "subheading", can be declared on the preamble, a section and an item
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -278,7 +275,7 @@ Headings of depth 4 or more have no rule kind, and are findings wherever they ar
 
 A rule for headings of depth 4 or more, "subheading", is added to the rule kinds. "subheading" can be declared on the preamble, a section and an item. A cardinality ([Cardinality is declared in five ways](#cardinality-is-declared-in-five-ways)) and a regular expression can be written on it; an extraction cannot.
 
-The table of rule kinds and the places they can be placed ([There are nine rule kinds, each with the places it can be placed](#there-are-nine-rule-kinds-each-with-the-places-it-can-be-placed)) becomes ten rule kinds, with the following one row added.
+The table of rule kinds and the places they can be placed ([There are ten rule kinds, each with the places it can be placed](#there-are-ten-rule-kinds-each-with-the-places-it-can-be-placed)) becomes ten rule kinds, with the following one row added.
 
 | Rule kind | What it validates | Where it can be placed |
 |---|---|---|
@@ -288,7 +285,7 @@ The table of rule kinds and the places they can be placed ([There are nine rule 
 
 ### Rejected options
 
-- Previous decision: there are nine rule kinds, with no rule for headings of depth 4 or more ([There are nine rule kinds, each with the places it can be placed](#there-are-nine-rule-kinds-each-with-the-places-it-can-be-placed)). It was dropped because subheadings inside an item cannot be declared.
+- Previous decision: there are nine rule kinds, with no rule for headings of depth 4 or more ([There are ten rule kinds, each with the places it can be placed](#there-are-ten-rule-kinds-each-with-the-places-it-can-be-placed)). It was dropped because subheadings inside an item cannot be declared.
 
 ### Confirmations
 

@@ -16,11 +16,8 @@ It needs to be decided how deep headings may nest. Three levels are enough for t
 
 The heading depths a schema can declare are only three levels: the title (depth 1), sections (depth 2) and items (depth 3). There is no recursive nesting of any depth, and there is no means to declare a further heading node under an item.
 
-A heading of depth 4 or more is made a finding.
-
 ### Confirmations
 
-- C-schema-doc-1 A heading of depth 4 or more is a heading_level_mismatch finding
 - C-schema-doc-2 (by reading) The schema language has no means to declare a heading node under an item
 
 ## Exactly one title is required only when the schema declares a title
@@ -232,7 +229,7 @@ When items are lacking, it is a repeat_min_not_met finding as falling below the 
 
 ## Headings of depth 4 or more are read as lines of the preamble, section or item that contains them, and are findings unless "subheading" is declared
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

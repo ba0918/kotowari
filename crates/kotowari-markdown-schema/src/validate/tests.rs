@@ -725,7 +725,7 @@ fn missing_required_section_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::MissingRequiredSection));
 }
 
-// @kotowari[REQ-schema-026, C-schema-doc-1]
+// @kotowari[REQ-schema-026, C-schema-doc-20]
 #[test]
 fn heading_level_mismatch_is_found() {
     let doc = "# ADR-0001: a\n\n## 状況\n\n#### 深すぎ\n\n## 決定\n\n判断。\n";

@@ -349,7 +349,7 @@ We want to be able to check items such as decision tables, which hold a table un
 
 ### Decision
 
-Table and code block rules can be declared on items too. The content of the rules, the default cardinality and the finding kinds are the same as when they are declared on a section. Which rule kinds can be placed where, as a whole, is decided in [There are nine rule kinds, each with the places it can be placed](schema-language.md#there-are-nine-rule-kinds-each-with-the-places-it-can-be-placed).
+Table and code block rules can be declared on items too. The content of the rules, the default cardinality and the finding kinds are the same as when they are declared on a section. Which rule kinds can be placed where, as a whole, is decided in [There are ten rule kinds, each with the places it can be placed](schema-language.md#there-are-ten-rule-kinds-each-with-the-places-it-can-be-placed).
 
 ### Confirmations
 

@@ -28,6 +28,7 @@ pub enum FindingKind {
     CodeblockLineMismatch,
     RepeatMinNotMet,
     RepeatMaxExceeded,
+    SubheadingPatternMismatch,
 }
 
 impl FindingKind {
@@ -58,6 +59,7 @@ impl FindingKind {
             FindingKind::CodeblockLineMismatch => "codeblock_line_mismatch",
             FindingKind::RepeatMinNotMet => "repeat_min_not_met",
             FindingKind::RepeatMaxExceeded => "repeat_max_exceeded",
+            FindingKind::SubheadingPatternMismatch => "subheading_pattern_mismatch",
         }
     }
 }
@@ -79,6 +81,7 @@ pub enum RuleKind {
     BlockQuote,
     Html,
     ThematicBreak,
+    Subheading,
 }
 
 impl RuleKind {
@@ -96,6 +99,7 @@ impl RuleKind {
             RuleKind::BlockQuote => "block_quote",
             RuleKind::Html => "html",
             RuleKind::ThematicBreak => "thematic_break",
+            RuleKind::Subheading => "subheading",
         }
     }
 }

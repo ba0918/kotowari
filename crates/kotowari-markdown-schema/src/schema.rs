@@ -154,6 +154,8 @@ pub struct Preamble {
     pub bullets: Option<Bullets>,
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
+    /// 深さ4以上の見出しの規則
+    pub subheading: Option<Subheading>,
     /// フィールド行の並び順を強制する（REQ-schema-041）
     #[serde(default)]
     pub ordered: bool,
@@ -179,6 +181,8 @@ pub struct Section {
     pub bullets: Option<Bullets>,
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
+    /// 深さ4以上の見出しの規則
+    pub subheading: Option<Subheading>,
     pub item: Option<Item>,
     pub extract: Option<Extract>,
     /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
@@ -201,6 +205,8 @@ pub struct Item {
     pub bullets: Option<Bullets>,
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
+    /// 深さ4以上の見出しの規則
+    pub subheading: Option<Subheading>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub extract: Option<Extract>,
@@ -281,6 +287,16 @@ pub struct Bullets {
     pub children: Option<Children>,
 }
 
+/// 深さ4以上の見出しの規則。見出しの行を数えて照らす規則で、下の行を持つノードではない。
+/// 抽出は宣言できない。
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Subheading {
+    pub required: Option<bool>,
+    pub repeat: Option<Repeat>,
+    pub pattern: Option<Pattern>,
+}
+
 /// 表（TBL-schema-004、REQ-schema-033）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -322,7 +338,8 @@ impl Table {
             | Block::Table { .. }
             | Block::Code { .. }
             | Block::Other { .. }
-            | Block::Unruled { .. } => None,
+            | Block::Unruled { .. }
+            | Block::Subheading { .. } => None,
         }))
     }
 }

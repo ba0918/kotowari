@@ -275,7 +275,8 @@ fn extract_statement(
                 | Block::Table { .. }
                 | Block::Code { .. }
                 | Block::Other { .. }
-                | Block::Unruled { .. } => &[],
+                | Block::Unruled { .. }
+                | Block::Subheading { .. } => &[],
             })
             .map(|raw| {
                 element_value(
@@ -488,7 +489,8 @@ fn list_item_pieces(block: &Block, children: Option<&Children>, doc: &Document) 
             | Block::Table { .. }
             | Block::Code { .. }
             | Block::Other { .. }
-            | Block::Unruled { .. } => {}
+            | Block::Unruled { .. }
+            | Block::Subheading { .. } => {}
         }
     }
     pieces
@@ -643,7 +645,8 @@ fn extract_codeblock(
                 | Block::Statement { .. }
                 | Block::Table { .. }
                 | Block::Other { .. }
-                | Block::Unruled { .. } => Value::Null,
+                | Block::Unruled { .. }
+                | Block::Subheading { .. } => Value::Null,
             };
             element_value(extract, doc, value, &Derived::at(b.line()))
         })
@@ -752,7 +755,8 @@ fn body_from_blocks(
         | Block::Table { .. }
         | Block::Code { .. }
         | Block::Other { .. }
-        | Block::Unruled { .. } => Vec::new(),
+        | Block::Unruled { .. }
+        | Block::Subheading { .. } => Vec::new(),
     });
     render(pieces, doc)
 }

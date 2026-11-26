@@ -19,8 +19,6 @@ pub struct Document {
     pub(crate) preamble: Vec<Block>,
     /// 深さ2の節
     pub(crate) sections: Vec<Section>,
-    /// 深さ4以上の見出し。節の中かどうかを問わず heading_level_mismatch の対象
-    pub(crate) stray_headings: Vec<Heading>,
     /// 前置部領域（最初の節より前）に出た深さ3の見出しとその内側の行。
     /// 題名より後の見出しは宣言済みの前置部の中の未宣言の構造として、open でも
     /// undeclared_heading / undeclared_line の対象になる（REQ-schema-003）。題名より前の
@@ -79,8 +77,7 @@ impl Document {
         let strays = self
             .stray_preamble_headings
             .iter()
-            .map(|s| (s.heading.line, s.heading.depth))
-            .chain(self.stray_headings.iter().map(|h| (h.line, h.depth)));
+            .map(|s| (s.heading.line, s.heading.depth));
         titles
             .chain(sections)
             .chain(strays)
@@ -207,6 +204,12 @@ pub enum Block {
     /// 規則の種類が無く、"open: true" を宣言しないノードの中では undeclared_line になる
     /// ブロック（段落の読み方の引用、HTML のブロック、水平線）
     Unruled { rule_kind: RuleKind, line: usize },
+    /// 深さ4以上の見出し。それを含むノードの行で、そのノードを終えない
+    Subheading {
+        text: String,
+        depth: u8,
+        line: usize,
+    },
 }
 
 impl Document {
@@ -324,7 +327,8 @@ impl TreeBuilder {
                         BlockOwner::StrayPreambleHeading(doc.stray_preamble_headings.len() - 1);
                 }
             },
-            depth => doc.stray_headings.push(Heading { text, depth, line }),
+            // 深さ4以上の見出しは、それを含む前置部・節・項目の行として読み、そのノードを終えない
+            depth => self.blocks(vec![Block::Subheading { text, depth, line }]),
         }
     }
 
@@ -692,7 +696,8 @@ impl Block {
             | Block::Table { line, .. }
             | Block::Code { line, .. }
             | Block::Other { line }
-            | Block::Unruled { line, .. } => *line,
+            | Block::Unruled { line, .. }
+            | Block::Subheading { line, .. } => *line,
         }
     }
 
@@ -706,7 +711,8 @@ impl Block {
             | Block::Table { .. }
             | Block::Code { .. }
             | Block::Other { .. }
-            | Block::Unruled { .. } => &[],
+            | Block::Unruled { .. }
+            | Block::Subheading { .. } => &[],
         }
     }
 }
