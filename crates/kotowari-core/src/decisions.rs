@@ -347,6 +347,22 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
             };
         }
     };
+    let mut skipped = Vec::new();
+    let document = read(path, text, &root, findings, &mut skipped);
+    findings.append(&mut skipped);
+    document
+}
+
+/// 読んだ文書の木から話題の文書を作る。決定の形の誤りは form に、読み飛ばされる中身を作る誤り
+/// （閉じないコードブロック、2つ目からの題名、形の置き場所の無いブロック）は skipped に積む。
+/// ほかの言語の側は骨組みでしか比べないので、skipped だけをその側の指摘にする
+fn read(
+    path: &str,
+    text: &str,
+    root: &Node,
+    form: &mut Vec<Finding>,
+    skipped: &mut Vec<Finding>,
+) -> Document {
     let mut decisions = Vec::new();
     let mut place = Place::Head;
     let mut title: Option<(usize, String)> = None;
@@ -354,16 +370,16 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
     let mut open_items = 0;
     // 行の区切りは kotowari のほかの文書と同じ（"\n"、"\r\n"、単独の "\r"）。Markdown の読み手の行の番号もそう数える
     let lines = crate::ir::split_lines(text);
-    unclosed_code_blocks(path, &root, text, &lines, findings);
-    extra_titles(path, &root, &lines, findings);
-    let anchored = heading_anchors(&root);
+    unclosed_code_blocks(path, root, text, &lines, skipped);
+    extra_titles(path, root, &lines, skipped);
+    let anchored = heading_anchors(root);
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
     for node in blocks {
         if let Node::Heading(heading) = node
             && heading.depth <= 2
         {
             if let Place::Decision(building) = std::mem::replace(&mut place, Place::Head) {
-                decisions.push(building.finish(path, &lines, findings));
+                decisions.push(building.finish(path, &lines, form));
             }
             if heading.depth == 1 {
                 if title.is_none() {
@@ -387,7 +403,9 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
                     lead = true;
                 }
             }
-            Place::Decision(building) => read_decision_block(node, text, &lines, building),
+            Place::Decision(building) => {
+                read_decision_block(path, node, text, &lines, building, skipped);
+            }
             Place::Open => {
                 if let Node::List(list) = node {
                     open_items += list.children.len();
@@ -396,16 +414,16 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         }
     }
     if let Place::Decision(building) = place {
-        decisions.push(building.finish(path, &lines, findings));
+        decisions.push(building.finish(path, &lines, form));
     }
     match title {
-        None => findings.push(Finding::new(
+        None => form.push(Finding::new(
             FindingKind::MissingTitle,
             path.to_owned(),
             None,
             String::new(),
         )),
-        Some((line, title)) if !lead => findings.push(Finding::new(
+        Some((line, title)) if !lead => form.push(Finding::new(
             FindingKind::TopicLeadMissing,
             path.to_owned(),
             Some(line),
@@ -418,7 +436,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         decisions,
         open_items,
         anchors: anchored.into_values().collect(),
-        links: crate::translations::markdown_links(&root),
+        links: crate::translations::markdown_links(root),
     }
 }
 
@@ -558,14 +576,13 @@ pub(crate) fn is_glossary(path: &str, place: &str) -> bool {
 
 /// リンクの行き先としてだけ読む文書。決定の形を検査せず、見出しの行き先の名前だけを持つ。
 /// content があれば（ほかの言語の側）その文書の中のリンクも持ち、check_links がその行き先を確かめる。
-/// そのときは、読み飛ばされる中身を作る誤り（閉じないコードブロック、2つ目からの題名）を content に積む
+/// そのときは、読み飛ばされる中身を作る誤り（`read` の skipped）を content に積む。決定の形のほかの
+/// 誤りは、骨組みの比較が先頭の言語の側との違いとして出す
 pub(crate) fn parse_target(path: &str, text: &str, content: Option<&mut Vec<Finding>>) -> Document {
     let root = crate::markdown::parse(text).ok();
     let links = content.is_some();
     if let (Some(findings), Some(root)) = (content, &root) {
-        let lines = crate::ir::split_lines(text);
-        unclosed_code_blocks(path, root, text, &lines, findings);
-        extra_titles(path, root, &lines, findings);
+        read(path, text, root, &mut Vec::new(), findings);
     }
     Document {
         path: path.to_owned(),
@@ -715,8 +732,32 @@ pub(crate) fn has_open_items(documents: &[Document]) -> bool {
     documents.iter().any(|doc| doc.open_items > 0)
 }
 
+/// 形が置き場所を持たないブロックを、見出しなら unknown_heading、ほかは unknown_line にする。古い形と
+/// 同じく、line はブロックの最初の行、detail はその行の書いたままの文字
+fn misplaced(path: &str, node: &Node, lines: &[&str], findings: &mut Vec<Finding>) {
+    let kind = if let Node::Heading(_) = node {
+        FindingKind::UnknownHeading
+    } else {
+        FindingKind::UnknownLine
+    };
+    let line = line_of(node);
+    findings.push(Finding::new(
+        kind,
+        path.to_owned(),
+        Some(line),
+        lines.get(line - 1).copied().unwrap_or_default().to_owned(),
+    ));
+}
+
 /// 決定の見出しの下の1つのブロックを読む
-fn read_decision_block(node: &Node, text: &str, lines: &[&str], building: &mut Building) {
+fn read_decision_block(
+    path: &str,
+    node: &Node,
+    text: &str,
+    lines: &[&str],
+    building: &mut Building,
+    skipped: &mut Vec<Finding>,
+) {
     let awaiting_state = std::mem::replace(&mut building.awaiting_state, false);
     read_fingerprinted(node, text, building);
     #[expect(
@@ -724,8 +765,11 @@ fn read_decision_block(node: &Node, text: &str, lines: &[&str], building: &mut B
         reason = "markdown::mdast::Node is a foreign enum: blocks other than headings, paragraphs and lists carry nothing a decision is read from"
     )]
     match node {
-        Node::Heading(_) => {
+        Node::Heading(heading) => {
             let section = Section::of(&node.to_string());
+            if heading.depth == 3 && section.is_none() {
+                misplaced(path, node, lines, skipped);
+            }
             building.sections.extend(section);
             building.section = section;
         }

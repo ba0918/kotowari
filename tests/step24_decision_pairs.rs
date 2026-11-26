@@ -347,11 +347,19 @@ fn a_missing_or_different_heading_on_the_japanese_side_is_a_structure_mismatch()
         mismatch(&first, &without_problem),
         vec![(None, "heading".to_string())]
     );
+    // 形の語でない節の名前は、骨組みの食い違いのほかに、その側の unknown_heading にもなる
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
     let other_section =
         japanese("greet", "提案", &["C-greet-1 出る"]).replace("### 問題", "### 背景");
+    write_pair(tmp.path(), DIR, "greet", &first, &other_section);
+    let side = "docs/decisions/greet/greet.ja.md";
     assert_eq!(
-        mismatch(&first, &other_section),
-        vec![(Some(11), "heading".to_string())]
+        findings(&check(tmp.path())),
+        vec![
+            finding("translation_structure_mismatch", side, Some(11), "heading"),
+            finding("unknown_heading", side, Some(11), "### 背景"),
+        ]
     );
 }
 
@@ -644,4 +652,41 @@ fn a_leading_byte_order_mark_on_either_side_is_skipped() {
     let value = check(tmp.path());
     assert_eq!(findings(&value), vec![], "{value}");
     assert_eq!(value["decisions"]["decisions"], 1);
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_section_with_an_unknown_name_on_both_sides_is_an_error_on_each_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &format!(
+            "{}\n### Notes\n\nA note.\n",
+            english("greet", "proposed", &["C-greet-1 Shown"])
+        ),
+        &format!(
+            "{}\n### 補足\n\nメモ。\n",
+            japanese("greet", "提案", &["C-greet-1 出る"])
+        ),
+    );
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![
+            finding(
+                "unknown_heading",
+                "docs/decisions/greet/greet.ja.md",
+                Some(23),
+                "### 補足"
+            ),
+            finding(
+                "unknown_heading",
+                "docs/decisions/greet/greet.md",
+                Some(23),
+                "### Notes"
+            ),
+        ]
+    );
 }

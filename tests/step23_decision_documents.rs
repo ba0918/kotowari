@@ -2054,3 +2054,64 @@ fn a_fence_on_the_last_line_of_a_document_is_unclosed() {
         )]
     );
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_section_of_a_decision_with_an_unknown_name_is_an_error_at_its_heading() {
+    for (text, heading) in [
+        (
+            topic(&[decision(
+                "挨拶する",
+                "提案",
+                &[
+                    ("問題", "困っていた。"),
+                    ("決めたこと", "こうする。"),
+                    ("補足", "メモ。"),
+                ],
+            )]),
+            "### 補足",
+        ),
+        (
+            "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n\
+             ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n### Notes\n\nA note.\n"
+                .to_string(),
+            "### Notes",
+        ),
+    ] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(tmp.path(), "docs/decisions/greet.md", &text);
+        let (code, stdout, _) = run(tmp.path(), &["check"]);
+        let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+        assert_eq!(
+            findings(&value),
+            vec![finding(
+                "unknown_heading",
+                "docs/decisions/greet.md",
+                17,
+                heading
+            )]
+        );
+        assert_eq!(code, Some(1), "{heading}");
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_deeper_heading_inside_a_section_of_a_decision_is_no_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[decision(
+            "挨拶する",
+            "提案",
+            &[
+                ("問題", "困っていた。\n\n#### 経緯\n\n前からあった。"),
+                ("決めたこと", "こうする。"),
+            ],
+        )]),
+    );
+    assert_eq!(findings(&check(tmp.path())), vec![]);
+}
