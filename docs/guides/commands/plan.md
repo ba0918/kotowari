@@ -31,7 +31,7 @@ Options may appear before the command or after the file.
 <!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/plan.md#kotowari-plan-checks-the-form-of-a-plan-against-the-schema-bundled-in-the-binary:8c47a326] -->
 
 `plan` reads only the plan file you pass.
-It does not read the configuration file, the IR, decision records or test files.
+It does not read the configuration file, the decision documents or test files.
 So `plan` does not stop even if the configuration file is broken.
 
 The rules for the form (the schema) are compiled into the binary; no schema file is read at run time.
@@ -110,9 +110,9 @@ The following are not checked:
 - The order of the sections
 - Whether step numbers are consecutive, or whether two steps share a number
 - The name after the `:` in a step heading
-- The contents of the fields (whether requirement IDs exist, whether `Done when` is an observable condition, and so on)
+- The contents of the fields (whether the decisions and confirmation rows named exist, whether `Done when` is an observable condition, and so on)
 
-Use `kotowari query` to confirm that requirement IDs exist.
+Use `kotowari query` to confirm that the decisions and rows exist.
 
 ## Output
 
@@ -148,7 +148,7 @@ Tell what is wrong from the first half of the detail (the schema side's kind).
 <!-- @kotowari[docs/decisions/core/plan.md#the-output-of-kotowari-plan-uses-the-same-finding-keys-as-check-and-the-json-has-only-findings-and-counts:b227d6e0] -->
 
 The top level has exactly two keys: `findings` and `counts`.
-The `files`, `lines`, `tests` and `guides` keys of `check` are not present.
+The `tests`, `guides`, `overview` and `decisions` keys of `check` are not present.
 
 | Key | Type | Description |
 |---|---|---|
@@ -188,11 +188,10 @@ A person who runs `wordcount check <path>` sees each word used more than the con
 
 ## Specification
 
-The IR is in `docs/ir/`. This plan covers:
+The decision documents are in `docs/decisions/`. This plan covers:
 
-- `docs/ir/core/count.md#REQ-core-010`, `#REQ-core-011`
-- `docs/ir/core/output.md#REQ-core-020`
-- Examples: EX-core-030, EX-core-031
+- `docs/decisions/core/count.md#a-word-used-more-than-the-limit-is-reported-with-the-line-of-its-first-use` (rows C-core-count-1, C-core-count-2)
+- `docs/decisions/core/report.md#each-word-over-the-limit-is-printed-on-one-line-and-the-exit-code-is-1` (row C-core-report-1)
 
 ## Approach and why
 
@@ -211,10 +210,10 @@ S1 before S2: S2 prints what S1 counts.
 
 ## Verification map
 
-| Step | Requirements | Examples |
+| Step | Decisions | Confirmation rows |
 |---|---|---|
-| S1 | REQ-core-010, REQ-core-011 | EX-core-030 |
-| S2 | REQ-core-020 | EX-core-031 |
+| S1 | count.md | C-core-count-1, C-core-count-2 |
+| S2 | report.md | C-core-report-1 |
 
 ## Left to the implementer
 
@@ -233,31 +232,31 @@ cargo test --workspace
 
 ## Out of scope
 
-- Stemming or case folding beyond what REQ-core-011 states
+- Stemming or case folding beyond what C-core-count-2 states
 
 ## Steps
 
 ### S1: count the words of one document
 
 - Purpose: count each word of a document and remember the line of its first use
-- Specification: `docs/ir/core/count.md#REQ-core-010`, `docs/ir/core/count.md#REQ-core-011`
+- Specification: `docs/decisions/core/count.md#a-word-used-more-than-the-limit-is-reported-with-the-line-of-its-first-use`
 - Prerequisites: none
 - May change: `src/count.rs`, `tests/count.rs`
 - Done when: counting a document with "a" three times and the limit 2 returns "a" with the line of its first use, and a document within the limit returns nothing
-- Shown by: test — EX-core-030, one test per rule of REQ-core-011
+- Shown by: test — C-core-count-1, C-core-count-2, one test per row
 - Left to the implementer: none
-- Stop and hand back if: REQ-core-011 and EX-core-030 disagree on what counts as a word
+- Stop and hand back if: C-core-count-1 and C-core-count-2 disagree on what counts as a word
 
 ### S2: print the words over the limit
 
 - Purpose: wire the count into `wordcount check` and print one line per word over the limit
-- Specification: `docs/ir/core/output.md#REQ-core-020`
+- Specification: `docs/decisions/core/report.md#each-word-over-the-limit-is-printed-on-one-line-and-the-exit-code-is-1`
 - Prerequisites: S1
 - May change: `src/main.rs`, `tests/count.rs`
-- Done when: `wordcount check a.md` prints `a.md:3 a` for EX-core-031 and exits with 1, and exits with 0 when nothing is over the limit
-- Shown by: test — EX-core-031
+- Done when: `wordcount check a.md` prints `a.md:3 a` as C-core-report-1 states and exits with 1, and exits with 0 when nothing is over the limit
+- Shown by: test — C-core-report-1
 - Left to the implementer: none
-- Stop and hand back if: the exit code for a document with no words is not decided by REQ-core-020
+- Stop and hand back if: the exit code for a document with no words is not decided in report.md
 ````
 
 ```console
@@ -339,17 +338,17 @@ Write each value on one line, including any commands.
 
 ```console
 $ kotowari plan docs/plans/wrapped.md --format text
-docs/plans/wrapped.md:28 [error] invalid_plan undeclared_line: undeclared ordered list "S1 before S2: S2 prints what S1 counts."
-docs/plans/wrapped.md:66 [error] invalid_plan undeclared_line: undeclared statement "one test per rule of REQ-core-011"
+docs/plans/wrapped.md:27 [error] invalid_plan undeclared_line: undeclared ordered list "S1 before S2: S2 prints what S1 counts."
+docs/plans/wrapped.md:65 [error] invalid_plan undeclared_line: undeclared statement "one test per row"
 ```
 
-(Line 66 is `one test per rule of REQ-core-011`, indented and continued on the line after `- Shown by: test — EX-core-030,`.)
+(Line 65 is `one test per row`, indented and continued on the line after `- Shown by: test — C-core-count-1, C-core-count-2,`.)
 
 ### A numbered list becomes `undeclared ordered list`
 
 <!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
-Numbered lists are not allowed in the plan-wide sections (line 28 in the example above is `1. S1 before S2: ...`).
+Numbered lists are not allowed in the plan-wide sections (line 27 in the example above is `1. S1 before S2: ...`).
 Rewrite it as a `-` bullet list or as sentences.
 To express an order, write it as sentences in `## Step order and prerequisites`.
 
@@ -401,7 +400,7 @@ docs/plans/broken.md:52 [error] invalid_plan undeclared_heading: undeclared sect
 
 ## Related
 
-- Specification: [Checking plans (the plan IR)](../../ir/core/plan.md), [Arguments](../../ir/core/cli.md#REQ-core-190)
+- Specification: [Checking plans](../../decisions/core/plan.md), [Arguments](../../decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants)
 - Common format and stops: [cli.md](../cli.md)
 - The list of finding kinds: [findings.md](../findings.md)
-- Confirming requirement IDs: [kotowari query](query.md)
+- Confirming decisions and rows: [kotowari query](query.md)

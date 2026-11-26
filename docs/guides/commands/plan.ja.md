@@ -31,7 +31,7 @@ kotowari plan [--format json|text] <計画書のファイル>
 <!-- @kotowari[docs/decisions/core/plan.md#kotowari-plan-reads-no-configuration-and-handles-arguments-and-unreadable-files-in-the-same-way-as-mutants:b92c7955, docs/decisions/core/plan.md#kotowari-plan-checks-the-form-of-a-plan-against-the-schema-bundled-in-the-binary:8c47a326] -->
 
 `plan` が読むのは、渡した計画書のファイルだけです。
-設定ファイル、IR、判断の記録、テストのファイルは読みません。
+設定ファイル、決定の文書、テストのファイルは読みません。
 そのため、設定ファイルが壊れていても `plan` は止まりません。
 
 形の決まり（スキーマ）はコンパイル時に本体へ取り込んだもので、実行時にスキーマのファイルを読みません。
@@ -109,9 +109,9 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 - 節の並び順
 - ステップの番号が連番か、同じ番号のステップが2つあるか
 - ステップの見出しの `:` の後の名前
-- 欄の中身（要求の ID が実在するか、`Done when` が観測できる条件か、など）
+- 欄の中身（挙げた決定と確認することの行が実在するか、`Done when` が観測できる条件か、など）
 
-要求の ID の実在は `kotowari query` で確かめます。
+決定と行の実在は `kotowari query` で確かめます。
 
 ## 出力
 
@@ -147,7 +147,7 @@ docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when
 <!-- @kotowari[docs/decisions/core/plan.md#the-output-of-kotowari-plan-uses-the-same-finding-keys-as-check-and-the-json-has-only-findings-and-counts:b227d6e0] -->
 
 最上位は `findings` と `counts` の2つの鍵だけです。
-`check` の `files`、`lines`、`tests`、`guides` はありません。
+`check` の `tests`、`guides`、`overview`、`decisions` はありません。
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
@@ -187,11 +187,10 @@ A person who runs `wordcount check <path>` sees each word used more than the con
 
 ## Specification
 
-The IR is in `docs/ir/`. This plan covers:
+The decision documents are in `docs/decisions/`. This plan covers:
 
-- `docs/ir/core/count.md#REQ-core-010`, `#REQ-core-011`
-- `docs/ir/core/output.md#REQ-core-020`
-- Examples: EX-core-030, EX-core-031
+- `docs/decisions/core/count.md#a-word-used-more-than-the-limit-is-reported-with-the-line-of-its-first-use` (rows C-core-count-1, C-core-count-2)
+- `docs/decisions/core/report.md#each-word-over-the-limit-is-printed-on-one-line-and-the-exit-code-is-1` (row C-core-report-1)
 
 ## Approach and why
 
@@ -210,10 +209,10 @@ S1 before S2: S2 prints what S1 counts.
 
 ## Verification map
 
-| Step | Requirements | Examples |
+| Step | Decisions | Confirmation rows |
 |---|---|---|
-| S1 | REQ-core-010, REQ-core-011 | EX-core-030 |
-| S2 | REQ-core-020 | EX-core-031 |
+| S1 | count.md | C-core-count-1, C-core-count-2 |
+| S2 | report.md | C-core-report-1 |
 
 ## Left to the implementer
 
@@ -232,31 +231,31 @@ cargo test --workspace
 
 ## Out of scope
 
-- Stemming or case folding beyond what REQ-core-011 states
+- Stemming or case folding beyond what C-core-count-2 states
 
 ## Steps
 
 ### S1: count the words of one document
 
 - Purpose: count each word of a document and remember the line of its first use
-- Specification: `docs/ir/core/count.md#REQ-core-010`, `docs/ir/core/count.md#REQ-core-011`
+- Specification: `docs/decisions/core/count.md#a-word-used-more-than-the-limit-is-reported-with-the-line-of-its-first-use`
 - Prerequisites: none
 - May change: `src/count.rs`, `tests/count.rs`
 - Done when: counting a document with "a" three times and the limit 2 returns "a" with the line of its first use, and a document within the limit returns nothing
-- Shown by: test — EX-core-030, one test per rule of REQ-core-011
+- Shown by: test — C-core-count-1, C-core-count-2, one test per row
 - Left to the implementer: none
-- Stop and hand back if: REQ-core-011 and EX-core-030 disagree on what counts as a word
+- Stop and hand back if: C-core-count-1 and C-core-count-2 disagree on what counts as a word
 
 ### S2: print the words over the limit
 
 - Purpose: wire the count into `wordcount check` and print one line per word over the limit
-- Specification: `docs/ir/core/output.md#REQ-core-020`
+- Specification: `docs/decisions/core/report.md#each-word-over-the-limit-is-printed-on-one-line-and-the-exit-code-is-1`
 - Prerequisites: S1
 - May change: `src/main.rs`, `tests/count.rs`
-- Done when: `wordcount check a.md` prints `a.md:3 a` for EX-core-031 and exits with 1, and exits with 0 when nothing is over the limit
-- Shown by: test — EX-core-031
+- Done when: `wordcount check a.md` prints `a.md:3 a` as C-core-report-1 states and exits with 1, and exits with 0 when nothing is over the limit
+- Shown by: test — C-core-report-1
 - Left to the implementer: none
-- Stop and hand back if: the exit code for a document with no words is not decided by REQ-core-020
+- Stop and hand back if: the exit code for a document with no words is not decided in report.md
 ````
 
 ```console
@@ -338,17 +337,17 @@ $ kotowari plan docs/plans/broken.md | jq .
 
 ```console
 $ kotowari plan docs/plans/wrapped.md --format text
-docs/plans/wrapped.md:28 [error] invalid_plan undeclared_line: undeclared ordered list "S1 before S2: S2 prints what S1 counts."
-docs/plans/wrapped.md:66 [error] invalid_plan undeclared_line: undeclared statement "one test per rule of REQ-core-011"
+docs/plans/wrapped.md:27 [error] invalid_plan undeclared_line: undeclared ordered list "S1 before S2: S2 prints what S1 counts."
+docs/plans/wrapped.md:65 [error] invalid_plan undeclared_line: undeclared statement "one test per row"
 ```
 
-（66行目は `- Shown by: test — EX-core-030,` の次の行に字下げして続けた `one test per rule of REQ-core-011`）
+（65行目は `- Shown by: test — C-core-count-1, C-core-count-2,` の次の行に字下げして続けた `one test per row`）
 
 ### 番号付きの一覧が `undeclared ordered list` になる
 
 <!-- @kotowari[docs/decisions/core/plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields:f10ab09f, docs/decisions/core/plan.md#under-a-step-only-field-lines-are-placed-and-plan-wide-sections-can-hold-statements-lists-tables-and-code-blocks:12358175] -->
 
-計画全体の節には番号付きの一覧を置けません（上の例の28行目は `1. S1 before S2: ...`）。
+計画全体の節には番号付きの一覧を置けません（上の例の27行目は `1. S1 before S2: ...`）。
 `-` の箇条書きか文に書き換えます。
 順序を表したいときは `## Step order and prerequisites` に文で書きます。
 
@@ -400,7 +399,7 @@ docs/plans/broken.md:52 [error] invalid_plan undeclared_heading: undeclared sect
 
 ## 関連
 
-- 仕様: [計画書の検査（plan の IR）](../../ir/core/plan.ja.md)、[引数](../../ir/core/cli.ja.md#REQ-core-190)
+- 仕様: [計画書の検査](../../decisions/core/plan.ja.md)、[引数](../../decisions/core/plan.ja.md#kotowari-plan-は設定を読まず引数と読めないファイルの扱いを-mutants-に揃える)
 - 共通の書式と停止: [cli.md](../cli.ja.md)
 - 指摘の種類の一覧: [findings.md](../findings.ja.md)
-- 要求の ID を確かめる: [kotowari query](query.ja.md)
+- 決定と行を確かめる: [kotowari query](query.ja.md)
