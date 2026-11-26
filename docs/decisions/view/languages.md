@@ -1,131 +1,133 @@
-# ページの言語
+# Page language
 
-view がページの言語を示すこと、view が書く文字を UI の文字から取ること、ほかの言語の同じページへのリンク、本文の無い参照の描き方を決める。view はどの言語の文字も中に持たず、言語ごとに1回ずつ描かれる。
+English | [日本語](languages.ja.md)
 
-## ページの lang の属性と、view が書く文字は、描画の入力の言語に従う
+Decides that view indicates the page's language, that view takes the text it writes from the UI strings, the links to the same page in other languages, and how references without a body are drawn. view holds no text of any language inside it and is drawn once per language.
 
-状態: 実装済み
+## The page's lang attribute and the text view writes follow the render input's language
 
-### 問題
+Status: implemented
 
-全体像のページは、UI の文字（数の札や古い節のマーカーなど）も "html" の要素の lang の属性も日本語に固定されていて、英語で書く利用者には読めない UI になっていた。一方で、利用者が書いた文字を kotowari が訳すことはできない。kotowari の持ち物は、view が自分で書く文字だけである。
+### Problem
 
-### 決めたこと
+On the overview pages, both the UI strings (such as count labels and the stale-section marker) and the lang attribute of the "html" element were fixed to Japanese, making the UI unreadable for users who write in English. On the other hand, kotowari cannot translate text the user wrote. What kotowari owns is only the text view writes itself.
 
-view は、HTML のページの "html" の要素の lang の属性を、いつも描画の入力の言語タグにする。
+### Decision
 
-view が自分で書く文字は、すべて UI の文字から取る。文書、参照の表、目次、ほかの言語から来る文字は、訳さずにそのまま描く。
+view always sets the lang attribute of the "html" element of an HTML page to the language tag of the render input.
 
-view が自分で書く文字は次のとおりで、数を入れる文字は数が入る所に "{n}" を持つ（[数の入る文字は、"{n}" の所に数を入れる](#数の入る文字はn-の所に数を入れる)）。
+All text view writes itself is taken from the UI strings. Text that comes from the documents, the reference table, the contents or the other languages is drawn as it is, without translation.
 
-| view が書く文字 | 使う所 | 数が入るか |
+The text view writes itself is as follows, and a string that takes a number has "{n}" where the number goes ([Strings that take a number have the number put where "{n}" is](#strings-that-take-a-number-have-the-number-put-where-n-is)).
+
+| Text view writes | Where it is used | Takes a number |
 |---|---|---|
-| 目次の群の下の文書の数 | 一覧のページの目次の群の見出し | 入る |
-| 古い節の数 | 一覧のページの文書の項目と、目次の群の見出し | 入る |
-| 札が "open" の項目の数 | 一覧のページの文書の項目と、目次の群の見出し | 入る |
-| 札が "planned" の項目の数 | 一覧のページの文書の項目 | 入る |
-| 一覧のページへのリンク | 目次に名前の無い文書のページ | 入らない |
-| 古い節のマーカー | 古い節の見出しの近く | 入らない |
-| アウトラインの古い節のマーカー | アウトラインの、古い節の項目 | 入らない |
-| 置き換え済みのマーカー | 状態が "superseded" の参照 | 入らない |
-| 後回しのマーカー | 状態が "deferred" の参照 | 入らない |
-| 前と後と理由の列の見出し | compare の部品 | 入らない |
-| status の札の表示（"decided"、"planned"、"open"、"dropped" の4つ） | status の部品 | 入らない |
-| 言語の名前 | view は使わない（ほかの言語の名前は view の外で決まる） | 入らない |
+| Number of documents under a contents group | The contents group headings on the index page | Yes |
+| Number of stale sections | The document items and the contents group headings on the index page | Yes |
+| Number of items labelled "open" | The document items and the contents group headings on the index page | Yes |
+| Number of items labelled "planned" | The document items on the index page | Yes |
+| Link to the index page | The page of a document whose name is not in the contents | No |
+| Stale-section marker | Near the heading of a stale section | No |
+| Outline stale-section marker | The outline items for stale sections | No |
+| Superseded marker | References whose state is "superseded" | No |
+| Deferred marker | References whose state is "deferred" | No |
+| Column headings for before, after and reason | The compare part | No |
+| Display of the status labels (the four "decided", "planned", "open", "dropped") | The status part | No |
+| Language name | Not used by view (the names of the other languages are decided outside view) | No |
 
-それぞれの文字をどこにどう描くかは、[一覧のページ](navigation.md)、[文書のページ](rendering.md)、[部品](parts.md)の話題の決定で決める。
+Where and how each string is drawn is decided in the decisions of the topics [the index page](navigation.md), [document pages](rendering.md) and [parts](parts.md).
 
-### 確認すること
+### Confirmations
 
-- C-view-languages-1 言語タグを "fr" にして描くと、どの HTML のページも "html" の要素の lang の属性が "fr" になる
-- C-view-languages-2 UI の文字の古い節のマーカーの値を変えて描くと、古い節の近くにその値が描かれる
+- C-view-languages-1 When drawn with the language tag set to "fr", every HTML page has the lang attribute of the "html" element set to "fr"
+- C-view-languages-2 When drawn with the value of the stale-section marker in the UI strings changed, that value is drawn near the stale section
 
-## view は UI の文字を中に持たず、描画の入力から受け取る
+## view holds no UI strings itself and receives them from the render input
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-view は kotowari を知らない描画のエンジンである。UI の文字の既定（英語の文字や、省いたときの決まり）を view と kotowari の2か所に持つと、食い違う。
+view is a rendering engine that does not know kotowari. Holding the defaults of the UI strings (the English strings and the rules for when they are omitted) in two places, view and kotowari, lets them disagree.
 
-### 決めたこと
+### Decision
 
-描画の入力には、言語タグと、そろった UI の文字の一式を必ず渡す。view はどの言語の UI の文字も中に持たない。英語の文字と、省いたときの決まりは、kotowari の側だけが持つ。
+The render input is always given a language tag and a complete set of UI strings. view holds no UI strings of any language inside it. Only kotowari's side holds the English strings and the rules for when they are omitted.
 
-view がページに書く文字のうち、文書、参照の表、目次、ほかの言語から来ないものを、UI の文字以外から取らない。
+Of the text view writes on a page, view takes nothing that does not come from the documents, the reference table, the contents or the other languages from anywhere other than the UI strings.
 
-### 確認すること
+### Confirmations
 
-- C-view-languages-3 8種類の部品をすべて使い、古い節と置き換え済み・後回しの参照を持つ文書を、すべての値を目印の付いた文字にした UI の文字で描くと、ページの文字のうち文書、参照の表、目次、ほかの言語から来ないものは、すべて UI の文字の値（数を入れたものを含む）になる
+- C-view-languages-3 When a document that uses all 8 kinds of parts and has stale sections and superseded and deferred references is drawn with UI strings whose values are all marked strings, every text on the page that does not come from the documents, the reference table, the contents or the other languages is a value of the UI strings (including ones with a number put in)
 
-## 数の入る文字は、"{n}" の所に数を入れる
+## Strings that take a number have the number put where "{n}" is
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-数と言葉の並びは、言語で変わる。数を文字の前に置くか後ろに置くかを view が決めると、言語によっては読めない並びになる。
+The order of number and words changes with the language. If view decides whether to put the number before or after the text, some languages end up with an unreadable order.
 
-### 決めたこと
+### Decision
 
-数の入る UI の文字は、数が入る所に "{n}" を書く。view はそれを描くとき、"{n}" をその数に置き換える。"{n}" がちょうど1つあるかは、kotowari の側が設定を読むときに確かめる（kotowari の設定の話題で決める）。
+A UI string that takes a number has "{n}" written where the number goes. When view draws it, view replaces "{n}" with that number. Whether there is exactly one "{n}" is checked by kotowari's side when it reads the configuration (decided in kotowari's configuration topic).
 
-### 確認すること
+### Confirmations
 
-- C-view-languages-4 目次の群の下の文書の数の文字を "全{n}件" にして、目次の群の下に文書を3つ置いて描くと、その目次の群の見出しに "全3件" が描かれる
+- C-view-languages-4 When the string for the number of documents under a contents group is set to "全{n}件" and three documents are placed under a contents group, "全3件" is drawn in that contents group's heading
 
-## どのページにも、ほかの言語の同じページへのリンクを置き、スクリプトは使わない
+## Every page links to the same page in the other languages, without scripts
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-多言語の文書を扱うプロジェクトでは、全体像を言語ごとに作る。言語ごとの読み手が、それぞれ自分の言語のページを読み、ほかの言語へ移れる必要がある。一方で、[どのページにもスクリプトを入れないという一覧のページの決定](navigation.md#view-が返すどのページにもスクリプトを入れない)は変えたくない。
+A project that handles multilingual documents builds the overview per language. Readers of each language need to read the pages in their own language and be able to move to other languages. On the other hand, we do not want to change [the index page's decision not to include scripts in any page](navigation.md#no-page-that-view-returns-contains-a-script).
 
-### 決めたこと
+### Decision
 
-全体像は、先頭の言語のページを今の置き場に、ほかの言語のページを "<言語タグ>/" の下に同じ構成で書く（ページを書くのは kotowari の側で、kotowari の全体像の話題で決める）。
+The overview writes the pages of the first language in the current location, and the pages of the other languages under "<言語タグ>/" with the same structure (writing the pages is kotowari's side, decided in kotowari's overview topic).
 
-view は、どの HTML のページにも、ほかの言語のそれぞれについて、その言語の置き場にある同じ名前のページへのリンクを描く。ほかの言語が無ければ、リンクを描かない。選んだ言語を覚える仕組みは作らず、[どのページにもスクリプトを入れない](navigation.md#view-が返すどのページにもスクリプトを入れない)。
+On every HTML page, view draws, for each of the other languages, a link to the page with the same name in that language's location. If there are no other languages, no link is drawn. No mechanism to remember the chosen language is built, and [no page contains a script](navigation.md#no-page-that-view-returns-contains-a-script).
 
-### 確認すること
+### Confirmations
 
-- C-view-languages-5 ほかの言語に置き場 "en/" の1件があり、文書 "a" があるとき、"a.html" に "en/a.html" へのリンクが、"index.html" に "en/index.html" へのリンクが描かれる
-- C-view-languages-6 ほかの言語があるときも、どのページにも script の要素が無い
-- C-view-languages-7 ほかの言語が空なら、"a.html" にも "index.html" にも、ほかの言語のページへのリンクが無い
+- C-view-languages-5 When the other languages have one entry with location "en/" and there is a document "a", "a.html" has a link to "en/a.html" and "index.html" has a link to "en/index.html"
+- C-view-languages-6 Even when there are other languages, no page has a script element
+- C-view-languages-7 When the other languages are empty, neither "a.html" nor "index.html" has a link to a page in another language
 
-## ほかの言語へのリンクの文字は、その言語自身で書いた言語の名前にする
+## A link to another language is labelled with that language's name written in that language
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-読めない言語のページに来た読み手は、リンクの文字が読めないと、自分の言語のページへ移れない。
+A reader who lands on a page in a language they cannot read cannot move to the page in their own language if they cannot read the link text.
 
-### 決めたこと
+### Decision
 
-ほかの言語のページへのリンクの文字は、リンク先の言語の名前を、その言語自身で書いたものにする。名前は、その言語の UI の文字の1つの鍵から取る。view は、ほかの言語の1件が持つ名前を、そのままリンクの文字にする。
+The text of a link to a page in another language is the name of the target language, written in that language itself. The name is taken from one key of that language's UI strings. view uses the name that an entry of the other languages carries as the link text, as it is.
 
-### 確認すること
+### Confirmations
 
-- C-view-languages-8 ほかの言語の1件の名前が "English" なら、その言語のページへのリンクの文字が "English" になる
+- C-view-languages-8 When the name of an entry of the other languages is "English", the text of the link to that language's page is "English"
 
-## 本文の無い参照は、表示名だけを描き、選んでも何も開かない
+## A reference without a body is drawn as its display name only and opens nothing when selected
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-判断の記録は訳さない。先頭の言語以外のページで判断の記録の参照を開くと、そのページの読み手には読めない文が出る。読めない文が出るより、何も開かないほうが読み手にとってよい。
+Decision records are not translated. If a decision record's reference is opened on a page of a language other than the first, text the page's reader cannot read appears. For the reader, nothing opening is better than unreadable text appearing.
 
-### 決めたこと
+### Decision
 
-参照の表の1件が本文を持たないとき、view はその参照を表示名だけで描き、選んでも何も開かないようにする。どの参照に本文を渡さないか（先頭の言語以外のページの、判断の記録の参照）は、kotowari の側が参照の表を作るときに決める（kotowari の全体像の話題で決める）。
+When an entry of the reference table has no body, view draws that reference with its display name only and makes selecting it open nothing. Which references get no body (the decision-record references on pages of languages other than the first) is decided by kotowari's side when it builds the reference table (decided in kotowari's overview topic).
 
-### 見送った案
+### Rejected options
 
-- 先頭の言語以外のページでも、判断の記録の決定の文を原文のまま開く。そのページの読み手には読めない文になる。
+- On pages of languages other than the first too, open the decision text of the decision record in the original. It would be text the page's reader cannot read.
 
-### 確認すること
+### Confirmations
 
-- C-view-languages-9 参照の表に、表示名が "x A1" で本文が無い1件があり、それを refs に持つ部品を描くと、ページに "x A1" が描かれ、選ぶと開く要素が無い
+- C-view-languages-9 When the reference table has one entry whose display name is "x A1" and that has no body, and a part that has it in refs is drawn, "x A1" is drawn on the page and there is no element that opens when selected

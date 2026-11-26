@@ -1,78 +1,80 @@
-# 決定の文書の言語とガイド
+# Languages of decision documents and guides
 
-決定の文書を何語で持つかと、利用者向けのガイドが古くなったことをどう見つけるかを決める。対の仕組みそのもの（一致の記録、骨組みの比較）は今あるものを使い、ここでは決定の文書への当て方だけを決める。
+English | [日本語](languages-and-guides.ja.md)
 
-## 決定の文書も、多言語の対で持てる
+This document decides which languages decision documents are kept in, and how it is found that a guide for users has become stale. The pairing mechanism itself (agreement records, skeleton comparison) is the existing one; here only how it is applied to decision documents is decided.
 
-状態: 提案
+## Decision documents can also be kept as multilingual pairs
 
-### 問題
+Status: implemented
 
-これまで、IR は英語と日本語の対で持ち、判断の記録は日本語だけで持っていた。この2つを1つの文書にするので、どちらの扱いに寄せるかを決める必要がある。利用者が読んで承認する文と、機械が読む正の文が別の言語になると、承認したものと正が食い違いうる。
+### Problem
 
-### 決めたこと
+Until now, the IR was kept as English and Japanese pairs, and the decision records were kept in Japanese only. Since these two become one document, it has to be decided which treatment to follow. If the text the user reads and approves and the authoritative text the machine reads are in different languages, what was approved and the authoritative text can diverge.
 
-決定の文書も、多言語の対で持てるようにする。対の仕組みは、今あるもの（対のファイル、最後に同じ中身だと確かめたときの両側の内容の識別子を持つ一致の記録、骨組みの比較、ずれたら誤り）をそのまま使う。
+### Decision
 
-機械が読む側（先頭の言語）は、今までどおり設定で決める。先頭の言語はリポジトリで1つとし、決定の文書、ガイド、全体像で同じものを使う。置き場ごとに先頭の言語を変える例外は作らない。
+Decision documents can also be kept as multilingual pairs. The pairing mechanism is used as it is (paired files, an agreement record holding identifiers of the contents of both sides from the last time they were confirmed to say the same thing, skeleton comparison, an error on drift).
 
-kotowari 自身は、英語を先頭にしたまま、日本語の対を持つ。決定の文書は、言語の付かない名前のファイルが英語で、`.ja` の付いたファイルが日本語になる。利用者が承認で読むのは日本語の側で、英語の側と揃っているかは対の検査が見る。
+The side the machine reads (the first language) is decided by the configuration as before. There is one first language per repository, and the same one is used for decision documents, guides and the overview. No exception that changes the first language per location is made.
 
-### 見送った案
+kotowari itself keeps English as the first language and has Japanese pairs. For decision documents, the file whose name has no language is English, and the file with `.ja` is Japanese. What the user reads at approval is the Japanese side, and whether it matches the English side is seen by the pair check.
 
-- 日本語だけで書き、対訳を持たない。書くのも直すのも1つで済むが、日本語を読めない人は決定の理由を読めない。多言語対応は仕組みとして持っておくほうがよい、と利用者が判断した。
-- 以前の決定: kotowari 自身は、決定の文書だけ日本語を先頭にする。利用者が承認した文が機械の読む側になる利点はあるが、ガイドは英語が先頭なので、同じリポジトリの中に先頭の言語の違う置き場ができる。プロジェクトの優先する言語に従って統一し、例外を作らない、と利用者が判断した。
-- 置き場ごとに先頭の言語を設定できるようにする。設定と対の仕組みに手が入り、例外を仕組みとして持つことになる。
-- 先頭の言語をやめ、どの言語の側も対等に読む。指紋を取る側の決め方など、今の仕組みに手が入る。今の仕組みのままで、承認した文を機械が読む側にできる。
+### Rejected options
 
-### 確認すること
+- Write in Japanese only, without a translation. Writing and fixing take only one, but people who cannot read Japanese cannot read the reasons for decisions. The user judged that it is better to have multilingual support as a mechanism.
+- Previous decision: for kotowari itself, only decision documents have Japanese as the first language. This has the advantage that the text the user approved becomes the side the machine reads, but guides have English as the first language, so locations with different first languages would exist within the same repository. The user judged to unify by following the project's preferred language and make no exception.
+- Make the first language configurable per location. The configuration and the pairing mechanism would be changed, and exceptions would be held as a mechanism.
+- Drop the first language and read every language side equally. The current mechanism would be changed, for example how the side that takes the fingerprint is determined. With the current mechanism as is, the approved text can be made the side the machine reads.
 
-- C-core-lang-1 設定に言語が2つ以上あるとき、対の側のファイルが無い決定の文書には、check が誤りを出す
-- C-core-lang-2 決定の文書の片側だけを直して一致の記録を直していなければ、check が誤りを出す
-- C-core-lang-3 確認することの ID とマーカーの照らし合わせは、先頭の言語の側だけで行う
-- C-core-lang-4 対の側の骨組み（見出し、状態の行、確認することの ID）が先頭の側と違えば、check が誤りを出す
+### Confirmations
 
-## 全体像の元データは、決定の文書を指す
+- C-core-lang-1 When the configuration has two or more languages, check reports an error for a decision document whose paired file does not exist
+- C-core-lang-2 If only one side of a decision document is changed and the agreement record is not updated, check reports an error
+- C-core-lang-3 Matching confirmation IDs against markers is done only on the first-language side
+- C-core-lang-4 If the skeleton of the paired side (headings, state lines, confirmation IDs) differs from the first-language side, check reports an error
 
-状態: 提案
+## The overview's source data points at decision documents
 
-### 問題
+Status: proposed
 
-全体像（仕様を図と文で見せるページ）の元データは、扱う IR の話題の文書の一覧と、部品の中からの要求や判断の記録への参照を持っていた。IR と判断の記録が無くなるので、指す相手が要る。
+### Problem
 
-### 決めたこと
+The overview's (a page that shows the specification with diagrams and text) source data held a list of the IR topic documents it covers and references from inside its parts to requirements and decision records. Since the IR and decision records go away, something for it to point at is needed.
 
-全体像の元データは、決定の文書を指す。扱う文書の一覧は、決定の文書のパスで書く。部品の中からの参照は、決定の見出しか、確認することの ID を指す。
+### Decision
 
-古さの見方はガイドと同じにする。節が指す決定の「決めたこと」か「確認すること」が変わったら、その節を古いとする。
+The overview's source data points at decision documents. The list of documents it covers is written as paths of decision documents. References from inside parts point at a decision's heading or at a confirmation ID.
 
-### 見送った案
+Staleness is judged the same way as for guides. If the "Decision" or "Confirmations" of the decision a section points at changes, that section is stale.
 
-- 全体像をこの版でやめる。決定の文書が読める文章になったので、別に見せるページを持たない、という考え方。全体像を使っているリポジトリで、作れなくなる。
+### Rejected options
 
-### 確認すること
+- Discontinue the overview in this version. The idea is that since decision documents have become readable prose, no separate page to show them is kept. Repositories that use the overview could no longer build it.
 
-- C-core-lang-7 全体像の元データの一覧が、無い決定の文書を指していると、check が誤りを出す
-- C-core-lang-8 全体像の部品の参照が、無い決定の見出しか、無い確認することの ID を指していると、check が誤りを出す
-- C-core-lang-9 全体像の節が指す決定の「決めたこと」か「確認すること」が変わると、その節が古いと出る
+### Confirmations
 
-## ガイドは、決めたことと確認することが変わったら古いとする
+- C-core-lang-7 If the list in the overview's source data points at a decision document that does not exist, check reports an error
+- C-core-lang-8 If a reference in an overview part points at a decision heading that does not exist or a confirmation ID that does not exist, check reports an error
+- C-core-lang-9 When the "Decision" or "Confirmations" of the decision an overview section points at changes, that section is reported as stale
 
-状態: 実装済み
+## A guide is stale when the Decision or Confirmations change
 
-### 問題
+Status: implemented
 
-利用者向けのガイドは、仕様のどの項目を写したかをマーカーで持ち、その項目が変わったら見直しを求められる。これまでは、要求の本文から出典の行を除いたものの指紋で見ていた。決定の形が変わるので、どこが変わったら古いとするかを決め直す必要がある。状態を変えただけ、理由を書き足しただけで見直しを求めると、振る舞いが変わっていないのに作業が増える。
+### Problem
 
-### 決めたこと
+A guide for users holds, in markers, which items of the specification it copied, and is asked to be reviewed when those items change. Until now, this was seen through the fingerprint of the requirement body with the source lines removed. Since the form of decisions changes, it has to be decided again which changes make it stale. If a review is asked for when only the state was changed or only a reason was added, work increases even though the behaviour has not changed.
 
-ガイドの側のマーカーは、決定の見出しを指す。決定の「決めたこと」と「確認すること」が変わったら、そのガイドの節を古いとする。状態、問題、見送った案が変わっても、古いとしない。
+### Decision
 
-### 見送った案
+Markers on the guide side point at decision headings. If the "Decision" or "Confirmations" of a decision change, that guide section is stale. If the state, the Problem or the Rejected options change, it is not stale.
 
-- 決定の全部（状態を除く）が変わったら古いとする。振る舞いが変わらない書き足しでも、ガイドの見直しが求められる。
+### Rejected options
 
-### 確認すること
+- Stale when anything in the decision (except the state) changes. A guide review is asked for even for additions that do not change behaviour.
 
-- C-core-lang-5 ガイドが指す決定の「決めたこと」か「確認すること」が変わると、check がそのガイドの節を古いと出す
-- C-core-lang-6 ガイドが指す決定の状態、問題、見送った案だけが変わっても、check はそのガイドの節を古いと出さない
+### Confirmations
+
+- C-core-lang-5 When the "Decision" or "Confirmations" of the decision a guide points at changes, check reports that guide section as stale
+- C-core-lang-6 When only the state, Problem or Rejected options of the decision a guide points at change, check does not report that guide section as stale

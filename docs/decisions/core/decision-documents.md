@@ -1,218 +1,220 @@
-# 決定の文書
+# Decision documents
 
-kotowari が仕様として読む文書の形を決める。何を1つの文書に書くか、1つの決定をどう書くか、決定を変えるときにどう書き直すか、どこに置くかを扱う。確認することとテストの対応は[確認することとテスト](confirmations.md)、訳とガイドは[決定の文書の言語とガイド](languages-and-guides.md)、壁打ちから実装までの進め方は[穴を埋めながら進む工程](workflow.md)、今の形からの切り替えは[古い形からの切り替え](form-switch.md)で決める。
+English | [日本語](decision-documents.ja.md)
 
-## 仕様は、話題ごとの、今有効な決定の文書だけで持つ
+Decides the form of the documents that kotowari reads as the specification. It covers what to write in one document, how to write one decision, how to rewrite a decision when it changes, and where to put the documents. The correspondence between confirmations and tests is decided in [Confirmations and tests](confirmations.md), translations and guides in [Languages of decision documents and guides](languages-and-guides.md), the way of working from brainstorm to implementation in [A workflow that fills gaps as it goes](workflow.md), and the switch from the current form in [Switching from the old form](form-switch.md).
 
-状態: 提案
+## The specification lives only in decision documents, one per topic, holding the decisions now in force
 
-### 問題
+Status: proposed
 
-これまで仕様を2つの層で持っていた。壁打ちごとに足していく判断の記録と、それを今有効な形にまとめ直した IR である。同じ決定を2か所に手で書き、IR の項目が記録のどの決定に基づくかを出典の行で指し、別のセッションの LLM に中身が合っているかを照合させていた。
+### Problem
 
-決まりを1つ変えるには、新しい記録に決定を書き、古い記録の決定に改めた印を付け、IR の文を書き直し、出典を付け替え、照合する。ある要求がなぜそうなっているかを知るには、3つの記録の5つの決定を開く、ということが起きていた。
+Until now the specification was held in two layers: decision records added with each brainstorm, and the IR that restated them in the form now in force. The same decision was written by hand in two places, each IR item pointed with a source line at the decision in the records it was based on, and an LLM in a separate session was made to check that their contents matched.
 
-kotowari を使っている9つのリポジトリの作業の記録を調べた。仕様の文どうしの食い違い・古さ・出典の不備の事例10件のうち6件は、IR を別の層として持つことで生まれたものだった（IR が実装より遅れていた、出典が漏れていた）。リポジトリの写しを、IR を抜いたものと抜かないものの2通り作り、LLM に同じ仕事をさせる実験（43回）では、IR の有無で結果に差は見えなかった。
+To change one rule, you wrote the decision in a new record, put a revised mark on the decision in the old record, rewrote the IR sentence, changed the source, and checked them against each other. To learn why some requirement was the way it was, you ended up opening five decisions in three records.
 
-もう1つの問題は読む側にある。利用者は、承認のときと、しばらく離れたリポジトリに戻ってきたときに、何を決めたか・なぜかを文書を開いて読む。判断の記録は履歴なので、今有効な決まりを知るために古い決定まで読むことになる。IR は決まった文型の要求文と場面で、人が読む前提で書かれていない。
+We examined the work logs of nine repositories that use kotowari. Of 10 cases of conflict, staleness or defective sources among the specification's sentences, 6 arose from holding the IR as a separate layer (the IR lagged behind the implementation, a source was missing). In an experiment (43 runs) in which we made two copies of a repository, one with the IR removed and one with it kept, and had an LLM do the same task, no difference in results was visible between having the IR and not.
 
-### 決めたこと
+The other problem is on the reading side. The user opens the documents and reads what was decided and why at approval time and when coming back to a repository after some time away. The decision records are a history, so to learn the rules now in force you end up reading old decisions too. The IR consists of requirement statements in a fixed sentence pattern and scenarios, and is not written on the assumption that people read it.
 
-仕様は、話題ごとの決定の文書だけで持つ。1つのファイルが1つの話題で、その話題の今有効な決定を並べる。壁打ちごとに足していく記録と、まとめ直した IR は持たない。出典の行と照合も持たない。
+### Decision
 
-決定の文書に書くのは、人が決めたことだけにする。実装する側が根拠を付けて決めた細部（上限の数値、出力の並び順、誤りを出す行の位置など）は書かない。細部の正はコードとテストで、決めた理由はコミットの本文とプルリクエストの本文にある（[実装の途中で見つかった細部は、実装する側が決める](workflow.md#実装の途中で見つかった細部は実装する側が決める)）。
+The specification is held only in decision documents, one per topic. One file is one topic, and it lists that topic's decisions now in force. Records added with each brainstorm, and an IR that restates them, are not kept. Source lines and the cross-check are not kept either.
 
-「決めたこと」には、いつも今の状態を書く。「以前は」「〜に改めた」のような経緯は書かない。経緯は git の履歴にある。なぜそう決めたかを伝えるのに要る経緯だけを、「問題」と「見送った案」に書く。
+A decision document contains only what people decided. Details that the implementing side decided with a reason (numeric limits, the order of output, the position of the line where an error is reported, and so on) are not written. The source of truth for details is the code and the tests, and the reasons for them are in the commit body and the pull request body ([Details found during implementation are decided by the implementing side](workflow.md#details-found-during-implementation-are-decided-by-the-implementing-side)).
 
-### 見送った案
+"Decision" always describes the current state. History such as "previously" or "changed to ..." is not written. The history is in git. Only the history needed to convey why it was decided that way is written, in "Problem" and "Rejected options".
 
-- 以前の決定: 判断の記録は壁打ちごとの別のファイルに残し、上書きしない。改めた決定は足していき、古い行に改めた先へのリンクを付ける。今有効な形は IR に書き、IR の項目は記録の決定を出典に引く。二重に書く手間と照合が要り、今の決まりを知るために古い決定まで読むことになるので、やめた。このとき、話題ごとに1ファイルのノートを現在形で保つ案も検討していて、IR が機械の検査つきで同じ役目を持つので二重になる、として退けていた。IR のほうをやめるので、退けた理由が成り立たなくなり、今回その形を採った。
-- 決まった文型の要求文と場面を持つ形のまま1層にし、理由と見送った案を足す。小さいリポジトリ1つをこの形に移して試した。数え方は成り立ったが、利用者が開いて読んだとき、何を決めたかを読めなかった。
-- 決定は足していく履歴の文章で持ち、今の正は別の文書に置いて、索引で指す。2つの層を手で書くことが残り、古い決定まで読む問題が、索引を引く手間に変わるだけで残る。
+### Rejected options
 
-### 確認すること
+- Previous decision: The decision records are kept in a separate file per brainstorm and are not overwritten. Revised decisions are added, and the old line gets a link to its revision. The form now in force is written in the IR, and each IR item cites a decision in the records as its source. This was dropped because it required writing twice and the cross-check, and because learning the current rules meant reading old decisions too. At that time an option to keep one note file per topic in the present tense was also considered, and it was rejected on the grounds that the IR played the same role with machine checks, so it would be a duplicate. Because the IR is the one being dropped, that reason for rejection no longer holds, and this time that form was adopted.
+- Make it one layer while keeping the form with requirement statements in a fixed sentence pattern and scenarios, and add reasons and rejected options. One small repository was moved to this form as a trial. The counting worked, but when the user opened it and read it, they could not read what had been decided.
+- Hold decisions as text in an accumulating history, put the current source of truth in another document, and point to it through an index. Writing two layers by hand remains, and the problem of reading old decisions merely turns into the effort of looking things up in the index.
 
-- C-core-docs-1 check は、決定の文書の置き場の下の話題の文書を読み、そこに書かれた決定と確認することを数える
-- C-core-docs-2 check は、出典の行と、壁打ちごとの判断の記録を求めない
-- C-core-docs-3 （読んで確認）壁打ちの skill に、決めたことは話題の文書に直接書き、壁打ちごとの記録と IR は書かないと書いてある
-- C-core-docs-4 （読んで確認）壁打ちの skill に、決定の文書に書くのは人が決めたことだけで、実装する側が決めた細部は書かないと書いてある
+### Confirmations
 
-## 1つの決定は、問題・決めたこと・見送った案・確認することの文章で書く
+- C-core-docs-1 check reads the topic documents under the location of decision documents, and counts the decisions and confirmations written in them
+- C-core-docs-2 check does not require source lines or decision records per brainstorm
+- C-core-docs-3 (by reading) The brainstorm skill says that what was decided is written directly in the topic document, and that records per brainstorm and the IR are not written
+- C-core-docs-4 (by reading) The brainstorm skill says that a decision document contains only what people decided, and that details decided by the implementing side are not written
 
-状態: 実装済み
+## Write one decision as text in Problem, Decision, Rejected options and Confirmations
 
-### 問題
+Status: implemented
 
-決定の文書は、人がそのまま読める文章でなければならない。同時に、決めたことが実際に確認されているかを機械が数えられる必要がある。決まった文型の要求文と Given / When / Then の場面は、機械には数えやすいが、人が読んで何を決めたかを掴むのが難しい。1つの要求が複数の決定を束ねていて、理由が10個、見送った案が9個付いた項目もあった。
+### Problem
 
-### 決めたこと
+A decision document must be text that people can read as it is. At the same time, a machine needs to be able to count whether what was decided is actually confirmed. Requirement statements in a fixed sentence pattern and Given / When / Then scenarios are easy for a machine to count, but hard for people to read and grasp what was decided. One requirement bundled several decisions, and there were items with 10 reasons and 9 rejected options attached.
 
-話題の文書は、題名と、その話題が何を扱うかの段落で始める。そのあとに、決定を1つずつ見出しで並べる。見出しは、その決定を一言で言う文にする。1つの見出しが1つの決定で、複数の決定を1つに束ねない。
+### Decision
 
-1つの決定は、次の順で書く。
+A topic document starts with a title and a paragraph on what the topic covers. After that, the decisions are listed one by one under headings. A heading is a sentence that states the decision in a word. One heading is one decision; several decisions are not bundled into one.
 
-| 部分 | 書くこと |
+One decision is written in the following order.
+
+| Part | What to write |
 |---|---|
-| 状態 | 「提案」（決めたが、まだ作っていない）か「実装済み」（作ってあり、今の振る舞い） |
-| 問題 | 何に困っていたか。決めた中身を知らなくても読める文で書く。なぜそう決めたかも、ここと「決めたこと」の文の中に書く |
-| 決めたこと | 今有効な決まりを、普通の文で書く |
-| 見送った案 | 検討して採らなかった案と、採らなかった理由。無ければこの節を置かない。実際に検討していない案を、作って書かない |
-| 確認すること | 決めたことが守られていると、見て確かめられる結果を、1行に1つ書く |
+| Status | "proposed" (decided but not built yet) or "implemented" (built, and the current behaviour) |
+| Problem | What was troubling. Written in sentences that can be read without knowing what was decided. Why it was decided that way is also written here and in the sentences of "Decision" |
+| Decision | The rules now in force, in plain sentences |
+| Rejected options | Options that were considered and not adopted, and why they were not adopted. If there are none, this section is omitted. Options that were not actually considered are not made up and written |
+| Confirmations | Results that can be checked by looking, showing that what was decided is kept, one per line |
 
-決まった文型の要求文と、Given / When / Then の場面は書かない。確認することの行は、人が承認のときに読んで「これは確かめてほしい」と分かる文にする。入力の値や出力の細かい形のような厳密な条件は、その行を指すテストの中に置く。
+Requirement statements in a fixed sentence pattern and Given / When / Then scenarios are not written. A confirmation row is a sentence that people reading it at approval time can recognise as "I want this checked". Strict conditions such as input values or the detailed shape of output are placed in the test that points at that line.
 
-文書の最後に置く「未決」の見出し（[人に戻す問題は、話題の文書の「未決」の節に書く](#人に戻す問題は話題の文書の未決の節に書く)）は、決定として扱わない。
+The "Open" heading placed at the end of the document ([Write questions handed back to people in the "Open" section of the topic document](#write-questions-handed-back-to-people-in-the-open-section-of-the-topic-document)) is not treated as a decision.
 
-決定表（条件と結果の組を表にしたもの）は「決めたこと」の中に Markdown の表で書く。性質（どんな入力でも成り立つこと）は「確認すること」の行として書く。工程や方針の決定のように、確認する振る舞いの無い決定は、「確認すること」を置かずに同じ文書に書いてよい。決定表や性質のための専用の節や、専用の ID の種類は作らない。
+A decision table (a table of condition and result pairs) is written as a Markdown table inside "Decision". A property (something that holds for any input) is written as a line in "Confirmations". A decision with no behaviour to confirm, such as a decision on a workflow or a policy, may be written in the same document without "Confirmations". No dedicated section or dedicated kind of ID is created for decision tables or properties.
 
-### 見送った案
+### Rejected options
 
-- 以前の決定: 要求は決まった文型で書き、種類・確認の方法・出典の行を持たせる。場面は Given / When / Then で書き、要求を指す。決定表と性質は専用の見出しと ID の種類を持つ。人が読めないので、やめた。
-- 以前の決定: 製品の振る舞いでない決定（工程、ビルド、リリースの決まり）は IR に書かず、判断の記録にだけ置く。記録を持たなくなるので、確認することの無い決定として同じ文書に書くことにした。
+- Previous decision: Requirements are written in a fixed sentence pattern and carry a kind, a confirmation method and a source line. Scenarios are written as Given / When / Then and point at requirements. Decision tables and properties have dedicated headings and kinds of ID. This was dropped because people could not read it.
+- Previous decision: Decisions that are not product behaviour (rules on the workflow, the build, releases) are not written in the IR and are kept only in the decision records. Because the records are no longer kept, these are now written in the same document as decisions without confirmations.
 
-### 確認すること
+### Confirmations
 
-- C-core-docs-5 状態の行が「提案」でも「実装済み」でもない決定には、check が誤りを出す
-- C-core-docs-6 「問題」か「決めたこと」の節が無い決定には、check が誤りを出す
-- C-core-docs-7 「見送った案」と「確認すること」の節が無い決定には、check が誤りを出さない
-- C-core-docs-8 題名のあとに、話題が何を扱うかの段落が無い文書には、check が誤りを出す
+- C-core-docs-5 check reports an error for a decision whose status line is neither "proposed" nor "implemented"
+- C-core-docs-6 check reports an error for a decision that lacks the "Problem" or "Decision" section
+- C-core-docs-7 check reports no error for a decision that lacks the "Rejected options" and "Confirmations" sections
+- C-core-docs-8 check reports an error for a document that has no paragraph on what the topic covers after the title
 
-## 事実が変わったら書き直し、決定を覆すときは古い決定を見送った案に書く
+## Rewrite when a fact changes; when overturning a decision, write the old decision in Rejected options
 
-状態: 提案
+Status: proposed
 
-### 問題
+### Problem
 
-今有効な決定だけを置くと決めると、決定を変えたときに古いものをどうするかが問題になる。黙って書き換えると、なぜ変えたかが git の中にしか残らず、同じ案をもう一度検討することになる。古いものを残すと、今の決まりを知るために古いものまで読むことになる。
+Once it is decided to keep only the decisions now in force, what to do with the old one when a decision changes becomes a problem. If it is rewritten silently, why it changed remains only in git, and the same option gets considered again. If the old one is kept, learning the current rules means reading the old ones too.
 
-### 決めたこと
+### Decision
 
-決定の中の事実（値、名前、パス）が変わったときは、その決定をその場で書き直す。
+When a fact in a decision (a value, a name, a path) changes, the decision is rewritten in place.
 
-決定そのものを覆すときは、新しい決定を立てる。新しい決定の「見送った案」に、古い決定と、なぜやめたかを「以前の決定」として書く。古い決定の理由と見送った案のうち、今も意味のあるものは新しい決定に移す。古い決定の本文は消す。古い決定の確認することを指していたテストは、新しい決定の確認することを指すように直すか、確かめるものが無くなったなら消す。
+When the decision itself is overturned, a new decision is set up. In the new decision's "Rejected options", the old decision and why it was dropped are written as a "Previous decision". Of the old decision's reasons and rejected options, those that still mean something are moved to the new decision. The body of the old decision is deleted. Tests that pointed at the old decision's confirmations are changed to point at the new decision's confirmations, or deleted if nothing is left to check.
 
-実装してみて、決定の文が事実と合わないと分かったとき（文字どおりには成り立たない、など）は、決めた向きが変わらなければ、事実の書き直しとして文を直す。
+When implementation shows that the sentences of a decision do not match the facts (they do not hold literally, for example), and the direction decided does not change, the sentences are corrected as a rewrite of facts.
 
-### 見送った案
+### Rejected options
 
-- 覆した古い決定を、そのまま凍結した木へ移す。凍結した木が増え続け、agent が検索で拾う量も増える。
-- 覆した古い決定に「覆された」と書いて、同じ文書に残す。今の決まりを知るために古いものまで読むことが、同じファイルの中で起きる。
-- 状態も経緯も持たず、その場で書き換えて、履歴は git だけにする。決めたことを黙って書き換えられ、理由が git の中にしか残らない。
+- Move the overturned old decision as it is to the frozen tree. The frozen tree keeps growing, and so does the amount an agent picks up by searching.
+- Write "overturned" on the overturned old decision and keep it in the same document. Reading old ones to learn the current rules happens inside the same file.
+- Keep neither status nor history, rewrite in place, and leave the history to git alone. What was decided can be rewritten silently, and the reasons remain only in git.
 
-### 確認すること
+### Confirmations
 
-- C-core-docs-9 （読んで確認）壁打ちの skill に、決定を覆すときは新しい決定を立て、古い決定となぜやめたかを見送った案に書き、古い本文を消すと書いてある
-- C-core-docs-10 （読んで確認）実装の skill に、実装して分かった事実と決定の文が合わないときは、決めた向きが変わらない範囲で文を直し、プルリクエストの本文に書くと書いてある
+- C-core-docs-9 (by reading) The brainstorm skill says that when overturning a decision, a new decision is set up, the old decision and why it was dropped are written in Rejected options, and the old body is deleted
+- C-core-docs-10 (by reading) The implementation skill says that when the facts found by implementing do not match the sentences of a decision, the sentences are corrected as long as the direction decided does not change, and this is written in the pull request body
 
-## ほかの決定を指すときは、見出しへリンクを張る
+## To refer to another decision, link to its heading
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-ある決定が、別の話題の決定や、複数の決定が使う定義に頼ることがある。ID を文の中に並べて指すと、読みにくくなる。
+A decision sometimes relies on a decision in another topic, or on a definition used by several decisions. Pointing at them by listing IDs in the sentences makes the text hard to read.
 
-### 決めたこと
+### Decision
 
-ほかの決定を指すときは、文の中から、相手の決定の見出しへ Markdown のリンクを張る。定義は、それを決めた決定の中に書き、使う側はそこへリンクする。定義だけの節は作らない。語の意味は、今までどおり用語集に置く。
+To refer to another decision, a Markdown link is placed from within the sentence to the heading of that decision. A definition is written in the decision that decided it, and the side that uses it links there. No section consisting only of definitions is created. The meanings of words stay in the glossary, as before.
 
-見出しへのリンクの書き方は、GitHub が Markdown を表示するときの規則に合わせる。リンクの先の文書や見出しが無ければ、check が誤りにする。見出しの文を変えるときは、それを指すリンクとガイドのマーカーも、同じ変更で直す。
+How links to headings are written follows GitHub's rules for rendering Markdown. If the document or heading a link points to does not exist, check treats it as an error. When the text of a heading is changed, the links and guide markers that point at it are fixed in the same change.
 
-### 見送った案
+### Rejected options
 
-- 決定に ID を付け、文の中に ID を書いて指す。見出しを変えても切れないが、文の中に ID が並び、読みにくくなる。
+- Give decisions IDs and point at them by writing IDs in the sentences. This does not break when a heading changes, but IDs line up in the sentences and make them hard to read.
 
-### 確認すること
+### Confirmations
 
-- C-core-docs-11 決定の文書の中のリンクが、無い文書か無い見出しを指していると、check が誤りを出す
+- C-core-docs-11 check reports an error when a link in a decision document points at a document or heading that does not exist
 
-## 同じ決定が2つの話題に出てくるときは、振る舞いが見える側に書く
+## When the same decision appears in two topics, write it on the side where the behaviour is visible
 
-状態: 提案
+Status: proposed
 
-### 問題
+### Problem
 
-1つの決定が、2つの話題の両方に関わることがある。両方に書くと、片方だけ直して食い違う。
+One decision sometimes concerns two topics. If it is written in both, one gets fixed and not the other, and they conflict.
 
-### 決めたこと
+### Decision
 
-2つの話題にまたがる決定は、振る舞いが見える側（確認することの行を置ける側）の話題に書く。もう片方からは、[見出しへリンクを張る](#ほかの決定を指すときは見出しへリンクを張る)。
+A decision that spans two topics is written in the topic on the side where the behaviour is visible (the side where confirmation rows can be placed). From the other one, [a link is placed to the heading](#to-refer-to-another-decision-link-to-its-heading).
 
-### 確認すること
+### Confirmations
 
-- C-core-docs-17 （読んで確認）壁打ちの skill に、2つの話題にまたがる決定は振る舞いが見える側に書き、もう片方からリンクすると書いてある
+- C-core-docs-17 (by reading) The brainstorm skill says that a decision spanning two topics is written on the side where the behaviour is visible, and linked from the other one
 
-## 用語集は人が読む文書として残し、用語の検査はやめる
+## Keep the glossary as a document for people, and drop the term check
 
-状態: 提案
+Status: proposed
 
-### 問題
+### Problem
 
-これまで check は、仕様の文の中でバッククォートで囲んだ語を用語として読み、用語集に無ければ誤りにしていた。決定の文書は普通の文として読める文章なので、用語を囲まない。囲まなければ、どの語が用語かを機械は見分けられない。曖昧な語（「適切に」「必要に応じて」など）を見つける検査は、語の一覧と照らすだけなので、囲みが無くても動く。
+Until now, check read words enclosed in backquotes in the specification's sentences as terms, and treated them as errors if they were not in the glossary. Decision documents are text that reads as plain sentences, so terms are not enclosed. Without enclosure, a machine cannot tell which words are terms. The check that finds vague words ("appropriately", "as needed", and so on) only compares against a word list, so it works without enclosure.
 
-### 決めたこと
+### Decision
 
-用語の検査（用語集に無い語を誤りにする）は、決定の文書ではしない。曖昧語の検査は、決定の「決めたこと」と「確認すること」に当てる。
+The term check (treating words not in the glossary as errors) is not done on decision documents. The vague-word check is applied to a decision's "Decision" and "Confirmations".
 
-用語集は、人が読む文書として残す。置き場は、まとまりのフォルダの中の `CONTEXT.md`（`docs/decisions/<まとまり>/CONTEXT.md`）とする。check は、これを話題の文書として読まず、中身を検査しない。
+The glossary is kept as a document that people read. Its location is `CONTEXT.md` in the group's folder (`docs/decisions/<まとまり>/CONTEXT.md`). check does not read it as a topic document and does not check its contents.
 
-### 見送った案
+### Rejected options
 
-- 以前の決定: 仕様の文の中の用語はバッククォートで囲み、用語集に無い語を誤りにする。決定の文書の文に囲みが戻り、普通の文として読みにくくなるので、やめた。
-- 曖昧語の検査もやめる。曖昧な語が入っても check は何も出さず、承認で人が見るだけになる。
-- 用語集のファイルを持たず、語の意味はそれを決めた決定の中に書く。語の意味を探すには決定を探すことになる。
+- Previous decision: Terms in the specification's sentences are enclosed in backquotes, and words not in the glossary are treated as errors. This was dropped because enclosures would come back into the sentences of decision documents and make them hard to read as plain sentences.
+- Drop the vague-word check too. Even when a vague word gets in, check reports nothing, and only people see it at approval.
+- Keep no glossary file, and write the meaning of a word in the decision that decided it. Looking for a word's meaning means looking for the decision.
 
-### 確認すること
+### Confirmations
 
-- C-core-docs-18 決定の「決めたこと」か「確認すること」に曖昧語があると、check が指摘を出す
-- C-core-docs-19 決定の「問題」と「見送った案」に曖昧語があっても、check は指摘を出さない
-- C-core-docs-20 決定の文書の置き場のまとまりのフォルダにある `CONTEXT.md` を、check は話題の文書として読まず、題名のあとの段落や決定の形を求めない
+- C-core-docs-18 check reports a finding when a decision's "Decision" or "Confirmations" contains a vague word
+- C-core-docs-19 check reports no finding even when a decision's "Problem" or "Rejected options" contains a vague word
+- C-core-docs-20 check does not read `CONTEXT.md` in a group's folder under the location of decision documents as a topic document, and does not require a paragraph after the title or the form of decisions from it
 
-## 人に戻す問題は、話題の文書の「未決」の節に書く
+## Write questions handed back to people in the "Open" section of the topic document
 
-状態: 提案
+Status: proposed
 
-### 問題
+### Problem
 
-これまで、人に戻す問題は別の文書（問題の記録）に書き、実装のループの中の整合の段は、実行ごとに新しい判断の記録を書いていた。足していく記録を持たなくなるので、行き先が要る。
+Until now, questions handed back to people were written in a separate document (the issue record), and the consistency phase inside the implementation loop wrote a new decision record on each run. Because accumulating records are no longer kept, they need somewhere to go.
 
-### 決めたこと
+### Decision
 
-まだ決まっていないことと、人に戻す問題は、関係する話題の文書の最後の「未決」の節に、何が決まっていないかと、誰がいつ決めるかを書く。問題の記録という別の文書は持たない。
+What is not decided yet, and questions handed back to people, are written in the "Open" section at the end of the related topic document, stating what is not decided and who decides it and when. No separate document such as the issue record is kept.
 
-「未決」に書くのは、人が決めることだけにする。実装する側が決めてよい細部は書かない。
+Only what people decide is written in "Open". Details that the implementing side may decide are not written.
 
-「完了」（complete）は、check の誤りが0で、どの話題の文書にも「未決」の項目が無いこと、とする。状態が「提案」のまま残っている決定があっても、完了かどうかは変わらない。
+"Complete" (complete) means that check has zero errors and no topic document has any item in "Open". Decisions remaining in the "proposed" status do not change whether it is complete.
 
-### 見送った案
+### Rejected options
 
-- 以前の決定: 人に戻す問題は、IR の置き場の問題の記録（FLAGS.md）に項目として書く。決定の文書とは別の形の文書が1つ残るので、やめた。
+- Previous decision: Questions handed back to people are written as items in the issue record (FLAGS.md) in the IR's location. This was dropped because one document in a form different from decision documents would remain.
 
-### 確認すること
+### Confirmations
 
-- C-core-docs-12 「未決」の節に項目が1つでもあれば、status の complete は false になる
-- C-core-docs-13 check の誤りが0で、「未決」の項目がどの文書にも無ければ、status の complete は true になる
+- C-core-docs-12 If the "Open" section has even one item, complete in status is false
+- C-core-docs-13 If check has zero errors and no document has any "Open" item, complete in status is true
 
-## 決定の文書は docs/decisions に置き、古い形の文書は凍結した木へ移す
+## Put decision documents in docs/decisions, and move documents in the old form to the frozen tree
 
-状態: 提案
+Status: proposed
 
-### 問題
+### Problem
 
-決定の文書をどこに置くかと、切り替える前の古い形の文書（IR、判断の記録、ADR）をどう扱うかを決める必要がある。古い文書を今の決まりの根拠として読むと、取り違えが起きる。
+It is necessary to decide where to put decision documents, and how to handle documents in the old form from before the switch (the IR, decision records, ADRs). Reading old documents as the basis for the current rules leads to mix-ups.
 
-### 決めたこと
+### Decision
 
-決定の文書は `docs/decisions/` の下に、話題ごとのファイルで置く。クレートごとのまとまり（core、schema、view）は、その下のディレクトリにする。置き場は kotowari の設定ファイルで変えられる。
+Decision documents are placed under `docs/decisions/`, one file per topic. The groups per crate (core, schema, view) are directories under it. The location can be changed in kotowari's configuration file.
 
-切り替える前の古い形の文書は、消さずに `docs/frozen/` へ移す。先頭に「今の決まりの根拠として読まない。編集しない」と書いた案内を置き、検索の道具が既定で読み飛ばす設定に入れる。check は凍結した木を読まない。凍結した木に入るのは、切り替える前の古い形の文書だけで、あとから足さない。
+Documents in the old form from before the switch are not deleted but moved to `docs/frozen/`. At the top, a notice saying "Do not read this as the basis for the current rules. Do not edit it" is placed, and the tree is added to the settings that search tools skip by default. check does not read the frozen tree. Only documents in the old form from before the switch go into the frozen tree; nothing is added later.
 
-### 見送った案
+### Rejected options
 
-- 古い形の文書は消して、経緯は git の履歴で読む。移すときに落とした細部や理由を確かめたくなったとき、git から掘ることになる。
+- Delete documents in the old form and read the history in git. When you want to check details or reasons dropped during the move, you end up digging through git.
 
-### 確認すること
+### Confirmations
 
-- C-core-docs-14 check は、凍結した木の下の文書を読まず、そこにある古い形の ID や誤りを数えない
-- C-core-docs-15 設定で決定の文書の置き場を変えると、check はその置き場を読む
-- C-core-docs-16 （読んで確認）凍結した木の先頭に、今の決まりの根拠として読まない・編集しないと書いた案内がある
+- C-core-docs-14 check does not read documents under the frozen tree, and does not count old-form IDs or errors there
+- C-core-docs-15 When the location of decision documents is changed in the configuration, check reads that location
+- C-core-docs-16 (by reading) At the top of the frozen tree there is a notice saying not to read it as the basis for the current rules and not to edit it

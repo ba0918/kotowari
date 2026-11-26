@@ -1,125 +1,127 @@
-# 部品
+# Parts
 
-view が描ける部品の種類、部品のスキーマの公開、部品の幅、flow の部品の描き方を決める。部品の中身の形の正は部品のスキーマで、view は形を検査しない。
+English | [日本語](parts.ja.md)
 
-## 部品の種類は、view が持つ8種の固定の一覧にする
+This decides the kinds of parts view can draw, the publishing of the part schemas, the width of parts, and how flow parts are drawn. The source of truth for the shape of part contents is the part schemas, and view does not validate the shape.
 
-状態: 実装済み
+## The kinds of parts are a fixed list of eight held by view
 
-### 問題
+Status: implemented
 
-全体像の文書を普通の Markdown で出すと、見た目が貧弱で、読む負担が大きい。固定の形式から分かりやすい出力ができれば、この問題は解決する。そこで、固定した種類の部品の中から文書ごとに選んで並べ、決まった描き方で HTML にする形を採った。この方向は、2つの文書を使い捨ての描画で作ったモックで確かめ、内容は良いが見た目は調整が要ると判断した。
+### Problem
 
-種類をその場で作らせず固定の一覧にする理由は、「基本は推奨でよく、必要になったら検討する」としか残っていない。
+If overview documents are output as ordinary Markdown, they look poor and are a heavy burden to read. If clear output can be made from a fixed format, this problem is solved. So the form adopted is to choose parts per document from a fixed set of kinds, arrange them, and turn them into HTML with a fixed way of drawing. This direction was checked with a mock that built two documents with a throwaway renderer, and the judgment was that the content was good but the look needed adjusting.
 
-status の札は、状態が一目で見分けられてこそ役に立つ。札の語を利用者の言語に依存させると、英語で書く利用者も元データに日本語を書くことになる。
+The only reason on record for making the kinds a fixed list instead of having them created on the spot is "the recommendation is fine as the default; consider it when it becomes necessary".
 
-### 決めたこと
+The labels of status are useful only when the states can be told apart at a glance. If the words of the labels depended on the user's language, users who write in English would also have to write Japanese in the source data.
 
-部品の種類は view が持つ固定の一覧にする。LLM がその場で新しい種類を作ることはできない。新しい種類は、必要になったときに仕様の変更として足す。フローチャートやシーケンス図のような図の部品は、必要になったときに検討する。
+### Decision
 
-最初の種類は、モックの2つの文書がこれで書けた次の8種とする。
+The kinds of parts are a fixed list held by view. An LLM cannot create a new kind on the spot. A new kind is added as a change to the specification when it becomes necessary. Diagram parts such as flowcharts and sequence diagrams are considered when they become necessary.
 
-| 種類の名前 | 描くもの |
+The initial kinds are the following eight, with which the two documents of the mock could be written.
+
+| Kind name | What it draws |
 |---|---|
-| lead | 結論と要約。[文書の冒頭に置く](rendering.md#文書のページは題名アウトラインlead冒頭の部品節の順に描く) |
-| flow | 流れ図。箱を並べた列が、左から右へ流れる |
-| steps | 段階 |
-| cards | カード |
-| status | 状態の一覧。札は "decided"、"planned"、"open"、"dropped" の4つ |
-| compare | 前と後 |
-| decisions | 判断のつながり |
-| quiz | 問い |
+| lead | Conclusion and summary. [Placed at the top of a document](rendering.md#draw-a-document-page-in-the-order-title-outline-lead-opening-parts-sections) |
+| flow | A flow diagram. Columns of boxes flow from left to right |
+| steps | Stages |
+| cards | Cards |
+| status | A list of states. The labels are the four "decided", "planned", "open", "dropped" |
+| compare | Before and after |
+| decisions | A chain of decisions |
+| quiz | Questions |
 
-status の札は、元データには "decided"、"planned"、"open"、"dropped" の語で書き、ページには [UI の文字](languages.md#view-は-ui-の文字を中に持たず描画の入力から受け取る)から取った、その言語の文字で描く。4つの状態は、互いに見分けられる見た目で描く。
+The labels of status are written in the source data with the words "decided", "planned", "open", "dropped", and drawn on the page in that language's text taken from the [UI strings](languages.md#view-holds-no-ui-strings-itself-and-receives-them-from-the-render-input). The four states are drawn with looks that can be told apart from each other.
 
-### 確認すること
+### Confirmations
 
-- C-view-parts-1 8種の部品それぞれが、表の「描くもの」のとおりに描かれる
-- C-view-parts-2 status の部品は、4つの札それぞれを UI の文字のその札の文字で描き、札の文字を除いても4つの見た目が互いに違う
+- C-view-parts-1 Each of the eight kinds of parts is drawn as described in the table's "What it draws"
+- C-view-parts-2 The status part draws each of the four labels with that label's text from the UI strings, and even without the label text the four looks differ from each other
 
-## 部品の形の正は、view が埋め込んで公開する部品のスキーマにする
+## The source of truth for the shape of parts is the part schemas that view embeds and publishes
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-部品の中身の形の知識は、形を検査する側と描く側の2か所に出る。2か所に書くと食い違う。正を1つに決め、テストで揃える必要がある。
+Knowledge of the shape of part contents appears in two places: the side that validates the shape and the side that draws it. Writing it in two places makes them diverge. One source of truth has to be chosen and kept in line by tests.
 
-view は自分の入力を描くエンジンなので、自分の入力の形を知らないのはおかしい。一方で、view は描画だけを扱うと決めてあり（[view は kotowari を知らず、描くものをすべて描画の入力で受け取る](rendering.md#view-は-kotowari-を知らず描くものをすべて描画の入力で受け取る)）、部品の中身の検査まで持つと、その範囲を超える。
+Since view is an engine that draws its own input, it is odd for it not to know the shape of its own input. On the other hand, view has been decided to handle rendering only ([view does not know kotowari and receives everything it draws in the rendering input](rendering.md#view-does-not-know-kotowari-and-receives-everything-it-draws-in-the-rendering-input)), and holding validation of part contents as well would go beyond that scope.
 
-### 決めたこと
+### Decision
 
-部品の中身の形の正は部品のスキーマとし、JSON Schema で書く。スキーマも元データも書くのは LLM なので、JSON Schema を読み書きする負担は問題にならない。
+The source of truth for the shape of part contents is the part schemas, written in JSON Schema. Since an LLM writes both the schemas and the source data, the burden of reading and writing JSON Schema is not a problem.
 
-部品のスキーマは、view のクレートが自分の入力の形として持ち、クレートの中に埋め込んで、種類の名前ごとにスキーマを返す公開の関数で渡す。view は公開するだけで、部品の中身を検査しない。検査は kotowari の側が、view から受け取ったスキーマで行う（全体像の元データの話題の決定）。view は検査済みの値から描くだけにする。
+The view crate holds the part schemas as the shape of its own input, embeds them in the crate, and hands them out through a public function that returns the schema for each kind name. view only publishes them and does not validate part contents. Validation is done by the kotowari side with the schemas received from view (a decision of the overview source data topic). view only draws from validated values.
 
-スキーマと view の描画が食い違わないことは、このリポジトリのテストで守る。種類ごとに、スキーマに合う部品の例を1つ以上持ち、すべての例がスキーマに合い、view がそれを失敗せずに描くことを確かめる。
+That the schemas and view's rendering do not diverge is guarded by this repository's tests. For each kind, there is at least one example part that matches the schema, and the tests check that every example matches the schema and that view draws it without failing.
 
-JSON Schema は、知らない鍵を既定で許す。この穴も、このリポジトリのテストで塞ぐ。部品のスキーマの中の型が object の部分すべてが "additionalProperties": false を宣言していることを確かめる。
+JSON Schema allows unknown keys by default. This hole is also closed by this repository's tests. They check that every part of the part schemas whose type is object declares "additionalProperties": false.
 
-### 見送った案
+### Rejected options
 
-- JSON Type Definition で書く（クレートを使うか、自前で実装する）。使えるクレートが長く更新されていない。
-- 部品のスキーマを ".kotowari/schemas/overview/" に置く。view が自分の入力の形を知らないことになる。
-- 部品の中身の検査を view に持たせる。view は描画だけを扱うと決めた範囲を超える。
-- view は部品の型を公開し、kotowari の側がその型への読み込みで検査する。部品の中身の決まりもスキーマとして宣言できるほうが自然で、そこだけをコードで判定するのは無理がある、と利用者が判断した。
+- Write them in JSON Type Definition (using a crate or implementing it ourselves). The usable crates have not been updated for a long time.
+- Put the part schemas in ".kotowari/schemas/overview/". view would then not know the shape of its own input.
+- Give view validation of part contents. It goes beyond the scope decided for view, which is handling rendering only.
+- view publishes types for the parts, and the kotowari side validates by loading into those types. The user judged that it is more natural for the rules of part contents to also be declarable as a schema, and that judging only that part in code is unreasonable.
 
-### 確認すること
+### Confirmations
 
-- C-view-parts-3 view の公開の関数に8種の種類の名前を渡すと、それぞれの部品のスキーマが JSON Schema で返る
-- C-view-parts-4 部品のスキーマに、"additionalProperties": false を宣言しない型が object の部分が1つでもあれば、このリポジトリのテストが落ちる
-- C-view-parts-5 種類ごとに、スキーマに合う部品の例が1つ以上あり、すべての例がスキーマに合い、view が失敗せずに描く
+- C-view-parts-3 Passing each of the eight kind names to view's public function returns that part's schema in JSON Schema
+- C-view-parts-4 If the part schemas contain even one part whose type is object and that does not declare "additionalProperties": false, this repository's tests fail
+- C-view-parts-5 For each kind, there is at least one example part that matches the schema, every example matches the schema, and view draws it without failing
 
-## レイアウトの指定は、部品の幅を半分にする指定だけにする
+## The only layout setting is one that makes a part half width
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-位置や色まで LLM が指定できると、毎回ばらばらになり、描画で揃える意味が薄れる。細部は実装しながら調整することになる。
+If an LLM can specify position and even color, the result varies every time, and the point of making the look consistent through rendering weakens. The details will be adjusted during implementation.
 
-### 決めたこと
+### Decision
 
-レイアウトの指定は、部品の幅を半分にする指定だけにする。元データの部品に "width": "half" と書き、同じ節の中で隣り合う半分の部品を左右に並べる。幅の指定の無い部品は、節の幅いっぱいに描く。部品のスキーマが "width" の値に許すのは "half" だけにする。足すものは、実装しながら決める。
+The only layout setting is one that makes a part half width. A part in the source data has "width": "half" written on it, and adjacent half parts in the same section are placed side by side. A part with no width setting is drawn at the full width of the section. The part schemas allow only "half" as the value of "width". Anything to add is decided during implementation.
 
-### 確認すること
+### Confirmations
 
-- C-view-parts-6 どの部品のスキーマも、"width" の値として "half" だけを許す
-- C-view-parts-7 同じ節の中で続けて置いた "width": "half" の部品2つは左右に並んで描かれ、幅の指定の無い部品は節の幅いっぱいに描かれる
+- C-view-parts-6 Every part schema allows only "half" as the value of "width"
+- C-view-parts-7 Two "width": "half" parts placed in a row in the same section are drawn side by side, and a part with no width setting is drawn at the full width of the section
 
-## flow の1つの列の箱は並列を表し、順番は列から列への流れだけで表す
+## Boxes in one column of a flow mean parallel; order is shown only by the flow from column to column
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-flow の1つの列に縦に並べた箱が、順番なのか並列なのかを見分けられず、意味がどこにも決まっていなかった。
+Whether boxes stacked vertically in one column of a flow meant an order or parallel items could not be told, and the meaning was not decided anywhere.
 
-### 決めたこと
+### Decision
 
-flow の1つの列に縦に並べた箱は、同じ段階に並ぶもの（並列）を表す。順番は、列から列への左から右の流れだけで表す。それが読めるように、1つの列の箱を1つの囲みの中に描き、矢印は列と列の間にだけ置き、同じ列の箱の間には置かない。
+Boxes stacked vertically in one column of a flow represent things at the same stage (parallel). Order is represented only by the left-to-right flow from column to column. So that this can be read, the boxes of one column are drawn inside one enclosure, and arrows are placed only between columns, never between boxes in the same column.
 
-列の囲みと矢印の具体的な見た目は、実装に任せる。画面での見え方は view が返す文字列の単体テストでは確かめられないので、人が描いたページを見て確かめる。
+The concrete look of the column enclosures and arrows is left to the implementation. How it looks on screen cannot be checked by unit tests of the strings view returns, so a person checks it by looking at a drawn page.
 
-### 確認すること
+### Confirmations
 
-- C-view-parts-8 （読んで確認）2つ以上の列があり、1つの列に箱を2つ以上縦に並べた flow の部品を描き、ブラウザで開くと、1つの列の箱が1つの囲みの中にあり、矢印が列と列の間にだけあって、同じ列の箱の間に無い
+- C-view-parts-8 (by reading) Draw a flow part with two or more columns and two or more boxes stacked vertically in one column, and open it in a browser: the boxes of one column are inside one enclosure, and the arrows are only between columns, not between boxes in the same column
 
-## 狭い画面では、flow の列を上から下に積む
+## On narrow screens, stack the columns of a flow from top to bottom
 
-状態: 実装済み
+Status: implemented
 
-### 問題
+### Problem
 
-flow は列を横に詰めて描くので、画面の幅が足りないと箱が重なる。
+Because a flow draws its columns packed side by side, boxes overlap when the screen is not wide enough.
 
-### 決めたこと
+### Decision
 
-狭い画面では、flow の列を上から下に積み、列と列の間の矢印を下向きにする。箱は重ねない。
+On narrow screens, the columns of a flow are stacked from top to bottom, and the arrows between columns point downward. Boxes do not overlap.
 
-広い画面と狭い画面の境目の幅と、矢印の形は、実装に任せる。画面の幅で変わる見え方は単体テストでは確かめられないので、人が広い幅と狭い幅で描いたページを見て確かめる。
+The width at the boundary between wide and narrow screens and the shape of the arrows are left to the implementation. A look that changes with screen width cannot be checked by unit tests, so a person checks it by looking at a drawn page at a wide width and at a narrow width.
 
-### 確認すること
+### Confirmations
 
-- C-view-parts-9 （読んで確認）2つ以上の列がある flow の部品を描き、ブラウザで狭い幅で開くと、列が上から下に積まれ、列と列の間の矢印が下を向き、箱が重ならない
+- C-view-parts-9 (by reading) Draw a flow part with two or more columns and open it in a browser at a narrow width: the columns are stacked from top to bottom, the arrows between columns point downward, and boxes do not overlap

@@ -1,144 +1,146 @@
-# 穴を埋めながら進む工程
+# A workflow that fills gaps as it goes
 
-壁打ちから実装、マージまでの進め方のうち、仕様に書いていないことが見つかったときに、誰がどこで決めるかを決める。仕様を先に完成させようとせず、穴は出る前提で進める。ここで決めたことは、工程の skill の文に書く。決定の文書の形は[決定の文書](decision-documents.md)、テストとの対応は[確認することとテスト](confirmations.md)で決める。
+English | [日本語](workflow.ja.md)
 
-kotowari を使っている9つのリポジトリの作業の記録から、仕様の穴が出た事例65件を読んで分けた。人の方針や前提と、agent の推奨や決めた仕様がずれて人が訂正したものが22件、実装やレビューの途中で出た未定の細部が16件、使って初めて分かった見え方・使い勝手が15件、仕様の文どうしの食い違い・古さ・出典の不備が10件、その他が2件だった。事例は調査した側の選抜で、分類は1人の読みである。下の決定は、この種類ごとの手当てになっている。
+This document decides, for the way work proceeds from the brainstorm through implementation to the merge, who decides and where when something the specification does not say is found. It does not try to complete the specification first; it proceeds on the premise that gaps will appear. What is decided here is written in the text of the workflow skills. The form of decision documents is decided in [Decision documents](decision-documents.md), and the correspondence with tests in [Confirmations and tests](confirmations.md).
 
-## 実装の途中で見つかった細部は、実装する側が決める
+From the work records of nine repositories that use kotowari, 65 cases where a gap in the specification appeared were read and classified. In 22 the person's policy or premise differed from the agent's recommendation or the decided specification and the person corrected it; 16 were undecided details that came up during implementation or review; 15 were matters of appearance or usability found only through use; 10 were contradictions between sentences of the specification, staleness, or faulty sources; and 2 were other. The cases were selected by the side that did the survey, and the classification is one person's reading. The decisions below are the remedy for each of these kinds.
 
-状態: 提案
+## Details found during implementation are decided by the implementing side
 
-### 問題
+Status: proposed
 
-実装やレビューの途中で、仕様に書いていない細部が見つかる。これまでは人に聞いて、仕様に書いてから進めていた。調べた16件のうち12件は、人に聞いた答えが推奨の採用だった。止めて聞いても、答えはほぼ変わらない。
+### Problem
 
-決めたことどうしがぶつかる、または2通りに読める、と実装の途中で分かることもある。読み方の確認を人に戻した事例も、答えは推奨の採用だった。
+During implementation or review, details that the specification does not say are found. Until now, the person was asked, and the answer was written into the specification before proceeding. In 12 of the 16 cases examined, the answer the person gave was to adopt the recommendation. Stopping to ask hardly changes the answer.
 
-### 決めたこと
+It also turns out during implementation that decisions conflict with each other, or can be read in two ways. In the cases where the confirmation of the reading was handed back to the person, the answer was also to adopt the recommendation.
 
-実装やレビューの途中で見つかった、決定の文書に書いていない細部は、実装する側が根拠を付けて決める。人には聞かない。決めたことどうしがぶつかる、または2通りに読めるときも、実装する側が根拠を付けて読みを決める。
+### Decision
 
-人に戻すのは、人が決めた意図そのものがぶつかるとき（どちらを取っても、人が決めたことの片方を捨てることになるとき）だけにする。そのときは、関係する話題の文書の「未決」の節に書く。意図がぶつかっているかは、決定の文書に書いてある2つの文が両立しないことで見分けられる。
+A detail found during implementation or review that the decision documents do not say is decided by the implementing side, with grounds. The person is not asked. When decisions conflict with each other, or can be read in two ways, the implementing side also decides the reading, with grounds.
 
-実装する側が決めた細部と読みは、何を・なぜ・証拠を、コミットの本文と、プルリクエストの本文の判断の一覧に書く。決定の文書には書かない。決定の文書を、人が決めたことだけに保つためである。
+It is handed back to the person only when intents the person decided themselves conflict (when either choice discards one of the things the person decided). In that case, it is written in the "Open" section of the related topic document. Whether intents conflict is told by two sentences written in the decision documents being unable to hold together.
 
-実装のループの中で仕様の側を直す段（整合の段）も同じにする。実行ごとの記録は書かず、直した理由はプルリクエストの本文に書く。
+For the details and readings the implementing side decided, what, why and the evidence are written in the commit body and in the list of judgements in the pull request body. They are not written in the decision documents. This keeps the decision documents to what the person decided.
 
-### 見送った案
+The step in the implementation loop that fixes the specification side (the consistency step) works the same way. No per-run record is written; the reasons for the fixes are written in the pull request body.
 
-- 以前の決定: 細部も人に聞いて、仕様に書いてから進める。仕様が黙っていることを、実装する側が決めてはいけない。答えがほぼ推奨の採用で、人を止める意味が薄いので、やめた。
-- 以前の決定: 整合の段は、実行ごとに新しい判断の記録を書く。足していく記録を持たなくなるので、やめた。
-- 利用者から見える振る舞いに関わる細部だけは人に聞く。「利用者から見えるか」は程度の問題で、文書を見ても線が引けず、聞きすぎるか聞かなすぎるかに振れうる。
-- 実装する側が決めた細部を、決定の文書の関係する決定の下に書く。人が決めたことと区別がつかなくなり、コードが変わるたびに書き直す対象が増える。
+### Rejected options
 
-### 確認すること
+- Previous decision: details are also asked of the person, and written into the specification before proceeding. The implementing side must not decide what the specification is silent about. Dropped because the answer was almost always to adopt the recommendation, so stopping the person meant little.
+- Previous decision: the consistency step writes a new decision record for each run. Dropped because records that accumulate are no longer kept.
+- Ask the person only about details that concern behaviour visible to users. "Is it visible to users" is a matter of degree; no line can be drawn by looking at the documents, and it can swing to asking too much or too little.
+- Write the details the implementing side decided under the related decision in the decision documents. They become indistinguishable from what the person decided, and the things to rewrite each time the code changes increase.
 
-- C-core-flow-1 （読んで確認）実装の skill に、書いていない細部と読みは実装する側が根拠を付けて決め、人に聞かないと書いてある
-- C-core-flow-2 （読んで確認）実装の skill に、人が決めた意図そのものがぶつかるときだけ、話題の文書の「未決」に書いて人に戻すと書いてある
-- C-core-flow-3 （読んで確認）実装とマージの skill に、決めた細部の何を・なぜ・証拠を、コミットの本文とプルリクエストの本文に書くと書いてある
-- C-core-flow-4 （読んで確認）整合の段の手順に、実行ごとの記録を書かず、直した理由をプルリクエストの本文に書くと書いてある
+### Confirmations
 
-## 壁打ちは、推奨を出す前に、利用者共通の方針の文書を読む
+- C-core-flow-1 (by reading) The implementation skill says that details and readings not written down are decided by the implementing side with grounds, without asking the person
+- C-core-flow-2 (by reading) The implementation skill says that only when intents the person decided themselves conflict is it written in "Open" of the topic document and handed back to the person
+- C-core-flow-3 (by reading) The implementation and merge skills say that what, why and the evidence of decided details are written in the commit body and the pull request body
+- C-core-flow-4 (by reading) The procedure of the consistency step says that no per-run record is written and the reasons for the fixes are written in the pull request body
 
-状態: 提案
+## The brainstorm reads the user-wide policy document before giving a recommendation
 
-### 問題
+Status: proposed
 
-人の方針と agent の推奨がずれて訂正された22件のうち10件ほどは、案件をまたぐ利用者の決まった方針に、agent の推奨が反したものだった。同じ形の訂正が、別のリポジトリで繰り返されていた。agent のメモリはプロジェクトごとで、ほかのリポジトリの壁打ちからは読めない。
+### Problem
 
-### 決めたこと
+Of the 22 cases where the person's policy and the agent's recommendation differed and were corrected, about 10 were ones where the agent's recommendation went against a settled policy of the user that spans projects. Corrections of the same form were repeated in different repositories. The agent's memory is per project and cannot be read from a brainstorm in another repository.
 
-利用者共通の方針の文書を1つ持つ。置き場は、利用者の設定の置き場の下の `kotowari/principles.md` とする（`XDG_CONFIG_HOME` があればそれに従う）。壁打ちは、推奨を出す前にこれを読む。推奨が方針に反していて訂正されたら、利用者が訂正した内容を、その場でこの文書に1行足す。
+### Decision
 
-文書が無いとき、読めないときは、読めなかったと壁打ちの最初に伝えて、読まずに進む。
+One user-wide policy document is kept. Its location is `kotowari/principles.md` under the user's configuration location (following `XDG_CONFIG_HOME` if it is set). The brainstorm reads it before giving a recommendation. When a recommendation goes against the policy and is corrected, one line with what the user corrected is added to this document on the spot.
 
-### 見送った案
+When the document does not exist or cannot be read, the brainstorm says at its start that it could not read it, and proceeds without it.
 
-- プロジェクトごとに方針の文書を持つ。案件をまたぐ方針を、リポジトリごとに書き直すことになる。
-- agent の指示のファイルや、agent のメモリの置き場に置く。agent の種類ごとに置き場が違い、プロジェクトをまたいで読めない。
-- 持たず、訂正はその場で直すだけにする。同じ訂正が繰り返される。
+### Rejected options
 
-### 確認すること
+- Keep a policy document per project. Policies that span projects would be rewritten in each repository.
+- Put it in the agent's instruction file or the agent's memory location. The location differs by kind of agent, and it cannot be read across projects.
+- Keep none, and only fix corrections on the spot. The same corrections are repeated.
 
-- C-core-flow-5 （読んで確認）壁打ちの skill に、推奨を出す前に利用者共通の方針の文書を読み、訂正されたら1行足すと書いてある
-- C-core-flow-6 （読んで確認）壁打ちの skill に、方針の文書が読めないときは、読めなかったと最初に伝えて進むと書いてある
+### Confirmations
 
-## 壁打ちは、最初に困っている場面を1つ組み、承認の前にその場面がどうなるかを見せる
+- C-core-flow-5 (by reading) The brainstorm skill says that the user-wide policy document is read before giving a recommendation, and one line is added when corrected
+- C-core-flow-6 (by reading) The brainstorm skill says that when the policy document cannot be read, it says at the start that it could not read it and proceeds
 
-状態: 提案
+## The brainstorm first builds one scene where someone is stuck, and before approval shows what happens to that scene
 
-### 問題
+Status: proposed
 
-求めた場面を解決しないものが、記録には範囲が正しく書かれたまま承認を通って作られたことがあった。1問ずつは判断できても、合わせて目的に届くかは見えなかった。
+### Problem
 
-また、場面を組むために人に聞いたところ、利用者がそのリポジトリを覚えておらず答えられなかったことがあった。答えは、依頼を出した側の記録に書いてあった。
+Something that did not solve the requested scene was built after passing approval, with its scope written correctly in the records. Each question could be judged on its own, but whether they together reached the goal was not visible.
 
-### 決めたこと
+Also, when the person was asked in order to build the scene, the user did not remember that repository and could not answer. The answer was written in the records of the side that made the request.
 
-壁打ちの最初に、人が困っている場面を1つ、具体的に組む。組む前に、依頼の出どころ（依頼を出した人やリポジトリの記録、issue、過去のやりとり）を調べる。場面と、決めることの答えが出どころに書いてあれば、利用者に聞かずにそれを根拠にする。書いていないときだけ、利用者の言葉から場面を組み、合っているかを確認する。
+### Decision
 
-承認の前に、決めたものでその場面がどうなるかを見せる。解決していなければ、承認に進まない。実物が無くて解決したかを判断できないときは、いつ・何を見て判断するかを決めて、未決として残す。
+At the start of the brainstorm, one scene where a person is stuck is built concretely. Before building it, the origin of the request (the records of the person or repository that made the request, issues, past exchanges) is investigated. If the scene and the answers to what is to be decided are written in the origin, they are used as the grounds without asking the user. Only when they are not written is the scene built from the user's words and checked with the user for correctness.
 
-承認で利用者が読むのは、決定の文書の差分である。
+Before approval, what happens to that scene with what was decided is shown. If it is not solved, it does not proceed to approval. When there is no real thing and whether it is solved cannot be judged, when and by looking at what it will be judged is decided, and it is left as open.
 
-### 見送った案
+What the user reads at approval is the diff of the decision documents.
 
-- 承認の前に、決めたことの全体を1枚で見せるだけにする（場面は組まない）。全体が見えても、目的の場面に届くかは分からない。
-- 目的のずれは、作ったあとに人が気づいて直す。作る費用を払ったあとになる。
-- 以前の決定: 承認で利用者が読むのは、判断の記録の差分（1行が1つの決定）で、IR の差分は読ませない。記録を持たなくなり、決定の文書そのものが読める文章になるので、それを読むことにした。
+### Rejected options
 
-### 確認すること
+- Before approval, only show the whole of what was decided on one page (no scene is built). Even when the whole is visible, whether it reaches the target scene is not known.
+- A drift in the goal is noticed and fixed by the person after it is built. That comes after the cost of building has been paid.
+- Previous decision: what the user reads at approval is the diff of the decision records (one line per decision), and the IR diff is not shown. Since records are no longer kept and the decision documents themselves become readable prose, it was decided to read those.
 
-- C-core-flow-7 （読んで確認）壁打ちの skill に、最初に困っている場面を1つ組み、組む前に依頼の出どころを調べると書いてある
-- C-core-flow-8 （読んで確認）壁打ちの skill に、承認の前に、決めたものでその場面がどうなるかを見せ、解決していなければ承認に進まないと書いてある
-- C-core-flow-9 （読んで確認）壁打ちの skill に、承認で見せるのは決定の文書の差分だと書いてある
+### Confirmations
 
-## 見える振る舞いを変える依頼は、壁打ちの中で見本を見せて決める
+- C-core-flow-7 (by reading) The brainstorm skill says that one scene where someone is stuck is built first, and the origin of the request is investigated before building it
+- C-core-flow-8 (by reading) The brainstorm skill says that before approval what happens to that scene with what was decided is shown, and if it is not solved it does not proceed to approval
+- C-core-flow-9 (by reading) The brainstorm skill says that what is shown at approval is the diff of the decision documents
 
-状態: 提案
+## Requests that change visible behaviour are decided in the brainstorm by showing a sample
 
-### 問題
+Status: proposed
 
-見え方・使い勝手の事例15件は、ほぼすべて、人がマージのあと・本番・実機で見つけていた。文で聞いて決めたものは、触って初めて違うと分かる。見本で合意してから進めた回は、利用者の評価が高かった。
+### Problem
 
-### 決めたこと
+Almost all of the 15 cases about appearance and usability were found by the person after the merge, in production, or on a real device. What is decided by asking in words turns out to be wrong only when it is touched. The rounds that proceeded after agreeing on a sample were rated highly by the user.
 
-利用者から見える振る舞いを変える依頼は、壁打ちの中で、文で聞かずに見本を作って見せ、反応を決定にする。見本は、動く試作、モック、出力のサンプルのどれかにする。何を作るか（作らないことを含む）は、壁打ちを進める agent が理由を付けてその場で決め、人には聞かない。マージの前に人が触って確認する段は足さない。
+### Decision
 
-動く試作は、決めるための使い捨てとし、製品のコードの土台にしない。実装する側に渡して、見比べる相手にする。試作で決めた動きのうち、機械で確かめられるものは、確認することの行にしてテストにする。
+For a request that changes behaviour visible to users, in the brainstorm a sample is made and shown instead of asking in words, and the reaction becomes the decision. The sample is one of a working prototype, a mock, or a sample of output. What to make (including making nothing) is decided on the spot, with reasons, by the agent running the brainstorm, and the person is not asked. No step where the person touches and checks it before the merge is added.
 
-### 見送った案
+A working prototype is throwaway, for deciding, and is not used as the base of product code. It is handed to the implementing side as something to compare against. Of the behaviours decided with the prototype, the ones that can be checked by machine become confirmation rows and tests.
 
-- マージの前に、動くものを人が触ってからマージする。人を待つ依頼が増える。
-- マージのあとに使って見つけ、小さい依頼で直す。これまでのやり方で、見つかるのが遅い。
-- 何を作るかを、人が毎回選ぶ。聞くことが増える。
-- 試作を土台にして、そのまま育てて製品にする。テストを先に書く流れとレビューを通らないコードが製品に入る。
+### Rejected options
 
-### 確認すること
+- Before the merge, the person touches the working thing and then it is merged. Requests that wait for the person increase.
+- Find it by use after the merge and fix it with a small request. This is the way so far, and things are found late.
+- The person chooses what to make each time. The questions increase.
+- Use the prototype as the base and grow it as is into the product. Code that has not gone through the test-first flow and review enters the product.
 
-- C-core-flow-10 （読んで確認）壁打ちの skill に、見える振る舞いを変える依頼では見本を作って見せ、何を作るかは agent が理由を付けて決めると書いてある
-- C-core-flow-11 （読んで確認）壁打ちと実装の skill に、試作は使い捨てで製品の土台にせず、実装する側の見比べる相手にすると書いてある
+### Confirmations
 
-## 既存のコードを取り込むときは、人が追認した振る舞いを「実装済み」で書く
+- C-core-flow-10 (by reading) The brainstorm skill says that for a request that changes visible behaviour a sample is made and shown, and what to make is decided by the agent with reasons
+- C-core-flow-11 (by reading) The brainstorm and implementation skills say that a prototype is throwaway, not the base of the product, and is something for the implementing side to compare against
 
-状態: 提案
+## When taking in existing code, behaviour the person has ratified is written as "implemented"
 
-### 問題
+Status: proposed
 
-仕様の無い既存のコードを kotowari に取り込むとき、これまでは1回の取り込みで判断の記録を1つ書き、テストの無い振る舞いは問題の記録へ送っていた。どちらも持たなくなるので、行き先が要る。check の「テストが無い」の指摘でテストが入った6件（[check は、確認することの行ごとに、それを指すテストがあるかを数える](confirmations.md#check-は確認することの行ごとにそれを指すテストがあるかを数える)の調べ）のうち4件は、あとから仕様を付けた既存のコードだった。
+### Problem
 
-### 決めたこと
+When taking existing code without a specification into kotowari, until now one decision record was written per intake, and behaviour without tests was sent to the issue records. Since neither is kept any more, a destination is needed. Of the 6 cases where tests were added because of check's "no test" finding (the survey in [check counts, per confirmation row, whether a test points at it](confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it)), 4 were existing code that was given a specification later.
 
-取り込みでは、人が追認した振る舞いを、状態が「実装済み」の決定として話題の文書に書く。テストの無い確認することの行は、check の誤りとして出て、それがテストを書く作業の一覧になる。取り込みごとの記録は書かない。テストが揃うまで check は誤りを出したままになる。テストが無いことの誤りは、コミットでは止めず push で止める、今のやり方（`--allow-test-findings`）を残す。
+### Decision
 
-コードがそうしているだけで、人が追認していない振る舞いは書かない。なぜそうなっているかが分からなければ、問題の節に「理由は残っていない」と書く。理由を作らない。
+In an intake, behaviour the person has ratified is written in the topic document as a decision whose state is "implemented". Confirmation rows without tests come out as check errors, and those become the list of work for writing tests. No per-intake record is written. Until the tests are in place, check keeps reporting errors. For errors about missing tests, the current practice of not stopping at commit and stopping at push (`--allow-test-findings`) is kept.
 
-### 見送った案
+Behaviour that the code merely has and the person has not ratified is not written. If why it is that way is not known, "no reason remains" is written in the Problem section. No reason is invented.
 
-- テストの無い振る舞いを「提案」の状態で書く。「提案」が、まだ作っていないものと、作ってあるがテストの無いものの両方を指すことになる。
-- 以前の決定: 1回の取り込みで判断の記録を1つ書き、テストの無い振る舞いは問題の記録へ送る。記録も問題の記録も持たなくなるので、やめた。
+### Rejected options
 
-### 確認すること
+- Write behaviour without tests in the "proposed" state. "proposed" would then mean both something not yet built and something built but without tests.
+- Previous decision: one decision record is written per intake, and behaviour without tests is sent to the issue records. Dropped because neither the records nor the issue records are kept any more.
 
-- C-core-flow-12 （読んで確認）取り込みの skill に、人が追認した振る舞いを「実装済み」の決定として書き、取り込みごとの記録は書かないと書いてある
-- C-core-flow-13 （読んで確認）取り込みの skill に、人が追認していない振る舞いは書かず、理由が分からなければそう書いて、理由を作らないと書いてある
+### Confirmations
+
+- C-core-flow-12 (by reading) The intake skill says that behaviour the person has ratified is written as an "implemented" decision, and no per-intake record is written
+- C-core-flow-13 (by reading) The intake skill says that behaviour the person has not ratified is not written, and if the reason is not known that is written, without inventing a reason

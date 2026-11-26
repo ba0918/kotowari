@@ -1,107 +1,109 @@
-# 古い形からの切り替え
+# Switching from the old form
 
-kotowari 自身を、IR と判断の記録の2層から、[決定の文書](decision-documents.md)の形へ切り替えるやり方を決める。切り替えが済んだら、この話題の決定は役目を終えるので、この文書は消す（git の履歴に残る）。
+English | [日本語](form-switch.ja.md)
 
-## 新しい版で一度に切り替え、古い形を読む仕組みは作らない
+This document decides how kotowari itself is switched from the two layers of IR and decision records to the form of [decision documents](decision-documents.md). Once the switch is done, the decisions of this topic have served their purpose, so this document is deleted (it remains in the git history).
 
-状態: 提案
+## Switch at once in a new version, and build no mechanism to read the old form
 
-### 問題
+Status: proposed
 
-kotowari 自身の IR は70話題あり、要求が434、場面が504、決定表と性質が73ある。判断の記録は94ファイルある。これを決定の文書の形へ移す。
+### Problem
 
-2つの話題を実際に文章の形へ書き直して、手間を測った。1話題あたり、agent の作業で約10万トークンだった（要求6・場面14の話題が決定8・確認すること22行に、要求10・場面14の話題が決定12・確認すること19行になった）。70話題すべてだと、文書を書くだけで700万トークン前後になる。この検討の中の別の実験で、軽いもので試して費用を見積もり、倍に外したことがあるので、その倍までを見ておく。
+kotowari's own IR has 70 topics, with 434 requirements, 504 scenarios, and 73 decision tables and properties. There are 94 decision record files. These are to be moved into the form of decision documents.
 
-一方で、新しい形では役目が無くなる話題がある（出典の検査、記録の形の検査、改めのリンク、後回しの宣言、照合など）。無くなる話題を書き直すのは無駄になる。
+Two topics were actually rewritten into the prose form, and the effort was measured. Per topic, the agent's work was about 100,000 tokens (a topic with 6 requirements and 14 scenarios became 8 decisions and 22 confirmation rows; a topic with 10 requirements and 14 scenarios became 12 decisions and 19 confirmation rows). For all 70 topics, writing the documents alone comes to around 7 million tokens. In another experiment within this study, a cost estimated from a trial with something light was off by a factor of two, so up to twice that is allowed for.
 
-### 決めたこと
+On the other hand, some topics have no role in the new form (the source check, the record form check, links to amendments, deferral declarations, reconciliation, and so on). Rewriting the topics that disappear would be wasted.
 
-kotowari 自身は、新しい版で一度に切り替える。check が古い形と新しい形の両方を読む期間は持たない。まだ移していないリポジトリは、古い版の kotowari を使い続ける。
+### Decision
 
-切り替えの版では、先に新しい check と工程を作る。新しい形で役目が無くなる話題は、書き直さずに凍結した木（[決定の文書は docs/decisions に置き、古い形の文書は凍結した木へ移す](decision-documents.md#決定の文書は-docsdecisions-に置き古い形の文書は凍結した木へ移す)）へ移す。残る話題だけを、文章の形に書き直す。テストのマーカーは、書き直すときに作る対応表（古い要求と場面の ID が、新しい確認することのどの ID に当たるか）から、機械で付け替える。
+kotowari itself switches at once in a new version. There is no period in which check reads both the old form and the new form. Repositories not yet moved keep using an old version of kotowari.
 
-### 見送った案
+In the switch version, the new check and workflow are built first. Topics that have no role in the new form are moved, without rewriting, to the frozen tree ([Decision documents live in docs/decisions, and old-form documents move to a frozen tree](decision-documents.md#put-decision-documents-in-docsdecisions-and-move-documents-in-the-old-form-to-the-frozen-tree)). Only the remaining topics are rewritten into the prose form. Test markers are reassigned by machine from the mapping table made during the rewrite (which new confirmation ID each old requirement and scenario ID corresponds to).
 
-- check が当面、古い形と新しい形の両方を読む。互換を維持する費用は無駄だ、と利用者が判断した。
-- check と工程だけ切り替え、古い話題は凍結して、触るときに書き直す。書き直すまで、凍結した話題の要求を check が数えず、テストが在ることの保証がその分だけ止まる。
-- 70話題を全部書き直してから切り替える。新しい形で無くなる話題の分は、書き直した直後に消すことになる。
+### Rejected options
 
-### 確認すること
+- check reads both the old form and the new form for the time being. The user judged that the cost of maintaining compatibility is wasted.
+- Switch only check and the workflow, freeze the old topics, and rewrite them when they are touched. Until rewritten, check does not count the requirements of frozen topics, and the guarantee that tests exist stops for that part.
+- Rewrite all 70 topics before switching. The topics that disappear in the new form would be deleted right after being rewritten.
 
-- C-core-switch-1 切り替えたあとの check は、IR の置き場と判断の記録の置き場を読まず、古い形の文書があっても誤りを出さない
-- C-core-switch-2 （読んで確認）切り替えの版で、役目が無くなる話題は書き直されずに凍結した木にあり、残る話題は決定の文書の置き場にある
-- C-core-switch-3 （読んで確認）切り替えたあと、古い形の ID（要求、場面、決定表、性質）を指すマーカーがテストに残っていない
+### Confirmations
 
-## ADR はやめ、今あるものは凍結する
+- C-core-switch-1 After the switch, check does not read the IR location or the decision record location, and reports no error even if old-form documents exist
+- C-core-switch-2 (by reading) In the switch version, topics that have no role are in the frozen tree without being rewritten, and the remaining topics are in the decision document location
+- C-core-switch-3 (by reading) After the switch, no markers pointing at old-form IDs (requirements, scenarios, decision tables, properties) remain in the tests
 
-状態: 提案
+## ADRs are discontinued, and the existing ones are frozen
 
-### 問題
+Status: proposed
 
-これまで、判断の記録と ADR（あとから読む人のために、設計の決定と理由をまとめた文書）の両方を残していた。決定の文書は、決定ごとに問題・決めたこと・見送った案を持つので、ADR と同じ役目を持つ。両方を持つと、決定と理由が2か所に書かれる。
+### Problem
 
-### 決めたこと
+Until now, both decision records and ADRs (documents that collect design decisions and their reasons for people who read them later) were kept. A decision document has a problem, a decision and rejected options for each decision, so it has the same role as an ADR. Keeping both writes decisions and reasons in two places.
 
-ADR はやめる。今ある ADR は、判断の記録と一緒に凍結した木へ移す。設定の `decisions.adr` のキーは無くす。
+### Decision
 
-### 見送った案
+ADRs are discontinued. The existing ADRs are moved to the frozen tree together with the decision records. The `decisions.adr` key in the configuration is removed.
 
-- 以前の決定: 判断の記録と ADR の両方を残し、既存の ADR を消さない。決定と理由を読む場所を決定の文書の1か所にするので、やめた。
+### Rejected options
 
-### 確認すること
+- Previous decision: keep both decision records and ADRs, and do not delete existing ADRs. Dropped because the place to read decisions and reasons becomes the single place of the decision documents.
 
-- C-core-switch-6 切り替えたあとの check は、ADR の置き場を読まず、設定に `decisions.adr` のキーを求めない
-- C-core-switch-7 （読んで確認）切り替えの版で、それまでの ADR が凍結した木にある
+### Confirmations
 
-## 書き直すとき、記録に無いものは作らず、見分けられない細部は落とす
+- C-core-switch-6 After the switch, check does not read the ADR location and does not require the `decisions.adr` key in the configuration
+- C-core-switch-7 (by reading) In the switch version, the ADRs up to then are in the frozen tree
 
-状態: 提案
+## When rewriting, nothing missing from the records is invented, and details that cannot be told apart are dropped
 
-### 問題
+Status: proposed
 
-2つの話題を書き直してみると、見送った案が記録に無い決定が半分を超えていた（8つのうち6つ、12のうち8つ）。人が決めたのか agent が決めたのかを記録から見分けられない細部も、話題ごとに2〜3あった。
+### Problem
 
-### 決めたこと
+When two topics were rewritten, decisions whose rejected options were not in the records were more than half (6 of 8, 8 of 12). There were also 2 to 3 details per topic for which the records could not tell whether the person or the agent decided them.
 
-書き直すとき、見送った案が記録に無ければ、節ごと書かない。理由が記録に無ければ、問題の節に「理由は残っていない」と書く。どちらも、後から作らない。
+### Decision
 
-誰が決めたかを見分けられない細部は、決定の文に入れず、コードとテストに任せる。落とした細部は、対応表に一覧で残す。対応表は、凍結した木に置く。決定の文書の置き場の下の文書は、すべて話題の文書として読まれるためである。
+When rewriting, if the rejected options are not in the records, the whole section is not written. If the reason is not in the records, "no reason remains" is written in the Problem section. Neither is invented afterwards.
 
-凍結した文書を、コードやテストが根拠として指している所は、移すときに洗い、今の決定の文書か、コードのコメントに書き直す。
+Details for which who decided cannot be told apart are not put in the decision text, and are left to the code and tests. The dropped details are kept as a list in the mapping table. The mapping table is placed in the frozen tree. This is because every document under the decision document location is read as a topic document.
 
-### 見送った案
+Places where code or tests point at frozen documents as grounds are swept when moving, and rewritten into the current decision documents or into code comments.
 
-- 見分けられない細部は、決定の文に残す。消える心配は無いが、決定の文書に agent の細部が混ざり、人が決めていない値を承認したことになる。
+### Rejected options
 
-### 確認すること
+- Keep details that cannot be told apart in the decision text. There is no worry of them disappearing, but agent details get mixed into the decision documents, and values the person did not decide count as approved.
 
-- C-core-switch-4 （読んで確認）書き直した話題ごとに、古い ID と新しい ID の対応と、落とした細部の一覧を持つ対応表がある
-- C-core-switch-5 （読んで確認）コードとテストの中に、凍結した木の文書を根拠として指す所が残っていない
+### Confirmations
 
-## 切り替えの途中に、利用者が実物を見て判断する点を2つ置く
+- C-core-switch-4 (by reading) For each rewritten topic, there is a mapping table that holds the correspondence between old IDs and new IDs and the list of dropped details
+- C-core-switch-5 (by reading) No places remain in the code and tests that point at frozen-tree documents as grounds
 
-状態: 提案
+## Two points are placed during the switch where the user looks at the real thing and judges
 
-### 問題
+Status: proposed
 
-この形で、決まりを変える手間が本当に減るのか、戻ってきたときに本当に読めるのかは、実物を使うまで判断できない。確かめられたのは、軽い依頼1つを文章の形の文書から実装できたことと、2つの話題の書き直しの見本までである。重い決定を文章の形から実装できるか、決定を覆す動きが回るか、見える動きを見本で決める動きが回るかは、まだ一度も確かめていない。全部を書き直したあとで駄目だと分かると、費用の大半を払ったあとになる。
+### Problem
 
-### 決めたこと
+Whether this form really reduces the effort of changing rules, and whether it is really readable when coming back, cannot be judged until the real thing is used. What has been confirmed is that one light request could be implemented from a prose-form document, and the samples of rewriting two topics. Whether a heavy decision can be implemented from the prose form, whether the flow of overturning a decision works, and whether the flow of deciding visible behaviour with a sample works have not been confirmed even once. Finding out it does not work after rewriting everything comes after most of the cost has been paid.
 
-場面が解けたかは、利用者が、次の2つの点で実物を見て判断する。
+### Decision
 
-1. この話題を含む、形と工程の仕様そのものを、文章の形で書いて承認に出す。利用者が読んで、読めなければ承認しない。
-2. 新しい形を読む check と工程の skill を作り、いちばん小さいまとまり（view。4話題、要求30）だけを書き直し、その上で、実際の小さい変更を1つ、決まりを変える所から通す。そこで止めて、結果を利用者に見せる。見せるのは、決まりを変えるのに何手かかったか、決定を覆す動きをやったか、文章の形から実装できたか、書き直しで落とした細部の一覧。
+Whether the scenes are solved is judged by the user looking at the real thing at the following two points.
 
-2つ目の点で良ければ、残りの話題を書き直す。駄目なら、形を直す壁打ちに戻る。2つ目の点までは枝の上の作業で、main には入れない。出す版は1つのままにする。
+1. The specification of the form and the workflow itself, including this topic, is written in the prose form and put up for approval. The user reads it, and does not approve it if it cannot be read.
+2. The check and workflow skills that read the new form are built, only the smallest group (view; 4 topics, 30 requirements) is rewritten, and on top of that one real small change is taken through, starting from changing a rule. Work stops there and the result is shown to the user. What is shown is how many steps changing a rule took, whether the flow of overturning a decision was performed, whether implementation from the prose form was possible, and the list of details dropped in the rewrite.
 
-### 見送った案
+If the second point is good, the remaining topics are rewritten. If not, it goes back to a brainstorm to fix the form. Work up to the second point is on a branch and does not go into main. The version released stays one.
 
-- 判断は承認のときの1回だけにし、残りは止めずに進める。書く側が駄目だと分かるのが、全部を書き直したあとになる。
-- check を作る前に、手で書き直した文書と手作業の手順だけで変更を1つ通して判断する。check が無いので、数え方や検査が回るかが、その時点では分からない。
-- 重い決定を含む複数の依頼で、今の形と文章の形を比べる実験を先にする。比べる文書を先に何本か書き直す必要があり、費用が大きい。
+### Rejected options
 
-## 未決
+- Judge only once, at approval, and proceed with the rest without stopping. The writing side finds out it does not work only after rewriting everything.
+- Before building check, take one change through with only hand-rewritten documents and a manual procedure, and judge. Without check, whether counting and checks work is not known at that point.
+- First run an experiment comparing the current form and the prose form on several requests that include heavy decisions. Several documents to compare would have to be rewritten first, and the cost is large.
 
-- 決めたもので、書く側の場面（決まりを1つ変える手間）と、読む側の場面（戻ってきたときに読める）が解けたか。決めるのは利用者。1つ目の点はこの仕様の承認のとき、2つ目の点は切り替えの版の作業の途中。
-- kotowari を使っているほかのリポジトリを、決定の文書の形へ移す手順を、製品として持つか（コマンドや skill にするか、移した実例を見せるだけにするか）。決めるのは利用者。2つ目の点のあとで、kotowari 自身を移した手順を見てから。
+## Open
+
+- Whether, with what was decided, the writing side's scene (the effort of changing one rule) and the reading side's scene (readable when coming back) are solved. The user decides. The first point at the approval of this specification; the second point during the work on the switch version.
+- Whether to have, as part of the product, a procedure for moving other repositories that use kotowari to the form of decision documents (whether to make it a command or skill, or only show an example of a move). The user decides. After the second point, having seen the procedure used to move kotowari itself.

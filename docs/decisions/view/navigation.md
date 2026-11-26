@@ -1,198 +1,200 @@
-# 一覧と移動
+# Index and navigation
 
-view が一覧のページに添える状態の数と、目次の群の描き方、文書のページから目次の中のほかの場所へ移る手段、文書のページの中でアウトラインから節へ移る手段を決める。目次が文書と食い違っていても、view は検査せずに決まった形で描く。[一覧のページそのものの描き方](rendering.md#一覧は目次に書いた順と入れ子のとおりに1ページで描く)と、[題名・アウトライン・lead の並び](rendering.md#文書のページは題名アウトラインlead冒頭の部品節の順に描く)は、描画の話題の決定で決める。
+English | [日本語](navigation.ja.md)
 
-## 一覧のカードには、文書の状態の数を、0 でないときだけ添える
+Decides the status counts that view adds to the index page, how contents groups are drawn, the means of moving from a document page to other places in the contents, and the means of moving from the outline to a section within a document page. Even when the contents disagree with the documents, view draws them in a fixed way without checking. [How the index page itself is drawn](rendering.md#draw-the-index-on-one-page-in-the-order-and-nesting-written-in-the-table-of-contents) and [the order of title, outline and lead](rendering.md#draw-a-document-page-in-the-order-title-outline-lead-opening-parts-sections) are decided in the decisions of the rendering topic.
 
-状態: 実装済み
+## Index cards show a document's status counts, only when they are not 0
 
-### 問題
+Status: implemented
 
-一覧のページは、読みたいページを探す入口であり、製品の地図として機能のまとまりと順番を見せる場所である。見直しが要るページや未決が残るページに気づかせることは、その補助になる。ところが一覧のカードには題名と lead の結論しか無く、各ページの状態（見直していない節、未決、予定）が一覧から分からなかった。
+### Problem
 
-状態は補助なので、気づける量だけ出す。view は節が古いかどうかと、status の部品の中身をすでに受け取っているので、数えるために描画の入力を足す必要は無い。
+The index page is the entry point for finding the page one wants to read, and the place that shows, as a map of the product, the groupings and order of features. Making readers notice pages that need review or that still have open items supports that. Yet the index cards had only the title and the conclusion of the lead, and each page's status (unreviewed sections, open items, planned items) could not be seen from the index.
 
-### 決めたこと
+Status is a supporting aid, so only as much is shown as can be noticed. view already receives whether a section is stale and the contents of the status part, so no render input needs to be added for counting.
 
-一覧のカードには、題名と lead の結論に加えて、その文書の古い節の数、[status の部品](parts.md#部品の種類はview-が持つ8種の固定の一覧にする)の札が "open"（未決）の項目の数、"planned"（予定）の項目の数を添える。それぞれ、0 でないときだけ出す。数えるのは view である。
+### Decision
 
-添える文字は UI の文字から取る。数の入る UI の文字は "{n}" をちょうど1つ含み、view はそこを数に置き換えて描く（[数の入る文字は、"{n}" の所に数を入れる](languages.md#数の入る文字はn-の所に数を入れる)）。
+Besides the title and the conclusion of the lead, an index card shows the number of stale sections of that document, the number of items of the [status part](parts.md#the-kinds-of-parts-are-a-fixed-list-of-eight-held-by-view) whose label is "open" (open), and the number of items whose label is "planned" (planned). Each is shown only when it is not 0. view does the counting.
 
-### 確認すること
+The text added is taken from the UI strings. A UI string that takes a number contains exactly one "{n}", and view draws it with that replaced by the number ([Strings that take a number have the number put where "{n}" is](languages.md#strings-that-take-a-number-have-the-number-put-where-n-is)).
 
-- C-view-navigation-1 一覧のカードに、古い節の数、未決の数、予定の数のうち 0 でないものだけが、UI の文字の "{n}" を数に置き換えた文字で出る
+### Confirmations
 
-## 目次の群の見出しには、その下のすべての文書の数と、状態の合計を出す
+- C-view-navigation-1 An index card shows, among the number of stale sections, the number of open items and the number of planned items, only those that are not 0, in UI strings with "{n}" replaced by the number
 
-状態: 実装済み
+## A contents group's heading shows the number of all documents under it and the status totals
 
-### 問題
+Status: implemented
 
-一覧のページの数には上限を置かず、目次の群は深さの制限なく入れ子にできる。群の見出しに合計があれば、群を畳んだときにも中の状態に気づける。そのためには、直下だけを数えたのでは足りない。
+### Problem
 
-### 決めたこと
+The number of pages in the index has no upper limit, and contents groups can be nested without a depth limit. If a group's heading has totals, the status inside can be noticed even when the group is collapsed. For that, counting only the direct children is not enough.
 
-目次の群の見出しには、入れ子の深さを問わずその下にあるすべての文書の数と、それらの文書の古い節の合計、未決の項目の合計を出す。予定の合計は出さない。
+### Decision
 
-目次のいちばん外側も1つの目次の群として扱い、一覧の見出しにも同じものを出す。文字は、カードと同じく UI の文字から取る。
+A contents group's heading shows the number of all documents under it regardless of nesting depth, the total of stale sections of those documents, and the total of open items. The total of planned items is not shown.
 
-### 確認すること
+The outermost level of the contents is also treated as one contents group, and the index heading shows the same. As with the cards, the text is taken from the UI strings.
 
-- C-view-navigation-2 目次の群の見出しに、入れ子の深さを問わずその下にあるすべての文書の数と、古い節の合計、未決の合計が出る
-- C-view-navigation-3 一覧の見出し（目次のいちばん外側）にも、文書の数と、古い節と未決の合計が出て、予定の合計は出ない
+### Confirmations
 
-## 目次の群は開いた状態で描き、見出しを選ぶと畳めるようにする
+- C-view-navigation-2 A contents group's heading shows the number of all documents under it regardless of nesting depth, the total of stale sections, and the total of open items
+- C-view-navigation-3 The index heading (the outermost level of the contents) also shows the number of documents and the totals of stale sections and open items, and does not show the total of planned items
 
-状態: 実装済み
+## Contents groups are drawn open and collapse when their heading is selected
 
-### 問題
+Status: implemented
 
-一覧は1ページで、目次を入れ子にしてすべてのページを出し、ページの数に上限を置かない。群を畳めるようにすること、開いた状態から始めること、畳んだ状態を覚えないことの理由は残っていない。
+### Problem
 
-### 決めたこと
+The index is one page, nests the contents to show every page, and puts no upper limit on the number of pages. The reasons for making groups collapsible, for starting in the open state and for not remembering the collapsed state have not been kept.
 
-一覧のページで、目次の中の目次の群は、どれも開いた状態で描き、見出しを選ぶとその中身が畳まれるようにする。畳んだ状態は覚えない。
+### Decision
 
-### 確認すること
+On the index page, every contents group in the contents is drawn in the open state, and selecting its heading collapses its contents. The collapsed state is not remembered.
 
-- C-view-navigation-4 一覧のページの、目次の中の目次の群が、どれも開いた状態で、見出しを選ぶと中身が畳まれる要素として描かれる
+### Confirmations
 
-## view が返すどのページにもスクリプトを入れない
+- C-view-navigation-4 On the index page, every contents group in the contents is drawn as an element that is open and whose contents collapse when its heading is selected
 
-状態: 実装済み
+## No page that view returns contains a script
 
-### 問題
+Status: implemented
 
-スクリプトを入れないと決めた理由は残っていない。
+### Problem
 
-### 決めたこと
+The reason for deciding not to include scripts has not been kept.
 
-view が返すどのページにも、スクリプトを入れない。
+### Decision
 
-### 確認すること
+No page that view returns contains a script.
 
-- C-view-navigation-5 view が返すどのページにも script の要素が無い
+### Confirmations
 
-## 文書のページの題名の上に、目次の中の位置を出す
+- C-view-navigation-5 No page that view returns has a script element
 
-状態: 実装済み
+## A document page shows its position in the contents above its title
 
-### 問題
+Status: implemented
 
-目次があれば、ページ同士は群でつながる。それ以上の理由は残っていない。
+### Problem
 
-### 決めたこと
+With contents, pages are connected through groups. No further reason has been kept.
 
-目次に名前がある文書のページでは、題名の上に、目次から、その文書を含む目次の群までの題名を、外側から順に並べる。それぞれの題名は、一覧のページのその目次の群の場所へリンクする。
+### Decision
 
-### 確認すること
+On the page of a document whose name is in the contents, the titles from the contents down to the contents group that contains that document are listed above the title, from the outside in. Each title links to the place of that contents group on the index page.
 
-- C-view-navigation-6 目次に名前がある文書のページの題名の上に、目次の題名からその文書を含む目次の群の題名までが外側から順に並び、それぞれが一覧のページのその目次の群の場所へリンクしている
+### Confirmations
 
-## 同じ目次の群のほかの文書へのリンクを、最後の節の後に並べる
+- C-view-navigation-6 Above the title of the page of a document whose name is in the contents, the titles from the contents' title down to the title of the contents group containing that document are listed from the outside in, and each links to the place of that contents group on the index page
 
-状態: 実装済み
+## Links to the other documents of the same contents group are listed after the last section
 
-### 問題
+Status: implemented
 
-目次があれば、ページ同士は群でつながる。関連するページをつなぐ宣言を別に足すと、それを保守する手間が増える。
+### Problem
 
-### 決めたこと
+With contents, pages are connected through groups. Adding a separate declaration that connects related pages increases the effort of maintaining it.
 
-目次に名前がある文書のページでは、最後の節の後に、その文書が属する目次の群に同じく属するほかの文書へのリンクを、目次に書かれた順に並べる。その文書自身へのリンクは並べない。
+### Decision
 
-このリンクはアウトラインには入れず、最後の節の後に置く（[文書のページに、節の見出しを並べたアウトラインを描く](#文書のページに節の見出しを並べたアウトラインを描く)）。
+On the page of a document whose name is in the contents, links to the other documents that belong to the same contents group as that document are listed after the last section, in the order written in the contents. No link to the document itself is listed.
 
-### 見送った案
+These links are not put in the outline but placed after the last section ([Document pages get an outline listing the section headings](#document-pages-get-an-outline-listing-the-section-headings)).
 
-- 関連するページを元データで宣言する仕組みを作る。目次で足り、宣言を増やすと保守が増える。
+### Rejected options
 
-### 確認すること
+- Build a mechanism that declares related pages in the source data. The contents are enough, and adding declarations adds maintenance.
 
-- C-view-navigation-7 目次に名前がある文書のページの最後の節の後に、同じ目次の群に属するほかの文書へのリンクが目次に書かれた順に並び、その文書自身へのリンクは無い
+### Confirmations
 
-## 目次と食い違った入力も、誤りにせず、決まった形で描く
+- C-view-navigation-7 After the last section of the page of a document whose name is in the contents, links to the other documents belonging to the same contents group are listed in the order written in the contents, and there is no link to the document itself
 
-状態: 実装済み
+## Input that disagrees with the contents is drawn in a fixed way, not treated as an error
 
-### 問題
+Status: implemented
 
-目次と元データの食い違いを検査するのは kotowari の側で、view は渡された入力を検査しない（[view は入力を検査せず、ファイルもネットワークも使わない](rendering.md#view-は入力を検査せずファイルもネットワークも使わない)）。それでも view は公開のクレートなので、kotowari 以外から食い違った目次が渡されたときの描き方も決めておく必要がある。食い違った目次でも、描き方は1つに決める。
+### Problem
 
-### 決めたこと
+Checking for disagreement between the contents and the source data is kotowari's side, and view does not check the input it is given ([view does not check its input and uses neither files nor the network](rendering.md#view-does-not-validate-its-input-and-uses-neither-files-nor-the-network)). Still, view is a public crate, so how to draw disagreeing contents passed from something other than kotowari also needs to be decided. Even for disagreeing contents, the way of drawing is fixed to one.
 
-view は渡された目次のとおりに描き、食い違いを誤りにしない。
+### Decision
 
-- 目次にあって文書の無い名前は、飛ばす。一覧に描かず、目次の群の見出しの数にも入れず、同じ目次の群のほかの文書へのリンクにも出さない。
-- 目次に名前の無い文書も、ページは返す。一覧には出さない。そのページの題名の上には、目次の中の位置の代わりに、一覧のページへのリンクだけを出す。
-- 目次に2回以上出てくる名前は、出てくるたびに描く。その文書のページの目次の中の位置は、目次を書かれた順に深さ優先でたどって最初に出てくる場所とする。
+view draws the contents as given and does not treat disagreement as an error.
 
-### 確認すること
+- A name that is in the contents but has no document is skipped. It is not drawn in the index, not counted in the contents group headings' numbers, and not shown among the links to the other documents of the same contents group.
+- A document whose name is not in the contents still gets its page returned. It is not shown in the index. Above that page's title, instead of the position in the contents, only a link to the index page is shown.
+- A name that appears in the contents two or more times is drawn each time it appears. The position in the contents for that document's page is the place where it first appears when the contents are traversed depth-first in the order written.
 
-- C-view-navigation-8 目次にあって文書の無い名前は、一覧にも、目次の群の見出しの数にも、同じ目次の群のほかの文書へのリンクにも出ず、誤りにもならない
-- C-view-navigation-9 目次に名前の無い文書のページも返り、一覧には出ず、そのページの題名の上には一覧のページへのリンクだけがある
-- C-view-navigation-10 目次に2回出てくる名前は一覧に2回描かれ、その文書のページの目次の中の位置は、目次を書かれた順に深さ優先でたどって最初に出てくる場所になる
+### Confirmations
 
-## 文書のページに、節の見出しを並べたアウトラインを描く
+- C-view-navigation-8 A name that is in the contents but has no document appears neither in the index, nor in the contents group headings' numbers, nor in the links to the other documents of the same contents group, and is not an error
+- C-view-navigation-9 The page of a document whose name is not in the contents is also returned, is not shown in the index, and above that page's title there is only a link to the index page
+- C-view-navigation-10 A name that appears twice in the contents is drawn twice in the index, and the position in the contents for that document's page is the place where it first appears when the contents are traversed depth-first in the order written
 
-状態: 実装済み
+## Document pages get an outline listing the section headings
 
-### 問題
+Status: implemented
 
-節が多い長い文書のページでは、今どこを読んでいるか、ほかの節へどう移るかが分からなかった。
+### Problem
 
-### 決めたこと
+On the page of a long document with many sections, it was unclear where one was reading and how to move to other sections.
 
-節が1つ以上ある文書のページには、アウトラインを描く。節の数でしきい値は作らない。しきい値は根拠の無い数になり、規則を増やすだけである。
+### Decision
 
-アウトラインには、節（"## " の見出し）の見出しの文字を、そのまま、節の順（元データに書いた順）に並べる。見出しと別の文字にするとどの節か対応が取れなくなり、並べ替えると本文の上から下の順とずれる。各項目は、そのページの中のその節へリンクする。リンク先の場所は1つのページの中で重ならず、同じ見出しの節が2つあっても別の場所になる。
+A document page with one or more sections gets an outline. No threshold on the number of sections is made. A threshold would be a number without grounds and would only add rules.
 
-アウトラインに入れないものは次のとおり。
+The outline lists the heading text of the sections ("## " headings) as it is, in section order (the order written in the source data). Using text different from the heading would make it impossible to tell which section an item corresponds to, and reordering would diverge from the top-to-bottom order of the body. Each item links to that section within the page. The link targets do not overlap within one page, and even when two sections have the same heading they are different places.
 
-- 冒頭（lead と、lead に続く冒頭の部品）への項目。冒頭は題名のすぐ下にあり、ページの頭に戻れば見える。
-- 節の中の "### " 以下の見出し。節は古いかどうかを持つ単位で、深い見出しまで並べると長くなり、アウトラインの役目がぼやける。
-- ほかのページへのリンク。アウトラインはそのページの中を移るものに絞る。
+The following are not put in the outline.
 
-一覧のページにはアウトラインを描かない。一覧は目次そのものを描いており、もう一度並べると同じものの繰り返しになる。
+- An item for the opening (the lead and the opening parts that follow the lead). The opening is right below the title and is visible by going back to the top of the page.
+- "### " and deeper headings inside a section. The section is the unit that carries whether it is stale, and listing the deeper headings too makes the outline long and blurs its role.
+- Links to other pages. The outline is limited to moving within that page.
 
-スクロールに合わせて今読んでいる節を強調することはしない。それにはスクリプトが要る（[view が返すどのページにもスクリプトを入れない](#view-が返すどのページにもスクリプトを入れない)）。
+The index page gets no outline. The index draws the contents itself, and listing them again would repeat the same thing.
 
-### 確認すること
+The section being read is not highlighted as the page scrolls. That would need a script ([No page that view returns contains a script](#no-page-that-view-returns-contains-a-script)).
 
-- C-view-navigation-11 節が1つ以上ある文書のページのアウトラインに、節の見出しの文字が節の順に並び、"### " 以下の見出しと冒頭への項目は無い
-- C-view-navigation-12 アウトラインの各項目はそのページの中のその節へリンクし、同じ見出しの節が2つあってもリンク先は別の場所になる
-- C-view-navigation-13 節の無い文書のページと、一覧のページには、アウトラインが無い
+### Confirmations
 
-## アウトラインの、古い節の項目には、古い節のマーカーを付ける
+- C-view-navigation-11 The outline of a document page with one or more sections lists the section heading texts in section order, and has no "### " or deeper headings and no item for the opening
+- C-view-navigation-12 Each outline item links to that section within the page, and even when two sections have the same heading the link targets are different places
+- C-view-navigation-13 A document page without sections and the index page have no outline
 
-状態: 実装済み
+## Outline items for stale sections carry the stale-section marker
 
-### 問題
+Status: implemented
 
-長いページで見直しが要る節を探すことが、アウトラインのいちばんの使いどころである。
+### Problem
 
-### 決めたこと
+Finding the sections that need review on a long page is the main use of the outline.
 
-アウトラインの項目のうち、古い節の項目には、見出しの文字の後に、節の見出しの近くに付ける古い節のマーカー（[古い節の見出しの近くに、古い節のマーカーを描く](rendering.md#古い節の見出しの近くに古い節のマーカーを描く)）と同じ意味のマーカーを付ける。文字は UI の文字から取る。
+### Decision
 
-### 確認すること
+Among the outline items, an item for a stale section gets, after the heading text, a marker with the same meaning as the stale-section marker placed near the section heading ([A stale-section marker is drawn near the heading of a stale section](rendering.md#draw-a-stale-section-marker-near-the-heading-of-a-stale-section)). The text is taken from the UI strings.
 
-- C-view-navigation-14 アウトラインで、古い節の項目にだけ、見出しの文字の後に古い節のマーカーが付く
+### Confirmations
 
-## アウトラインは、広い画面では本文の左で見え続け、狭い画面では題名の下に置く
+- C-view-navigation-14 In the outline, only the items for stale sections get the stale-section marker after the heading text
 
-状態: 実装済み
+## On wide screens the outline stays visible to the left of the body; on narrow screens it sits below the title
 
-### 問題
+Status: implemented
 
-節が多い長いページでも、今どこにいるかと、ほかの節へ移る手段が、いつも見えていてほしい（利用者の言葉は「アウトラインを常に出せるなら長文のページが出てきても読みやすい」）。一方で、狭い画面で左に固定すると本文の幅を食う。
+### Problem
 
-### 決めたこと
+Even on a long page with many sections, where one is and the means of moving to other sections should always be visible (in the user's words: "if the outline can always be shown, even long pages are easy to read"). On the other hand, fixing it on the left on a narrow screen takes up the body's width.
 
-広い画面では、アウトラインを本文の左に置き、本文をスクロールしても見え続けるようにする。狭い画面では、アウトラインを題名の下、冒頭の lead より上に置き（[文書のページは、題名、アウトライン、lead、冒頭の部品、節の順に描く](rendering.md#文書のページは題名アウトラインlead冒頭の部品節の順に描く)）、スクロールに追従させない。
+### Decision
 
-画面の幅とスクロールで変わる見え方は、view が返す文字列の単体テストでは確かめられないので、人が広い幅と狭い幅で描いたページを見て確かめる。
+On a wide screen, the outline is placed to the left of the body and stays visible while the body scrolls. On a narrow screen, the outline is placed below the title and above the opening lead ([A document page is drawn in the order title, outline, lead, opening parts, sections](rendering.md#draw-a-document-page-in-the-order-title-outline-lead-opening-parts-sections)) and does not follow scrolling.
 
-### 確認すること
+What changes with screen width and scrolling cannot be confirmed by unit tests of the string view returns, so a person confirms it by looking at the page drawn at a wide width and at a narrow width.
 
-- C-view-navigation-15 （読んで確認）節の多い文書のページをブラウザで開き、広い幅ではアウトラインが本文の左にあって本文をスクロールしても見え続け、狭い幅では題名の下・lead の上にあってスクロールに追従しないことを、人が見て確かめる
+### Confirmations
+
+- C-view-navigation-15 (by reading) A person opens a document page with many sections in a browser and confirms by looking that at a wide width the outline is to the left of the body and stays visible while the body scrolls, and at a narrow width it is below the title and above the lead and does not follow scrolling

@@ -265,7 +265,7 @@ fn load_configured(
 
     let mut assembly = translations::Assembly::new(&base, cfg);
     let mut preparation = ir::prepare(&base, cfg, &mut assembly)?;
-    decisions::push(&base, cfg, &mut preparation)?;
+    decisions::push(&base, cfg, &mut assembly, &mut preparation)?;
     let (records, adr) = sources::read_texts(&base, cfg)?;
     let (tests, test_paths) = match reading {
         TestReading::Analyzed => {

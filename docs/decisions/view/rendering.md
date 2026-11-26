@@ -1,270 +1,272 @@
-# 描画
+# Rendering
 
-view が描画の入力を受け取り、ページの並びを返すまでを扱う。部品の種類とそのスキーマは[「部品」の話題](parts.md)で、一覧のページに添える数とページの間の移動は[「一覧と移動」の話題](navigation.md)で、ページの言語と本文の無い参照は[「言語」の話題](languages.md)で決める。view は kotowari の仕様と判断の記録を知らない、描画だけのエンジンである。
+English | [日本語](rendering.ja.md)
 
-## view は kotowari を知らず、描くものをすべて描画の入力で受け取る
+This covers view from receiving the rendering input to returning the sequence of pages. The kinds of parts and their schemas are decided in [the Parts topic](parts.md), the counts attached to the index page and the movement between pages in [the Index and navigation topic](navigation.md), and the language of a page and references without a body in [the Languages topic](languages.md). view is a rendering-only engine that knows nothing of kotowari's specifications and decision records.
 
-状態: 実装済み
+## view does not know kotowari and receives everything it draws in the rendering input
 
-### 問題
+Status: implemented
 
-全体像の文書は、LLM が決まった形式で書いた元データから、描画が HTML を作る。描画の中に、仕様や判断の記録への参照を解くような kotowari の仕事が混ざると、描画の部分だけを切り出して確かめることも、ほかで使うこともできない。入力は元データ、出力は HTML なので、描画はある程度まで汎用にできる、と利用者が判断した。
+### Problem
 
-### 決めたこと
+For an overview document, the renderer builds HTML from source data that an LLM wrote in a fixed format. If kotowari's work, such as resolving references to specifications and decision records, is mixed into the renderer, the rendering part can neither be cut out and verified on its own nor used elsewhere. Since the input is source data and the output is HTML, the user judged that the renderer can be made generic to some degree.
 
-view は、kotowari とは別のクレートの描画のエンジンにする。依存の向きは kotowari から view への一方向で、view は kotowari の仕様も判断の記録も知らない。
+### Decision
 
-view が描くものは、1回の描画で渡される描画の入力からすべて取る。描画の入力は、次のものからなる。
+view is a rendering engine in a crate separate from kotowari. Dependencies point one way, from kotowari to view, and view knows neither kotowari's specifications nor its decision records.
 
-- 文書の並び。文書は、Markdown の文章の塊と部品を順に並べたものである。元データのどこからどこまでが部品かを切り分けるのは、元データを読む view の外の側で、view は切り分けられたものを受け取る。文書は題名、冒頭の lead、lead に続く冒頭の部品、節の並びを持ち、節は古いかどうかを持つ。
-- 参照の表。参照の文字列から、表示名、本文、状態への対応である。kotowari の側が仕様と判断の記録を読んで作り、view は表を引いて描くだけにする。
-- 目次。一覧の並びと入れ子を決める。view は渡された目次のとおりに描く。
-- 言語タグと、そろった UI の文字の一式。view は UI の文字を中に持たない。英語の文字と、省いたときの決まりは kotowari の側だけが持つ。
-- ほかの言語。同じページをほかの言語で描いた置き場の並びである。
+view takes everything it draws from the rendering input passed in a single rendering. The rendering input consists of the following.
 
-### 見送った案
+- The sequence of documents. A document is a sequence of Markdown text blocks and parts in order. Splitting the source data into which span is a part is done by the side outside view that reads the source data; view receives what has been split. A document has a title, the opening lead, the opening parts that follow the lead, and a sequence of sections, and each section carries whether it is stale.
+- The reference table. It maps a reference string to a display name, a body and a state. The kotowari side builds it by reading the specifications and decision records; view only looks up the table and draws.
+- The table of contents. It decides the order and nesting of the index. view draws it exactly as the table of contents passed to it.
+- The language tag and a complete set of UI strings. view holds no UI strings of its own. Only the kotowari side holds the English strings and the rule for when they are omitted.
+- Other languages. A sequence of locations where the same page is drawn in other languages.
 
-- kotowari 専用のクレートにして、参照をクレートの中で直接解く。描画は入力と出力だけで汎用にできるので、kotowari の仕事と分けることにした。
+### Rejected options
 
-### 確認すること
+- Make it a kotowari-only crate and resolve references directly inside the crate. Because rendering can be made generic with just an input and an output, it was separated from kotowari's work.
 
-- C-view-rendering-1 描画の入力に渡した文書の節とブロック、参照の表、目次の中身が、それぞれページに描かれる
-- C-view-rendering-2 （読んで確認）view のクレートは kotowari のクレートに依存せず、kotowari の仕様や判断の記録を読むコードを持たない
+### Confirmations
 
-## view は入力を検査せず、ファイルもネットワークも使わない
+- C-view-rendering-1 The sections and blocks of the documents, the reference table and the contents of the table of contents passed in the rendering input are each drawn on the pages
+- C-view-rendering-2 (by reading) The view crate does not depend on the kotowari crate and has no code that reads kotowari's specifications or decision records
 
-状態: 実装済み
+## view does not validate its input and uses neither files nor the network
 
-### 問題
+Status: implemented
 
-部品の中身の形の知識を、スキーマと view の2か所に持つと食い違う。view に検査を持たせると、描画だけを扱うと決めた責務を超える、と利用者が判断した。
+### Problem
 
-### 決めたこと
+If knowledge of the shape of part contents is held in two places, the schema and view, the two diverge. The user judged that giving view validation would go beyond the responsibility decided for it, which is handling rendering only.
 
-部品の中身の形の正はスキーマにする（スキーマは「部品」の話題の[部品の形の正は、view が埋め込んで公開する部品のスキーマにする](parts.md#部品の形の正はview-が埋め込んで公開する部品のスキーマにする)で決める）。view は検査済みの値から描くだけで、描画の入力を検査せず、誤りを報告しない。スキーマに合わない値が渡されても、誤りを出さずに描く。
+### Decision
 
-view はファイルを読み書きせず、ネットワークにつながず、ページの名前と中身の並びを返すだけにする。ページをファイルに書き出すのは、view を呼ぶ側である。
+The source of truth for the shape of part contents is the schema (the schema is decided in the Parts topic under [The source of truth for the shape of parts is the part schemas that view embeds and publishes](parts.md#the-source-of-truth-for-the-shape-of-parts-is-the-part-schemas-that-view-embeds-and-publishes)). view only draws from validated values; it does not validate the rendering input and reports no errors. Even when a value that does not match the schema is passed, it draws without raising an error.
 
-### 見送った案
+view does not read or write files and does not connect to the network; it only returns a sequence of page names and contents. Writing the pages out to files is done by the side that calls view.
 
-- view が部品の型を持ち、型への読み込みで検査する。コードブロックの中の独自の定義もスキーマとして宣言できるほうが自然で、そこだけコードで判定するのは無理がある。view が型を公開し、kotowari の側が型への読み込みで検査する2層の形も、しっくり来ないとして採らなかった。
+### Rejected options
 
-### 確認すること
+- view holds types for the parts and validates by loading into those types. It is more natural for custom definitions inside code blocks to also be declarable as a schema, and judging only that part in code is unreasonable. The two-layer form, where view publishes the types and the kotowari side validates by loading into them, was also not adopted because it did not feel right.
 
-- C-view-rendering-3 部品の値がスキーマに合わなくても、view は誤りを出さずにページを描く
-- C-view-rendering-4 （読んで確認）view のコードは、ファイルの読み書きとネットワークへの接続をしない
+### Confirmations
 
-## 一覧、文書ごとのページ、共通のスタイルを、別々のページとして返す
+- C-view-rendering-3 Even when a part's value does not match the schema, view draws the page without raising an error
+- C-view-rendering-4 (by reading) view's code does not read or write files and does not connect to the network
 
-状態: 実装済み
+## Return the index, one page per document, and the shared style as separate pages
 
-### 問題
+Status: implemented
 
-全体像の文書ごとのページに加えて、全部の文書を並べた一覧が欲しい。全部を1つのファイルにまとめると、規模が大きくなったときに扱いにくく、変わったファイルだけを出し直すこともできない。見た目は1か所で揃えたい。
+### Problem
 
-### 決めたこと
+In addition to one page per overview document, an index listing all documents is wanted. Putting everything into one file makes it hard to handle as the scale grows, and also makes it impossible to re-output only the files that changed. The look should be kept consistent in one place.
 
-view は1回の描画で、一覧のページ "index.html"、文書ごとのページ "<文書の名前>.html"、共通のスタイル "style.css" を返し、ほかのページは返さない。一覧と文書のページは "style.css" を参照し、互いにリンクで行き来できる。目次に名前が無い文書もページは作るが、一覧には出さない（目次と食い違う入力の扱いは「一覧と移動」の話題の[目次と食い違った入力も、誤りにせず、決まった形で描く](navigation.md#目次と食い違った入力も誤りにせず決まった形で描く)で決める）。
+### Decision
 
-### 見送った案
+In a single rendering, view returns the index page "index.html", one page per document "<文書の名前>.html", and the shared style "style.css", and returns no other pages. The index and document pages refer to "style.css" and can be navigated between by links. A document whose name is not in the table of contents still gets a page but is not shown in the index (how input that conflicts with the table of contents is handled is decided in the Index and navigation topic under [Input that conflicts with the table of contents is not an error either and is drawn in a fixed form](navigation.md#input-that-disagrees-with-the-contents-is-drawn-in-a-fixed-way-not-treated-as-an-error)).
 
-- 一覧と全部のページを1つの HTML にまとめて、標準出力に出す。規模が大きくなると扱いにくく、変わったファイルだけを出し直せない。
+### Rejected options
 
-### 確認すること
+- Put the index and all pages into one HTML and write it to standard output. It becomes hard to handle as the scale grows, and only the files that changed cannot be re-output.
 
-- C-view-rendering-5 文書が2つの描画の入力からは、"index.html"、2つの文書のページ、"style.css" の4つだけが返り、文書が無ければ "index.html" と "style.css" だけが返る
-- C-view-rendering-6 一覧と文書のページが "style.css" を参照し、一覧と文書のページが互いにリンクする
+### Confirmations
 
-## 同じ描画の入力からは、同じページを返す
+- C-view-rendering-5 From a rendering input with two documents, exactly four are returned: "index.html", the two document pages and "style.css"; with no documents, only "index.html" and "style.css" are returned
+- C-view-rendering-6 The index and document pages refer to "style.css", and the index and document pages link to each other
 
-状態: 実装済み
+## Return the same pages from the same rendering input
 
-### 問題
+Status: implemented
 
-全体像は、LLM が毎回 HTML を書くのではなく、元データから決まった描画で作る。見た目を毎回揃え、古さの検出と差分の読みやすさを元データの側に残すためである。ページを書き出す側は、毎回すべてを描き直し、中身が既にあるファイルと違うものだけを書き直す。描画の依存関係の記録を持たずに済むからである。
+### Problem
 
-### 決めたこと
+The overview is built not by an LLM writing HTML each time but by a fixed rendering from the source data. This keeps the look consistent every time and leaves stale-content detection and diff readability on the source data side. The side that writes out the pages redraws everything every time and rewrites only the files whose contents differ from the existing ones, because then it does not need to keep a record of rendering dependencies.
 
-view は、同じ描画の入力からは、名前も中身のバイトもすべて同じページの並びを返す。
+### Decision
 
-### 見送った案
+From the same rendering input, view returns a sequence of pages whose names and content bytes are all the same.
 
-- 共通のスタイルシートだけを決め、LLM が毎回 HTML を書く。見た目が毎回揃わない。
+### Rejected options
 
-### 確認すること
+- Fix only a shared stylesheet and have an LLM write HTML each time. The look is not consistent from time to time.
 
-- C-view-rendering-7 どんな描画の入力でも、2回描いた結果のページの名前と中身のバイトがすべて等しい
+### Confirmations
 
-## 一覧は、目次に書いた順と入れ子のとおりに、1ページで描く
+- C-view-rendering-7 For any rendering input, the names and content bytes of the pages from two renderings are all equal
 
-状態: 実装済み
+## Draw the index on one page, in the order and nesting written in the table of contents
 
-### 問題
+Status: implemented
 
-一覧のページは、読みたいページを探す入口で、一覧そのものが製品の地図として、機能のまとまりと順番を見せる。ページの数には上限が無く、数十から百を超えても迷わない形が要る。
+### Problem
 
-### 決めたこと
+The index page is the entrance for finding the page one wants to read, and the index itself, as a map of the product, shows the groupings of features and their order. There is no upper limit on the number of pages, so a form is needed that does not get confusing even at several dozen or over a hundred.
 
-一覧は1ページで、目次のすべての項目を描く。検索は作らず、ブラウザのページ内検索に任せる。
+### Decision
 
-一覧の見出しは、目次のいちばん外側の目次の群の題名にする。その下に、目次の項目を書いた順に描く。項目が目次の群なら、その題名を見出しにして、その群の項目を中に入れ子にして描く。入れ子の深さは制限しない。項目が文書の名前なら、その文書の題名と、冒頭の lead の結論を描き、その文書のページへリンクする。
+The index is one page and draws every item of the table of contents. No search is built; it is left to the browser's in-page search.
 
-### 見送った案
+The heading of the index is the title of the outermost table-of-contents group. Below it, the items of the table of contents are drawn in the order written. If an item is a table-of-contents group, its title becomes a heading and the group's items are drawn nested inside it. The depth of nesting is not limited. If an item is a document name, the document's title and the conclusion of its opening lead are drawn, linking to that document's page.
 
-- 1段で束ねるだけにする。群が増えると、一段上の群の見出しの並びで同じ問題が起きる。
-- 題名や名前の文字の順で自動に並べる。日本語の題名は読みの順に並べる手段が無く、順不同に見える。使う順や工程の順という順番そのものが、地図としての情報になる。
-- 目次の群ごとにページを分ける。探すために群を当てて開くか、検索を自前で作ることになる。
+### Rejected options
 
-### 確認すること
+- Only bundle into one level. As groups increase, the same problem occurs in the sequence of headings of the groups one level up.
+- Sort automatically by the character order of titles or names. Japanese titles have no means of being sorted by reading, so they look unordered. The order itself, such as the order of use or the order of the workflow, is information as a map.
+- Split pages by table-of-contents group. To search, one would have to guess the group and open it, or build a search oneself.
 
-- C-view-rendering-8 一覧の見出しは目次の題名で、その下に目次の項目が書いた順に並び、目次の群の項目はその群の見出しの中に入れ子で描かれる
-- C-view-rendering-9 一覧の文書の項目には、その文書の題名と冒頭の lead の結論が描かれ、題名からその文書のページへリンクする
+### Confirmations
 
-## 文書のページは、題名、アウトライン、lead、冒頭の部品、節の順に描く
+- C-view-rendering-8 The heading of the index is the title of the table of contents, below it the items of the table of contents are in the order written, and the items of a table-of-contents group are drawn nested inside that group's heading
+- C-view-rendering-9 A document item in the index shows the document's title and the conclusion of its opening lead, and the title links to that document's page
 
-状態: 実装済み
+## Draw a document page in the order title, outline, lead, opening parts, sections
 
-### 問題
+Status: implemented
 
-全体像の冒頭に結論と要約を置く構成は、比べて正解だった。題名の後、最初の節より前には、lead に続けて部品を置けるのに、それを描く場所が無く、検査を通った部品が黙って消えていた。アウトラインは題名の下、lead より上に置く。
+### Problem
 
-### 決めたこと
+The structure that puts the conclusion and summary at the top of the overview proved right on comparison. After the title and before the first section, parts can be placed following the lead, but there was nowhere to draw them, and parts that had passed validation were silently disappearing. The outline goes below the title and above the lead.
 
-文書のページには、題名の後に、アウトラインを描くときはアウトライン（どの文書に描くかと中身は「一覧と移動」の話題の[文書のページに、節の見出しを並べたアウトラインを描く](navigation.md#文書のページに節の見出しを並べたアウトラインを描く)で決める）、冒頭の lead、lead に続く冒頭の部品を並びの順に、そのあと節を並びの順に描く。lead が題名の直後に来るのは、アウトラインを描かないときだけである。
+### Decision
 
-### 見送った案
+On a document page, after the title, the outline when one is drawn (which documents it is drawn on and its contents are decided in the Index and navigation topic under [Draw an outline listing the section headings on a document page](navigation.md#document-pages-get-an-outline-listing-the-section-headings)), the opening lead, and the opening parts following the lead are drawn in sequence order, and then the sections in sequence order. The lead comes directly after the title only when no outline is drawn.
 
-- 最初の節より前は lead だけにして、ほかの部品を元データの形の誤りにする。承認した元データの形を狭めることになる。
+### Rejected options
 
-### 確認すること
+- Allow only the lead before the first section and make any other part an error in the shape of the source data. That would narrow the approved shape of the source data.
 
-- C-view-rendering-10 文書のページには、題名、アウトライン、冒頭の lead、冒頭の部品、節がこの順に並び、冒頭の部品と節は渡した並びの順に描かれる
+### Confirmations
 
-## Markdown の文章の塊は、view が HTML にする
+- C-view-rendering-10 On a document page, the title, the outline, the opening lead, the opening parts and the sections appear in this order, and the opening parts and the sections are drawn in the order of the sequence passed
 
-状態: 実装済み
+## view turns Markdown text blocks into HTML
 
-### 問題
+Status: implemented
 
-部品の間には、普通の Markdown（見出し、文章、リスト、表、コード）を書ける。文章を HTML にするのは描画の仕事で、元データを読むのは描画の外の仕事である。
+### Problem
 
-### 決めたこと
+Ordinary Markdown (headings, text, lists, tables, code) can be written between parts. Turning text into HTML is the renderer's job, and reading the source data is a job outside the renderer.
 
-文書の中の Markdown の文章の塊は、view が HTML にする。見出し、文章、リスト、表、コードを描ける。
+### Decision
 
-### 確認すること
+view turns the Markdown text blocks in a document into HTML. It can draw headings, text, lists, tables and code.
 
-- C-view-rendering-11 文章の塊の見出し、リスト、表、コード、強調が、それぞれ HTML の要素として描かれる
+### Confirmations
 
-## 文章の塊の中の HTML は文字として出し、HTML のコメントは出さない
+- C-view-rendering-11 Headings, lists, tables, code and emphasis in a text block are each drawn as HTML elements
 
-状態: 実装済み
+## Output HTML in a text block as text, and do not output HTML comments
 
-### 問題
+Status: implemented
 
-Markdown には HTML をそのまま書ける。view がそれを HTML として出すと、元データに書いた文字がページの要素になり、スクリプトやページの外を読み込む要素を、元データからページに入れられる。[スクリプトを入れない決定](navigation.md#view-が返すどのページにもスクリプトを入れない)と、[外から読み込まない決定](#ページはフォントもスタイルも画像も外から読み込まない)が、元データの書き方ひとつで破れる。
+### Problem
 
-HTML のコメントは、元データを書く人やツールのための書き込み（ガイドの節のマーカーなど）で、ページの読み手に見せるものではない。
+HTML can be written directly in Markdown. If view outputs it as HTML, characters written in the source data become page elements, and scripts and elements that load things from outside the page can be put into the page from the source data. [The decision not to include scripts](navigation.md#no-page-that-view-returns-contains-a-script) and [the decision not to load from outside](#pages-load-no-fonts-styles-or-images-from-outside) would be broken by a single way of writing the source data.
 
-### 決めたこと
+HTML comments are annotations for the people and tools that write the source data (such as markers for guide sections), not something to show the page's reader.
 
-文章の塊の中に書いた HTML は、HTML として解釈せず、書いた文字のまま表示する。HTML のコメントはページに出さない。コメントの前後の文章は、コメントが無いときと同じに描く。
+### Decision
 
-### 確認すること
+HTML written in a text block is not interpreted as HTML and is shown as the characters written. HTML comments are not output to the page. The text before and after a comment is drawn the same as when there is no comment.
 
-- C-view-rendering-17 文章の塊に書いた HTML のタグ（"<script>" など）は、ページの要素にならず、文字として表示される
-- C-view-rendering-18 文章の塊に書いた HTML のコメントは、ページに出ず、コメントの前後の文章は、コメントが無いときと同じに描かれる
+### Confirmations
 
-## Markdown の参照リンクは、同じブロックの中の定義だけで解く
+- C-view-rendering-17 HTML tags written in a text block (such as "<script>") do not become page elements and are shown as text
+- C-view-rendering-18 HTML comments written in a text block do not appear on the page, and the text before and after a comment is drawn the same as when there is no comment
 
-状態: 実装済み
+## Resolve Markdown reference links only with definitions in the same block
 
-### 問題
+Status: implemented
 
-文章の塊の中の参照リンクの定義が、部品を挟んだ別の塊にあるとき、どう描くかを決める必要があった。view が使う Markdown の変換の道具には、外から定義を渡す口が無く、文書全体から定義を集める仕組みを新しく作ることになる。塊をまたいで参照を書く利用者がいる根拠も無い。
+### Problem
 
-### 決めたこと
+It had to be decided how to draw a reference link in a text block whose definition is in another block across a part. The Markdown conversion tool view uses has no way to pass definitions in from outside, so a new mechanism would have to be built to collect definitions from the whole document. There is also no evidence of users who write references across blocks.
 
-ブロックの中の参照リンクは、同じブロックの中にある参照の定義だけで解く。別のブロックにある定義では解かず、参照リンクは文字のまま出る。
+### Decision
 
-### 見送った案
+A reference link in a block is resolved only with the reference definitions in the same block. It is not resolved with a definition in another block, and the reference link is output as plain text.
 
-- 文書の全部の定義を、各ブロックに渡す。定義を集める仕組みを新しく作ることになる。
-- ブロックをまたぐ参照リンクを誤りにする。採らなかった理由は、記録に残っていない。
+### Rejected options
 
-### 確認すること
+- Pass all of the document's definitions to each block. A new mechanism to collect definitions would have to be built.
+- Make reference links across blocks an error. The reason it was not adopted is not on record.
 
-- C-view-rendering-12 あるブロックの参照リンクは同じブロックの定義で解かれ、別のブロックの定義を使う参照リンクは文字のまま出る
+### Confirmations
 
-## 参照はページの外へリンクせず、選ぶとその場で本文を開く
+- C-view-rendering-12 A reference link in a block is resolved with a definition in the same block, and a reference link that uses a definition in another block is output as plain text
 
-状態: 実装済み
+## References do not link outside the page; selecting one opens its body in place
 
-### 問題
+Status: implemented
 
-kotowari はリポジトリの公開先を知らず、全体像を配る簡易サーバは描いたページの置き場の下しか配らない。参照の出典がちゃんと見られる形なら、ページの外へ飛ばなくてよい、と利用者が判断した。
+### Problem
 
-### 決めたこと
+kotowari does not know where the repository is published, and the simple server that serves the overview serves only what is under the location of the drawn pages. The user judged that as long as the source of a reference can be properly viewed, there is no need to jump outside the page.
 
-参照は、参照の表の表示名で描き、選ぶとページを離れずに、その参照の本文を開いて見せる。どの参照も、ページの外へのリンクにしない。本文の無い参照の描き方は「言語」の話題の[本文の無い参照は、表示名だけを描き、選んでも何も開かない](languages.md#本文の無い参照は表示名だけを描き選んでも何も開かない)で決める。
+### Decision
 
-### 見送った案
+A reference is drawn with its display name from the reference table, and selecting it opens and shows the reference's body without leaving the page. No reference is made a link outside the page. How a reference without a body is drawn is decided in the Languages topic under [A reference without a body draws only its display name and opens nothing when selected](languages.md#a-reference-without-a-body-is-drawn-as-its-display-name-only-and-opens-nothing-when-selected).
 
-- 設定に書いたリポジトリの URL へリンクする。
-- 表示名だけを出す。
+### Rejected options
 
-### 確認すること
+- Link to the repository URL written in the configuration.
+- Show only the display name.
 
-- C-view-rendering-13 参照は表示名で描かれ、選ぶとその本文が開き、参照の文字列が指すファイルへのリンクがページに無い
+### Confirmations
 
-## 置き換え済みと後回しの参照に、マーカーを付ける
+- C-view-rendering-13 A reference is drawn with its display name, selecting it opens its body, and the page has no link to the file the reference string points to
 
-状態: 実装済み
+## Mark superseded and deferred references
 
-### 問題
+Status: implemented
 
-判断のつながりが古くなったことは、指摘にはしない。判断が置き換えられたことは記録から機械で分かり、ページの上で見えれば足りる。予定のものも全体像に含めるので、今のものと見分けられる必要がある。
+### Problem
 
-### 決めたこと
+That a chain of decisions has become stale is not made a finding. That a decision was superseded can be determined mechanically from the records, and it is enough for it to be visible on the page. Since planned things are also included in the overview, they need to be distinguishable from current ones.
 
-参照の状態は「今のもの」「置き換え済み」「後回し」の3つにする。置き換え済みの参照には置き換え済みのマーカーを、後回しの参照には後回しのマーカーを付け、今のものには付けない。マーカーの文字は UI の文字から取る。
+### Decision
 
-### 確認すること
+A reference has one of three states: "current", "superseded" and "deferred". A superseded reference gets the superseded marker, a deferred reference gets the deferred marker, and a current one gets none. The marker text is taken from the UI strings.
 
-- C-view-rendering-14 置き換え済みの参照には置き換え済みのマーカーが、後回しの参照にはそれとは別の後回しのマーカーが付き、今のものの参照には付かない
+### Confirmations
 
-## 古い節の見出しの近くに、古い節のマーカーを描く
+- C-view-rendering-14 A superseded reference gets the superseded marker, a deferred reference gets a separate deferred marker, and a current reference gets none
 
-状態: 実装済み
+## Draw a stale-section marker near the heading of a stale section
 
-### 問題
+Status: implemented
 
-全体像の節のうち、元になった仕様が変わったあと、まだ見直していない部分を、読む人が見分けられるようにしたい。直す作業は、実装のループではなく、次にその話題に触れた壁打ちが行うので、実装のループの作業は増やさない。
+### Problem
 
-### 決めたこと
+Readers should be able to tell which sections of the overview have not yet been reviewed since the specification they came from changed. The fixing is done not by the implementation loop but by the next brainstorm that touches the topic, so no work is added to the implementation loop.
 
-節が古いかどうかは、ガイドのマーカーが付いた節ごとに view の外の側が計算して、描画の入力で渡す。view は、古いと渡された節の見出しの近くに、仕様が変わったあとまだ見直していないことを示すマーカーを描く。マーカーの文字は UI の文字から取る。
+### Decision
 
-### 確認すること
+Whether a section is stale is computed per section with a guide marker by the side outside view and passed in the rendering input. Near the heading of a section passed as stale, view draws a marker showing that it has not yet been reviewed since the specification changed. The marker text is taken from the UI strings.
 
-- C-view-rendering-15 古いと渡された節の見出しの近くにだけマーカーがあり、古くない節の見出しには無い
+### Confirmations
 
-## ページは、フォントもスタイルも画像も、外から読み込まない
+- C-view-rendering-15 A marker appears only near the headings of sections passed as stale, and not on the headings of sections that are not stale
 
-状態: 実装済み
+## Pages load no fonts, styles or images from outside
 
-### 問題
+Status: implemented
 
-ページが外のサーバーから何かを読み込むと、ネットワークの無い所では表示が崩れ、ページを開いたことが外のサーバーに伝わる。文章の塊には Markdown で画像を書けるので、元データを書いた人が意図せずに外の画像を読み込ませることもある。フォントについては、外から読み込まないと決めた理由は残っていない。
+### Problem
 
-### 決めたこと
+If a page loads something from an outside server, the display breaks where there is no network, and the fact that the page was opened is conveyed to the outside server. Since images can be written in Markdown in a text block, the person who wrote the source data may also unintentionally make the page load outside images. For fonts, the reason for deciding not to load them from outside is not on record.
 
-ページは、フォント、スタイル、画像を、ページの外（"http://" や "https://" で始まる場所）から読み込まない。フォントは OS のフォントを使い、スタイルは view が返す "style.css" だけを使う。文章の塊に外の画像やスタイルを指す書き方があっても、それを読み込む要素をページに作らない。
+### Decision
 
-スクリプトは、外からに限らず、[どのページにも入れない](navigation.md#view-が返すどのページにもスクリプトを入れない)。
+Pages do not load fonts, styles or images from outside the page (locations starting with "http://" or "https://"). Fonts use the OS fonts, and styles use only the "style.css" that view returns. Even if a text block contains a way of writing that points to an outside image or style, no element that loads it is created on the page.
 
-### 確認すること
+Scripts, not only from outside, are [not included in any page](navigation.md#no-page-that-view-returns-contains-a-script).
 
-- C-view-rendering-16 どのページにも、外からフォントを読み込む指定（"http://" や "https://" で始まる参照）が無い
-- C-view-rendering-19 すべての種類の部品を描いたどのページにも、外からスタイルや画像を読み込む指定が無い
-- C-view-rendering-20 文章の塊に、外の画像やスタイルを指す Markdown や HTML を書いても、ページに画像、スタイル、スクリプト、埋め込みの要素ができない
+### Confirmations
+
+- C-view-rendering-16 No page has a specification that loads fonts from outside (a reference starting with "http://" or "https://")
+- C-view-rendering-19 No page that draws every kind of part has a specification that loads styles or images from outside
+- C-view-rendering-20 Even if Markdown or HTML pointing to an outside image or style is written in a text block, no image, style, script or embedding element is created on the page
