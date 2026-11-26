@@ -69,6 +69,8 @@ When rewriting, if the rejected options are not in the records, the whole sectio
 
 Details for which who decided cannot be told apart are not put in the decision text, and are left to the code and tests. The dropped details are kept as a list in the mapping table. The mapping table is placed in the frozen tree. This is because every document under the decision document location is read as a topic document.
 
+Of the dropped details, those that concern safety (those whose dropping would make a dangerous behaviour disappear from the decisions) are written as decisions and confirmation rows when a current test or a skill's text checks them.
+
 Places where code or tests point at frozen documents as grounds are swept when moving, and rewritten into the current decision documents or into code comments.
 
 ### Rejected options
@@ -79,6 +81,7 @@ Places where code or tests point at frozen documents as grounds are swept when m
 
 - C-core-switch-4 (by reading) For each rewritten topic, there is a mapping table that holds the correspondence between old IDs and new IDs and the list of dropped details
 - C-core-switch-5 (by reading) No places remain in the code and tests that point at frozen-tree documents as grounds
+- C-core-switch-8 (by reading) The mapping table of a rewritten topic has a list of the safety-related dropped details that were returned to the decisions (the detail, the new ID, and what checks it)
 
 ## Two points are placed during the switch where the user looks at the real thing and judges
 
