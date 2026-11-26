@@ -82,12 +82,12 @@ We want a schema to be able to constrain the shape of statements and bullet line
 
 A regular expression and an allow list can be imposed on a statement. A statement that does not satisfy the regular expression is a statement_pattern_mismatch finding, and a statement not in the allow list is a statement_enum_invalid finding.
 
-A regular expression can be imposed on a bullet line. A line that does not satisfy it is a bullet_pattern_mismatch finding. Matching is done only on the part of the original marker line without the marker. Continuation paragraphs, and lines that follow the marker line with no blank line between, are not matched.
+A regular expression can be imposed on a bullet line. A line that does not satisfy it is a bullet_pattern_mismatch finding. Which text is matched is decided in [The regular expression of a bullet is matched against the lead paragraph of the list item joined into one line](#the-regular-expression-of-a-bullet-is-matched-against-the-lead-paragraph-of-the-list-item-joined-into-one-line).
 
 ### Confirmations
 
 - C-schema-block-6 If a statement does not match the regular expression it is a statement_pattern_mismatch finding, and if it is not in the allow list it is a statement_enum_invalid finding
-- C-schema-block-7 If a bullet line does not match the regular expression it is a bullet_pattern_mismatch finding; matching is done only on the part of the marker line without the marker, and continuation paragraphs and lines following the marker line are not matched
+- C-schema-block-7 If a bullet line does not match the regular expression it is a bullet_pattern_mismatch finding
 
 ## The order of field lines is matched only when enforcing it is declared
 
@@ -357,7 +357,7 @@ Table and code block rules can be declared on items too. The content of the rule
 
 ## The regular expression of a bullet is matched against the lead paragraph of the list item joined into one line
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

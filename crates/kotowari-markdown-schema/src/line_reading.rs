@@ -78,7 +78,7 @@ impl LineReader {
         }
         if let Some(fence) = Fence::open(text) {
             let (block, next) = fence.read(lines, index);
-            self.attach(block, indent_width(text));
+            self.attach(block, indent_width(text), next);
             return next;
         }
         if let Some(depth) = heading_depth(text) {
@@ -87,7 +87,7 @@ impl LineReader {
             return index + 1;
         }
         if let Some((block, next)) = table_at(lines, index) {
-            self.attach(block, indent_width(text));
+            self.attach(block, indent_width(text), next);
             return next;
         }
         if !is_thematic_break(text)
@@ -98,7 +98,7 @@ impl LineReader {
             if let Some(mut fence) = Fence::open(&marker.content) {
                 fence.indent = marker.content_column;
                 let (block, next) = fence.read(lines, index);
-                self.attach(block, marker.indent);
+                self.attach(block, marker.indent, next);
                 return next;
             }
             self.list_line(text, line, &marker);
@@ -128,6 +128,7 @@ impl LineReader {
             text.trim_start().to_string()
         };
         let content = marker.content.clone();
+        self.extend_open(line);
         if marker.ordered {
             // 順序付きの行は子を持たない。子にあたる行はその後ろの兄弟になる（TBL-schema-007）
             self.attach_here(Block::OrderedList {
@@ -143,9 +144,18 @@ impl LineReader {
     }
 
     /// 字下げ `indent` の表やコードブロックを、届く一覧の行の子か、`ノード`の直下に置く。
-    fn attach(&mut self, block: Block, indent: usize) {
+    /// `last` はそのブロックの最後の行（1始まり）で、開いている一覧の行はそこまで延びる。
+    fn attach(&mut self, block: Block, indent: usize, last: usize) {
         self.close_deeper_than(indent);
+        self.extend_open(last);
         self.attach_here(block);
+    }
+
+    /// 開いている一覧の行の最後の行を `line` まで延ばす。
+    fn extend_open(&mut self, line: usize) {
+        for item in &mut self.open {
+            item.block.extend_end(line);
+        }
     }
 
     fn attach_here(&mut self, block: Block) {

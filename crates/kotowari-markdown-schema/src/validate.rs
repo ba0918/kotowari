@@ -1,6 +1,6 @@
 //! 文書の構造と閉じた世界の検証。
 
-use crate::document::{Block, Document, Heading, Item};
+use crate::document::{Block, Document, Heading, Item, joined_lead};
 use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
     Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
@@ -600,7 +600,8 @@ fn validate_declared_bullet(
     findings: &mut Vec<Finding>,
 ) {
     bullet_lines.push(line);
-    let text = marker_line_part(text);
+    let text = joined_lead(text);
+    let text = text.as_str();
     if when_allows(bullets.when.as_ref(), fields, sibling_blocks)
         && let Some(pattern) = &bullets.pattern
         && !pattern.is_match(text)
@@ -616,12 +617,6 @@ fn validate_declared_bullet(
     }
     // when は required / pattern / enum にだけ効く。子の照合は常に行う（REQ-schema-020）。
     validate_children(block, bullets.children.as_ref(), findings);
-}
-
-/// lead のうちマーカーの行にある部分。段落の読み方では遅延継続の行も lead 段落に
-/// 入るが、箇条書きの照合はマーカーの行だけに当てる（REQ-schema-054）
-fn marker_line_part(lead: &str) -> &str {
-    lead.lines().next().unwrap_or_default().trim_end()
 }
 
 /// 箇条書きの子の行を undeclared_line にする。子がさらに子を持つときも再帰する。

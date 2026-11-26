@@ -2116,7 +2116,7 @@ document:
     );
 }
 
-// @kotowari[EX-schema-046, C-schema-extract-24]
+// @kotowari[EX-schema-046, C-schema-extract-47]
 #[test]
 fn ex_schema_046_end_outside_items_and_sections_stops() {
     let schema = r#"

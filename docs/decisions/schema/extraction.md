@@ -16,7 +16,7 @@ If values taken from a document were converted to dates or numbers, mds would de
 
 The extracted values taken from a document are output as strings. Even a value that looks like a date or a number is not converted.
 
-Values derived from positions rather than from the text of the document (the line number and the last line of the element among the derived values) are outside this rule. How they are decided is decided in [Derived values are five words, and each word is limited to the nodes on which it can be declared](#derived-values-are-five-words-and-each-word-is-limited-to-the-nodes-on-which-it-can-be-declared).
+Values derived from positions rather than from the text of the document (the line number and the last line of the element among the derived values) are outside this rule. How they are decided is decided in [Derived values are five words](#derived-values-are-five-words).
 
 ### Rejected options
 
@@ -70,7 +70,7 @@ The declaration of an extraction used to list, in one list, the place to put a v
 
 If the value of the element were given an implicit unnamed place, it would compete for names with the derived values at the same level. If the value of the element is also given a declared key, the competition itself disappears. A declaration that wants only derived values (no cells) is a legitimate intent, and since a place always exists, the result is also as predicted.
 
-The short form is used by 13 of the 22 declarations, and it is not ambiguous in itself. A named capture cuts out the value of an element with a regular expression, and is not a separate value derived from the element. The reason for allowing a named capture to be declared only on the title is not recorded.
+The short form is used by 13 of the 22 declarations, and it is not ambiguous in itself.
 
 ### Decision
 
@@ -78,7 +78,7 @@ The extraction of a node is declared as one nested mapping. `path` holds exactly
 
 The short form `extract: <name>` is read as an abbreviation of `{ path: <name> }`.
 
-The named capture `group` is written next to `path`, not under `of`, and can be declared only on the title. The extraction of a title that declares `group` takes as its value the text that the named capture of the title's regular expression captured. A schema that declares `group` on a node other than the title, and a schema whose title has no regular expression or whose regular expression does not contain the specified named capture, are a stop.
+How a named capture is written is decided in [Named captures are written with group as the value of a key of of, on the title and on bullets](#named-captures-are-written-with-group-as-the-value-of-a-key-of-of-on-the-title-and-on-bullets).
 
 ### Rejected options
 
@@ -89,8 +89,6 @@ The named capture `group` is written next to `path`, not under `of`, and can be 
 - C-schema-extract-5 For a schema that declares an extraction without `path` or an extraction written as a list of forms, `values` stops, and the exit code is 2
 - C-schema-extract-6 The element object of an extraction that has only `of` written, without `value`, holds only the keys of the derived values and the placement paths that inner nodes declared
 - C-schema-extract-7 The short form `extract: <name>` is read the same as a declaration with only `path` written
-- C-schema-extract-8 When `group` is declared on the extraction of the title, the text that the named capture of the title's regular expression captured becomes the value
-- C-schema-extract-9 A schema that declares `group` on a node other than the title, and a schema in which the title that declares `group` has no regular expression or its regular expression does not contain that named capture, stop
 
 ## An object per element is assembled only when value or a derived value is declared
 
@@ -106,7 +104,7 @@ For any node, if neither `value` nor a derived value is declared, the shorthand 
 
 | Node | Unit of element (when `value` or a derived value is declared) | Value | Line the raw line and the line number point at |
 |---|---|---|---|
-| Title | Not split | The heading text. When `group` is declared, the text captured by the named capture | The heading line of the title |
+| Title | Not split | The heading text | The heading line of the title |
 | Field line | Not split | The value string after the name. When a delimiter is declared, the array of split strings | The line of that field line |
 | Statement | Lines, only when a derived value is declared. Not split if none is declared | When not split, the body string. When split into lines, the text of the line with leading and trailing whitespace removed | That line |
 | Section | Not split | The body string joining only the lines of statements and bullets. Field lines, tables, code blocks, and items are not included | The heading line of the section |
@@ -167,7 +165,7 @@ When a field line, statement, bullet, table, or code block inside an item declar
 - C-schema-extract-19 A schema in which the item itself declares no extraction and only a field line, table, or code block inside the item declares an extraction stops with `schema_invalid`. If the item declares an extraction, the same inner declarations do not stop
 - C-schema-extract-20 A schema that declares an extraction only on a field line that is a child of a bullet inside an item (however deep the nesting) also stops with `schema_invalid`
 
-## Derived values are five words, and each word is limited to the nodes on which it can be declared
+## Derived values are five words
 
 Status: implemented
 
@@ -183,7 +181,7 @@ The derived values are five: the line number `line`, the ID of the item heading 
 
 The line number and the last line of the element are output as JSON numbers.
 
-`line` and `raw` can be declared on any node. `id` and `name` can be declared only on items, and a schema that declares them on a node other than an item is a stop. `end` can be declared only on items and sections, and a schema that declares it on any other node is a stop.
+The nodes on which each word can be declared are decided in [The derived value name can be declared on sections too, and end on bullets too](#the-derived-value-name-can-be-declared-on-sections-too-and-end-on-bullets-too).
 
 The line that the line number and the raw line point at follows the table in [An object per element is assembled only when value or a derived value is declared](#an-object-per-element-is-assembled-only-when-value-or-a-derived-value-is-declared). For a table row, the header row and the delimiter row are not counted, and the data row is pointed at. The raw line outputs the text of that line as it is, including indentation and trailing whitespace, and does not reassemble it.
 
@@ -195,8 +193,6 @@ The line that the line number and the raw line point at follows the table in [An
 
 - C-schema-extract-21 The values of `line` and `end` are output as JSON numbers
 - C-schema-extract-22 For a schema that declares as a derived value a word that is none of the five, `values` stops, and the exit code is 2
-- C-schema-extract-23 A schema that declares `id` or `name` on a node other than an item stops
-- C-schema-extract-24 For a schema that declares `end` on a node other than items and sections (for example a table), `values` stops with `schema_invalid`
 - C-schema-extract-25 `line` and `raw` point at the heading line for a title, at that data row for a table, at that line for a field line, and at the opening line of the fence for a code block
 - C-schema-extract-26 `raw` outputs the text of the heading or line as written, including indentation, trailing whitespace, and the symbols of inline markup
 
@@ -391,7 +387,7 @@ Whether to have a means of viewing a Markdown document as a tree as it is, separ
 
 ## The derived value name can be declared on sections too, and end on bullets too
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -412,7 +408,7 @@ The `name` of a section is the text of the section's heading (read as in [Headin
 
 ### Rejected options
 
-- Previous decision: `id` and `name` can be declared only on items, and `end` only on items and sections (the third paragraph of the Decision of [Derived values are five words, and each word is limited to the nodes on which it can be declared](#derived-values-are-five-words-and-each-word-is-limited-to-the-nodes-on-which-it-can-be-declared)). It was dropped because the text of a section's heading and the last line of a bullet's row cannot be taken out.
+- Previous decision: `id` and `name` can be declared only on items, and `end` only on items and sections (the third paragraph of the Decision of [Derived values are five words](#derived-values-are-five-words)). It was dropped because the text of a section's heading and the last line of a bullet's row cannot be taken out.
 
 ### Confirmations
 
@@ -422,7 +418,7 @@ The `name` of a section is the text of the section's heading (read as in [Headin
 
 ## Named captures are written with group as the value of a key of of, on the title and on bullets
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

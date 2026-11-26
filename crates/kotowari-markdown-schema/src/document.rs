@@ -160,6 +160,8 @@ pub enum Block {
         text: String,
         /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
         lead_end: usize,
+        /// 一覧の項目の最後の行。継続段落と子を含む
+        end: usize,
         name: String,
         value: String,
         /// フィールド行の子である継続段落の行の範囲。REQ-schema-030 ではフィールド行の一部として扱う
@@ -174,6 +176,8 @@ pub enum Block {
         text: String,
         /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
         lead_end: usize,
+        /// 一覧の項目の最後の行。継続段落と子を含む
+        end: usize,
         /// リスト項目の子である継続段落の行の範囲。REQ-schema-030 では箇条書きの一部として扱う
         continuation: Vec<LineSpan>,
         /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
@@ -583,6 +587,7 @@ fn blocks_from_list_item(
                 line_text: original_item_line(item, src, preserve_indent),
                 text: String::new(),
                 lead_end: item_line,
+                end: item_line,
                 continuation: Vec::new(),
                 children: Vec::new(),
                 line: item_line,
@@ -590,11 +595,23 @@ fn blocks_from_list_item(
         });
     }
     let mut out = Vec::new();
-    if let Some(lead) = lead_block {
+    if let Some(mut lead) = lead_block {
+        // 一覧の項目の位置は、後ろに続く空行で終わることがある。最後の空でない行を最後の行にする
+        let mut end = line_at_end(item.position.as_ref());
+        while end > item_line && raw_line_of(lines, end).trim().is_empty() {
+            end -= 1;
+        }
+        lead.extend_end(end);
         out.push(lead);
     }
     out.extend(extra);
     out
+}
+
+/// 一覧の行の lead 段落を1行につないだ文字。行ごとに前後の空白を除き、改行を空白1つに
+/// 置き換える。箇条書きの正規表現と名前付きキャプチャはこの文字に照らす
+pub(crate) fn joined_lead(lead: &str) -> String {
+    lead.lines().map(str::trim).collect::<Vec<_>>().join(" ")
 }
 
 /// 段落が画像ノードだけで構成されているか。画像だけの行は文として数えない。
@@ -673,6 +690,7 @@ impl Block {
                 line_text,
                 text,
                 lead_end,
+                end: lead_end,
                 name,
                 value,
                 continuation: Vec::new(),
@@ -683,6 +701,7 @@ impl Block {
                 line_text,
                 text,
                 lead_end,
+                end: lead_end,
                 continuation: Vec::new(),
                 children: Vec::new(),
                 line,
@@ -702,6 +721,13 @@ impl Block {
             | Block::Other { line }
             | Block::Unruled { line, .. }
             | Block::Subheading { line, .. } => *line,
+        }
+    }
+
+    /// 一覧の行の最後の行を、`line` まで延ばす。一覧の行でないブロックは変えない。
+    pub(crate) fn extend_end(&mut self, line: usize) {
+        if let Block::Field { end, .. } | Block::Bullet { end, .. } = self {
+            *end = (*end).max(line);
         }
     }
 
@@ -782,6 +808,10 @@ fn start_line(node: &Node) -> usize {
 /// ノードの位置が指す範囲の生テキスト。インラインの Markdown 記法を保持する。
 fn raw_slice(src: &str, node: &Node) -> String {
     slice_at(src, node.position())
+}
+
+fn line_at_end(position: Option<&markdown::unist::Position>) -> usize {
+    position.map(|p| p.end.line).unwrap_or(1)
 }
 
 fn line_at(position: Option<&markdown::unist::Position>) -> usize {

@@ -19,7 +19,7 @@ open: false
 document:
   title:
     pattern: "^ADR-(?<id>\\d{4}):"
-    extract: { path: id, group: id }
+    extract: { path: title, of: { id: { group: id } } }
   preamble:
     fields:
       - name: 状態
@@ -98,15 +98,15 @@ document:
     assert_eq!(field.effective_separator(), Some(","));
 }
 
-// @kotowari[REQ-schema-035, C-schema-extract-7]
+// @kotowari[REQ-schema-035, C-schema-extract-7, C-schema-extract-51]
 #[test]
-fn extract_accepts_the_shorthand_and_the_named_group() {
+fn extract_accepts_the_shorthand_and_a_named_group_in_of() {
     // 略記（`extract: <名前>`）は `{ path: <名前> }` と同じに読む（REQ-schema-048）
     let yaml = r#"
 document:
   title:
     pattern: "^ADR-(?<id>\\d{4})"
-    extract: { path: id, group: id }
+    extract: { path: id, of: { id: { group: id } } }
   preamble:
     fields:
       - name: 状態
@@ -116,13 +116,15 @@ document:
     let title = schema.document.title.unwrap();
     let title_extract = title.extract.as_ref().unwrap();
     assert_eq!(title_extract.path(), "id");
-    assert_eq!(title_extract.group(), Some("id"));
+    assert_eq!(
+        title_extract.of(),
+        &[("id".to_string(), OfKind::Group("id".to_string()))]
+    );
     let preamble = schema.document.preamble.unwrap();
     let field_extract = preamble.fields[0].extract.as_ref().unwrap();
     assert_eq!(field_extract.path(), "status");
     assert_eq!(field_extract.value(), None);
     assert!(field_extract.of().is_empty());
-    assert_eq!(field_extract.group(), None);
 }
 
 // @kotowari[REQ-schema-018, EX-schema-008, C-schema-lang-3]
@@ -205,50 +207,6 @@ fn invalid_regex_pattern_is_an_error() {
 fn invalid_item_id_regex_is_an_error() {
     let yaml = "document:\n  sections:\n    - name: x\n      items:\n      - id: \"(\"\n";
     assert_rejected(yaml, "regex parse error");
-}
-
-// @kotowari[REQ-schema-035, C-schema-extract-9]
-#[test]
-fn capture_extract_outside_title_is_schema_invalid() {
-    // `group` の宣言（名前付きキャプチャ）は題名にだけ使える。題名以外のノードで
-    // 宣言したときは schema_invalid の停止になる（TBL-schema-008）。
-    let cases: &[(&str, &str)] = &[
-        (
-            "field",
-            "document:\n  preamble:\n    fields:\n      - name: 状態\n        extract: { path: s, group: x }\n",
-        ),
-        (
-            "statement",
-            "document:\n  preamble:\n    statement:\n      extract: { path: s, group: x }\n",
-        ),
-        (
-            "bullets",
-            "document:\n  preamble:\n    bullets:\n      extract: { path: b, group: x }\n",
-        ),
-        (
-            "section",
-            "document:\n  sections:\n    - name: 状況\n      extract: { path: sec, group: x }\n",
-        ),
-        (
-            "item",
-            "document:\n  sections:\n    - name: 要求\n      items:\n      - extract: { path: item, group: x }\n",
-        ),
-        (
-            "table",
-            "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [a]\n        extract: { path: t, group: x }\n",
-        ),
-        (
-            "codeblock",
-            "document:\n  sections:\n    - name: コード\n      codeblock:\n        extract: { path: c, group: x }\n",
-        ),
-    ];
-    for (node, yaml) in cases {
-        // node に Capture 形の extract を宣言したのに schema_invalid にならない
-        assert_rejected(
-            yaml,
-            &format!("{node} extract cannot use the named-group capture form"),
-        );
-    }
 }
 
 // @kotowari[REQ-schema-036, TBL-schema-009, C-schema-cli-22]
@@ -342,35 +300,6 @@ document:
     assert_rejected(
         yaml,
         "item internals declare extract but the item itself does not",
-    );
-}
-
-// @kotowari[REQ-schema-035, C-schema-extract-9]
-#[test]
-fn capture_extract_without_pattern_is_schema_invalid() {
-    // `group` を宣言した抽出は pattern の名前付きキャプチャを取る。pattern が無い
-    // 題名は schema_invalid の停止になる（REQ-schema-048）。
-    let yaml = r#"
-document:
-  title:
-    extract: { path: id, group: id }
-"#;
-    assert_rejected(yaml, "title capture extract requires a pattern");
-}
-
-// @kotowari[REQ-schema-035, C-schema-extract-9]
-#[test]
-fn capture_extract_with_pattern_missing_the_group_is_schema_invalid() {
-    // pattern が指定の名前付きキャプチャを含まない題名も schema_invalid（TBL-schema-008）。
-    let yaml = r#"
-document:
-  title:
-    pattern: "^ADR-(?<other>\\d{4}):"
-    extract: { path: id, group: id }
-"#;
-    assert_rejected(
-        yaml,
-        "title pattern does not contain a named capture group \"id\"",
     );
 }
 
@@ -589,7 +518,7 @@ document:
     assert_rejected(yaml, "repeat min is greater than max");
 }
 
-// @kotowari[REQ-schema-035, REQ-schema-048, C-schema-extract-23]
+// @kotowari[REQ-schema-035, REQ-schema-048, C-schema-extract-47]
 #[test]
 fn of_id_outside_an_item_is_rejected() {
     let yaml = r#"

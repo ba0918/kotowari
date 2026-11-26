@@ -160,17 +160,17 @@ document:
     );
 }
 
-// @kotowari[REQ-schema-035, C-schema-extract-8]
+// @kotowari[REQ-schema-035, C-schema-extract-51]
 #[test]
 fn title_named_group_capture_is_extracted() {
     let schema = r#"
 document:
   title:
     pattern: "^ADR-(?<id>\\d{4}):"
-    extract: { path: id, group: id }
+    extract: { path: title, of: { id: { group: id } } }
 "#;
     let v = values(schema, "# ADR-0042: 話\n");
-    assert_eq!(v["id"], "0042");
+    assert_eq!(v["title"]["id"], "0042");
 }
 
 // @kotowari[REQ-schema-019, REQ-schema-038, C-schema-extract-4, C-schema-lang-11]

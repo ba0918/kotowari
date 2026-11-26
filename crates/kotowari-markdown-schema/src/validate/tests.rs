@@ -84,33 +84,43 @@ fn continuation_paragraph_does_not_count_as_statement() {
     assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
 }
 
-// @kotowari[REQ-schema-054, C-schema-block-7]
+// @kotowari[C-schema-block-32]
 #[test]
-fn bullet_pattern_is_matched_only_on_the_marker_line_not_on_a_lazy_continuation_line() {
-    // 段落の読み方では遅延継続の行も lead 段落に入るが、照合はマーカーの行だけに当てる。
-    // 行の読み方と同じ結果になる
-    let schema = |reading: &str| {
+fn bullet_pattern_is_matched_against_the_lead_paragraph_joined_into_one_line() {
+    let schema = |pattern: &str| {
         format!(
-            "reading: {reading}\ndocument:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: {{ min: 0 }}\n        pattern: \"^親$\"\n"
+            "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: {{ min: 0 }}\n        pattern: \"{pattern}\"\n"
         )
     };
-    let doc = "## 理由\n\n- 親\n続き\n";
-    for reading in ["paragraph", "line"] {
-        let findings = validate_src(&schema(reading), doc, true);
-        assert!(
-            !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "{reading}: {findings:?}"
-        );
-    }
-    let findings = validate_src(&schema("paragraph"), "## 理由\n\n- 子\n続き\n", true);
+    let doc = "## 理由\n\n- a b\n  c\n";
+    assert!(validate_src(&schema("^a b c$"), doc, false).is_empty());
+    let findings = validate_src(&schema("^a b$"), doc, false);
     let mismatch = findings
         .iter()
         .find(|f| f.kind == FindingKind::BulletPatternMismatch)
-        .expect("マーカーの行が pattern に合わなければ指摘する");
+        .expect("つないだ文字が pattern に合わなければ指摘する");
+    assert_eq!(mismatch.line, Some(3));
     assert!(
-        mismatch.detail.contains("bullet \"子\" does"),
+        mismatch.detail.contains("bullet \"a b c\" does"),
         "{mismatch:?}"
     );
+}
+
+// @kotowari[C-schema-block-32, C-schema-block-9]
+#[test]
+fn bullet_pattern_when_reading_by_line_sees_only_the_marker_line() {
+    let schema = "reading: line\ndocument:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n        pattern: \"^親$\"\n      statement: { repeat: { min: 0 } }\n";
+    let findings = validate_src(schema, "## 理由\n\n- 親\n続き\n", false);
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+// @kotowari[C-schema-block-33]
+#[test]
+fn bullet_pattern_does_not_see_continuation_paragraphs_or_child_lists() {
+    let schema = "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 0 }\n        pattern: \"^a$\"\n        children: { open: true }\n";
+    let doc = "## 理由\n\n- a\n\n  b\n\n  - c\n";
+    let findings = validate_src(schema, doc, false);
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 // @kotowari[REQ-schema-030, C-schema-block-7]

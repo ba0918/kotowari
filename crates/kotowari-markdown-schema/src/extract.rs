@@ -1,8 +1,10 @@
 //! スキーマの `extract` に沿って値を組み立てる。
 
-use crate::document::{Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection};
+use crate::document::{
+    Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection, joined_lead,
+};
 use crate::schema::{
-    Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
+    Bullets, Children, CodeBlock, Extract, Field, OfKind, Pattern, Schema, Statement, Table,
     is_declared_field, item_internals_declare_extract, select_item, select_section,
 };
 use serde_json::{Map, Value};
@@ -68,23 +70,12 @@ fn extract_title(schema: &Schema, document: &Document, root: &mut Map<String, Va
     let Some(heading) = document.titles.first() else {
         return;
     };
-    // 名前付きキャプチャを宣言した題名の要素の値は、題名の文字ではなく
-    // pattern が捕まえた部分である（REQ-schema-048）
-    let value = match extract.group() {
-        Some(group) => {
-            let Some(captured) = title
-                .pattern
-                .as_ref()
-                .and_then(|p| p.captures(&heading.text))
-                .and_then(|caps| caps.name(group).map(|m| m.as_str().to_string()))
-            else {
-                return;
-            };
-            Value::String(captured)
-        }
-        None => Value::String(heading.text.clone()),
+    // 名前付きキャプチャを宣言しても、題名の要素の値は題名の文字のまま
+    let got = Derived {
+        captures: captures_of(extract, title.pattern.as_ref(), &heading.text),
+        ..Derived::at(heading.line)
     };
-    let element = element_value(extract, document, value, &Derived::at(heading.line));
+    let element = element_value(extract, document, Value::String(heading.text.clone()), &got);
     place(root, extract.path(), element);
 }
 
@@ -379,7 +370,7 @@ fn extract_bullets(
                     list_item_pieces(b, bullets.children.as_ref(), doc),
                     doc,
                 )),
-                &Derived::at(b.line()),
+                &bullet_derived(b, extract, bullets),
             )
         })
         .collect();
@@ -718,6 +709,7 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
             id,
             name: Some(name),
             end: Some(doc.end_line(item.line, 3)),
+            captures: Vec::new(),
         };
         if let Some(key) = extract.value() {
             place(
@@ -795,8 +787,38 @@ struct Derived {
     line: Option<usize>,
     id: Option<String>,
     name: Option<String>,
-    /// 要素の最後の行。項目と節だけが持つ（REQ-schema-062）
+    /// 要素の最後の行。項目と節と箇条書きが持つ（REQ-schema-062）
     end: Option<usize>,
+    /// `of` に書いた名前付きキャプチャのうち、照合に加わったものの名前と捕まえた文字
+    captures: Vec<(String, String)>,
+}
+
+/// 箇条書きの要素の導かれる値の材料。名前付きキャプチャは、lead 段落を1行につないだ文字に
+/// 箇条書きの正規表現を照らして取る（検査と同じ文字）。
+fn bullet_derived(block: &Block, extract: &Extract, bullets: &Bullets) -> Derived {
+    let (Block::Bullet { text, end, .. } | Block::Field { text, end, .. }) = block else {
+        return Derived::at(block.line());
+    };
+    Derived {
+        end: Some(*end),
+        captures: captures_of(extract, bullets.pattern.as_ref(), &joined_lead(text)),
+        ..Derived::at(block.line())
+    }
+}
+
+/// `of` に書いた名前付きキャプチャの捕まえた文字。照合に加わらなかったキャプチャは含めない。
+fn captures_of(extract: &Extract, pattern: Option<&Pattern>, text: &str) -> Vec<(String, String)> {
+    let Some(captures) = pattern.and_then(|p| p.captures(text)) else {
+        return Vec::new();
+    };
+    extract
+        .groups()
+        .filter_map(|name| {
+            captures
+                .name(name)
+                .map(|m| (name.to_string(), m.as_str().to_string()))
+        })
+        .collect()
 }
 
 impl Derived {
@@ -860,6 +882,11 @@ fn place_derived(map: &mut Map<String, Value>, extract: &Extract, doc: &Document
             OfKind::Id => got.id.clone().map(Value::String),
             OfKind::Name => got.name.clone().map(Value::String),
             OfKind::End => got.end.map(Value::from),
+            OfKind::Group(name) => got
+                .captures
+                .iter()
+                .find(|(captured, _)| captured == name)
+                .map(|(_, text)| Value::String(text.clone())),
         };
         if let Some(value) = value {
             place(map, key, value);
@@ -887,5 +914,7 @@ fn place(root: &mut Map<String, Value>, path: &str, value: Value) {
     current.insert((*last).to_string(), value);
 }
 
+#[cfg(test)]
+mod group_tests;
 #[cfg(test)]
 mod tests;

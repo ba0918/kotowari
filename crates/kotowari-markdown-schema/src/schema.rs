@@ -534,8 +534,7 @@ impl When {
 }
 
 /// `of` が選ぶ、ノードから導かれる値の種類（REQ-schema-048）。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OfKind {
     /// ノードまたは要素が現れた行番号（1始まりの数値）
     Line,
@@ -545,25 +544,76 @@ pub enum OfKind {
     Name,
     /// 生の行。字下げと末尾の空白を含み、組み立て直さない
     Raw,
-    /// 項目と節の最後の行（1始まりの数値。REQ-schema-062）
+    /// 項目と節の最後の行、箇条書きの一覧の項目の最後の行（1始まりの数値。REQ-schema-062）
     End,
+    /// ノードの正規表現のこの名前付きキャプチャが捕まえた文字。`{ group: <名前> }` と書く
+    Group(String),
+}
+
+/// `of` の値に書く語。
+const OF_WORDS: &[&str] = &["line", "id", "name", "raw", "end"];
+
+impl<'de> Deserialize<'de> for OfKind {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        d.deserialize_any(OfKindVisitor)
+    }
+}
+
+struct OfKindVisitor;
+
+impl<'de> serde::de::Visitor<'de> for OfKindVisitor {
+    type Value = OfKind;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("one of the words line, id, name, raw, end, or { group: <name> }")
+    }
+
+    fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<OfKind, E> {
+        match v {
+            "line" => Ok(OfKind::Line),
+            "id" => Ok(OfKind::Id),
+            "name" => Ok(OfKind::Name),
+            "raw" => Ok(OfKind::Raw),
+            "end" => Ok(OfKind::End),
+            other => Err(E::unknown_variant(other, OF_WORDS)),
+        }
+    }
+
+    fn visit_map<M: serde::de::MapAccess<'de>>(self, mut map: M) -> Result<OfKind, M::Error> {
+        let mut captured: Option<String> = None;
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "group" if captured.is_none() => captured = Some(map.next_value()?),
+                "group" => return Err(M::Error::custom("of has \"group\" twice")),
+                other => {
+                    return Err(M::Error::custom(format!(
+                        "unknown key \"{other}\" in a derived value; accepted: \"group\""
+                    )));
+                }
+            }
+        }
+        captured
+            .map(OfKind::Group)
+            .ok_or_else(|| M::Error::custom("a derived value mapping requires \"group\""))
+    }
 }
 
 impl OfKind {
     /// スキーマに書く語。
-    fn word(self) -> &'static str {
+    pub(crate) fn word(&self) -> &'static str {
         match self {
             OfKind::Line => "line",
             OfKind::Id => "id",
             OfKind::Name => "name",
             OfKind::Raw => "raw",
             OfKind::End => "end",
+            OfKind::Group(_) => "group",
         }
     }
 }
 
 /// 1つのノードが宣言した抽出規則。YAML では `配置パス`だけの略記か、
-/// `path`・`value`・`of`・`group` を持つ入れ子の写像を受ける（REQ-schema-048）。
+/// `path`・`value`・`of` を持つ入れ子の写像を受ける（REQ-schema-048）。
 #[derive(Debug, Clone)]
 pub struct Extract {
     /// 出力の置き場。必ず1つ
@@ -573,8 +623,6 @@ pub struct Extract {
     /// 要素ごとの導かれる値。鍵は要素オブジェクトの中の配置パス。
     /// 宣言された順に持つ（出力の鍵の順がこの順になる）
     of: Vec<(String, OfKind)>,
-    /// 題名の正規表現の名前付きキャプチャの名前
-    group: Option<String>,
 }
 
 impl Extract {
@@ -593,9 +641,12 @@ impl Extract {
         &self.of
     }
 
-    /// 題名の名前付きキャプチャの名前。
-    pub fn group(&self) -> Option<&str> {
-        self.group.as_deref()
+    /// `of` に書いた名前付きキャプチャの名前。宣言された順。
+    pub(crate) fn groups(&self) -> impl Iterator<Item = &str> {
+        self.of.iter().filter_map(|(_, kind)| match kind {
+            OfKind::Group(name) => Some(name.as_str()),
+            OfKind::Line | OfKind::Id | OfKind::Name | OfKind::Raw | OfKind::End => None,
+        })
     }
 
     /// 導かれる値を1つでも宣言しているか。
@@ -625,7 +676,6 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
             path: v.to_string(),
             value: None,
             of: Vec::new(),
-            group: None,
         })
     }
 
@@ -633,7 +683,6 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
         let mut path: Option<String> = None;
         let mut value: Option<String> = None;
         let mut of: Option<Vec<(String, OfKind)>> = None;
-        let mut group: Option<String> = None;
         while let Some(key) = map.next_key::<String>()? {
             let duplicate = |k: &str| M::Error::custom(format!("extract has \"{k}\" twice"));
             match key.as_str() {
@@ -656,10 +705,9 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
                     of = Some(map.next_value::<OfEntries>()?.0);
                 }
                 "group" => {
-                    if group.is_some() {
-                        return Err(duplicate("group"));
-                    }
-                    group = Some(map.next_value()?);
+                    return Err(M::Error::custom(
+                        "\"group\" is written in \"of\", as { <key>: { group: <name> } }",
+                    ));
                 }
                 other => {
                     return Err(M::Error::custom(format!("unknown extract key \"{other}\"")));
@@ -676,12 +724,7 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
         for relative in value.iter().chain(of.iter().map(|(key, _)| key)) {
             check_placement_path(relative).map_err(M::Error::custom)?;
         }
-        Ok(Extract {
-            path,
-            value,
-            of,
-            group,
-        })
+        Ok(Extract { path, value, of })
     }
 }
 
