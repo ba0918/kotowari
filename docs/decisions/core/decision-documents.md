@@ -6,7 +6,7 @@ Decides the form of the documents that kotowari reads as the specification. It c
 
 ## The specification lives only in decision documents, one per topic, holding the decisions now in force
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -197,7 +197,7 @@ Only what people decide is written in "Open". Details that the implementing side
 
 ## Put decision documents in docs/decisions, and move documents in the old form to the frozen tree
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

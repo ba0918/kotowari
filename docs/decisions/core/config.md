@@ -87,7 +87,7 @@ The overview is enabled only when the "overview" key is written. The mere existe
 
 ## The location of decision documents is pointed at by decisions.documents with docs/decisions as the default, and the keys for the locations of the old form are removed
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -106,7 +106,7 @@ The keys for the locations of the old form, "ir", "decisions.records" and "decis
 
 ## The keys for the limits on line count and number of requirements, limits.lines and limits.requirements, are removed
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

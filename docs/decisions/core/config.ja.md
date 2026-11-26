@@ -87,7 +87,7 @@ kotowari が何を読むかを、どこに書かせるかを決める必要が�
 
 ## 決定の文書の置き場は decisions.documents で指して既定を docs/decisions にし、古い形の置き場のキーは無くす
 
-状態: 提案
+状態: 実装済み
 
 ### 問題
 
@@ -106,7 +106,7 @@ kotowari が何を読むかを、どこに書かせるかを決める必要が�
 
 ## 行数と要求の数の上限のキー limits.lines と limits.requirements は無くす
 
-状態: 提案
+状態: 実装済み
 
 ### 問題
 

@@ -6,7 +6,7 @@ This document decides how kotowari itself is switched from the two layers of IR 
 
 ## Switch at once in a new version, and build no mechanism to read the old form
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -36,7 +36,7 @@ In the switch version, the new check and workflow are built first. Topics that h
 
 ## ADRs are discontinued, and the existing ones are frozen
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -57,7 +57,7 @@ ADRs are discontinued. The existing ADRs are moved to the frozen tree together w
 
 ## When rewriting, nothing missing from the records is invented, and details that cannot be told apart are dropped
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

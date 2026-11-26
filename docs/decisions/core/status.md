@@ -101,7 +101,7 @@ The summary of "kotowari status" outputs the number of confirmation rows split i
 
 ## The documents group counts the number of decision documents read and their lines
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

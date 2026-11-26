@@ -107,13 +107,11 @@ Outputting the total line count of the decision documents in status is decided i
 
 ## The line-count and requirement-count limit notices too_many_lines and too_many_requirements are removed
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
 In the old form, a too_many_lines notice was reported when the line count of a document exceeded a limit, and a too_many_requirements notice when the number of requirements exceeded a limit. For decision documents it was decided not to report a notice for the line-count limit, and the notice for the requirement-count limit is also removed, since requirements disappear. The reason is not recorded.
-
-The code that reads documents in the old form still reports these two notices.
 
 ### Decision
 
