@@ -583,8 +583,8 @@ impl<'de> serde::de::Visitor<'de> for OfKindVisitor {
         let mut captured: Option<String> = None;
         while let Some(key) = map.next_key::<String>()? {
             match key.as_str() {
-                "group" if captured.is_none() => captured = Some(map.next_value()?),
-                "group" => return Err(M::Error::custom("of has \"group\" twice")),
+                // 同じ鍵の2つ目は、YAML を読む側が重複した鍵として先に止める
+                "group" => captured = Some(map.next_value()?),
                 other => {
                     return Err(M::Error::custom(format!(
                         "unknown key \"{other}\" in a derived value; accepted: \"group\""

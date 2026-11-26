@@ -711,3 +711,15 @@ document:
         "expected one of the words line, id, name, raw, end, or { group: <name> }",
     );
 }
+
+// @kotowari[C-schema-extract-52]
+#[test]
+fn a_derived_value_mapping_with_group_twice_is_rejected() {
+    let yaml = r#"
+document:
+  title:
+    pattern: "^(?<a>A)(?<b>B)"
+    extract: { path: t, of: { x: { group: a, group: b } } }
+"#;
+    assert_rejected(yaml, "duplicate mapping key: group");
+}
