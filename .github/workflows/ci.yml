@@ -43,14 +43,14 @@ jobs:
         run: scripts/gates.sh
       # ビルド済みの cargo-deny を入れる。ソースから入れると数分かかる
       - name: Install cargo-deny
-        uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
+        uses: taiki-e/install-action@75a7c0f87bd666af3cdb75c5b9e9d03ab6044e6f # v2.90.6
         with:
           tool: cargo-deny@${{ env.CARGO_DENY_VERSION }}
       - name: Check dependency licences and advisories
         run: scripts/deps.sh
       # ビルド済みの cargo-about を入れる
       - name: Install cargo-about
-        uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
+        uses: taiki-e/install-action@75a7c0f87bd666af3cdb75c5b9e9d03ab6044e6f # v2.90.6
         with:
           tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
       - name: Check that the third-party licence list can be generated for every released binary
