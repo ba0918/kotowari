@@ -19,7 +19,7 @@ a.en.md: 9c1e0f0d6f1b4e2a8c3d5b7e9f1a2c4d6e8f0a1b
 
 ## What must match
 
-kotowari reads items, IDs, sources, fingerprints, `list` items and `query` output from the first-language side only; for a decision document, also the marks matched with its rows, the targets of guide marks and the quoted surfaces, and on its other sides only headings and links (decision-documents.md, **Languages: a pair of sides**). On the other sides it checks only terms (against that language's glossary chain, `CONTEXT.<tag>.md`), vague words, document-name references, unclosed backticks and the glossary's form. Everything except natural-language sentences is the skeleton and must be the same on every side; a difference is translation_structure_mismatch:
+kotowari reads items, IDs, sources, fingerprints, `list` items and `query` output from the first-language side only; for a decision document, also the marks matched with its rows, the targets of guide marks and the quoted surfaces, and on its other sides only headings, links and vague words (decision-documents.md, **Languages: a pair of sides**). On the other sides it checks only terms (against that language's glossary chain, `CONTEXT.<tag>.md`), vague words, document-name references, unclosed backticks and the glossary's form. Everything except natural-language sentences is the skeleton and must be the same on every side; a difference is translation_structure_mismatch:
 
 | Document | Must match |
 |---|---|

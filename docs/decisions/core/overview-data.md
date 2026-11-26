@@ -173,7 +173,7 @@ Status: implemented
 
 ### Problem
 
-After the switch, what the list of the overview source data points at is decision documents, and the IR goes away. The current key "ir" and the names of the finding kinds overview_ir_missing and overview_ir_shared remain words that point at the IR that goes away. No other reason for renaming them is on record.
+After the switch, what the list of the overview source data points at is decision documents, and the IR goes away. Before this decision, the key "ir" and the names of the finding kinds overview_ir_missing and overview_ir_shared remained words that pointed at the IR that goes away. No other reason for renaming them is on record.
 
 ### Decision
 

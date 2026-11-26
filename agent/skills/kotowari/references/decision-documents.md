@@ -116,9 +116,11 @@ and `x.ja.md` is the Japanese side, which is the side the person reads and appro
   the topic paragraph is the paragraph after it.
 - check reads the decisions, the row IDs, the marks they are matched with, the fingerprints, the
   targets of guide marks and the quoted surfaces from the first-language side only. Another side
-  is read only for its headings and links: a link there must point at a document and heading that
-  exist, in its own language (`confirmations.ja.md#<Japanese anchor>`), or it is
-  link_target_missing or link_language_mismatch. Errors that leave content unread
+  is read only for its headings, its links and its vague words: a link there must point at a
+  document and heading that exist, in its own language (`confirmations.ja.md#<Japanese anchor>`),
+  and not into `docs/frozen/`, or it is link_target_missing, link_language_mismatch or
+  link_to_record, and a word of `vague_words` in its Decision or Confirmations is vague_word on
+  that side. The overview takes the bodies of references on that language's pages from it. Errors that leave content unread
   (unclosed_code_block, multiple_titles, unknown_heading, unknown_line) are raised on each side
   itself, since the skeleton below does not compare paragraphs or lists.
 - The skeleton of the sides must match, or the other side is translation_structure_mismatch: the
