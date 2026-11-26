@@ -71,6 +71,7 @@ pub fn check_analysis(
     check_entries(
         analysis.iter(),
         docs,
+        &[],
         unspecified
             .iter()
             .map(|source| (source.path(), source.text())),
@@ -78,9 +79,10 @@ pub fn check_analysis(
     )
 }
 
-pub fn check_entries<'a>(
+pub(crate) fn check_entries<'a>(
     analysis: impl IntoIterator<Item = &'a crate::SurfaceAnalysis>,
     docs: &[IrDocument],
+    decisions: &[crate::decisions::Document],
     unspecified: impl IntoIterator<Item = (&'a str, &'a str)>,
     findings: &mut Vec<Finding>,
 ) -> Result<SurfaceTally, StopReason> {
@@ -113,7 +115,7 @@ pub fn check_entries<'a>(
             }
         }
     }
-    Ok(report(&surfaces, docs, &list, findings))
+    Ok(report(&surfaces, docs, decisions, &list, findings))
 }
 
 /// 1件を読む。鍵と値の組で、"kind"、"name"、"why" のちょうど3つの鍵の値がどれも文字列で、
@@ -148,10 +150,11 @@ fn written_detail(item: &Value) -> String {
 fn report(
     surfaces: &[Surface],
     docs: &[IrDocument],
+    decisions: &[crate::decisions::Document],
     list: &UnspecifiedList,
     findings: &mut Vec<Finding>,
 ) -> SurfaceTally {
-    let quoted = quoted_in_ir(docs);
+    let quoted = quoted_in_ir(docs, decisions);
     let in_ir = |name: &str| quoted.contains(name);
     let listed = |surface: &Surface| {
         list.entries
@@ -199,8 +202,9 @@ fn report(
 }
 
 /// `話題ごとの文書`の`要求`の`文`、`決定表`の表のセル（見出しの行を含む）、`シナリオ`のステップの行で、
-/// 二重引用符の対かバッククォートの対で囲んだ中身の集まり。中身の前後の空白は除かない（REQ-core-226）
-fn quoted_in_ir(docs: &[IrDocument]) -> BTreeSet<String> {
+/// 二重引用符の対かバッククォートの対で囲んだ中身の集まり。中身の前後の空白は除かない（REQ-core-226）。
+/// 決定の文書の決定の「決めたこと」と「確認すること」の中（表はセルごと、コードブロックは除く）も同じく見る
+fn quoted_in_ir(docs: &[IrDocument], decisions: &[crate::decisions::Document]) -> BTreeSet<String> {
     let mut quoted = BTreeSet::new();
     let mut collect = |text: &str| {
         for line in split_lines(text) {
@@ -232,6 +236,9 @@ fn quoted_in_ir(docs: &[IrDocument]) -> BTreeSet<String> {
         for cell in decision_table_cells(doc) {
             collect(&cell);
         }
+    }
+    for text in crate::decisions::quotable(decisions) {
+        collect(text);
     }
     quoted
 }

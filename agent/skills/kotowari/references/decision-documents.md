@@ -168,8 +168,12 @@ A definition used by several decisions is written inside the decision that settl
 others link to it; there is no section for definitions only. The meaning of a term goes in the
 project's glossary.
 
-## Guides
+## Guides and surfaces
 
 A guide mark points at a decision by `<path of the document>#<anchor of its heading>`, and its
 fingerprint covers only "what was decided" and "rows to confirm"; `kotowari list` lists each
-decision as kind `decision` with that target as `id` and its `fingerprint` (guides.md).
+decision as kind `decision` with that target as `id` and its `fingerprint` (guides.md). A
+surface counts as specified when its name is the whole content of a pair of double quotes or
+backticks in "what was decided" or "rows to confirm" of any decision, in either state (a table
+cell by cell, code blocks not read); the problem, the rejected options and the open section do
+not count (surface.md).

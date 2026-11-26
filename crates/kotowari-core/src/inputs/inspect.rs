@@ -63,6 +63,7 @@ impl CheckPreparation {
             self.surface = Some(crate::surface::check_entries(
                 files.iter().map(|file| &file.analysis),
                 &self.read.docs,
+                &self.read.decisions,
                 entries(unspecified),
                 &mut self.findings,
             )?);

@@ -1046,3 +1046,119 @@ fn req_226_a_backticked_term_in_a_decision_table_cell_counts() {
     assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
     assert!(findings_of(&v, "unknown_term").is_empty(), "{v}");
 }
+
+// --- 決定の文書に引用された面 ---
+
+/// EX-core-407 の面の規則と "src/cli.rs" に、決定の文書の置き場を足す。IR は無い。
+/// `sections` は決定1つの (節の名前, 中身) の並び
+fn decision_project(tmp: &Path, sections: &[(&str, &str)]) {
+    make_project(
+        tmp,
+        &format!("{SURFACE_RS}decisions:\n  documents: docs/decisions\n"),
+    );
+    write(tmp, "rules/surface.yml", FLAG_RULE);
+    write(tmp, "src/cli.rs", &cli_rs());
+    let mut text = "# 題名\n\n範囲。\n\n## フラグを受ける\n\n状態: 提案\n\n".to_string();
+    for (name, body) in sections {
+        text.push_str(&format!("### {name}\n\n{body}\n\n"));
+    }
+    write(tmp, "docs/decisions/flags.md", &text);
+}
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_names_quoted_in_what_a_decision_decided_and_its_rows_count() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            ("決めたこと", "\"--format\" を受ける。"),
+            ("確認すること", "- C-flags-1 `--verbose` で詳しく出る"),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
+}
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_names_quoted_only_in_the_problem_rejected_options_or_open_items_do_not_count() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "\"--verbose\" が無かった。"),
+            ("決めたこと", "\"--format\" を受ける。"),
+            ("見送った案", "- \"--verbose\" を受ける。要らない。"),
+        ],
+    );
+    let path = tmp.path().join("docs/decisions/flags.md");
+    let text =
+        std::fs::read_to_string(&path).unwrap() + "## 未決\n\n- \"--verbose\" を受けるか。\n";
+    std::fs::write(path, text).unwrap();
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_a_decision_quotes_a_name_only_as_the_whole_content_of_a_cell_outside_code() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "| 鍵 | 値 |\n|---|---|\n| \"--format | x\" | \"--verbose true\" |\n\n```\n\"--verbose\"\n```",
+            ),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        without_spec(&v),
+        vec!["flag --format", "flag --verbose"],
+        "{v}"
+    );
+}
+
+// @kotowari[REQ-core-226, TBL-core-028]
+#[test]
+fn req_226_a_name_quoted_in_a_decision_is_counted_as_specified_by_status() {
+    let tmp = TempDir::new().unwrap();
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            ("決めたこと", "\"--format\" を受ける。"),
+        ],
+    );
+    write(
+        tmp.path(),
+        "docs/surface.yaml",
+        &entry("flag", "--format", "古い"),
+    );
+    let config = tmp.path().join(".kotowari/config.yaml");
+    let text = std::fs::read_to_string(&config)
+        .unwrap()
+        .replace("  rules:", "  unspecified: \"docs/surface.yaml\"\n  rules:");
+    std::fs::write(config, text).unwrap();
+    let (_, stdout, stderr) = run(tmp.path(), &["status"]);
+    let v: serde_json::Value =
+        serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
+    assert_eq!(
+        v["surface"],
+        serde_json::json!({"total": 2, "specified": 1, "unspecified": 0}),
+        "{v}"
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_unspecified_stale")
+            .into_iter()
+            .map(|(_, _, detail)| detail)
+            .collect::<Vec<_>>(),
+        vec!["flag --format"],
+        "{v}"
+    );
+}

@@ -50,6 +50,8 @@ pub(crate) struct Decision {
     pub(crate) fingerprinted: Vec<String>,
     /// `fingerprinted` の指紋。ガイドの印と照らす（C-core-lang-5、C-core-lang-6）
     pub(crate) fingerprint: String,
+    /// 「決めたこと」と「確認すること」の中の、引用を探す文字。表はセルごと、コードブロックは入れない
+    pub(crate) quotable: Vec<String>,
     /// 状態が「提案」でも「実装済み」でもなければ None
     pub(crate) state: Option<State>,
     pub(crate) confirmations: Vec<Confirmation>,
@@ -110,6 +112,7 @@ struct Building {
     fingerprinted: Vec<(usize, usize)>,
     /// 今の "###" の節が指紋に入れる節か
     in_fingerprinted: bool,
+    quotable: Vec<String>,
     /// 状態の行を探すのは、見出しの直後の段落だけ
     state_line: Option<(usize, String)>,
     awaiting_state: bool,
@@ -126,6 +129,7 @@ impl Building {
             anchor,
             fingerprinted: Vec::new(),
             in_fingerprinted: false,
+            quotable: Vec::new(),
             state_line: None,
             awaiting_state: true,
             sections: BTreeSet::new(),
@@ -191,6 +195,7 @@ impl Building {
             fingerprinted,
             state,
             confirmations: self.confirmations,
+            quotable: self.quotable,
         }
     }
 }
@@ -264,7 +269,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
                     lead = true;
                 }
             }
-            Place::Decision(building) => read_decision_block(node, &lines, building),
+            Place::Decision(building) => read_decision_block(node, text, &lines, building),
             Place::Open => {
                 if let Node::List(list) = node {
                     open_items += list.children.len();
@@ -425,9 +430,9 @@ pub(crate) fn has_open_items(documents: &[Document]) -> bool {
 }
 
 /// 決定の見出しの下の1つのブロックを読む
-fn read_decision_block(node: &Node, lines: &[&str], building: &mut Building) {
+fn read_decision_block(node: &Node, text: &str, lines: &[&str], building: &mut Building) {
     let awaiting_state = std::mem::replace(&mut building.awaiting_state, false);
-    read_fingerprinted(node, building);
+    read_fingerprinted(node, text, building);
     #[expect(
         clippy::wildcard_enum_match_arm,
         reason = "markdown::mdast::Node is a foreign enum: blocks other than headings, paragraphs and lists carry nothing a decision is read from"
@@ -661,9 +666,9 @@ pub(crate) fn query_items(
     items
 }
 
-/// 「決めたこと」と「確認すること」の節を、指紋の行の範囲に加える。
+/// 「決めたこと」と「確認すること」の節を、指紋の行の範囲と引用を探す文字に加える。
 /// 節は "###" の見出しから、次の "###" か "##" の見出しまで。"####" より深い見出しは節の中にある
-fn read_fingerprinted(node: &Node, building: &mut Building) {
+fn read_fingerprinted(node: &Node, text: &str, building: &mut Building) {
     let line = line_of(node);
     let end = node.position().map_or(line, |position| position.end.line);
     if let Node::Heading(heading) = node
@@ -681,6 +686,41 @@ fn read_fingerprinted(node: &Node, building: &mut Building) {
     }
     if let Some(section) = building.fingerprinted.last_mut() {
         section.1 = end;
+    }
+    quotable_texts(node, text, &mut building.quotable);
+}
+
+/// ブロックの元の文字。表はセルごとに分け、コードブロックは入れない
+fn quotable_texts(node: &Node, text: &str, out: &mut Vec<String>) {
+    let source = |node: &Node| {
+        node.position()
+            .and_then(|position| text.get(position.start.offset..position.end.offset))
+            .map(str::to_owned)
+    };
+    #[expect(
+        clippy::wildcard_enum_match_arm,
+        reason = "markdown::mdast::Node is a foreign enum: every block other than a table and code is read as written"
+    )]
+    match node {
+        Node::Code(_) => {}
+        Node::Table(_) | Node::TableRow(_) => {
+            for child in node.children().into_iter().flatten() {
+                quotable_texts(child, text, out);
+            }
+        }
+        Node::TableCell(cell) => {
+            let span = cell
+                .children
+                .first()
+                .zip(cell.children.last())
+                .and_then(|(first, last)| {
+                    Some(first.position()?.start.offset..last.position()?.end.offset)
+                });
+            if let Some(content) = span.and_then(|span| text.get(span)) {
+                out.push(content.to_owned());
+            }
+        }
+        _ => out.extend(source(node)),
     }
 }
 
@@ -707,6 +747,14 @@ pub(crate) fn fingerprints(documents: &[Document]) -> impl Iterator<Item = (Stri
             .iter()
             .map(move |decision| (target(doc, decision), decision.fingerprint.clone()))
     })
+}
+
+/// どこかの決定の「決めたこと」か「確認すること」の、引用を探す文字
+pub(crate) fn quotable(documents: &[Document]) -> impl Iterator<Item = &str> {
+    documents
+        .iter()
+        .flat_map(|doc| &doc.decisions)
+        .flat_map(|decision| decision.quotable.iter().map(String::as_str))
 }
 
 /// "kotowari list" の、決定の1件ずつ。ID はガイドの印が指す行き先

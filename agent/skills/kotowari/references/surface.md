@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-27; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-11-26; the version of kotowari itself is not pinned)
 
 ## What the surface check does
 
@@ -78,6 +78,8 @@ A surface is in the IR when its name is the whole content of a pair of double qu
 Double quotes pair from the left of the line; backticks pair only outside double quotes, as in the term check. The content must equal the name exactly, spaces included: `"--verbose true"` and `" --verbose"` do not contain the surface `--verbose`. A backticked name must still pass the term check, so a name in backticks has to be a glossary term; quote values with double quotes.
 
 Not counted: statements of properties, the scope line, the lines starting with `- ` under an item heading (`- how_to_verify:` included), the flags (FLAGS.md), and the glossary.
+
+A surface also counts as specified when its name is quoted the same way in a decision document, inside the `### 決めたこと` or `### 確認すること` section of a decision of either state: each line of the text, each table cell separately, code blocks not read. The problem, the rejected options and `## 未決` are not counted.
 
 ## Findings and how to fix them
 
