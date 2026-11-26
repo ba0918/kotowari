@@ -797,7 +797,20 @@ fn read_decision_block(
                 .copied()
                 .unwrap_or_default();
             if let Some((keywords, value)) = state_line(first) {
-                building.state_line = Some((line_of(node), keywords, value.to_owned()));
+                let line = line_of(node);
+                building.state_line = Some((line, keywords, value.to_owned()));
+                // 状態の行の段落の2行目からは、状態の行と最初の節の間のブロックと同じく置き場所が無い
+                if node
+                    .position()
+                    .is_some_and(|position| position.end.line > line)
+                {
+                    skipped.push(Finding::new(
+                        FindingKind::UnknownLine,
+                        path.to_owned(),
+                        Some(line + 1),
+                        lines.get(line).copied().unwrap_or_default().to_owned(),
+                    ));
+                }
             }
         }
         Node::List(list) if building.section == Some(Section::Confirmations) => {

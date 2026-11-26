@@ -1895,22 +1895,34 @@ fn every_line_ending_gives_the_same_body_fingerprint_and_lines() {
 // @kotowari[C-core-docs-1]
 #[test]
 fn a_state_line_wrapped_by_a_lone_carriage_return_is_read() {
-    for (text, state) in [
+    for (text, state, second) in [
         (
             "# 挨拶\r\r挨拶の仕方を決める。\r\r## 挨拶する\r\r状態: 実装済み\r続きの文。\r\r\
              ### 問題\r\r困っていた。\r\r### 決めたこと\r\rこうする。\r",
             "implemented",
+            "続きの文。",
         ),
         (
             "# Greetings\r\rDecides how to greet.\r\r## 挨拶する\r\rStatus: proposed\rMore words.\r\r\
              ### Problem\r\rTrouble.\r\r### Decision\r\rDo this.\r",
             "proposed",
+            "More words.",
         ),
     ] {
         let tmp = TempDir::new().unwrap();
         make_project(tmp.path(), Some("docs/decisions"));
         write(tmp.path(), "docs/decisions/greet.md", text);
-        assert_eq!(findings(&check(tmp.path())), vec![], "{state}");
+        // 状態の行の段落の2行目は、状態の行と最初の節の間のブロックと同じく誤り
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![finding(
+                "unknown_line",
+                "docs/decisions/greet.md",
+                8,
+                second
+            )],
+            "{state}"
+        );
         let decision = &query(tmp.path(), "docs/decisions/greet.md#挨拶する")["items"][0];
         assert_eq!(decision["state"], state);
     }
@@ -2330,4 +2342,33 @@ fn a_section_name_on_a_deeper_heading_is_not_that_section() {
         )]
     );
     assert_eq!(value["decisions"]["confirmations"], 0);
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn more_lines_in_the_state_paragraph_are_an_error_at_the_second_line() {
+    for (english, state) in [(false, "状態: 提案"), (true, "Status: proposed")] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &proposed_with_preamble(english, "").replace(
+                &format!("{state}\n\n"),
+                &format!("{state}\n補足の行。\n二行目。\n"),
+            ),
+        );
+        let value = check(tmp.path());
+        assert_eq!(
+            findings(&value),
+            vec![finding(
+                "unknown_line",
+                "docs/decisions/greet.md",
+                8,
+                "補足の行。"
+            )],
+            "english={english}"
+        );
+        assert_eq!(value["decisions"]["decisions"], 1, "english={english}");
+    }
 }

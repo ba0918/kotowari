@@ -776,3 +776,27 @@ fn a_heading_before_the_first_decision_on_both_sides_is_an_error_on_each_side() 
         ]
     );
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_second_line_in_the_state_paragraph_on_the_japanese_side_only_is_an_error_on_that_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &english("greet", "proposed", &["C-greet-1 Shown"]),
+        &japanese("greet", "提案", &["C-greet-1 出る"])
+            .replace("状態: 提案\n", "状態: 提案\n補足の行。\n"),
+    );
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![finding(
+            "unknown_line",
+            "docs/decisions/greet/greet.ja.md",
+            Some(10),
+            "補足の行。"
+        )]
+    );
+}
