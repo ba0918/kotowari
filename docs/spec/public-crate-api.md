@@ -102,7 +102,7 @@ let partial = extract_partial(&schema, &document, &options);
 既存CLIの`values`と`ast --schema`は部分抽出の値を使うため、文書の違反だけで新しく失敗することはない。
 ファイル・URL取得には`SchemaLoader`を使い、取得・キャッシュの規則をCLIと共用する。
 
-[純粋な入口](../ir/schema/library.md) / [検証と抽出](../ir/schema/library-extraction.md) / [I/O](../ir/schema/library-io.md)
+[純粋な入口](../decisions/schema/library.ja.md) / [検証と抽出](../decisions/schema/library-extraction.ja.md) / [I/O](../decisions/schema/library-io.ja.md)
 
 ## Tokioから呼ぶ
 

@@ -105,9 +105,9 @@ by `check` beside them until it is removed, so tests carry the IDs of both forms
 IDs to new rows (`docs/frozen/maps/`); `check` does not read it, and it is not evidence of current
 rules.
 
-The documents under `docs/ir/schema/` are checked by `kotowari check` alone, the same as those
-under `docs/ir/core/`. Neither carries a `$schema` frontmatter, so `kotowari-mds check` does not read them:
-given a directory it skips them, and given one of them by name it stops.
+The documents under `docs/ir/core/` are checked by `kotowari check` alone. They carry no `$schema`
+frontmatter, so `kotowari-mds check` does not read them: given a directory it skips them, and
+given one of them by name it stops.
 
 `docs/spec/` is **not** the specification. It holds prose — concept notes and the write-ups a
 brainstorm produced — and `check` never reads it, because `.kotowari/config.yaml` does not point

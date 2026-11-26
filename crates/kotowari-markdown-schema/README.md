@@ -252,7 +252,7 @@ the kind of rule the node belongs to — one of `section`, `item`, `field`, `bul
 
 The library holds the schema language, validation and extraction, with no CLI dependencies.
 Reading files and fetching URLs stays with the caller. The entry points promised to dependent
-crates are listed in `docs/ir/schema/library.md` at the repository root. Public input and result
+crates are listed in `docs/decisions/schema/library.md` at the repository root. Public input and result
 types are compatibility-managed contracts; implementation modules remain private.
 
 ```rust
@@ -269,8 +269,9 @@ let values = partial.values();
 
 ## Specification
 
-`docs/ir/schema/` at the repository root is the specification. It is normalised so that it can
-be checked mechanically, and every requirement there is linked to the tests that cover it.
+`docs/decisions/schema/` at the repository root is the specification: one decision document
+per topic, in English with a Japanese side. Every row to confirm there is linked to the tests
+that cover it.
 
 ## License
 

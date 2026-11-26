@@ -66,7 +66,7 @@ impl FindingKind {
     }
 }
 
-/// 規則種別。スキーマが文書の構造を記述するノードの種類（docs/ir/schema/CONTEXT.md）。
+/// 規則種別。スキーマが文書の構造を記述するノードの種類（docs/decisions/schema/CONTEXT.md）。
 /// 宣言していない行の`指摘`と`出現回数`の`指摘`が、どの種別として読んだか・数えたかを持つ
 /// （REQ-schema-055、REQ-schema-057）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
