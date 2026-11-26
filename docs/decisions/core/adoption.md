@@ -26,7 +26,7 @@ The adoption procedure is held as the workflow skill kotowari-adopt. Approval us
 
 ## A request to bring in an existing specification or existing code is routed to kotowari-adopt at the entry
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -58,7 +58,7 @@ Whether a statement of the legacy material agrees with the implementation is jud
 
 ## The destination of a row is decided by the result of comparing the legacy material with the implementation
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -135,7 +135,7 @@ In the list round the person answers only two things: which of the ratification 
 
 ## A row of the list sets out the legacy statement, the implementation's behaviour and the grounds test, and rows that become "Open" are only shown
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -154,7 +154,7 @@ The rows that become "Open" items and the breakdown of test destinations are onl
 
 ## A confirmation row written by ratification is not made "(by reading)" because it has no test
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -173,7 +173,7 @@ How each row is checked is shown in the list, and the person is not asked.
 
 ## The "Problem" of a decision written by ratification states in one sentence that it was taken as the specification without review
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -189,7 +189,7 @@ The "Problem" of a decision written by ratification states in one sentence that 
 
 ## Terms are not sorted in an intake
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -221,7 +221,7 @@ kotowari-adopt places no marker on a test, deletes no test, and moves no test.
 
 ## Each test in the scope is sorted to one of four destinations, and the breakdown is shown in the list round and at approval
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -279,7 +279,7 @@ The request text holds the following.
 
 ## In the request text after approval, reviewing the grounds tests and writing tests are done per confirmation row
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -314,7 +314,7 @@ kotowari-adopt tells the user that tests outside "tests.files" in the configurat
 
 ## The user is told that the errors left until tests are written, and complete while "Open" items remain, are intended
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -350,7 +350,7 @@ Every surface for which `kotowari check` raises surface_without_spec when the su
 
 ## When adoption writes a topic's surface into a decision, that surface's entry is removed from the list of unspecified surfaces
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

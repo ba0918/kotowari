@@ -110,7 +110,7 @@ Behaviours under the same rule that differ only in a value or a wording are put 
 
 ## One row of the list is a candidate for one decision
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
