@@ -4,7 +4,7 @@ use crate::document::{Block, Document, Heading, Item};
 use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
     Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
-    Statement, Subheading, Table, Title, When, is_declared_field,
+    Statement, Subheading, Table, Title, When, is_declared_field, select_section,
 };
 use std::collections::HashMap;
 
@@ -43,21 +43,13 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         &mut findings,
     );
 
-    let mut section_lines: HashMap<&str, Vec<usize>> = HashMap::new();
+    // 節の見出しは、宣言した順で最初に選ぶ規則のものになる
+    let mut section_lines: Vec<Vec<usize>> = vec![Vec::new(); doc_rule.sections.len()];
     for section in &document.sections {
-        section_lines
-            .entry(section.name.as_str())
-            .or_default()
-            .push(section.line);
-    }
-
-    for section in &document.sections {
-        match doc_rule
-            .sections
-            .iter()
-            .find(|def| def.name == section.name)
-        {
-            Some(def) => {
+        match select_section(&doc_rule.sections, &section.name) {
+            Some(index) => {
+                section_lines[index].push(section.line);
+                let def = &doc_rule.sections[index];
                 let rules = ContainerRules::for_section(def);
                 validate_container(
                     &rules,
@@ -98,14 +90,13 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         }
     }
 
-    for def in &doc_rule.sections {
-        let empty: Vec<usize> = Vec::new();
-        let lines = section_lines.get(def.name.as_str()).unwrap_or(&empty);
+    for (def, lines) in doc_rule.sections.iter().zip(&section_lines) {
+        let selector = def.selector();
         check_occurrence(
             &Occurrence {
                 lines,
-                name: Some(&def.name),
-                what: format!("section \"{}\"", def.name),
+                name: selector.node_name(),
+                what: selector.describe("section"),
                 container_line: None,
                 rule_kind: RuleKind::Section,
             },
@@ -1148,6 +1139,8 @@ fn check_occurrence(
 mod open_tests;
 #[cfg(test)]
 mod quote_tests;
+#[cfg(test)]
+mod selector_tests;
 #[cfg(test)]
 mod subheading_tests;
 #[cfg(test)]

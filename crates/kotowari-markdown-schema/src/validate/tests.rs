@@ -49,7 +49,7 @@ fn title_pattern_mismatch_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::TitlePatternMismatch));
 }
 
-// @kotowari[REQ-schema-001, REQ-schema-024, C-schema-closed-1, C-schema-doc-10]
+// @kotowari[REQ-schema-001, REQ-schema-024, C-schema-closed-1, C-schema-lang-14]
 #[test]
 fn undeclared_heading_is_found() {
     let doc = "# ADR-0001: a\n\n## 状況\n\n背景。\n\n## 決定\n\n判断。\n\n## 補足\n\n余計な節。\n";
@@ -717,7 +717,7 @@ fn field_continuation_is_part_of_the_field_not_undeclared_or_statement() {
     );
 }
 
-// @kotowari[REQ-schema-004, REQ-schema-024, C-schema-doc-10]
+// @kotowari[REQ-schema-004, REQ-schema-024, C-schema-lang-14]
 #[test]
 fn missing_required_section_is_found() {
     let doc = "# ADR-0001: a\n\n- 状態: 承認済み\n\n## 状況\n\n背景。\n";

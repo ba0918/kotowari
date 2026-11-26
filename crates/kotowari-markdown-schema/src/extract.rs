@@ -3,7 +3,7 @@
 use crate::document::{Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection};
 use crate::schema::{
     Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
-    is_declared_field, item_internals_declare_extract,
+    is_declared_field, item_internals_declare_extract, select_section,
 };
 use serde_json::{Map, Value};
 
@@ -30,8 +30,8 @@ pub fn extract_values(schema: &Schema, document: &Document) -> Value {
         );
         extract_codeblock(preamble.codeblock.as_ref(), &blocks, document, &mut root);
     }
-    for def in &schema.document.sections {
-        extract_section(def, document, &mut root);
+    for index in 0..schema.document.sections.len() {
+        extract_section(&schema.document.sections, index, document, &mut root);
     }
     if let Some(item) = &schema.document.item {
         // 文書の直下の項目（REQ-schema-061）
@@ -88,15 +88,19 @@ fn extract_title(schema: &Schema, document: &Document, root: &mut Map<String, Va
     place(root, extract.path(), element);
 }
 
+/// `index` の節の規則が選んだ節を抽出する。見出しは、宣言した順で最初に選ぶ規則のものになる
+/// （検査と同じ選び方）。
 fn extract_section(
-    def: &crate::schema::Section,
+    rules: &[crate::schema::Section],
+    index: usize,
     document: &Document,
     root: &mut Map<String, Value>,
 ) {
+    let def = &rules[index];
     let occurrences: Vec<&DocSection> = document
         .sections
         .iter()
-        .filter(|s| s.name == def.name)
+        .filter(|s| select_section(rules, &s.name) == Some(index))
         .collect();
 
     if let Some(extract) = &def.extract {
@@ -110,6 +114,7 @@ fn extract_section(
                     Value::String(section_body(s, def, document)),
                     &Derived {
                         end: Some(document.end_line(s.line, 2)),
+                        name: Some(s.name.clone()),
                         ..Derived::at(s.line)
                     },
                 )

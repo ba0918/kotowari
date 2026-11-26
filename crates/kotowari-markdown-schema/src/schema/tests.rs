@@ -68,7 +68,10 @@ fn loads_a_schema_with_all_rule_kinds() {
     assert!(preamble.statement.is_some());
     assert!(preamble.bullets.is_some());
     let section = &schema.document.sections[0];
-    assert_eq!(section.name, "状況");
+    assert_eq!(
+        section.name.as_ref().map(Names::all),
+        Some(&["状況".to_string()][..])
+    );
     assert!(section.table.is_some());
     assert!(section.codeblock.is_some());
     let item = section.item.as_ref().unwrap();

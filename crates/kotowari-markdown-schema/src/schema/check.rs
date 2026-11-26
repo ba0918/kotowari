@@ -10,7 +10,12 @@ pub(super) fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
         validate_preamble(preamble)?;
     }
     reject_duplicate_names(
-        schema.document.sections.iter().map(|s| s.name.as_str()),
+        schema
+            .document
+            .sections
+            .iter()
+            .flat_map(|s| s.name.iter().flat_map(|names| names.all()))
+            .map(String::as_str),
         "section",
     )?;
     for section in &schema.document.sections {
@@ -125,6 +130,12 @@ fn validate_preamble(preamble: &Preamble) -> Result<(), SchemaError> {
 }
 
 fn validate_section(section: &Section) -> Result<(), SchemaError> {
+    // 見出しを選ぶ手段は "name" か "pattern" のちょうど一方
+    if section.name.is_some() == section.pattern.is_some() {
+        return Err(SchemaError(
+            "section must declare exactly one of \"name\" or \"pattern\"".into(),
+        ));
+    }
     if let Some(repeat) = &section.repeat {
         repeat.validate()?;
     }
@@ -330,10 +341,10 @@ fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), S
     Ok(())
 }
 
-/// 項目と節の外のノードが `of` に宣言できる語。`id` と `name` は項目だけ、`end` は項目と節だけ（REQ-schema-048）。
+/// 項目と節の外のノードが `of` に宣言できる語。`id` は項目だけ、`name` と `end` は項目と節だけ（REQ-schema-048）。
 const OUTSIDE_ITEM_OF: &[OfKind] = &[OfKind::Line, OfKind::Raw];
 /// 節が `of` に宣言できる語（REQ-schema-048）。
-const SECTION_OF: &[OfKind] = &[OfKind::Line, OfKind::Raw, OfKind::End];
+const SECTION_OF: &[OfKind] = &[OfKind::Line, OfKind::Raw, OfKind::Name, OfKind::End];
 
 /// ノードが受け付けない `of` の語を schema_invalid の停止にし、受け付ける語の一覧を示す（REQ-schema-065）。
 fn reject_of_words(

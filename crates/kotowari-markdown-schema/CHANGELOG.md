@@ -9,6 +9,8 @@ Entries are written for someone upgrading from one release to the next: what cha
 ### Added
 
 - A preamble, a section, an item and the child rules of a bullet (`children`) can declare `open: true`. Such a node accepts, with their contents, blocks of the kinds it has no rule for (paragraphs, ordered lists, tables, code blocks, quotes, bullets), while its own rules keep every constraint. This is separate from the schema's top-level `open` and `check --open`, which still do not relax a declared node.
+- A section rule can select headings by a list of names (`name: [未決, Open]`; a single string still works) or by a regular expression searched in the heading text (`pattern: "^Ch"`; `pattern: ""` selects every heading). A heading belongs to the first rule, in declared order, that selects it. Findings of a name-list rule carry the first name of the list as `node`; findings of a pattern rule carry no `node` and name the pattern in the detail. A section rule must declare exactly one of `name` and `pattern`, and a name may appear only once across the section rules.
+- The derived value `name` can be declared in `of` of a section's extraction; it holds the section's heading text.
 - A preamble, a section and an item can declare `subheading`, a rule for headings of depth 4 or more, with `required`, `repeat` and `pattern` (no `extract`). A heading that does not match the pattern is the new finding `subheading_pattern_mismatch`; a count outside the bounds is `repeat_min_not_met` or `repeat_max_exceeded` with the rule kind `subheading`.
 
 ### Changed

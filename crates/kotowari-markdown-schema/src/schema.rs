@@ -164,12 +164,103 @@ pub struct Preamble {
     pub open: bool,
 }
 
+/// 節と項目の規則が選ぶ見出しの名前。1つの文字列か、文字列の一覧で書く。
+#[derive(Debug, Clone)]
+pub struct Names(Vec<String>);
+
+impl Names {
+    /// 一覧の最初の名前。指摘のノードの名前に使う
+    pub fn first(&self) -> &str {
+        self.0.first().map_or("", String::as_str)
+    }
+
+    /// 宣言した順の名前。
+    pub fn all(&self) -> &[String] {
+        &self.0
+    }
+
+    /// 見出しの文字がどれかの名前と等しいか。
+    pub fn contains(&self, text: &str) -> bool {
+        self.0.iter().any(|name| name == text)
+    }
+}
+
+impl<'de> Deserialize<'de> for Names {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum OneOrMany {
+            One(String),
+            Many(Vec<String>),
+        }
+        let names = match OneOrMany::deserialize(d)? {
+            OneOrMany::One(name) => vec![name],
+            OneOrMany::Many(names) => names,
+        };
+        if names.is_empty() {
+            return Err(D::Error::custom("name must hold at least one name"));
+        }
+        Ok(Names(names))
+    }
+}
+
+/// 規則が見出しを選ぶ手段。名前の一覧か、見出しの文字の中を探す正規表現。
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum Selector<'a> {
+    Names(&'a Names),
+    Pattern(&'a Pattern),
+}
+
+impl<'a> Selector<'a> {
+    /// 見出しの文字を選ぶか。
+    pub(crate) fn selects(self, text: &str) -> bool {
+        match self {
+            Selector::Names(names) => names.contains(text),
+            Selector::Pattern(pattern) => pattern.is_match(text),
+        }
+    }
+
+    /// 指摘が持つノードの名前。名前の一覧の規則だけが、一覧の最初の名前を持つ
+    pub(crate) fn node_name(self) -> Option<&'a str> {
+        match self {
+            Selector::Names(names) => Some(names.first()),
+            Selector::Pattern(_) => None,
+        }
+    }
+
+    /// 指摘の詳細の中で規則を指す言い回し。正規表現の規則は正規表現を示す
+    pub(crate) fn describe(self, node: &str) -> String {
+        match self {
+            Selector::Names(names) => format!("{node} \"{}\"", names.first()),
+            Selector::Pattern(pattern) => format!("{node} matching \"{}\"", pattern.source()),
+        }
+    }
+}
+
+impl Section {
+    /// 見出しを選ぶ手段。スキーマの読み込みが、"name" と "pattern" のちょうど一方を保証する
+    pub(crate) fn selector(&self) -> Selector<'_> {
+        match (&self.name, &self.pattern) {
+            (Some(names), _) => Selector::Names(names),
+            (None, Some(pattern)) => Selector::Pattern(pattern),
+            (None, None) => unreachable!("check::validate_section が選び方の宣言を保証する"),
+        }
+    }
+}
+
+/// 見出しの文字を、宣言した順で最初に選ぶ節の規則の位置。
+pub(crate) fn select_section(rules: &[Section], text: &str) -> Option<usize> {
+    rules.iter().position(|rule| rule.selector().selects(text))
+}
+
 /// 節（TBL-schema-004、REQ-schema-024）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Section {
-    /// 見出しの文字列
-    pub name: String,
+    /// 見出しの文字と等しいかで選ぶ名前の一覧
+    pub name: Option<Names>,
+    /// 見出しの文字の中を探して選ぶ正規表現。"" はすべての見出しに合う
+    pub pattern: Option<Pattern>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub statement: Option<Statement>,

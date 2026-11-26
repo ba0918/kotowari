@@ -126,11 +126,10 @@ The default of checking is the closed world, and its purpose is to fix the forma
 
 ### Decision
 
-A section is identified by the text of its heading, and a section that matches no name the schema declares is made a finding. The text of a heading is the text with inline markup removed, and the text inside strikethrough is kept too.
+The text of a heading is the text with inline markup removed, and the text inside strikethrough is kept too.
 
 ### Confirmations
 
-- C-schema-doc-10 A section heading that matches no name the schema declares is an undeclared-heading finding, and if a declared section is absent, a finding that the section is missing is reported
 - C-schema-doc-11 In a schema that declares the section "Ax", a document with a section whose heading consists of "A" and "x" enclosed in strikethrough gets exit code 0 from "kotowari-mds check"
 
 ## An item heading is read with the part before ":" as the ID and the part after it as the name
