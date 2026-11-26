@@ -60,7 +60,7 @@ A line that people or an LLM check by reading has "(by reading)" written at its 
 
 ## The implementing side changes the status, and decisions not built yet stay "proposed"
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
