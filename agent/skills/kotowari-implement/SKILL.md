@@ -47,7 +47,7 @@ spelling of the same keyword (the kotowari skill's `references/decision-document
 Hand a question back to a person only when the intent a person decided collides with itself:
 two sentences of the decision documents cannot both hold, so that either choice drops one thing a
 person decided. Then write it as an item under `## 未決` at the end of the topic document it
-concerns — what collides, the two sentences linked, and that the person decides it — commit it,
+concerns — what collides, the two sentences linked, and that the person decides it when that topic is next brainstormed — commit it,
 and hand back to cycle with that item. Do not build either side of the collision meanwhile.
 
 When building shows that a sentence of a decision does not match the facts (it cannot hold
@@ -90,7 +90,7 @@ external piece hands back before running anything unsafe, privileged, or irrever
 The test command comes from, in order: the project's own instructions, the standard tool of the
 language. If neither settles it, hand back to cycle.
 
-A prototype handed to you is something to compare with, not a base: build the product test-first
+A prototype handed to you is throwaway, something to compare with and not a base: build the product test-first
 on its own, then set what you built beside the prototype and look at the behavior the person saw
 in it. A difference you cannot ground in a decision or a fact is a detail to decide and report as
 above.

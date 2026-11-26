@@ -179,7 +179,7 @@ back to the dialogue.
    3. Only in a project whose configuration has the `overview` key, rebuild the overview, as the
       kotowari skill's `references/overview.md` says. The overview is reference material, not
       something the person approves; it changes neither what is shown for approval nor the order
-      of these steps:
+      in which the person reads it:
       1. From the decision documents this brainstorm changed, find the overviews involved through
          the `documents` lists of the overview data. For a changed decision document of a topic no
          overview lists, propose adding it to an existing overview or starting a new one, and let

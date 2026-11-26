@@ -79,7 +79,7 @@ Every finding ends in a state where the decision documents and the code agree.
 - A collision of intent is the one thing a person decides. Choose a default that keeps as much of
   both decisions as can be kept, make the code agree with it, and write the collision as an item
   under `## 未決` at the end of the topic document: the two sentences linked, the default taken, and
-  that the person decides. Return it as a finding with the action `human_judgment`: its claim states
+  that the person decides when that topic is next brainstormed. Return it as a finding with the action `human_judgment`: its claim states
   the default and the one word that reverses it, and its `oracle.note` the grounds and measurements
   tried and why they could not settle it. It stays open for the final report; the phase never stops
   to hand it to a person.

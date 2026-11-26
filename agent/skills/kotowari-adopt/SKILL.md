@@ -70,7 +70,11 @@ behaviors found outside the scope (below), with the names of the topics they sug
 
 Write the topic document from the answers, then approve once by kotowari-brainstorm's
 **Finishing**, step 3 ("Approve in this order"). The diff of the decision documents the person reads
-there is the final version of the list.
+there is the final version of the list. Of that step, 3.2 (showing the scene) does not apply: an
+adoption builds nothing. In 3.4, show the proposed decisions written, when there are any, in place
+of the list of decisions to build. Step 4 applies as written (the commit, and the branch with its
+worktree); the request text of **After approval** names that branch, its worktree, and the decisions
+written, each as `path#anchor`.
 
 ## Sorting behaviors
 

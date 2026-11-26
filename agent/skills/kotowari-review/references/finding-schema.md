@@ -1,7 +1,7 @@
 # Finding shape
 
 One JSON file per branch holds the current state of every finding (a snapshot that is
-overwritten, never an append-only log), and the record of the run: the IDs and the merge target
+overwritten, never an append-only log), and the record of the run: the decisions (`path#anchor`) and the merge target
 it received, the line, the earlier request it fixes, and its ending. Cost is not recorded. Only cycle writes it; it is never committed, lives
 outside the worktree that cleanup removes, and is never deleted by the workflow (the kotowari-cycle
 skill's **Resuming and running more**). Reviewers return arrays of
