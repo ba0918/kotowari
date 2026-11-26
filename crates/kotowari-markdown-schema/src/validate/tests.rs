@@ -279,12 +279,12 @@ fn image_only_paragraph_after_code_block_lead_is_not_a_statement() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::MissingStatement),
-        "先頭がコードブロックのリスト項目の画像だけの段落は文に数えない（REQ-schema-032）: {:?}",
+        "先頭がコードブロックのリスト項目の画像だけの段落は文に数えない: {:?}",
         kinds(&findings)
     );
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "先頭がコードブロックのリスト項目の画像だけの段落は undeclared_line にしない（REQ-schema-032）: {:?}",
+        "先頭がコードブロックのリスト項目の画像だけの段落は undeclared_line にしない: {:?}",
         kinds(&findings)
     );
 }
@@ -299,7 +299,7 @@ fn nested_list_items_are_not_counted_as_top_level_bullets() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::RepeatMinNotMet),
-        "子は親の本数に数えず、min: 2 が満たされない（REQ-schema-031）: {:?}",
+        "子は親の本数に数えず、min: 2 が満たされない: {:?}",
         kinds(&findings)
     );
 }
@@ -335,7 +335,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言された子フィールドは通る（REQ-schema-031）: {:?}",
+        "宣言された子フィールドは通る: {:?}",
         kinds(&findings)
     );
     assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredField));
@@ -358,7 +358,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "一致しない `- 名前: 値` は箇条書きとして扱い、children.bullets が無いので undeclared_line（TBL-schema-007、REQ-schema-031）: {:?}",
+        "一致しない `- 名前: 値` は箇条書きとして扱い、children.bullets が無いので undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -372,7 +372,7 @@ fn child_list_without_children_rule_is_undeclared_line() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "親が children を持たないのに子リストがある場合は undeclared_line（REQ-schema-001）: {:?}",
+        "親が children を持たないのに子リストがある場合は undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -395,7 +395,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みフィールド行の下の子リストは undeclared_line（REQ-schema-001）: {:?}",
+        "宣言済みフィールド行の下の子リストは undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -419,7 +419,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みの子フィールド行の下の子リストは undeclared_line（REQ-schema-001）: {:?}",
+        "宣言済みの子フィールド行の下の子リストは undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -470,7 +470,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "children.bullets の when は兄弟の children.fields を参照する（REQ-schema-021）: {:?}",
+        "children.bullets の when は兄弟の children.fields を参照する: {:?}",
         kinds(&findings)
     );
 }
@@ -496,7 +496,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "when が真のとき子の未宣言行は undeclared_line（REQ-schema-031）: {:?}",
+        "when が真のとき子の未宣言行は undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -523,7 +523,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "親の bullets の when が偽でも子は children の宣言に照合する（REQ-schema-031）: {:?}",
+        "親の bullets の when が偽でも子は children の宣言に照合する: {:?}",
         kinds(&findings)
     );
 }
@@ -550,7 +550,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "再帰的な children.bullets に照合する（REQ-schema-031）: {:?}",
+        "再帰的な children.bullets に照合する: {:?}",
         kinds(&findings)
     );
 }
@@ -577,7 +577,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "子の子の箇条書きにも children.bullets の pattern を適用する（REQ-schema-031）: {:?}",
+        "子の子の箇条書きにも children.bullets の pattern を適用する: {:?}",
         kinds(&findings)
     );
 }
@@ -598,13 +598,13 @@ document:
     let ok = validate_src(schema, "## 理由\n\n- 親\n  - 子1\n  - 子2\n", false);
     assert!(
         !kinds(&ok).contains(&FindingKind::RepeatMinNotMet),
-        "親1本・子2本で両方満たす（REQ-schema-019、REQ-schema-031）: {:?}",
+        "親1本・子2本で両方満たす: {:?}",
         kinds(&ok)
     );
     let short = validate_src(schema, "## 理由\n\n- 親\n  - 子1\n", false);
     assert!(
         kinds(&short).contains(&FindingKind::RepeatMinNotMet),
-        "子が1本しか無ければ children.bullets の min を満たさない（REQ-schema-019、REQ-schema-031）: {:?}",
+        "子が1本しか無ければ children.bullets の min を満たさない: {:?}",
         kinds(&short)
     );
 }
@@ -627,7 +627,7 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みの構造の中の未宣言の子は open でも undeclared_line（REQ-schema-003）: {:?}",
+        "宣言済みの構造の中の未宣言の子は open でも undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -650,7 +650,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::FieldPatternMismatch),
-        "子フィールドの pattern は値に適用する（REQ-schema-029）: {:?}",
+        "子フィールドの pattern は値に適用する: {:?}",
         kinds(&findings)
     );
 }
@@ -672,7 +672,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::MissingRequiredField),
-        "宣言された子フィールドが無ければ missing_required_field（REQ-schema-004、REQ-schema-031）: {:?}",
+        "宣言された子フィールドが無ければ missing_required_field: {:?}",
         kinds(&findings)
     );
 }
@@ -699,7 +699,7 @@ fn ordered_list_is_not_a_bullet_and_is_undeclared_in_closed_world() {
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "順序付きリストは箇条書きの対象外なので pattern を適用しない（TBL-schema-007）"
+        "順序付きリストは箇条書きの対象外なので pattern を適用しない"
     );
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
@@ -723,7 +723,7 @@ fn field_continuation_is_part_of_the_field_not_undeclared_or_statement() {
     assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "継続段落はフィールド行の一部で undeclared_line にしない（REQ-schema-030）"
+        "継続段落はフィールド行の一部で undeclared_line にしない"
     );
 }
 
@@ -779,11 +779,11 @@ fn undeclared_field_name_line_counts_as_a_bullet() {
     let ks = kinds(&findings);
     assert!(
         !ks.contains(&FindingKind::UndeclaredLine),
-        "未宣言の名前の `- 名前: 値` 行は箇条書きとして扱う（TBL-schema-007）: {ks:?}"
+        "未宣言の名前の `- 名前: 値` 行は箇条書きとして扱う: {ks:?}"
     );
     assert!(
         !ks.contains(&FindingKind::RepeatMinNotMet),
-        "箇条書きとして本数に数える（TBL-schema-007）: {ks:?}"
+        "箇条書きとして本数に数える: {ks:?}"
     );
 }
 
@@ -796,7 +796,7 @@ fn undeclared_field_name_line_is_subject_to_bullet_pattern() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-        "箇条書きとして pattern を適用する（TBL-schema-007）"
+        "箇条書きとして pattern を適用する"
     );
 }
 
@@ -954,7 +954,7 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-        "宣言済みの前置部の中の ### 見出しは open でも undeclared_heading（REQ-schema-003）: {:?}",
+        "宣言済みの前置部の中の ### 見出しは open でも undeclared_heading: {:?}",
         kinds(&findings)
     );
 }
@@ -972,7 +972,7 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "宣言済みの前置部の中の見出しの内側の行は open でも undeclared_line（REQ-schema-003）: {:?}",
+        "宣言済みの前置部の中の見出しの内側の行は open でも undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -990,12 +990,12 @@ document:
     let findings = validate_src(schema, doc, true);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-        "題名より前の見出しは open では許す（REQ-schema-002）: {:?}",
+        "題名より前の見出しは open では許す: {:?}",
         kinds(&findings)
     );
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "題名より前の見出しの内側の行も open では許す（REQ-schema-002）: {:?}",
+        "題名より前の見出しの内側の行も open では許す: {:?}",
         kinds(&findings)
     );
 }
@@ -1013,12 +1013,12 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-        "題名より前の見出しは閉じた世界で undeclared_heading（REQ-schema-001）: {:?}",
+        "題名より前の見出しは閉じた世界で undeclared_heading: {:?}",
         kinds(&findings)
     );
     assert!(
         kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "題名より前の見出しの内側の行は閉じた世界で undeclared_line（REQ-schema-001）: {:?}",
+        "題名より前の見出しの内側の行は閉じた世界で undeclared_line: {:?}",
         kinds(&findings)
     );
 }
@@ -1613,7 +1613,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "項目に宣言した表は undeclared_line にしない（TBL-schema-004）"
+        "項目に宣言した表は undeclared_line にしない"
     );
 }
 
@@ -1634,7 +1634,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::TableHeaderMismatch),
-        "項目の表のヘッダ不一致は table_header_mismatch にする（TBL-schema-004、REQ-schema-033）"
+        "項目の表のヘッダ不一致は table_header_mismatch にする"
     );
 }
 
@@ -1655,7 +1655,7 @@ document:
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-        "項目に宣言したコードブロックは undeclared_line にしない（TBL-schema-004）"
+        "項目に宣言したコードブロックは undeclared_line にしない"
     );
 }
 
@@ -1667,7 +1667,7 @@ fn table_without_declared_header_accepts_any_header() {
     let findings = validate_src(schema, doc, false);
     assert!(
         !kinds(&findings).contains(&FindingKind::TableHeaderMismatch),
-        "header を宣言しないときはヘッダと列数を検査しない（REQ-schema-033）"
+        "header を宣言しないときはヘッダと列数を検査しない"
     );
 }
 
@@ -1679,7 +1679,7 @@ fn table_without_declared_header_is_still_required() {
     let findings = validate_src(schema, doc, false);
     assert!(
         kinds(&findings).contains(&FindingKind::MissingTable),
-        "header を宣言しなくても表の有無は検査する（REQ-schema-033）"
+        "header を宣言しなくても表の有無は検査する"
     );
 }
 

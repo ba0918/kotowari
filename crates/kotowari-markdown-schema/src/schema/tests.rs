@@ -427,7 +427,7 @@ document:
 "#;
     assert!(
         parse_schema(yaml).is_ok(),
-        "子フィールドは自分の extract を持つことができる（REQ-schema-036）"
+        "子フィールドは自分の extract を持つことができる"
     );
 }
 
@@ -567,7 +567,7 @@ document:
 "#;
     assert!(
         parse_schema(yaml).is_ok(),
-        "項目が extract を持てば内部にも宣言できる（REQ-schema-039）"
+        "項目が extract を持てば内部にも宣言できる"
     );
 }
 
@@ -596,7 +596,7 @@ document:
     assert_eq!(
         extract.of(),
         [("line".to_string(), OfKind::Line)],
-        "of は鍵から導かれる値の語への対応として読む（REQ-schema-048）"
+        "of は鍵から導かれる値の語への対応として読む"
     );
 }
 
@@ -691,6 +691,6 @@ document:
     assert_rejected(parent_and_child, "has the key \"a\" twice");
     assert!(
         parse_schema(siblings).is_ok(),
-        "a.b と a.c は入れ子を共有するだけの別の鍵（TBL-schema-009）"
+        "a.b と a.c は入れ子を共有するだけの別の鍵"
     );
 }

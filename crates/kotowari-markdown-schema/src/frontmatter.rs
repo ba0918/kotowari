@@ -296,7 +296,7 @@ mod tests {
         let src = "---\nただのスカラ\n---\n# 題名\n";
         assert!(
             frontmatter_schema(src).is_err(),
-            "frontmatter が YAML のマッピングでなければ誤りにする（REQ-schema-014）"
+            "frontmatter が YAML のマッピングでなければ誤りにする"
         );
     }
 
@@ -306,7 +306,7 @@ mod tests {
         let src = "---\n- a\n- b\n---\n# 題名\n";
         assert!(
             frontmatter_schema(src).is_err(),
-            "frontmatter が並びでも誤りにする（REQ-schema-014）"
+            "frontmatter が並びでも誤りにする"
         );
     }
 }
