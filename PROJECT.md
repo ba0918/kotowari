@@ -93,24 +93,29 @@ binary's `finished in` time and find the cause of any that exceeds 0.5 s.
 
 ## Specification
 
-The specification is the IR under `docs/ir/` and the decision documents under `docs/decisions/`,
-and nowhere else — `docs/ir/core/` for `kotowari`, `docs/ir/schema/` for
-`kotowari-markdown-schema`, and `docs/decisions/view/` for `kotowari-markdown-view`, the first part
-moved to the decision documents (`docs/decisions/core/decision-documents.md`).
-`.kotowari/config.yaml` points `check` at both, so one run covers every product. `docs/frozen/`
-holds the old-form documents a moved part replaced; `check` does not read it, and it is not
-evidence of current rules.
+The specification is held in decision documents under `docs/decisions/`
+(`docs/decisions/core/decision-documents.md`): `docs/decisions/core/` for `kotowari`,
+`docs/decisions/schema/` for `kotowari-markdown-schema` and `docs/decisions/view/` for
+`kotowari-markdown-view`. Each topic is a pair, `<topic>.md` in English (the side `check` reads)
+and `<topic>.ja.md` in Japanese, with its agreement record `<topic>.i18n.yaml`. The old form —
+the IR under `docs/ir/` and the decision records and ADRs under `docs/decision/` — is still read
+by `check` beside them until it is removed, so tests carry the IDs of both forms for now.
+`.kotowari/config.yaml` points `check` at both forms, so one run covers every product.
+`docs/frozen/` holds the old-form documents a moved part replaced and the mapping tables from old
+IDs to new rows (`docs/frozen/maps/`); `check` does not read it, and it is not evidence of current
+rules.
 
 The documents under `docs/ir/schema/` are checked by `kotowari check` alone, the same as those
 under `docs/ir/core/`. Neither carries a `$schema` frontmatter, so `kotowari-mds check` does not read them:
 given a directory it skips them, and given one of them by name it stops.
 
 `docs/spec/` is **not** the specification. It holds prose — concept notes and the write-ups a
-brainstorm produced — and `check` never reads it, because `.kotowari/config.yaml` points only at
-`docs/ir/`. Where prose and IR disagree, the IR is what holds.
+brainstorm produced — and `check` never reads it, because `.kotowari/config.yaml` does not point
+at it. Where prose and the specification disagree, the specification is what holds.
 
-Terms are defined in the `CONTEXT.md` of each IR directory, and rules the IR does not yet carry
-are recorded in its `FLAGS.md`. Read the `kotowari` skill before writing or revising an IR
+Terms are defined in the `CONTEXT.md` of each group under `docs/decisions/` (and, for the old
+form, of each IR directory), and rules the old-form IR does not yet carry are recorded in its
+`FLAGS.md`. Read the `kotowari` skill before writing or revising an IR
 document and before acting on a `kotowari check` finding. To decide where a new request starts,
 use the `kotowari-using-workflow` skill, not `ba0918-using-workflow`.
 
