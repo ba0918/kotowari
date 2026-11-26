@@ -98,6 +98,6 @@ including skipped-run reasons and unresolved defaults with the word that reverse
 ## Exceptions
 
 Work with an approved specification or a run in progress is not rewound; it enters from where
-it left off, and its skill's resume rules own the records. "Implement it" with an approved
+it left off, and its skill's resume rules own the findings file. "Implement it" with an approved
 specification is kotowari-cycle — implementing by hand there is a counter-example. A skill outside the table fires
 on its own description.
