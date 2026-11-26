@@ -108,7 +108,7 @@ On a resume during implementation, the implementer decides what remains, using a
 
 ## In small tasks and in the description of the findings file's shape too, what is received is handled as the list of decisions
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
