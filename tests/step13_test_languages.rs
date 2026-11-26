@@ -630,6 +630,24 @@ fn ex_core_311_added_rule_counts_tests() {
     assert_eq!(unmarked(&v), vec!["fast"], "{v}");
 }
 
+// @kotowari[C-core-qrules-6]
+#[test]
+fn c_core_qrules_6_a_typescript_rule_does_not_match_tsx_files() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(
+        tmp.path(),
+        &["tests/**/*.ts", "tests/**/*.tsx"],
+        &["rules/bench.yml"],
+    );
+    write(tmp.path(), "rules/bench.yml", BENCH_RULE);
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    write(tmp.path(), "tests/b.test.tsx", "bench('tsx', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["fast"], "{v}");
+    assert_eq!(v["tests"]["tsx"]["files"], 1, "{v}");
+}
+
 // @kotowari[REQ-core-186, C-core-qrules-4]
 #[test]
 fn req_186_rules_separated_by_dashes_all_apply_and_give_a_language_a_query() {
