@@ -92,16 +92,121 @@ impl DecisionStates {
     readonly!(copy proposed: usize, implemented: usize);
 }
 
-const STATE: &str = "状態:";
-const PROPOSED: &str = "提案";
-const IMPLEMENTED: &str = "実装済み";
-const PROBLEM: &str = "問題";
-const DECIDED: &str = "決めたこと";
-const CONFIRMATIONS: &str = "確認すること";
-/// 文書の最後に置く、決定として扱わない見出し
-const OPEN: &str = "未決";
-/// テストを求めない行の頭の印
-const BY_READING: &str = "（読んで確認）";
+/// 形の語の、1つの言語での綴り。どちらの言語の綴りも、どの文書でも同じ意味に読む
+struct Keywords {
+    /// 状態の行の頭
+    state: &'static str,
+    proposed: &'static str,
+    implemented: &'static str,
+    problem: &'static str,
+    decided: &'static str,
+    rejected: &'static str,
+    confirmations: &'static str,
+    /// 文書の最後に置く、決定として扱わない見出し
+    open: &'static str,
+    /// テストを求めない行の頭の印
+    by_reading: &'static str,
+}
+
+const JAPANESE: Keywords = Keywords {
+    state: "状態:",
+    proposed: "提案",
+    implemented: "実装済み",
+    problem: "問題",
+    decided: "決めたこと",
+    rejected: "見送った案",
+    confirmations: "確認すること",
+    open: "未決",
+    by_reading: "（読んで確認）",
+};
+
+const ENGLISH: Keywords = Keywords {
+    state: "Status:",
+    proposed: "proposed",
+    implemented: "implemented",
+    problem: "Problem",
+    decided: "Decision",
+    rejected: "Rejected options",
+    confirmations: "Confirmations",
+    open: "Open",
+    by_reading: "(by reading)",
+};
+
+/// 認める綴りの組。最初が、どの言語で書いたか分からないときに指摘に使う綴り
+const KEYWORDS: [&Keywords; 2] = [&JAPANESE, &ENGLISH];
+
+/// 決定の中の "###" の節のうち、形の語の付いたもの
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum Section {
+    Problem,
+    Decided,
+    Rejected,
+    Confirmations,
+}
+
+impl Section {
+    fn spelled(self, keywords: &Keywords) -> &'static str {
+        match self {
+            Self::Problem => keywords.problem,
+            Self::Decided => keywords.decided,
+            Self::Rejected => keywords.rejected,
+            Self::Confirmations => keywords.confirmations,
+        }
+    }
+
+    /// 見出しの文がどれかの言語の節の名前なら、その節
+    fn of(heading: &str) -> Option<Self> {
+        let heading = heading.trim();
+        [
+            Self::Problem,
+            Self::Decided,
+            Self::Rejected,
+            Self::Confirmations,
+        ]
+        .into_iter()
+        .find(|section| {
+            KEYWORDS
+                .iter()
+                .any(|keywords| section.spelled(keywords) == heading)
+        })
+    }
+}
+
+/// "##" の見出しの文が、どれかの言語の「未決」か
+fn is_open(heading: &str) -> bool {
+    KEYWORDS
+        .iter()
+        .any(|keywords| keywords.open == heading.trim())
+}
+
+/// 状態の行の値を状態にする。どれかの言語の「提案」か「実装済み」でなければ None
+fn state_of(value: &str) -> Option<State> {
+    KEYWORDS.iter().find_map(|keywords| {
+        if value == keywords.proposed {
+            Some(State::Proposed)
+        } else if value == keywords.implemented {
+            Some(State::Implemented)
+        } else {
+            None
+        }
+    })
+}
+
+/// 段落の最初の行が状態の行なら、その綴りの組と、頭のあとの値
+fn state_line(first: &str) -> Option<(&'static Keywords, &str)> {
+    KEYWORDS.iter().find_map(|keywords| {
+        first
+            .strip_prefix(keywords.state)
+            .map(|value| (*keywords, value.trim()))
+    })
+}
+
+/// 確認することの行の ID のあとの文から、頭の「（読んで確認）」をどれかの言語の綴りで外す
+fn strip_by_reading(rest: &str) -> Option<&str> {
+    KEYWORDS
+        .iter()
+        .find_map(|keywords| rest.strip_prefix(keywords.by_reading))
+}
 
 /// 1つの決定を読んでいる途中のもの
 struct Building {
@@ -113,11 +218,11 @@ struct Building {
     /// 今の "###" の節が指紋に入れる節か
     in_fingerprinted: bool,
     quotable: Vec<String>,
-    /// 状態の行を探すのは、見出しの直後の段落だけ
-    state_line: Option<(usize, String)>,
+    /// 状態の行を探すのは、見出しの直後の段落だけ。(行, 書いた綴りの組, 値)
+    state_line: Option<(usize, &'static Keywords, String)>,
     awaiting_state: bool,
-    sections: BTreeSet<String>,
-    section: Option<String>,
+    sections: BTreeSet<Section>,
+    section: Option<Section>,
     confirmations: Vec<Confirmation>,
 }
 
@@ -140,9 +245,8 @@ impl Building {
 
     fn finish(self, path: &str, lines: &[&str], findings: &mut Vec<Finding>) -> Decision {
         let state = match &self.state_line {
-            Some((_, value)) if value == PROPOSED => Some(State::Proposed),
-            Some((_, value)) if value == IMPLEMENTED => Some(State::Implemented),
-            Some((line, value)) => {
+            Some((_, _, value)) if state_of(value).is_some() => state_of(value),
+            Some((line, _, value)) => {
                 findings.push(Finding::new(
                     FindingKind::DecisionStateInvalid,
                     path.to_owned(),
@@ -161,13 +265,18 @@ impl Building {
                 None
             }
         };
-        for required in [PROBLEM, DECIDED] {
-            if !self.sections.contains(required) {
+        // 欠けた節の名前は、状態の行を書いた言語の綴りで出す
+        let keywords = self
+            .state_line
+            .as_ref()
+            .map_or(KEYWORDS[0], |(_, keywords, _)| *keywords);
+        for required in [Section::Problem, Section::Decided] {
+            if !self.sections.contains(&required) {
                 findings.push(Finding::new(
                     FindingKind::DecisionSectionMissing,
                     path.to_owned(),
                     Some(self.heading_line),
-                    required.to_owned(),
+                    required.spelled(keywords).to_owned(),
                 ));
             }
         }
@@ -251,7 +360,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
                 if title.is_none() {
                     title = Some((line_of(node), node.to_string()));
                 }
-            } else if node.to_string().trim() == OPEN {
+            } else if is_open(&node.to_string()) {
                 place = Place::Open;
             } else {
                 let line = line_of(node);
@@ -439,18 +548,18 @@ fn read_decision_block(node: &Node, text: &str, lines: &[&str], building: &mut B
     )]
     match node {
         Node::Heading(_) => {
-            let name = node.to_string().trim().to_owned();
-            building.sections.insert(name.clone());
-            building.section = Some(name);
+            let section = Section::of(&node.to_string());
+            building.sections.extend(section);
+            building.section = section;
         }
         Node::Paragraph(_) if awaiting_state => {
             let text = node.to_string();
             let first = text.lines().next().unwrap_or_default();
-            if let Some(value) = first.strip_prefix(STATE) {
-                building.state_line = Some((line_of(node), value.trim().to_owned()));
+            if let Some((keywords, value)) = state_line(first) {
+                building.state_line = Some((line_of(node), keywords, value.to_owned()));
             }
         }
-        Node::List(list) if building.section.as_deref() == Some(CONFIRMATIONS) => {
+        Node::List(list) if building.section == Some(Section::Confirmations) => {
             for item in &list.children {
                 building.confirmations.push(confirmation(item, lines));
             }
@@ -465,9 +574,7 @@ fn confirmation(item: &Node, lines: &[&str]) -> Confirmation {
     let text = text.trim_start();
     let (id, rest) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
     let rest = rest.trim_start();
-    let (by_reading, rest) = rest
-        .strip_prefix(BY_READING)
-        .map_or((false, rest), |after| (true, after));
+    let (by_reading, rest) = strip_by_reading(rest).map_or((false, rest), |after| (true, after));
     let line = line_of(item);
     let end = item.position().map_or(line, |position| position.end.line);
     let mut body: Vec<String> = lines
@@ -675,7 +782,10 @@ fn read_fingerprinted(node: &Node, text: &str, building: &mut Building) {
         && heading.depth == 3
     {
         let name = node.to_string();
-        building.in_fingerprinted = matches!(name.trim(), DECIDED | CONFIRMATIONS);
+        building.in_fingerprinted = matches!(
+            Section::of(&name),
+            Some(Section::Decided | Section::Confirmations)
+        );
         if building.in_fingerprinted {
             building.fingerprinted.push((line, end));
         }

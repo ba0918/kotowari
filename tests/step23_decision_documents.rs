@@ -1477,3 +1477,156 @@ fn a_decision_entry_outside_a_markdown_path_or_with_a_second_hash_or_a_space_is_
         "{value}"
     );
 }
+
+/// 英語の形の語で書いた、題名と話題の段落のあとに決定を並べた文書
+fn english_topic(decisions: &[&str]) -> String {
+    format!(
+        "# Greetings\n\nDecides how to greet.\n\n{}",
+        decisions.concat()
+    )
+}
+
+// @kotowari[C-core-docs-1]
+// @kotowari[C-core-confirm-6]
+#[test]
+fn a_document_written_with_the_english_keywords_is_read_like_the_japanese_one() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &format!(
+            "{}## Open\n\n- How to greet at night. The user decides it at the next brainstorm\n",
+            english_topic(&[
+                "## Greet\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n\
+                 ### Rejected options\n\n- Not this. Why.\n\n### Confirmations\n\n\
+                 - C-greet-1 (by reading) The skill says so\n- C-greet-2 A greeting is shown\n\n",
+                "## Leave\n\nStatus: proposed\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo that.\n\n",
+            ])
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "confirmation_without_test",
+            "docs/decisions/greet.md",
+            24,
+            "C-greet-2"
+        )]
+    );
+    assert_eq!(
+        value["decisions"],
+        serde_json::json!({"documents": 1, "decisions": 2, "confirmations": 2})
+    );
+    let (status, _) = status(tmp.path());
+    assert_eq!(
+        status["decisions"],
+        serde_json::json!({"proposed": 1, "implemented": 1})
+    );
+    assert_eq!(status["complete"], false);
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn list_gives_the_same_state_values_for_english_and_japanese_documents() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/en.md",
+        &english_topic(&[
+            "## Greet\n\nStatus: proposed\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n\
+             ### Confirmations\n\n- C-en-1 (by reading) The skill says so\n\n",
+        ]),
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/ja.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["C-ja-1 （読んで確認）skill に書いてある"],
+        )]),
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["list"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let rows: Vec<_> = value["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["kind"] == "confirmation")
+        .map(|item| {
+            (
+                item["id"].as_str().unwrap().to_string(),
+                item["state"].clone(),
+                item["by_reading"].clone(),
+                item["name"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            (
+                "C-en-1".to_string(),
+                serde_json::json!("proposed"),
+                serde_json::json!(true),
+                "The skill says so".to_string()
+            ),
+            (
+                "C-ja-1".to_string(),
+                serde_json::json!("proposed"),
+                serde_json::json!(true),
+                "skill に書いてある".to_string()
+            ),
+        ]
+    );
+}
+
+// @kotowari[C-core-docs-6]
+#[test]
+fn a_missing_section_is_named_in_the_language_of_the_state_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &english_topic(&["## Greet\n\nStatus: proposed\n\n### Decision\n\nDo this.\n\n"]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "decision_section_missing",
+            "docs/decisions/greet.md",
+            5,
+            "Problem"
+        )]
+    );
+}
+
+// @kotowari[C-core-docs-5]
+#[test]
+fn an_english_state_line_with_another_value_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &english_topic(&[
+            "## Greet\n\nStatus: decided\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n",
+        ]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "decision_state_invalid",
+            "docs/decisions/greet.md",
+            7,
+            "decided"
+        )]
+    );
+}
