@@ -674,3 +674,91 @@ fn the_read_documents_expose_their_place_relative_paths_and_kinds() {
         [("core/topic.md", kotowari_core::DocKind::Topic)]
     );
 }
+
+// @kotowari[C-core-libinputs-14]
+#[test]
+fn parsing_a_decision_document_returns_its_decisions_and_rows_at_their_lines() {
+    let source = SourceText::new(
+        "docs/decisions/core/greet.md",
+        "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n### Confirmations\n\n- C-core-greet-1 A greeting is shown\n- C-core-greet-2 (by reading) The skill says so\n\n## Wave\n\nStatus: proposed\n\n### Problem\n\nTrouble.\n\n### Decision\n\nWave.\n",
+    )
+    .unwrap();
+    let document = kotowari_core::parse_decision_document(&source).unwrap();
+    assert_eq!(document.path(), "docs/decisions/core/greet.md");
+    assert!(document.findings().is_empty(), "{:?}", document.findings());
+    let decisions: Vec<_> = document
+        .decisions()
+        .iter()
+        .map(|d| (d.heading(), d.anchor(), d.line(), d.end_line(), d.state()))
+        .collect();
+    assert_eq!(
+        decisions,
+        vec![
+            ("Greet", "greet", 5, 21, Some("implemented")),
+            ("Wave", "wave", 22, 32, Some("proposed")),
+        ]
+    );
+    let rows: Vec<_> = document.decisions()[0]
+        .confirmations()
+        .iter()
+        .map(|row| (row.id(), row.line(), row.by_reading(), row.name()))
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            ("C-core-greet-1", 19, false, "A greeting is shown"),
+            ("C-core-greet-2", 20, true, "The skill says so"),
+        ]
+    );
+    assert!(document.decisions()[1].confirmations().is_empty());
+}
+
+// @kotowari[C-core-libinputs-15]
+#[test]
+fn parsing_a_decision_document_with_form_errors_returns_what_was_read_and_the_findings() {
+    let source = SourceText::new(
+        "docs/decisions/core/greet.md",
+        "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: done\n\n### Decision\n\nDo this.\n\n### Confirmations\n\n- C-core-greet-1 A greeting is shown\n- C-bad A broken row\n",
+    )
+    .unwrap();
+    let document = kotowari_core::parse_decision_document(&source).unwrap();
+    let decision = &document.decisions()[0];
+    assert_eq!(
+        (decision.heading(), decision.line(), decision.state()),
+        ("Greet", 5, None)
+    );
+    let ids: Vec<_> = decision
+        .confirmations()
+        .iter()
+        .map(|row| (row.id(), row.line()))
+        .collect();
+    assert_eq!(ids, vec![("C-core-greet-1", 15), ("C-bad", 16)]);
+    let findings: Vec<_> = document
+        .findings()
+        .iter()
+        .map(|f| (f.kind().as_str(), f.path(), f.line(), f.detail()))
+        .collect();
+    assert_eq!(
+        findings,
+        vec![
+            (
+                "decision_section_missing",
+                "docs/decisions/core/greet.md",
+                Some(5),
+                "Problem"
+            ),
+            (
+                "decision_state_invalid",
+                "docs/decisions/core/greet.md",
+                Some(7),
+                "done"
+            ),
+            (
+                "invalid_id",
+                "docs/decisions/core/greet.md",
+                Some(16),
+                "C-bad"
+            ),
+        ]
+    );
+}

@@ -117,7 +117,7 @@ The input for list and query (`ReadInputs`) does not require the guides and surf
 
 ## A public entry point is provided that parses the string of a decision document and returns, read-only, the decisions and confirmations obtained
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

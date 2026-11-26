@@ -11,6 +11,10 @@ macro_rules! readonly {
 #[cfg(test)]
 extern crate self as kotowari_core;
 pub mod config;
+mod decision_parse;
+pub use decision_parse::{
+    ParsedConfirmation, ParsedDecision, ParsedDecisionDocument, parse_decision_document,
+};
 mod decisions;
 pub use decisions::{
     ConfirmationCounts, DecisionStates, DecisionTally, is_confirmation_id, is_decision_target,
