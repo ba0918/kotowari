@@ -51,7 +51,7 @@
               </div>
               <h2 data-i18n="decisionTitle">{{ copy.decisionTitle }}</h2>
               <p data-i18n="decisionBody">{{ copy.decisionBody }}</p>
-              <code>docs/decision/records/login.md#A1</code>
+              <code>docs/decisions/login/lockout.md</code>
             </li>
             <li class="trace-card requirement-card">
               <div class="card-label">
@@ -68,7 +68,7 @@
                 <span data-i18n="test">{{ copy.test }}</span><span aria-hidden="true">↗</span>
               </div>
               <h2 data-i18n="testTitle">{{ copy.testTitle }}</h2>
-              <code>// @kotowari[REQ-001]<br>#[test]<br>fn locks_after_five_failures() { … }</code>
+              <code>// @kotowari[C-login-lockout-1]<br>#[test]<br>fn locks_after_five_failures() { … }</code>
               <p data-i18n="testBody">{{ copy.testBody }}</p>
             </li>
           </ol>
@@ -92,17 +92,17 @@
           <article>
             <span class="step-number">01</span>
             <h3 data-i18n="flow1Title">{{ copy.flow1Title }}</h3>
-            <p data-i18n="flow1Body">{{ copy.flow1Body }}</p><code>decision → #A1</code>
+            <p data-i18n="flow1Body">{{ copy.flow1Body }}</p><code>### Decision</code>
           </article>
           <article>
             <span class="step-number">02</span>
             <h3 data-i18n="flow2Title">{{ copy.flow2Title }}</h3>
-            <p data-i18n="flow2Body">{{ copy.flow2Body }}</p><code>REQ-001 → source</code>
+            <p data-i18n="flow2Body">{{ copy.flow2Body }}</p><code>C-login-lockout-1</code>
           </article>
           <article>
             <span class="step-number">03</span>
             <h3 data-i18n="flow3Title">{{ copy.flow3Title }}</h3>
-            <p data-i18n="flow3Body">{{ copy.flow3Body }}</p><code>@kotowari[REQ-001]</code>
+            <p data-i18n="flow3Body">{{ copy.flow3Body }}</p><code>@kotowari[C-login-lockout-1]</code>
           </article>
         </div>
       </section>
@@ -158,7 +158,7 @@
         </div>
         <div class="commands">
           <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.5.0/docs/guides/commands/check.md"><code>kotowari check</code><span data-i18n="cmdCheck">{{ copy.cmdCheck }}</span><small lang="en">Guide ↗</small></a>
-          <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.5.0/docs/guides/commands/query.md"><code>kotowari query REQ-001</code><span data-i18n="cmdQuery">{{ copy.cmdQuery }}</span><small lang="en">Guide ↗</small></a>
+          <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.5.0/docs/guides/commands/query.md"><code>kotowari query C-login-lockout-1</code><span data-i18n="cmdQuery">{{ copy.cmdQuery }}</span><small lang="en">Guide ↗</small></a>
           <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.5.0/docs/guides/commands/status.md"><code>kotowari status</code><span data-i18n="cmdStatus">{{ copy.cmdStatus }}</span><small lang="en">Guide ↗</small></a>
         </div>
       </section>
