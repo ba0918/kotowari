@@ -1,11 +1,9 @@
 use crate::StopReason;
 use std::collections::BTreeMap;
-use std::num::NonZeroU64;
 
 /// 設定ファイルの構造（TBL-core-004）
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
-    pub ir: String,
     pub decisions: DecisionsConfig,
     pub tests: TestsConfig,
     pub guides: GuidesConfig,
@@ -13,7 +11,6 @@ pub struct Config {
     pub surface: SurfaceConfig,
     /// `全体像の元データ`の置き場。鍵が無ければ None で、元データを読まない（TBL-core-004）
     pub overview: Option<OverviewConfig>,
-    pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
     /// "languages" に書いた言語タグ。鍵が無ければ空（`言語の一覧`は "en" だけ。REQ-core-334）
     pub languages: Vec<String>,
@@ -57,11 +54,8 @@ pub struct MutantsConfig {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DecisionsConfig {
-    pub records: String,
-    pub adr: String,
-    /// 決定の文書の置き場（docs/decisions/core/decision-documents.md）。鍵が無ければ None で、
-    /// 決定の文書を読まない。古い形の置き場と並べて読む間は、書いたリポジトリだけが読む
-    pub documents: Option<String>,
+    /// 決定の文書の置き場（docs/decisions/core/config.md）。既定は "docs/decisions"
+    pub documents: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -78,20 +72,11 @@ pub struct RustTestsConfig {
     pub macros: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LimitsConfig {
-    pub lines: NonZeroU64,
-    pub requirements: NonZeroU64,
-}
-
 impl Default for Config {
     fn default() -> Self {
         Config {
-            ir: "docs/ir".to_string(),
             decisions: DecisionsConfig {
-                records: "docs/decision/records".to_string(),
-                adr: "docs/decision/adr".to_string(),
-                documents: None,
+                documents: "docs/decisions".to_string(),
             },
             tests: TestsConfig {
                 files: vec!["src/**/*.rs".to_string(), "tests/**/*.rs".to_string()],
@@ -105,10 +90,6 @@ impl Default for Config {
             mutants: MutantsConfig { equivalents: None },
             surface: SurfaceConfig::default(),
             overview: None,
-            limits: LimitsConfig {
-                lines: NonZeroU64::new(200).expect("200 is non-zero"),
-                requirements: NonZeroU64::new(10).expect("10 is non-zero"),
-            },
             vague_words: vec![
                 "適切に".to_string(),
                 "必要に応じて".to_string(),
@@ -127,8 +108,6 @@ impl Default for Config {
 #[serde(deny_unknown_fields)]
 struct RawConfig {
     #[serde(default, deserialize_with = "deserialize_nullable")]
-    ir: Option<Option<String>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
     decisions: Option<Option<RawDecisions>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     tests: Option<Option<RawTests>>,
@@ -138,8 +117,6 @@ struct RawConfig {
     mutants: Option<Option<RawMutants>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     surface: Option<Option<RawSurface>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    limits: Option<Option<RawLimits>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     overview: Option<Option<RawOverview>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
@@ -162,10 +139,6 @@ struct RawOverview {
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawDecisions {
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    records: Option<Option<String>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    adr: Option<Option<String>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     documents: Option<Option<String>>,
 }
@@ -213,15 +186,6 @@ struct RawSurface {
     rules: Option<Option<Vec<String>>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     unspecified: Option<Option<String>>,
-}
-
-#[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-struct RawLimits {
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    lines: Option<Option<NonZeroU64>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    requirements: Option<Option<NonZeroU64>>,
 }
 
 /// null を Some(None)、値を Some(Some(v))、不在を None にデシリアライズ
@@ -395,11 +359,8 @@ impl Config {
 
     pub(crate) fn validated(&self) -> Result<Self, StopReason> {
         Self::from_raw(RawConfig {
-            ir: Some(Some(self.ir.clone())),
             decisions: Some(Some(RawDecisions {
-                records: Some(Some(self.decisions.records.clone())),
-                adr: Some(Some(self.decisions.adr.clone())),
-                documents: self.decisions.documents.clone().map(Some),
+                documents: Some(Some(self.decisions.documents.clone())),
             })),
             tests: Some(Some(RawTests {
                 files: Some(Some(self.tests.files.clone())),
@@ -426,10 +387,6 @@ impl Config {
                     toc: Some(Some(overview.toc.clone())),
                 })
             }),
-            limits: Some(Some(RawLimits {
-                lines: Some(Some(self.limits.lines)),
-                requirements: Some(Some(self.limits.requirements)),
-            })),
             vague_words: Some(Some(self.vague_words.clone())),
             languages: Some(Some(self.languages.clone())),
             labels: Some(Some(self.labels.clone())),
@@ -439,36 +396,18 @@ impl Config {
     fn from_raw(raw: RawConfig) -> Result<Self, StopReason> {
         let defaults = Config::default();
 
-        // REQ-core-014: null 値の検出と絶対パスの検出
-        // REQ-core-110: パスの正規化
-        let ir = non_null_or_default(raw.ir, "ir", defaults.ir)?;
-        check_not_absolute(&ir, "ir")?;
-        let ir = crate::normalize_path(&ir);
-
-        // REQ-core-014: "decisions:" 自体が null のときも設定の誤りで停止する
+        // "decisions:" 自体が null のときも設定の誤りで停止する。値は null と絶対パスを止め、
+        // 正規化する（docs/decisions/core/config.md、docs/decisions/core/base-directory.md）
         let decisions = match non_null(raw.decisions, "decisions")? {
             Some(d) => {
-                let records = non_null_or_default(
-                    d.records,
-                    "decisions.records",
-                    defaults.decisions.records,
+                let documents = non_null_or_default(
+                    d.documents,
+                    "decisions.documents",
+                    defaults.decisions.documents,
                 )?;
-                check_not_absolute(&records, "decisions.records")?;
-                let records = crate::normalize_path(&records);
-                let adr = non_null_or_default(d.adr, "decisions.adr", defaults.decisions.adr)?;
-                check_not_absolute(&adr, "decisions.adr")?;
-                let adr = crate::normalize_path(&adr);
-                let documents = match non_null(d.documents, "decisions.documents")? {
-                    Some(path) => {
-                        check_not_absolute(&path, "decisions.documents")?;
-                        Some(crate::normalize_path(&path))
-                    }
-                    None => None,
-                };
+                check_not_absolute(&documents, "decisions.documents")?;
                 DecisionsConfig {
-                    records,
-                    adr,
-                    documents,
+                    documents: crate::normalize_path(&documents),
                 }
             }
             None => defaults.decisions,
@@ -563,23 +502,6 @@ impl Config {
             None => defaults.surface,
         };
 
-        // REQ-core-014: "limits:" 自体が null のときも停止する
-        let limits = match non_null(raw.limits, "limits")? {
-            Some(l) => {
-                let lines = non_null_or_default(l.lines, "limits.lines", defaults.limits.lines)?;
-                let requirements = non_null_or_default(
-                    l.requirements,
-                    "limits.requirements",
-                    defaults.limits.requirements,
-                )?;
-                LimitsConfig {
-                    lines,
-                    requirements,
-                }
-            }
-            None => defaults.limits,
-        };
-
         // REQ-core-014: "vague_words:" 自体が null のときも停止する
         let vague_words =
             non_null_or_default(raw.vague_words, "vague_words", defaults.vague_words)?;
@@ -607,14 +529,12 @@ impl Config {
             .map_err(StopReason::ConfigError)?;
 
         Ok(Config {
-            ir,
             decisions,
             tests,
             guides,
             mutants,
             surface,
             overview,
-            limits,
             // REQ-core-015: 一覧は既定を置き換える
             vague_words,
             languages,

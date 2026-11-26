@@ -5,7 +5,6 @@ use super::*;
 pub(super) struct ReadPreparation {
     pub(super) policy: Policy,
     pub(super) originals: Originals,
-    pub(super) docs: Vec<crate::ir::IrDocument>,
     pub(super) decisions: Vec<crate::decisions::Document>,
     /// 決定の文書を読んだときに出た形の指摘
     pub(super) decision_findings: Vec<crate::Finding>,
@@ -18,7 +17,6 @@ impl ReadPreparation {
         Self {
             policy,
             originals: Originals::default(),
-            docs: vec![],
             decisions: vec![],
             decision_findings: vec![],
             decision_targets: vec![],
@@ -41,11 +39,7 @@ impl ReadPreparation {
         };
         let text = crate::translations::without_switcher(config, &first, &language, &source.text);
         let text = text.as_deref().unwrap_or(&source.text);
-        let glossary = config
-            .decisions
-            .documents
-            .as_deref()
-            .is_some_and(|place| crate::decisions::is_glossary(&first, place));
+        let glossary = crate::decisions::is_glossary(&first, &config.decisions.documents);
         if glossary || language != languages[0] {
             // C-core-docs-20: 用語集は中身を検査しないので、その中のリンクも見ない
             let content =
@@ -66,100 +60,37 @@ impl ReadPreparation {
         self.decisions.push(document);
         Ok(())
     }
-    pub(super) fn parse_ir(
-        &mut self,
-        source: &Text,
-        relative: &str,
-    ) -> Result<(), crate::StopReason> {
-        // REQ-core-346: `切り替えの行`は`文書が扱う範囲`の行に数えず、文の検査も受けない
-        let config = &self.policy.config;
-        let first = config.languages().remove(0);
-        let text = crate::translations::without_switcher(config, relative, &first, &source.text);
-        let doc = crate::ir::parse_document(relative, text.as_deref().unwrap_or(&source.text))?;
-        self.docs.push(doc);
-        Ok(())
-    }
-    pub(super) fn finish(
-        mut self,
-        records: &[Text],
-        adr: &[Text],
-        tests: &[Test],
-    ) -> Result<ReadModel, InputError> {
-        self.originals.admit(records)?;
-        self.originals.admit(adr)?;
+    pub(super) fn finish(mut self, tests: &[Test]) -> Result<ReadModel, InputError> {
         self.originals
             .admit(tests.iter().map(|file| &file.source))?;
-        Ok(self.calculate(records, adr, tests))
+        Ok(self.calculate(tests))
     }
-    pub(super) fn calculate(self, records: &[Text], adr: &[Text], tests: &[Test]) -> ReadModel {
+    pub(super) fn calculate(self, tests: &[Test]) -> ReadModel {
         let config = &self.policy.config;
-        let mut docs = self.docs;
-        docs.sort_by(|left, right| {
-            left.relative_path
-                .as_bytes()
-                .cmp(right.relative_path.as_bytes())
-        });
-        let duplicates = crate::ir::GlossaryDuplicates::new(&docs);
-        let mut findings = crate::ir::check_documents_with_duplicates(&docs, config, &duplicates);
-        let context = crate::sources::context_from_entries(config, entries(records), entries(adr));
-        crate::sources::check_sources_with_duplicates(
-            &docs,
-            &context,
-            &config.ir,
-            &duplicates,
-            &mut findings,
-        );
-        crate::record_form::check_record_forms(&context, &mut findings);
+        let place = &config.decisions.documents;
         let mut decisions = self.decisions;
         decisions.sort_by(|left, right| left.path.as_bytes().cmp(right.path.as_bytes()));
-        findings.extend(self.decision_findings);
-        let decision_tally = config
-            .decisions
-            .documents
-            .is_some()
-            .then(|| crate::decisions::tally(&decisions));
+        let mut findings = self.decision_findings;
+        let decision_tally = crate::decisions::tally(&decisions);
         crate::decisions::check_ids(&decisions, &mut findings);
-        if let Some(place) = &config.decisions.documents {
-            crate::decisions::check_links(&decisions, &self.decision_targets, place, &mut findings);
-            crate::decisions::check_domains(&decisions, place, &mut findings);
-        }
-        let mut known_ids = crate::collect_known_ids(&docs);
-        known_ids.extend(crate::decisions::known_ids(&decisions));
-        crate::terms::check_terms_and_vague_words_with_duplicates(
-            &docs,
-            &config.vague_words,
-            &config.ir,
-            &duplicates,
-            &mut findings,
-        );
-        let paths = docs.iter().map(|doc| doc.relative_path.clone()).collect();
-        crate::terms::check_document_references(&docs, &config.ir, &paths, &mut findings);
+        crate::decisions::check_links(&decisions, &self.decision_targets, place, &mut findings);
+        crate::decisions::check_domains(&decisions, place, &mut findings);
+        let known_ids: BTreeSet<String> = crate::decisions::known_ids(&decisions).collect();
         let discovered = crate::tests_discovery::check_entries(
             tests
                 .iter()
                 .map(|file| (file.source.path.as_str(), &file.analysis)),
-            &docs,
             &known_ids,
-            &config.ir,
             &mut findings,
         );
         crate::decisions::check_tests(&decisions, &discovered.markers, &mut findings);
-        crate::deferred_notices::check(&docs, &config.ir, &discovered.markers, &mut findings);
-        let source_texts = records
-            .iter()
-            .chain(adr)
-            .map(|source| (source.path.clone(), source.text.clone()))
-            .collect();
         ReadModel {
             policy: self.policy,
             originals: self.originals,
-            docs,
             decisions,
             decision_tally,
             findings,
             discovered,
-            context,
-            source_texts,
         }
     }
 }
@@ -167,7 +98,7 @@ impl ReadPreparation {
 /// Opaque preparation preserves parse stops between native acquisition steps.
 pub struct RepositoryReadPreparation {
     pub(super) inner: ReadPreparation,
-    pub(super) ir_identities: BTreeSet<Identity>,
+    pub(super) identities: BTreeSet<Identity>,
 }
 
 impl RepositoryReadPreparation {
@@ -178,25 +109,11 @@ impl RepositoryReadPreparation {
     pub fn new(config: crate::config::Config) -> Result<Self, crate::StopReason> {
         Ok(Self {
             inner: ReadPreparation::new(Policy::new(&config)?),
-            ir_identities: BTreeSet::new(),
+            identities: BTreeSet::new(),
         })
     }
     pub fn config(&self) -> &crate::config::Config {
         &self.inner.policy.config
-    }
-    pub fn push_ir(&mut self, source: NativeSourceText) -> Result<(), crate::StopReason> {
-        let source: Text = source.into();
-        if !self.ir_identities.insert(source.identity.clone()) {
-            return Err(native_error(&InputError::InvalidInput(format!(
-                "duplicate source identity: {}",
-                source.path
-            ))));
-        }
-        self.inner
-            .originals
-            .admit([&source])
-            .map_err(|error| native_error(&error))?;
-        self.inner.parse_ir(&source, &source.path)
     }
     /// 決定の文書を1つ加える。path は`基準のディレクトリ`からの相対パス
     pub fn push_decision_document(
@@ -204,7 +121,7 @@ impl RepositoryReadPreparation {
         source: NativeSourceText,
     ) -> Result<(), crate::StopReason> {
         let source: Text = source.into();
-        if !self.ir_identities.insert(source.identity.clone()) {
+        if !self.identities.insert(source.identity.clone()) {
             return Err(native_error(&InputError::InvalidInput(format!(
                 "duplicate source identity: {}",
                 source.path
@@ -216,17 +133,12 @@ impl RepositoryReadPreparation {
             .map_err(|error| native_error(&error))?;
         self.inner.parse_decisions(&source)
     }
-    pub fn finish(
-        self,
-        records: Vec<NativeSourceText>,
-        adr: Vec<NativeSourceText>,
-        tests: Vec<NativeTestAnalysis>,
-    ) -> Result<ReadModel, crate::StopReason> {
+    pub fn finish(self, tests: Vec<NativeTestAnalysis>) -> Result<ReadModel, crate::StopReason> {
         let tests = selected(Some(tests), self.inner.policy.tests(), "test information")
             .and_then(native_tests)
             .map_err(|error| native_error(&error))?;
         self.inner
-            .finish(&texts(records), &texts(adr), &tests)
+            .finish(&tests)
             .map_err(|error| native_error(&error))
     }
 }
@@ -234,15 +146,10 @@ impl RepositoryReadPreparation {
 pub struct ReadModel {
     pub(super) policy: Policy,
     pub(super) originals: Originals,
-    pub(crate) docs: Vec<crate::ir::IrDocument>,
     pub(crate) decisions: Vec<crate::decisions::Document>,
-    /// 決定の文書の置き場を設定に書いたときだけ持つ
-    pub(crate) decision_tally: Option<crate::decisions::DecisionTally>,
+    pub(crate) decision_tally: crate::decisions::DecisionTally,
     pub(crate) findings: Vec<crate::Finding>,
     pub(crate) discovered: crate::tests_discovery::DiscoveredTests,
-    pub(crate) context: crate::sources::SourceContext,
-    /// 判断の記録の置き場と ADR の置き場から読んだ文書の中身。出典の指す先の中身を引く
-    pub(super) source_texts: BTreeMap<String, Arc<str>>,
 }
 
 pub struct ReadList(
@@ -269,26 +176,23 @@ impl QueryReport {
 }
 
 pub(super) fn logical_read(inputs: ReadInputs, policy: Policy) -> Result<ReadModel, InputError> {
-    let ir = texts(selected(inputs.ir, true, "IR")?);
-    let records = texts(selected(inputs.records, true, "records")?);
-    let adr = texts(selected(inputs.adr, true, "ADR")?);
+    let documents = texts(selected(inputs.decisions, true, "decision documents")?);
     let tests = logical_tests(selected(inputs.tests, policy.tests(), "test information")?);
     let mut preparation = ReadPreparation::new(policy);
-    preparation.originals.admit(&ir)?;
-    preparation.originals.admit(&records)?;
-    preparation.originals.admit(&adr)?;
+    preparation.originals.admit(&documents)?;
     preparation
         .originals
         .admit(tests.iter().map(|file| &file.source))?;
-    let place = crate::normalize_path(&preparation.policy.config.ir);
-    for source in &ir {
-        let relative =
-            crate::sources::relative_to_place(&source.path, &place).ok_or_else(|| {
-                InputError::InvalidInput("IR source must be under its configured place".into())
-            })?;
-        preparation.parse_ir(source, relative).map_err(input_stop)?;
+    let place = crate::normalize_path(&preparation.policy.config.decisions.documents);
+    for source in &documents {
+        if crate::decisions::relative_to_place(&source.path, &place).is_none() {
+            return Err(InputError::InvalidInput(
+                "decision document must be under its configured place".into(),
+            ));
+        }
+        preparation.parse_decisions(source).map_err(input_stop)?;
     }
-    Ok(preparation.calculate(&records, &adr, &tests))
+    Ok(preparation.calculate(&tests))
 }
 
 impl ReadModel {
@@ -298,10 +202,10 @@ impl ReadModel {
     }
     pub fn build_repository(input: RepositoryReadInputs) -> Result<Self, crate::StopReason> {
         let mut preparation = RepositoryReadPreparation::new(input.config)?;
-        for source in input.ir {
-            preparation.push_ir(source)?;
+        for source in input.decisions {
+            preparation.push_decision_document(source)?;
         }
-        preparation.finish(input.records, input.adr, input.tests)
+        preparation.finish(input.tests)
     }
     pub fn config(&self) -> &crate::config::Config {
         &self.policy.config
@@ -311,24 +215,13 @@ impl ReadModel {
     }
     /// "items" と、`言語の一覧`の言語が2つ以上なら pairs の "translations"（REQ-core-155）
     pub fn list_with(&self, pairs: &crate::translations::Pairs) -> ReadList {
-        let mut items = crate::list::build(&self.docs, &self.config().ir, &self.discovered.markers);
-        items.items.extend(crate::decisions::list_items(
-            &self.decisions,
-            &self.discovered.markers,
-        ));
-        items.items.sort_by(|a, b| a.location().cmp(&b.location()));
+        let mut items = crate::decisions::list_items(&self.decisions, &self.discovered.markers);
+        items.sort_by(|a, b| a.location().cmp(&b.location()));
         let translations = self.policy.translations().then(|| pairs.listing());
-        ReadList(items, translations)
+        ReadList(crate::list::ListResult { items }, translations)
     }
     pub fn query(&self, id: &str) -> Result<QueryReport, InputError> {
-        let mut items =
-            crate::query::build(&self.docs, &self.config().ir, &self.discovered.markers, id)
-                .map_or_else(Vec::new, |result| result.items);
-        items.extend(crate::decisions::query_items(
-            &self.decisions,
-            &self.discovered.markers,
-            id,
-        ));
+        let items = crate::decisions::query_items(&self.decisions, &self.discovered.markers, id);
         if items.is_empty() {
             return Err(InputError::UnknownQuery(id.into()));
         }
@@ -342,20 +235,9 @@ impl ReadModel {
             .map(|document| crate::decision_parse::parsed(document, Vec::new()))
             .collect()
     }
-    /// 読んだ`IR`の文書。パスのバイト順に並ぶ
-    pub fn documents(&self) -> &[crate::ir::IrDocument] {
-        &self.docs
-    }
-    /// 出典が指す判断の記録の決定か、判断の記録でない Markdown の見出しの節（TBL-core-012）。
-    /// 指す先が無ければ None
-    pub fn source_target(&self, source: &str) -> Option<crate::sources::SourceTarget> {
-        let resolved = self.context.resolve(source)?;
-        let text = self.source_texts.get(&resolved.path)?;
-        crate::sources::SourceTarget::read(resolved, text)
-    }
     /// ほかの文書の`ガイドの印`を`ガイド`と同じ規則で読むもの（REQ-core-286）
     pub fn guide_reader(&self) -> crate::guides::GuideReader {
-        crate::guides::GuideReader::new(&self.docs, &self.decisions)
+        crate::guides::GuideReader::new(&self.decisions)
     }
     pub fn validate_guide_paths<'a>(
         &self,

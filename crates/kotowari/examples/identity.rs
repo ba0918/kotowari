@@ -4,7 +4,7 @@ fn main() {
         config,
         ..Default::default()
     };
-    assert_eq!(inputs.config.ir, "docs/ir");
+    assert_eq!(inputs.config.decisions.documents, "docs/decisions");
     assert!(matches!(
         kotowari::ReadModel::build(inputs),
         Err(kotowari_core::InputError::InputMissing(_))

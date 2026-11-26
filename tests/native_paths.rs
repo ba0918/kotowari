@@ -9,14 +9,7 @@ use std::os::unix::ffi::OsStringExt;
 
 fn byte_filename_project(group: &str) -> tempfile::TempDir {
     let project = tempfile::tempdir().unwrap();
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-        group,
-        "rules",
-    ] {
+    for dir in [".kotowari", "docs/decisions", group, "rules"] {
         fs::create_dir_all(project.path().join(dir)).unwrap();
     }
     let extra = match group {
@@ -51,7 +44,7 @@ fn native_check(project: &std::path::Path) -> std::process::Output {
         .unwrap()
 }
 
-// @kotowari[REQ-core-313, REQ-core-018, REQ-core-198, REQ-core-224, EX-core-485, C-core-clienv-5, C-core-guides-6, C-core-libapi-11, C-core-surface-8]
+// @kotowari[C-core-clienv-5, C-core-guides-6, C-core-libapi-11, C-core-surface-8]
 #[test]
 fn byte_named_files_without_legacy_read_aliases_keep_the_unreadable_stop() {
     for (group, extension) in [("tests", "rs"), ("guides", "md"), ("surface", "rs")] {
@@ -78,7 +71,7 @@ fn byte_named_files_without_legacy_read_aliases_keep_the_unreadable_stop() {
     }
 }
 
-// @kotowari[REQ-core-313, REQ-core-198, REQ-core-206, REQ-core-224, EX-core-485, C-core-libapi-11, C-core-output-5]
+// @kotowari[C-core-libapi-11, C-core-output-5]
 #[test]
 fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
     for (group, extension, original, replacement) in [
@@ -91,7 +84,7 @@ fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
         (
             "guides",
             "md",
-            "<!-- @kotowari[REQ-001:12345678] -->\n",
+            "<!-- @kotowari[docs/decisions/a.md#x:12345678] -->\n",
             "replacement\n",
         ),
         (
@@ -150,7 +143,7 @@ fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
     }
 }
 
-// @kotowari[REQ-core-313, REQ-core-092, EX-core-485, C-core-libapi-11]
+// @kotowari[C-core-libapi-11]
 #[test]
 fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
     let project = byte_filename_project("tests");
@@ -176,18 +169,11 @@ fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
     assert_eq!(value["decisions"]["documents"], 1);
 }
 
-// @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]
+// @kotowari[C-core-libapi-11]
 #[test]
 fn distinct_native_files_with_equal_display_paths_keep_both_counts_and_findings() {
     let project = tempfile::tempdir().unwrap();
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-        "tests/a",
-        "guides/a",
-    ] {
+    for dir in [".kotowari", "docs/decisions", "tests/a", "guides/a"] {
         fs::create_dir_all(project.path().join(dir)).unwrap();
     }
     fs::write(
@@ -234,18 +220,11 @@ fn distinct_native_files_with_equal_display_paths_keep_both_counts_and_findings(
     );
 }
 
-// @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]
+// @kotowari[C-core-libapi-11]
 #[test]
 fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     let project = tempfile::tempdir().unwrap();
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-        "guides",
-        "tests",
-    ] {
+    for dir in [".kotowari", "docs/decisions", "guides", "tests"] {
         fs::create_dir_all(project.path().join(dir)).unwrap();
     }
     fs::write(
@@ -255,12 +234,12 @@ fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     .unwrap();
     fs::write(
         project.path().join("guides/a\\..\\b.md"),
-        "<!-- @kotowari[REQ-001:12345678] -->\n",
+        "<!-- @kotowari[docs/decisions/a.md#x:12345678] -->\n",
     )
     .unwrap();
     fs::write(
         project.path().join("tests/a\\..\\b.txt"),
-        "@kotowari[REQ-001]\n",
+        "@kotowari[C-x-1]\n",
     )
     .unwrap();
     let output = Command::cargo_bin("kotowari")
@@ -291,18 +270,11 @@ fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     }
 }
 
-// @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]
+// @kotowari[C-core-libapi-11]
 #[test]
 fn configured_test_rules_match_the_original_acquired_path() {
     let project = tempfile::tempdir().unwrap();
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-        "tests",
-        "rules",
-    ] {
+    for dir in [".kotowari", "docs/decisions", "tests", "rules"] {
         fs::create_dir_all(project.path().join(dir)).unwrap();
     }
     fs::write(

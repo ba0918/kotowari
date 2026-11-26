@@ -1,9 +1,6 @@
-# kotowari check の設定（実験003。仕様書の「設定ファイル」の節と判断の記録 A23、A26、A47、A48）
-ir: docs/ir
+# kotowari check の設定（docs/decisions/core/config.md）
 decisions:
-  records: docs/decision/records
-  adr: docs/decision/adr
-  # 決定の文書の置き場（docs/decisions/core/decision-documents.md）。古い形の IR と並べて読む
+  # 決定の文書の置き場（docs/decisions/core/decision-documents.md）
   documents: docs/decisions
 tests:
   # 印を探す先。クレートごとに明示する。ID がドメインの名前を持つので
@@ -23,20 +20,20 @@ tests:
     attributes: [kani::proof]
     macros: [proptest]
 guides:
-  # 利用者向けの使い方の文書。印の指紋を今の IR と照らす（docs/ir/core/guides.md）
+  # 利用者向けの使い方の文書。印の指紋を今の決定の文書と照らす（docs/decisions/core/guides.md）
   files:
     - "docs/guides/**/*.md"
 mutants:
   equivalents: .kotowari/equivalents.yaml
 surface:
-  # 利用者から見える kotowari の CLI の面を取り出し、IR に引用されているかを確かめる（docs/ir/core/surface.md）
+  # 利用者から見える kotowari の CLI の面を取り出し、決定の文書に引用されているかを確かめる（docs/decisions/core/surface.md）
   files:
     - "src/**/*.rs"
     - "crates/kotowari-core/src/**/*.rs"
   rules:
     - ".kotowari/rules/surface.yml"
 
-# 文書を英語と日本語の対で持つ。接尾辞の無いファイルが英語、"*.ja.md" が日本語（docs/ir/core/translation-pairs.md）
+# 文書を英語と日本語の対で持つ。接尾辞の無いファイルが英語、"*.ja.md" が日本語（docs/decisions/core/translation-pairs.md）
 languages: [en, ja]
 labels:
   ja:

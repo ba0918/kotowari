@@ -30,12 +30,7 @@ const JAPANESE: [(&str, &str); 17] = [
 
 /// 英語を先頭に日本語の対を持つ、決定の文書の置き場のある設定を作る
 fn make_project(tmp: &Path) {
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
+    for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     let mut config = String::from(

@@ -6,8 +6,8 @@ use std::path::Path;
 
 use kotowari_core::is_frozen;
 
-/// 設定に置き場があれば、その下の Markdown の文書を読んで加える。置き場が無いか
-/// ディレクトリでなければ、ほかの置き場と同じく停止する。言語が2つ以上なら文書を`対`に入れ、
+/// 置き場の下の Markdown の文書を読んで加える。置き場が無いかディレクトリでなければ停止する
+/// （C-core-config-10）。言語が2つ以上なら文書を`対`に入れ、
 /// `先頭の言語`の`側`のある`対`の、ファイルのある`側`を加える（C-core-lang-1）
 pub fn push(
     base: &Path,
@@ -15,9 +15,7 @@ pub fn push(
     assembly: &mut crate::translations::Assembly,
     preparation: &mut kotowari_core::RepositoryReadPreparation,
 ) -> Result<(), kotowari_core::StopReason> {
-    let Some(place) = &config.decisions.documents else {
-        return Ok(());
-    };
+    let place = &config.decisions.documents;
     let dir = base.join(place);
     if !dir.is_dir() {
         let detail = std::fs::read_dir(&dir)
@@ -28,7 +26,7 @@ pub fn push(
         )));
     }
     let mut entries = Vec::new();
-    crate::ir::collect_ir_paths(&dir, "", place, &mut entries)?;
+    collect_markdown_paths(&dir, "", place, &mut entries)?;
     let mut entries: Vec<(String, std::path::PathBuf)> = entries
         .into_iter()
         .map(|(relative, absolute)| (kotowari_core::join_display_path(place, &relative), absolute))
@@ -40,6 +38,41 @@ pub fn push(
         let text = read_utf8_file(&absolute, &path)?;
         preparation
             .push_decision_document(kotowari_core::NativeSourceText::new(absolute, path, text))?;
+    }
+    Ok(())
+}
+
+/// 置き場の下の ".md" のファイルを深さ優先で集める。"." で始まるディレクトリには入らず、
+/// ディレクトリへのシンボリックリンクは辿らない
+pub(crate) fn collect_markdown_paths(
+    dir: &Path,
+    prefix: &str,
+    place: &str,
+    paths: &mut Vec<(String, std::path::PathBuf)>,
+) -> Result<(), kotowari_core::StopReason> {
+    let display = kotowari_core::join_display_path(place, prefix);
+    let display = if prefix.is_empty() { place } else { &display };
+    let unreadable = |e| kotowari_core::StopReason::UnreadableFile(format!("{display}: {e}"));
+    for entry in std::fs::read_dir(dir).map_err(unreadable)? {
+        let entry = entry.map_err(unreadable)?;
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        let relative_path = kotowari_core::join_display_path(prefix, &name);
+        let entry_display = kotowari_core::join_display_path(place, &relative_path);
+        let entry_error =
+            |e| kotowari_core::StopReason::UnreadableFile(format!("{entry_display}: {e}"));
+        let file_type = entry.file_type().map_err(entry_error)?;
+        let (is_dir, is_file) = if file_type.is_symlink() {
+            let metadata = std::fs::metadata(&path).map_err(entry_error)?;
+            (false, metadata.is_file())
+        } else {
+            (file_type.is_dir(), file_type.is_file())
+        };
+        if is_dir && !name.starts_with('.') {
+            collect_markdown_paths(&path, &relative_path, place, paths)?;
+        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
+            paths.push((relative_path, path));
+        }
     }
     Ok(())
 }

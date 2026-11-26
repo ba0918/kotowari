@@ -9,24 +9,12 @@ use tempfile::TempDir;
 
 /// 置き場と設定を作る
 fn make_project(tmp: &Path) {
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-        "docs/decisions",
-        "tests",
-    ] {
+    for dir in [".kotowari", "docs/decisions", "tests"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
-    )
-    .unwrap();
-    std::fs::write(
-        tmp.join("docs/decision/records/records.md"),
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+        "decisions:\n  documents: docs/decisions\n",
     )
     .unwrap();
 }
@@ -60,13 +48,6 @@ fn run_status(tmp: &Path) -> (Option<i32>, serde_json::Value) {
     (code, serde_json::from_str(&stdout).expect("valid JSON"))
 }
 
-/// 要求の見出しと行を作る
-fn requirement(id: &str, name: &str, fields: &str) -> String {
-    format!(
-        "### {id}: {name}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{fields}\n文である。\n\n"
-    )
-}
-
 /// 確認することの行が2つある決定の文書と、その2つを指す印のあるテスト
 fn write_ex_258_project(tmp: &Path) {
     make_project(tmp);
@@ -85,7 +66,7 @@ fn write_ex_258_project(tmp: &Path) {
 
 // --- REQ-core-162、REQ-core-165: 集計と complete ---
 
-// @kotowari[REQ-core-162, REQ-core-165, TBL-core-028, EX-core-258, C-core-status-5, C-core-status-6, C-core-status-9]
+// @kotowari[C-core-status-5, C-core-status-6, C-core-status-9]
 #[test]
 fn req_162_complete_project_counts_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
@@ -98,199 +79,9 @@ fn req_162_complete_project_counts_and_exit_zero() {
     assert_eq!(v["complete"], true);
 }
 
-// @kotowari[REQ-core-165, REQ-core-098, EX-core-259]
-#[test]
-fn req_165_review_requirement_without_how_to_verify_is_not_complete() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement("REQ-002", "二", "- verification: review\n")
-        ),
-    );
-    let (code, v) = run_status(tmp.path());
-    assert_eq!(code, Some(1), "{v}");
-    assert!(v["findings"]["error"].as_u64().unwrap() >= 1, "{v}");
-    assert_eq!(v["requirements"]["review_without_how_to_verify"], 1);
-    assert_eq!(v["complete"], false);
-}
-
-// @kotowari[REQ-core-165, EX-core-260]
-#[test]
-fn req_165_flag_makes_it_not_complete() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement(
-                "REQ-001",
-                "一",
-                "- verification: review\n- how_to_verify: 人が読む\n"
-            )
-        ),
-    );
-    write(
-        tmp.path(),
-        "docs/ir/FLAGS.md",
-        "# 問題の記録\n\nなし。\n\n## Flags\n\n### FLAG-001: 抜け\n\n- kind: gap\n- related: REQ-001\n- source: docs/decision/records/records.md#A1\n\n本文。\n",
-    );
-    let (code, v) = run_status(tmp.path());
-    assert_eq!(v["findings"]["error"], 0, "check reports nothing here: {v}");
-    assert_eq!(v["items"]["flag"], 1);
-    assert_eq!(v["complete"], false);
-    assert_eq!(code, Some(1), "{v}");
-}
-
 // --- TBL-core-028: 数え方 ---
 
-// @kotowari[TBL-core-028, REQ-core-085, EX-core-263]
-#[test]
-fn tbl_028_requirement_covered_through_a_scenario_counts_as_with_tests() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}## Examples\n\n\
-```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
-            requirement("REQ-001", "一", "- verification: unit\n")
-        ),
-    );
-    // 具体例の ID だけの印
-    write(
-        tmp.path(),
-        "tests/a.rs",
-        "// @kotowari[EX-001]\n#[test]\nfn ex_001_x() {}\n",
-    );
-    let (_, v) = run_status(tmp.path());
-    assert_eq!(v["requirements"]["with_tests"], 1, "{v}");
-    assert_eq!(v["requirements"]["without_tests"], 0, "{v}");
-}
-
-// @kotowari[TBL-core-028]
-#[test]
-fn tbl_028_review_requirements_are_not_in_with_or_without_tests() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement(
-                "REQ-001",
-                "一",
-                "- verification: review\n- how_to_verify: 人が読む\n"
-            )
-        ),
-    );
-    let (_, v) = run_status(tmp.path());
-    assert_eq!(v["requirements"]["review"], 1);
-    assert_eq!(v["requirements"]["with_tests"], 0, "{v}");
-    assert_eq!(v["requirements"]["without_tests"], 0, "{v}");
-}
-
-// @kotowari[TBL-core-028]
-#[test]
-fn tbl_028_requirement_without_a_verification_line_is_counted_by_marks_only() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement("REQ-001", "一", "")
-        ),
-    );
-    let (_, v) = run_status(tmp.path());
-    // "- verification:" の行の無い要求は検証の値のどれにも数えない
-    for key in ["unit", "property", "proof", "review"] {
-        assert_eq!(v["requirements"][key], 0, "{key}: {v}");
-    }
-    // review でないので、印の有無でどちらかに数える
-    assert_eq!(v["requirements"]["with_tests"], 0, "{v}");
-    assert_eq!(v["requirements"]["without_tests"], 1, "{v}");
-}
-
-// @kotowari[TBL-core-028]
-#[test]
-fn tbl_028_items_are_counted_by_kind() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}## Decision tables\n\n\
-### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
-### TBL-002: もう1つの表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
-## Properties\n\n### PROP-001: 性\n\n- source: docs/decision/records/records.md#A1\n\n文である。\n\n## Examples\n\n\
-```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
-            requirement(
-                "REQ-001",
-                "一",
-                "- verification: review\n- how_to_verify: 人が読む\n"
-            )
-        ),
-    );
-    write(
-        tmp.path(),
-        "docs/ir/FLAGS.md",
-        "# 問題の記録\n\nなし。\n\n## Flags\n\n### FLAG-001: 抜け\n\n- kind: gap\n- related: REQ-001\n- source: docs/decision/records/records.md#A1\n\n本文。\n",
-    );
-    let (_, v) = run_status(tmp.path());
-    // 決定表だけ2つにして、種類ごとの数が入れ替わらないことも見る
-    for (key, count) in [
-        ("requirement", 1),
-        ("table", 2),
-        ("property", 1),
-        ("scenario", 1),
-        ("flag", 1),
-    ] {
-        assert_eq!(v["items"][key], count, "{key}: {v}");
-    }
-    // 印の無い具体例はテストの無い側に数える
-    assert_eq!(v["scenarios"]["with_tests"], 0, "{v}");
-    assert_eq!(v["scenarios"]["without_tests"], 1, "{v}");
-}
-
-// @kotowari[TBL-core-028]
-#[test]
-fn tbl_028_requirements_are_counted_by_verification_value() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}{}{}{}",
-            requirement("REQ-001", "一", "- verification: unit\n"),
-            requirement("REQ-002", "二", "- verification: property\n"),
-            requirement("REQ-003", "三", "- verification: proof\n"),
-            requirement(
-                "REQ-004",
-                "四",
-                "- verification: review\n- how_to_verify: 人が読む\n"
-            ),
-        ),
-    );
-    let (_, v) = run_status(tmp.path());
-    for key in ["unit", "property", "proof", "review"] {
-        assert_eq!(v["requirements"][key], 1, "{key}: {v}");
-    }
-    // review の3件以外は分母に入り、印が無いのでテストの無い側に数える
-    assert_eq!(v["requirements"]["without_tests"], 3, "{v}");
-}
-
-// @kotowari[TBL-core-028, REQ-core-165, C-core-status-5, C-core-status-9]
+// @kotowari[C-core-status-5, C-core-status-9]
 #[test]
 fn tbl_028_notices_are_counted_apart_from_errors() {
     let tmp = TempDir::new().unwrap();
@@ -298,7 +89,7 @@ fn tbl_028_notices_are_counted_apart_from_errors() {
     // 指紋の古いガイドの印だけを置き、注意（guide_stale）だけが出る置き場にする
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\nguides:\n  files:\n    - \"guide/*.md\"\n",
+        "decisions:\n  documents: docs/decisions\nguides:\n  files:\n    - \"guide/*.md\"\n",
     )
     .unwrap();
     write(
@@ -314,22 +105,45 @@ fn tbl_028_notices_are_counted_apart_from_errors() {
     assert_eq!(code, Some(0), "{v}");
 }
 
-// @kotowari[TBL-core-028, TBL-core-021, C-core-status-6]
+// @kotowari[C-core-status-6]
 #[test]
-fn tbl_028_documents_and_test_files_match_check() {
+fn tbl_028_test_files_match_check() {
     let tmp = TempDir::new().unwrap();
     write_ex_258_project(tmp.path());
     let (_, status) = run_status(tmp.path());
     let (_, stdout, _) = run(tmp.path(), &["check"]);
     let check: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
-    assert_eq!(status["documents"]["files"], check["files"]);
-    assert_eq!(status["documents"]["lines"], check["lines"]);
     assert_eq!(status["tests"]["files"], check["tests"]);
+}
+
+// @kotowari[C-core-status-10]
+#[test]
+fn the_documents_group_counts_the_decision_documents_read_and_their_lines() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_258_project(tmp.path());
+    // 2つ目の決定の文書は5行。用語集は話題の文書でないので数えない
+    write(
+        tmp.path(),
+        "docs/decisions/a/b.md",
+        "# 題名\n\n範囲。\n\n二行目の段落。\n",
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/a/CONTEXT.md",
+        "# 用語集\n\n語。\n",
+    );
+    let first = std::fs::read_to_string(tmp.path().join("docs/decisions/a/a.md")).unwrap();
+    let (_, v) = run_status(tmp.path());
+    assert_eq!(
+        v["documents"],
+        serde_json::json!({"files": 2, "lines": first.lines().count() + 5}),
+        "{v}"
+    );
 }
 
 // --- REQ-core-166: 出力の形 ---
 
-// @kotowari[REQ-core-164, REQ-core-166, TBL-core-028, C-core-status-12]
+// @kotowari[C-core-status-12]
 #[test]
 fn req_166_json_top_level_has_only_the_groups() {
     let tmp = TempDir::new().unwrap();
@@ -347,20 +161,14 @@ fn req_166_json_top_level_has_only_the_groups() {
             "documents",
             "findings",
             "guides",
-            "items",
             "overview",
-            "requirements",
-            "scenarios",
             "surface",
             "tests",
         ],
     );
-    // 群の順は TBL-core-028 の表の順で、"complete" が最後
+    // 群の順は status の表の順で、"complete" が最後
     let order: Vec<usize> = [
         "\"documents\"",
-        "\"items\"",
-        "\"requirements\"",
-        "\"scenarios\"",
         "\"tests\"",
         "\"guides\"",
         "\"surface\"",
@@ -377,7 +185,7 @@ fn req_166_json_top_level_has_only_the_groups() {
     assert!(order.windows(2).all(|w| w[0] < w[1]), "{stdout}");
 }
 
-// @kotowari[REQ-core-162, C-core-status-1]
+// @kotowari[C-core-status-1]
 #[test]
 fn req_162_status_writes_no_finding() {
     let tmp = TempDir::new().unwrap();
@@ -408,7 +216,7 @@ fn req_162_status_writes_no_finding() {
     }
 }
 
-// @kotowari[REQ-core-166, TBL-core-028, EX-core-261, C-core-status-6, C-core-status-11]
+// @kotowari[C-core-status-6, C-core-status-11]
 #[test]
 fn req_166_text_prints_one_line_per_group() {
     let tmp = TempDir::new().unwrap();

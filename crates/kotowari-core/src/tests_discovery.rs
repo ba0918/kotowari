@@ -1,7 +1,5 @@
 //! テストの発見と印の結び付け（REQ-core-071〜REQ-core-088）
 
-use crate::deferred;
-use crate::ir::{IrDocument, Item, is_valid_id};
 pub use crate::test_markers::{InvalidMarkers, Marker, MarkerIds, parse_markers_in_line};
 use crate::{Finding, FindingKind};
 use std::collections::{BTreeMap, BTreeSet};
@@ -48,9 +46,7 @@ pub struct DiscoveredTests {
 
 pub fn check_entries<'a>(
     analysis: impl IntoIterator<Item = (&'a str, &'a crate::TestAnalysis)>,
-    docs: &[IrDocument],
     known_ids: &BTreeSet<String>,
-    ir_path: &str,
     findings: &mut Vec<Finding>,
 ) -> DiscoveredTests {
     let mut all_tests = Vec::new();
@@ -75,7 +71,7 @@ pub fn check_entries<'a>(
             record_test_markers(&file.tests, path, known_ids, &mut markers, findings);
             all_tests.extend(file.tests.iter().cloned());
         } else {
-            let lines = crate::ir::split_lines(file.source.text());
+            let lines = crate::split_lines(file.source.text());
             for marker in &file.line_markers {
                 if marker.ids.is_empty() {
                     findings.push(Finding::new(
@@ -110,7 +106,7 @@ pub fn check_entries<'a>(
         }
     }
     files.sort();
-    check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
+    check_unmarked_tests(&all_tests, findings);
     DiscoveredTests {
         tally,
         markers,
@@ -149,55 +145,8 @@ fn record_test_markers(
     }
 }
 
-/// 集めた印から、テストのない具体例・テストのない要求・印の無いテストを検査する
-fn check_missing_tests(
-    docs: &[IrDocument],
-    ir_path: &str,
-    markers: &[TestMarker],
-    all_tests: &[DiscoveredTest],
-    findings: &mut Vec<Finding>,
-) {
-    let scenarios = collect_scenarios(docs, ir_path);
-    let coverage = TestCoverage::new(markers, &scenarios);
-    let requirements = deferred::Requirements::new(docs);
-
-    // REQ-core-137: テストのない具体例
-    for (id, scenario) in &scenarios {
-        if scenario.needs_test && !coverage.is_marked(id) {
-            findings.push(Finding::new(
-                FindingKind::ScenarioWithoutTest,
-                scenario.path.clone(),
-                Some(scenario.line),
-                id.clone(),
-            ));
-        }
-    }
-
-    // REQ-core-085: テストのない要求。`後回し`の要求には出さない
-    for doc in docs {
-        for item in &doc.items {
-            if let Item::Requirement {
-                id,
-                verification: Some(v),
-                ..
-            } = item
-                && v != "review"
-                && is_valid_id(id)
-                && !requirements.is_deferred(id)
-                && !coverage.has_test(id)
-            {
-                let path = crate::join_display_path(ir_path, &doc.relative_path);
-                findings.push(Finding::new(
-                    FindingKind::RequirementWithoutTest,
-                    path,
-                    Some(item.item_line()),
-                    id.clone(),
-                ));
-            }
-        }
-    }
-
-    // REQ-core-086: 印の無いテスト
+/// 印の無いテストに test_without_id を出す
+fn check_unmarked_tests(all_tests: &[DiscoveredTest], findings: &mut Vec<Finding>) {
     for test in all_tests {
         if test.marker_ids.is_empty() {
             // 名前が null なら節の最初の行の文字を detail にする
@@ -233,87 +182,4 @@ fn check_test_markers(
             ));
         }
     }
-}
-
-/// REQ-core-085: `ID` に結び付く`テスト`があるかの判定。
-/// check の requirement_without_test と status の with_tests はこの同じ判定を使う
-pub struct TestCoverage {
-    /// `印`に現れた `ID`
-    marked: BTreeSet<String>,
-    /// `印`のある`シナリオ`が "@about" に挙げている `ID`
-    covered_by_scenario: BTreeSet<String>,
-}
-
-impl TestCoverage {
-    pub fn new(markers: &[TestMarker], scenarios: &BTreeMap<String, ScenarioCoverage>) -> Self {
-        let marked: BTreeSet<String> = markers.iter().map(|m| m.id.clone()).collect();
-        let covered_by_scenario = marked
-            .iter()
-            .filter_map(|id| scenarios.get(id))
-            .flat_map(|scenario| scenario.about.iter().cloned())
-            .collect();
-        TestCoverage {
-            marked,
-            covered_by_scenario,
-        }
-    }
-
-    /// その `ID` を`印`に含む`テスト`があるか
-    pub fn is_marked(&self, id: &str) -> bool {
-        self.marked.contains(id)
-    }
-
-    /// その `ID` を`印`に含む`テスト`があるか、その `ID` を "@about" に持つ`シナリオ`の
-    /// `ID` を`印`に含む`テスト`があるか
-    pub fn has_test(&self, id: &str) -> bool {
-        self.is_marked(id) || self.covered_by_scenario.contains(id)
-    }
-}
-
-/// 具体例の ID から引く、その`シナリオ`の "@about" と場所（REQ-core-137、REQ-core-085）
-#[derive(Debug, Clone)]
-pub struct ScenarioCoverage {
-    /// "@about" に挙がった ID
-    pub about: Vec<String>,
-    /// 指摘のパス（IR の置き場からの相対）
-    pub path: String,
-    /// TBL-core-019: タグの行（無ければ "Scenario:" の行）
-    pub line: usize,
-    /// REQ-core-137 の適用条件を満たすか（"@about" に、検証が "unit"・"property"・"proof" で
-    /// `後回し`でない要求がある）
-    pub needs_test: bool,
-    /// `後回しのシナリオ`か
-    pub deferred: bool,
-}
-
-/// 具体例の ID から "@about" と場所を引く表を作る。
-/// 同じ ID の`シナリオ`が2か所以上にあるときは REQ-core-032 の1つ目（文書はパスのバイト順、
-/// 同じ文書では行の小さい方）を使う。docs も items もその順に並んでいる。
-pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String, ScenarioCoverage> {
-    let requirements = deferred::Requirements::new(docs);
-
-    let mut scenarios: BTreeMap<String, ScenarioCoverage> = BTreeMap::new();
-    for doc in docs {
-        for item in &doc.items {
-            if let Item::Scenario {
-                id: Some(id),
-                line,
-                tag_line,
-                about,
-                ..
-            } = item
-            {
-                scenarios
-                    .entry(id.clone())
-                    .or_insert_with(|| ScenarioCoverage {
-                        about: about.clone(),
-                        path: crate::join_display_path(ir_path, &doc.relative_path),
-                        line: tag_line.unwrap_or(*line),
-                        needs_test: requirements.needs_test(about),
-                        deferred: requirements.is_deferred_scenario(about),
-                    });
-            }
-        }
-    }
-    scenarios
 }

@@ -17,18 +17,6 @@ fn tests(values: &[kotowari::TestRef]) -> Vec<Value> {
 }
 fn item(value: &ListItem) -> Value {
     let variant = match value {
-        ListItem::Requirement(i) => {
-            json!({"name":i.name(),"type":i.type_(),"verification":i.verification(),"definition":i.definition(),"examples":i.examples(),"how_to_verify":i.how_to_verify(),"sources":i.sources(),"tests":tests(i.tests()),"fingerprint":i.fingerprint(),"deferred":i.deferred()})
-        }
-        ListItem::WithExamples(i) => {
-            json!({"name":i.name(),"examples":i.examples(),"sources":i.sources(),"tests":tests(i.tests()),"fingerprint":i.fingerprint(),"deferred":i.deferred()})
-        }
-        ListItem::Scenario(i) => {
-            json!({"name":i.name(),"sources":i.sources(),"tests":tests(i.tests()),"fingerprint":i.fingerprint(),"deferred":i.deferred()})
-        }
-        ListItem::Flag(i) => {
-            json!({"name":i.name(),"type":i.type_(),"relations":i.relations(),"sources":i.sources(),"tests":tests(i.tests()),"fingerprint":i.fingerprint(),"deferred":i.deferred()})
-        }
         ListItem::Confirmation(i) => {
             json!({"name":i.name(),"decision":i.decision(),"state":i.state(),"by_reading":i.by_reading(),"tests":tests(i.tests())})
         }
@@ -110,33 +98,23 @@ fn overview(group: Option<&kotowari::GroupTally>) -> Value {
     json!({"files":group.map_or(0, |group| group.files()),"marks":group.map_or(0, |group| group.marks())})
 }
 pub fn check(value: &CheckReport) -> Value {
-    let mut result = json!({"files":value.files(),"lines":value.lines(),"findings":findings(value.findings()),"counts":value.counts(),"tests":file_tallies(value.tests()),"guides":{"files":value.guides().files(),"marks":value.guides().marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP))});
+    let mut result = json!({"findings":findings(value.findings()),"counts":value.counts(),"tests":file_tallies(value.tests()),"guides":{"files":value.guides().files(),"marks":value.guides().marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP))});
     if let Some(surface) = value.surface() {
         result["surface"] = json!({"unspecified":surface.unspecified()});
     }
-    if let Some(decisions) = value.decisions() {
-        result["decisions"] = json!({"documents":decisions.documents(),"decisions":decisions.decisions(),"confirmations":decisions.confirmations()});
-    }
+    let decisions = value.decisions();
+    result["decisions"] = json!({"documents":decisions.documents(),"decisions":decisions.decisions(),"confirmations":decisions.confirmations()});
     result
 }
 pub fn status(value: &StatusReport) -> Value {
     let d = value.documents();
-    let i = value.items();
-    let r = value.requirements();
-    let s = value.scenarios();
     let t = value.tests();
     let g = value.guides();
     let u = value.surface();
     let f = value.findings();
-    let mut result = json!({"documents":{"files":d.files(),"lines":d.lines()},"items":{"requirement":i.requirement(),"table":i.table(),"property":i.property(),"scenario":i.scenario(),"flag":i.flag()},"requirements":{"unit":r.unit(),"property":r.property(),"proof":r.proof(),"review":r.review(),"with_tests":r.with_tests(),"without_tests":r.without_tests(),"review_with_how_to_verify":r.review_with_how_to_verify(),"review_without_how_to_verify":r.review_without_how_to_verify(),"without_examples":r.without_examples(),"deferred":r.deferred()},"scenarios":{"with_tests":s.with_tests(),"without_tests":s.without_tests(),"deferred":s.deferred()},"tests":{"marks":t.marks(),"files":file_tallies(t.files())},"guides":{"files":g.files(),"marks":g.marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP)),"surface":{"total":u.total(),"specified":u.specified(),"unspecified":u.unspecified()},"findings":{"error":f.error(),"notice":f.notice()},"complete":value.complete()});
-    if let Some(decisions) = value.decisions() {
-        result["decisions"] =
-            json!({"proposed":decisions.proposed(),"implemented":decisions.implemented()});
-    }
-    if let Some(rows) = value.confirmations() {
-        result["confirmations"] = json!({"with_tests":rows.with_tests(),"without_tests":rows.without_tests(),"by_reading":rows.by_reading()});
-    }
-    result
+    let decisions = value.decisions();
+    let rows = value.confirmations();
+    json!({"documents":{"files":d.files(),"lines":d.lines()},"tests":{"marks":t.marks(),"files":file_tallies(t.files())},"guides":{"files":g.files(),"marks":g.marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP)),"surface":{"total":u.total(),"specified":u.specified(),"unspecified":u.unspecified()},"decisions":{"proposed":decisions.proposed(),"implemented":decisions.implemented()},"confirmations":{"with_tests":rows.with_tests(),"without_tests":rows.without_tests(),"by_reading":rows.by_reading()},"findings":{"error":f.error(),"notice":f.notice()},"complete":value.complete()})
 }
 /// REQ-core-295: "written"、"removed"、"unchanged" の3つの鍵だけ
 pub fn overview_build(value: &kotowari::OverviewBuild) -> Value {

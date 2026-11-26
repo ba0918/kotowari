@@ -6,22 +6,16 @@ mod cache;
 mod decisions;
 #[cfg(feature = "tokio")]
 pub use asynchronous::{AsyncOptions, AsyncProject};
-mod guides;
-mod ir;
 #[cfg(test)]
-mod ir_tests;
+mod decisions_tests;
+mod guides;
 mod overview;
-mod sources;
 mod surface;
 mod test_files;
 mod translations;
 
 pub use kotowari_core::config::Config;
 pub use kotowari_core::guides::{GuideReader, GuideTally};
-/// `ReadModel::documents` が返す読み終えた`IR`の文書。`kotowari_core::IrDocument`（根の別名）は
-/// "ir::parse" の部分の解析の結果で、Project のどの操作からも届かない（REQ-core-309）
-pub use kotowari_core::ir::IrDocument;
-pub use kotowari_core::ir::is_valid_id;
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
@@ -30,8 +24,8 @@ pub use kotowari_core::{
     QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
 };
 pub use kotowari_core::{
-    ConfirmationItem, DecisionItem, Documents, ExampleItem, Findings, FlagItem, Items, ListItem,
-    QueryItem, Reference, RequirementItem, Requirements, ScenarioItem, Scenarios, TestRef, Tests,
+    ConfirmationItem, DecisionItem, Documents, Findings, ListItem, QueryItem, Reference, TestRef,
+    Tests,
 };
 pub use kotowari_core::{is_confirmation_id, is_decision_target};
 /// check と status の結果の中の、全体像の元データの群の名前（REQ-core-288）

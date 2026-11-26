@@ -9,12 +9,6 @@ use serde_json::Value;
 /// `対`にする文書の種類（TBL-core-044 の文書の列）
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
-    /// `話題ごとの文書`
-    Topic,
-    /// `用語集`
-    Glossary,
-    /// `問題の記録`
-    Flags,
     Guide,
     /// `全体像の元データ`
     OverviewData,
@@ -47,9 +41,6 @@ pub(crate) type Skeleton = Vec<(&'static str, Vec<Element>)>;
 /// 呼ぶ側が`側`の検査のために読んだものを渡す
 pub(crate) fn skeleton(kind: Kind, text: &str, root: Option<&Node>) -> Skeleton {
     match kind {
-        Kind::Topic => topic(text, root),
-        Kind::Glossary => vec![("glossary", glossary(text, root))],
-        Kind::Flags => vec![("flag", flags(text))],
         Kind::Guide => {
             let markdown = Markdown { text, root };
             vec![
@@ -341,147 +332,6 @@ fn marks(text: &str, root: Option<&Node>) -> Vec<Element> {
             )
         })
         .collect()
-}
-
-/// コードブロックの外の行。(行番号, 行)
-fn outside_code(text: &str) -> Vec<(usize, &str)> {
-    crate::ir::fenced_lines(text)
-        .into_iter()
-        .enumerate()
-        .filter(|(_, (_, part))| *part == crate::ir::Fenced::Outside)
-        .map(|(index, (line, _))| (index + 1, line))
-        .collect()
-}
-
-/// "- 名前:" の行の値
-fn field<'l>(line: &'l str, name: &str) -> Option<&'l str> {
-    line.strip_prefix("- ")?
-        .strip_prefix(name)?
-        .strip_prefix(':')
-        .map(str::trim)
-}
-
-/// "### " の見出しの`ID`（":" より前）
-fn heading_id(line: &str) -> String {
-    let rest = line.trim_start_matches('#').trim();
-    let id = rest.split_once(':').map_or(rest, |(id, _)| id).trim();
-    if crate::ir::is_valid_id(id) {
-        id.to_string()
-    } else {
-        String::new()
-    }
-}
-
-fn topic(text: &str, root: Option<&Node>) -> Skeleton {
-    let markdown = Markdown { text, root };
-    let headings = markdown.headings(|depth, source| match depth {
-        2 => Some("##".to_string()),
-        3 => Some(format!("### {}", heading_id(source))),
-        _ => None,
-    });
-    let mut fields = Vec::new();
-    for (line, text) in outside_code(text) {
-        for name in [
-            "kind",
-            "source",
-            "verification",
-            "definition",
-            "deferred",
-            "related",
-        ] {
-            if let Some(value) = field(text, name) {
-                fields.push(element(format!("{name}: {value}"), Some(line)));
-            }
-        }
-        if field(text, "how_to_verify").is_some() {
-            fields.push(element("how_to_verify", Some(line)));
-        }
-    }
-    let tables = markdown.tables(|cell| ids(cell).join(" "));
-    let gherkin = markdown
-        .nodes(|node| matches!(node, Node::Code(code) if code.lang.as_deref() == Some("gherkin")))
-        .into_iter()
-        .flat_map(|node| {
-            let start = start_line(node).unwrap_or(0);
-            let Node::Code(code) = node else {
-                return Vec::new();
-            };
-            gherkin_lines(&code.value, start)
-        })
-        .collect();
-    vec![
-        ("heading", headings),
-        ("field", fields),
-        ("table", tables),
-        ("gherkin", gherkin),
-        ("code", markdown.code(|lang| lang != Some("gherkin"))),
-    ]
-}
-
-/// セルの中の`ID`の並び
-fn ids(cell: &str) -> Vec<&str> {
-    cell.split(|c: char| !(c.is_ascii_alphanumeric() || c == '-'))
-        .filter(|word| crate::ir::is_valid_id(word))
-        .collect()
-}
-
-/// gherkin のコードブロックの中のタグの行と、"Scenario:" の行とステップの行の始まりの語。
-/// start はフェンスの開始の行
-fn gherkin_lines(value: &str, start: usize) -> Vec<Element> {
-    let mut out = Vec::new();
-    for (index, line) in crate::ir::split_lines(value).into_iter().enumerate() {
-        let line_number = Some(start + 1 + index);
-        let trimmed = line.trim();
-        if trimmed.starts_with('@') {
-            out.push(element(trimmed, line_number));
-        } else if trimmed.starts_with("Scenario:") {
-            out.push(element("Scenario:", line_number));
-        } else if let Some(word) = trimmed.split_whitespace().next()
-            && ["Given", "When", "Then", "And", "But"].contains(&word)
-        {
-            out.push(element(word, line_number));
-        }
-    }
-    out
-}
-
-/// `用語集`の表の行ごとの出典の列
-fn glossary(text: &str, root: Option<&Node>) -> Vec<Element> {
-    let markdown = Markdown { text, root };
-    let Some(table) = markdown
-        .nodes(|node| matches!(node, Node::Table(_)))
-        .into_iter()
-        .next()
-    else {
-        return Vec::new();
-    };
-    table
-        .children()
-        .into_iter()
-        .flatten()
-        .skip(1)
-        .map(|row| {
-            let line = markdown.source(row).lines().next().unwrap_or("");
-            let source = split_row(line).get(2).map_or("", |cell| cell.trim());
-            element(source, start_line(row))
-        })
-        .collect()
-}
-
-/// `問題の記録`の "### FLAG-" の見出しの`ID`と、"- kind:"、"- related:"、"- source:" の値
-fn flags(text: &str) -> Vec<Element> {
-    let mut out = Vec::new();
-    for (line, text) in outside_code(text) {
-        if text.starts_with("### FLAG-") {
-            out.push(element(heading_id(text), Some(line)));
-        }
-        for name in ["kind", "related", "source"] {
-            if let Some(value) = field(text, name) {
-                out.push(element(format!("{name}: {value}"), Some(line)));
-            }
-        }
-    }
-    out
 }
 
 /// `目次`の1つの項目。名前か`目次の群`

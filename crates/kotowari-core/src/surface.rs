@@ -1,9 +1,7 @@
 //! `面`の検査（docs/ir/core/surface.md）。`面の規則`で`面のファイル`から`面`を取り出す。
 
-use crate::doc_kind::DocKind;
-use crate::ir::{IrDocument, Item, split_lines};
+use crate::split_lines;
 use crate::{Finding, FindingKind, StopReason};
-use markdown::mdast::Node;
 use serde_json::Value;
 use std::collections::BTreeSet;
 
@@ -62,16 +60,21 @@ struct UnspecifiedList {
     findings: Vec<Finding>,
 }
 
+/// `面`の検査を、取り出した`面`と、決定の文書と、`未記載の面の一覧`だけから行う。決定の文書の形の
+/// 誤りはここでは出さない（check が出す）
 pub fn check_analysis(
     analysis: &[crate::SurfaceAnalysis],
-    docs: &[IrDocument],
+    decisions: &[crate::SourceText],
     unspecified: &[crate::SourceText],
     findings: &mut Vec<Finding>,
 ) -> Result<SurfaceTally, StopReason> {
+    let decisions = decisions
+        .iter()
+        .map(|source| crate::decisions::parse(source.path(), source.text(), &[], &mut Vec::new()))
+        .collect::<Result<Vec<_>, _>>()?;
     check_entries(
         analysis.iter(),
-        docs,
-        &[],
+        &decisions,
         unspecified
             .iter()
             .map(|source| (source.path(), source.text())),
@@ -81,7 +84,6 @@ pub fn check_analysis(
 
 pub(crate) fn check_entries<'a>(
     analysis: impl IntoIterator<Item = &'a crate::SurfaceAnalysis>,
-    docs: &[IrDocument],
     decisions: &[crate::decisions::Document],
     unspecified: impl IntoIterator<Item = (&'a str, &'a str)>,
     findings: &mut Vec<Finding>,
@@ -115,7 +117,7 @@ pub(crate) fn check_entries<'a>(
             }
         }
     }
-    Ok(report(&surfaces, docs, decisions, &list, findings))
+    Ok(report(&surfaces, decisions, &list, findings))
 }
 
 /// 1件を読む。鍵と値の組で、"kind"、"name"、"why" のちょうど3つの鍵の値がどれも文字列で、
@@ -144,18 +146,17 @@ fn written_detail(item: &Value) -> String {
     format!("{} {}", written("kind"), written("name"))
 }
 
-/// IR に無く一覧のどの1件にも一致しない`面`に、種類と名前の組ごとに1件の surface_without_spec を出す。
+/// 決定の文書に無く一覧のどの1件にも一致しない`面`に、種類と名前の組ごとに1件の surface_without_spec を出す。
 /// 場所は`面のファイル`のパスのバイト順、次に行の小さい順で最初の`面`（REQ-core-227）。
-/// 一致する`面`が無いか、一致する`面`が IR にある1件には surface_unspecified_stale を出す（REQ-core-234）
+/// 一致する`面`が無いか、一致する`面`が決定の文書にある1件には surface_unspecified_stale を出す（REQ-core-234）
 fn report(
     surfaces: &[Surface],
-    docs: &[IrDocument],
     decisions: &[crate::decisions::Document],
     list: &UnspecifiedList,
     findings: &mut Vec<Finding>,
 ) -> SurfaceTally {
-    let quoted = quoted_in_ir(docs, decisions);
-    let in_ir = |name: &str| quoted.contains(name);
+    let quoted = quoted_in_decisions(decisions);
+    let in_spec = |name: &str| quoted.contains(name);
     let listed = |surface: &Surface| {
         list.entries
             .iter()
@@ -165,7 +166,7 @@ fn report(
     for entry in &list.entries {
         let needed = surfaces
             .iter()
-            .any(|s| s.kind == entry.kind && s.name == entry.name && !in_ir(&s.name));
+            .any(|s| s.kind == entry.kind && s.name == entry.name && !in_spec(&s.name));
         if !needed {
             findings.push(Finding::new(
                 FindingKind::SurfaceUnspecifiedStale,
@@ -185,7 +186,7 @@ fn report(
             continue;
         }
         tally.total += 1;
-        if in_ir(&surface.name) {
+        if in_spec(&surface.name) {
             tally.specified += 1;
         } else if listed(surface) {
             tally.unspecified += 1;
@@ -201,12 +202,11 @@ fn report(
     tally
 }
 
-/// `話題ごとの文書`の`要求`の`文`、`決定表`の表のセル（見出しの行を含む）、`シナリオ`のステップの行で、
-/// 二重引用符の対かバッククォートの対で囲んだ中身の集まり。中身の前後の空白は除かない（REQ-core-226）。
-/// 決定の文書の決定の「決めたこと」と「確認すること」の中（表はセルごと、コードブロックは除く）も同じく見る
-fn quoted_in_ir(docs: &[IrDocument], decisions: &[crate::decisions::Document]) -> BTreeSet<String> {
+/// 決定の文書の決定の「決めたこと」と「確認すること」の中（表はセルごと、コードブロックは除く）で、
+/// 二重引用符の対かバッククォートの対で囲んだ中身の集まり。中身の前後の空白は除かない
+fn quoted_in_decisions(decisions: &[crate::decisions::Document]) -> BTreeSet<String> {
     let mut quoted = BTreeSet::new();
-    let mut collect = |text: &str| {
+    for text in crate::decisions::quotable(decisions) {
         for line in split_lines(text) {
             quoted.extend(
                 crate::double_quoted_contents(line)
@@ -219,78 +219,6 @@ fn quoted_in_ir(docs: &[IrDocument], decisions: &[crate::decisions::Document]) -
                     .map(str::to_string),
             );
         }
-    };
-    for doc in docs.iter().filter(|doc| doc.kind == DocKind::Topic) {
-        for item in &doc.items {
-            match item {
-                Item::Requirement { statements, .. } => {
-                    statements.iter().for_each(|(_, text)| collect(text));
-                }
-                Item::Scenario { steps, .. } => steps.iter().for_each(|(_, text)| collect(text)),
-                Item::DecisionTable { .. }
-                | Item::Property { .. }
-                | Item::FlagEntry { .. }
-                | Item::GlossaryTerm { .. } => {}
-            }
-        }
-        for cell in decision_table_cells(doc) {
-            collect(&cell);
-        }
-    }
-    for text in crate::decisions::quotable(decisions) {
-        collect(text);
     }
     quoted
-}
-
-/// `決定表`の`項目`の中にある表の、見出しの行を含むすべてのセルの元の文字
-fn decision_table_cells(doc: &IrDocument) -> Vec<String> {
-    let ranges: Vec<(usize, usize)> = doc
-        .items
-        .iter()
-        .filter_map(|item| match item {
-            Item::DecisionTable { line, end, .. } => Some((*line, *end)),
-            Item::Requirement { .. }
-            | Item::Property { .. }
-            | Item::Scenario { .. }
-            | Item::FlagEntry { .. }
-            | Item::GlossaryTerm { .. } => None,
-        })
-        .collect();
-    if ranges.is_empty() {
-        return Vec::new();
-    }
-    let Ok(root) = crate::markdown::parse(&doc.raw_content) else {
-        return Vec::new();
-    };
-    let mut cells = Vec::new();
-    collect_cells(&root, &doc.raw_content, &ranges, &mut cells);
-    cells
-}
-
-/// 行が `ranges` のどれかに入る表のセルの、中身の元の文字を集める
-fn collect_cells(node: &Node, source: &str, ranges: &[(usize, usize)], cells: &mut Vec<String>) {
-    if let Node::TableCell(cell) = node {
-        let span = cell
-            .children
-            .first()
-            .zip(cell.children.last())
-            .and_then(|(first, last)| {
-                Some((
-                    first.position()?.start.clone(),
-                    last.position()?.end.clone(),
-                ))
-            });
-        if let Some((start, end)) = span
-            && ranges
-                .iter()
-                .any(|(from, to)| (*from..=*to).contains(&start.line))
-        {
-            cells.push(source[start.offset..end.offset].to_string());
-        }
-        return;
-    }
-    for child in node.children().into_iter().flatten() {
-        collect_cells(child, source, ranges, cells);
-    }
 }

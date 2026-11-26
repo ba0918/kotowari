@@ -76,12 +76,15 @@ pub(crate) struct Document {
     /// 見出しへのリンクの行き先になる名前（GitHub の規則）
     pub(crate) anchors: BTreeSet<String>,
     pub(crate) links: Vec<crate::translations::MarkdownLink>,
+    /// 文書の行の数（status の "documents" の "lines"）
+    pub(crate) line_count: usize,
 }
 
 impl Document {
-    fn empty(path: &str) -> Self {
+    fn empty(path: &str, text: &str) -> Self {
         Self {
             path: path.to_owned(),
+            line_count: crate::split_lines(text).len(),
             decisions: Vec::new(),
             open_items: 0,
             anchors: BTreeSet::new(),
@@ -789,7 +792,7 @@ fn check_vague_words(
     for (heading, end) in sections {
         for line in (heading + 1..=end).filter(|line| !code.contains(line)) {
             for part in crate::split_outside_quotes(reading.raw(line)) {
-                crate::terms::check_vague_words(part, line, vague_words, path, findings);
+                vague_words_in_line(part, line, vague_words, path, findings);
             }
         }
     }
@@ -811,7 +814,7 @@ pub(crate) fn parse(
                 None,
                 detail,
             ));
-            return Ok(Document::empty(path));
+            return Ok(Document::empty(path, text));
         }
     };
     let reading = read_with_engine(path, text)?;
@@ -830,6 +833,7 @@ pub(crate) fn parse(
         .collect();
     Ok(Document {
         path: path.to_owned(),
+        line_count: crate::split_lines(text).len(),
         decisions,
         open_items: reading.values.open_items.len(),
         anchors: anchored.into_values().collect(),
@@ -920,7 +924,7 @@ const GLOSSARY: &str = "CONTEXT.md";
 
 /// 置き場のまとまりのフォルダの直下の用語集か。置き場の直下と、まとまりの下のフォルダのものは違う
 pub(crate) fn is_glossary(path: &str, place: &str) -> bool {
-    crate::sources::relative_to_place(path, &crate::normalize_path(place))
+    relative_to_place(path, &crate::normalize_path(place))
         .and_then(|relative| relative.split_once('/'))
         .is_some_and(|(group, name)| !group.is_empty() && name == GLOSSARY)
 }
@@ -949,6 +953,7 @@ pub(crate) fn parse_target(
     }
     Ok(Document {
         path: path.to_owned(),
+        line_count: crate::split_lines(text).len(),
         decisions: Vec::new(),
         open_items: 0,
         anchors: root
@@ -1206,7 +1211,7 @@ pub fn is_confirmation_id(id: &str) -> bool {
     let Some((name, number)) = id.strip_prefix("C-").and_then(|rest| rest.rsplit_once('-')) else {
         return false;
     };
-    crate::ir::is_valid_id_name(name)
+    is_valid_id_name(name)
         && !number.is_empty()
         && !number.starts_with('0')
         && number.chars().all(|c| c.is_ascii_digit())
@@ -1252,8 +1257,8 @@ pub(crate) fn check_ids(documents: &[Document], findings: &mut Vec<Finding>) {
 pub(crate) fn check_domains(documents: &[Document], place: &str, findings: &mut Vec<Finding>) {
     let place = crate::normalize_path(place);
     for (doc, _, row) in rows(documents) {
-        let Some((folder, _)) = crate::sources::relative_to_place(&doc.path, &place)
-            .and_then(|relative| relative.split_once('/'))
+        let Some((folder, _)) =
+            relative_to_place(&doc.path, &place).and_then(|relative| relative.split_once('/'))
         else {
             continue;
         };
@@ -1465,6 +1470,56 @@ fn decision_items(documents: &[Document]) -> Vec<crate::list::ListItem> {
         .collect()
 }
 
+/// 置き場（正規化したパス）からの path の相対パス。置き場の外なら None、置き場が空なら path のまま
+pub(crate) fn relative_to_place<'a>(path: &'a str, place: &str) -> Option<&'a str> {
+    if place.is_empty() {
+        return Some(path);
+    }
+    path.strip_prefix(place)?.strip_prefix('/')
+}
+
+/// ID の名前の形（小文字の英字で始まり、2文字目からは小文字の英数字と "-"）
+fn is_valid_id_name(name: &str) -> bool {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_lowercase() => {}
+        _ => return false,
+    }
+    chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+}
+
+/// 1行の曖昧語の検査。行の左から最長一致で重ならない形で、出現ごとに1件を数える
+fn vague_words_in_line(
+    text: &str,
+    line: usize,
+    vague_words: &[String],
+    path: &str,
+    findings: &mut Vec<Finding>,
+) {
+    if vague_words.is_empty() {
+        return;
+    }
+    let mut remaining = text;
+    while let Some(first) = remaining.chars().next() {
+        // 現在位置から始まる最長の曖昧語を探す
+        let best_word = vague_words
+            .iter()
+            .filter(|w| !w.is_empty() && remaining.starts_with(w.as_str()))
+            .max_by_key(|w| w.chars().count());
+        if let Some(word) = best_word {
+            findings.push(Finding::new(
+                FindingKind::VagueWord,
+                path.to_string(),
+                Some(line),
+                word.clone(),
+            ));
+            remaining = &remaining[word.len()..];
+        } else {
+            remaining = &remaining[first.len_utf8()..];
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1590,5 +1645,25 @@ mod tests {
                     .to_owned()
             )
         );
+    }
+
+    // @kotowari[C-core-clienv-13]
+    #[test]
+    fn a_node_name_that_cannot_be_mapped_to_a_section_stops_with_the_name_in_the_details() {
+        let reading = read_with_engine("x.md", "# 題\n\n段落。\n").unwrap();
+        let grouped = group(&reading.values);
+        let engine = EngineFinding {
+            kind: EngineKind::RepeatMinNotMet,
+            line: Some(3),
+            node: Some("未知の節".to_owned()),
+            raw: None,
+            rule_kind: Some(RuleKind::Item),
+        };
+        let stop = map_one("x.md", &reading, &grouped, false, &engine)
+            .err()
+            .map(|stop| stop.to_string())
+            .unwrap_or_default();
+        assert!(stop.starts_with("mapping error: "), "{stop}");
+        assert!(stop.contains("未知の節"), "{stop}");
     }
 }

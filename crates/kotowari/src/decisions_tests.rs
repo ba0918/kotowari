@@ -22,7 +22,7 @@ fn inspect_decisions(base: &Path) -> Result<Inspection, StopReason> {
 fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
     findings.iter().filter(|f| f.kind() == kind).collect()
 }
-// @kotowari[REQ-core-033, REQ-core-037, TBL-core-005, C-core-document-1]
+// @kotowari[C-core-document-1]
 #[test]
 fn req_033_subdirectories_are_read_at_any_depth() {
     let tmp = tempfile::tempdir().unwrap();
@@ -52,24 +52,7 @@ fn req_033_subdirectories_are_read_at_any_depth() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// @kotowari[EX-core-282]
-#[test]
-fn ex_core_282_finding_after_bare_cr_has_the_split_line_number() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\rScope.\r## Requirements\r### foo\r",
-    )
-    .unwrap();
-    let inspection = inspect(tmp.path()).unwrap();
-    let findings = inspection.check().findings();
-    let uh = find_by_kind(findings, "unknown_heading");
-    assert_eq!(uh.len(), 1, "{findings:?}");
-    assert_eq!(uh[0].line(), Some(4), "{findings:?}");
-}
-
-// @kotowari[REQ-core-033, C-core-document-2, C-core-document-3, C-core-document-4, C-core-document-13]
+// @kotowari[C-core-document-2, C-core-document-3, C-core-document-4, C-core-document-13]
 #[test]
 #[cfg(unix)]
 fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
@@ -96,7 +79,7 @@ fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// @kotowari[REQ-core-033, REQ-core-018, TBL-core-020, C-core-clienv-5, C-core-clienv-12, C-core-document-4]
+// @kotowari[C-core-clienv-5, C-core-clienv-12, C-core-document-4]
 #[test]
 #[cfg(unix)]
 fn req_033_broken_symlink_in_a_subdirectory_stops() {
@@ -112,53 +95,7 @@ fn req_033_broken_symlink_in_a_subdirectory_stops() {
     );
 }
 
-// @kotowari[REQ-core-033, REQ-core-036, REQ-core-117]
-#[test]
-fn req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
-    for file in ["CONTEXT.md", "FLAGS.md"] {
-        std::fs::write(tmp.path().join("docs/ir/sub").join(file), "# Title\n").unwrap();
-    }
-    let inspection = inspect(tmp.path()).unwrap();
-    let (docs, findings) = (inspection.read().documents(), inspection.check().findings());
-    assert_eq!(
-        docs.iter().map(|d| d.kind()).collect::<Vec<_>>(),
-        [
-            kotowari_core::ir::DocKind::Glossary,
-            kotowari_core::ir::DocKind::Flags
-        ]
-    );
-    assert!(find_by_kind(findings, "missing_scope").is_empty());
-    assert_eq!(find_by_kind(findings, "glossary_invalid").len(), 1);
-}
-
-// @kotowari[TBL-core-008, REQ-core-034, REQ-core-036, REQ-core-117]
-#[test]
-fn tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
-    for file in ["CONTEXT.md", "a.md"] {
-        std::fs::write(tmp.path().join("docs/ir/sub").join(file), "").unwrap();
-    }
-    let inspection = inspect(tmp.path()).unwrap();
-    let findings = inspection.check().findings();
-    for (kind, expected) in [
-        ("missing_title", vec!["CONTEXT.md", "a.md"]),
-        ("missing_scope", vec!["a.md"]),
-        ("glossary_invalid", vec!["CONTEXT.md"]),
-    ] {
-        assert_eq!(
-            find_by_kind(findings, kind)
-                .iter()
-                .map(|f| f.detail())
-                .collect::<Vec<_>>(),
-            expected
-        );
-    }
-}
-
-// @kotowari[REQ-core-032, C-core-findings-9]
+// @kotowari[C-core-findings-9]
 #[test]
 fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     let tmp = tempfile::tempdir().unwrap();

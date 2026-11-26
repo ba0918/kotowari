@@ -14,28 +14,10 @@ fn cmd() -> Command {
 
 fn make_project(tmp: &std::path::Path) {
     fs::create_dir_all(tmp.join(".kotowari")).unwrap();
-    fs::create_dir_all(tmp.join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
     fs::create_dir_all(tmp.join("docs/decisions")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp.join("docs/decision/records/records.md"),
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
-    )
-    .unwrap();
-}
-
-fn make_ir_with_req(tmp: &std::path::Path, req_id: &str, verification: &str) {
-    fs::write(
-        tmp.join("docs/ir/a.md"),
-        format!(
-            "# Title\n\nScope.\n\n## Requirements\n\n### {req_id}: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: {verification}\n\nStatement.\n"
-        ),
+        "decisions:\n  documents: docs/decisions\n",
     )
     .unwrap();
 }
@@ -74,31 +56,31 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
 
 // --- REQ-core-079: テストのファイル ---
 
-// @kotowari[REQ-core-079, C-core-discover-1]
+// @kotowari[C-core-discover-1]
 #[test]
 fn req_079_reads_files_matching_the_globs() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001]\n#[test]\nfn test_a() {}\n",
+        "// @kotowari[C-t-a-1]\n#[test]\nfn test_a() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
     assert!(
         rwt.is_empty(),
-        "REQ-001 should have test coverage: {:?}",
+        "C-t-a-1 should have test coverage: {:?}",
         rwt
     );
 }
 
 // --- REQ-core-080: tree-sitter で読む ---
 
-// @kotowari[REQ-core-080, C-core-discover-4]
+// @kotowari[C-core-discover-4]
 #[test]
 fn req_080_uses_tree_sitter_with_bundled_rust_query() {
     let tmp = TempDir::new().unwrap();
@@ -121,7 +103,7 @@ fn req_080_uses_tree_sitter_with_bundled_rust_query() {
 
 // --- REQ-core-081: 拡張子と言語の対応 ---
 
-// @kotowari[REQ-core-081, TBL-core-031, C-core-discover-7]
+// @kotowari[C-core-discover-7]
 #[test]
 fn req_081_extension_decides_the_language_case_sensitively() {
     // 表の拡張子だけが言語を決め、大文字小文字を区別する。".go" は言語が決まっても
@@ -130,7 +112,7 @@ fn req_081_extension_decides_the_language_case_sensitively() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*\"\n",
+        "tests:\n  files:\n    - \"tests/**/*\"\n",
     )
     .unwrap();
     for name in ["a.rs", "a.go", "A.PY", "a.Rs"] {
@@ -143,14 +125,14 @@ fn req_081_extension_decides_the_language_case_sensitively() {
     }
 }
 
-// @kotowari[REQ-core-080, EX-core-293, C-core-discover-6]
+// @kotowari[C-core-discover-6]
 #[test]
 fn ex_core_293_file_of_a_language_without_a_query_is_not_parsed() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     write_test_file(tmp.path(), "a.go", "func TestA(t *testing.T) {\n");
@@ -158,14 +140,14 @@ fn ex_core_293_file_of_a_language_without_a_query_is_not_parsed() {
     assert!(findings_by_kind(&v, "unparsable_file").is_empty(), "{v}");
 }
 
-// @kotowari[REQ-core-081, EX-core-295, C-core-discover-7]
+// @kotowari[C-core-discover-7]
 #[test]
 fn ex_core_295_upper_case_extension_decides_no_language() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*\"\n",
+        "tests:\n  files:\n    - \"tests/**/*\"\n",
     )
     .unwrap();
     write_test_file(tmp.path(), "A.PY", "def test_x():\n    pass\n");
@@ -173,7 +155,7 @@ fn ex_core_295_upper_case_extension_decides_no_language() {
     assert!(findings_by_kind(&v, "test_without_id").is_empty(), "{v}");
 }
 
-// @kotowari[REQ-core-118, TBL-core-010, C-core-document-7, C-core-document-8, C-core-markers-7]
+// @kotowari[C-core-document-7, C-core-document-8, C-core-markers-7]
 #[test]
 fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
     // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで数えると、
@@ -183,17 +165,17 @@ fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n    - \"tests/**/*.rs\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n    - \"tests/**/*.rs\"\n",
     )
     .unwrap();
     fs::write(
         tmp.path().join("tests/test_a.go"),
-        "first\r// @kotowari[REQ-999]\r",
+        "first\r// @kotowari[C-t-a-999]\r",
     )
     .unwrap();
     fs::write(
         tmp.path().join("tests/test_b.rs"),
-        "#[test]\r/* first\r@kotowari[REQ-998] */\rfn t() {}\r",
+        "#[test]\r/* first\r@kotowari[C-t-a-998] */\rfn t() {}\r",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -219,7 +201,7 @@ fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
 
 // --- REQ-core-082: Rust のテスト ---
 
-// @kotowari[REQ-core-082, TBL-core-017, C-core-queries-4]
+// @kotowari[C-core-queries-4]
 #[test]
 fn req_082_test_attribute_is_always_counted() {
     let tmp = TempDir::new().unwrap();
@@ -240,26 +222,26 @@ fn req_082_test_attribute_is_always_counted() {
     );
 }
 
-// @kotowari[REQ-core-082, TBL-core-017, EX-core-017, C-core-queries-5]
+// @kotowari[C-core-queries-5]
 #[test]
 fn req_082_configured_attribute_matches_path_with_arguments() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
+        "tests:\n  rust:\n    attributes:\n      - kani::proof\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("src")).unwrap();
     fs::write(
         tmp.path().join("src/lib.rs"),
-        "// @kotowari[REQ-001]\n#[kani::proof(unwind = 3)]\nfn my_proof() {}\n",
+        "// @kotowari[C-t-a-1]\n#[kani::proof(unwind = 3)]\nfn my_proof() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
     assert!(
         rwt.is_empty(),
         "kani::proof should count as test: {:?}",
@@ -267,42 +249,42 @@ fn req_082_configured_attribute_matches_path_with_arguments() {
     );
 }
 
-// @kotowari[REQ-core-082, TBL-core-017, C-core-queries-7]
+// @kotowari[C-core-queries-7]
 #[test]
 fn req_082_macro_body_functions_are_counted_by_last_segment() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - proptest\n",
+        "tests:\n  rust:\n    macros:\n      - proptest\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "proptest::proptest! {\n    // @kotowari[REQ-001]\n    #[test]\n    fn my_prop_test(x in 0..100u32) {\n        assert!(x < 101);\n    }\n}\n",
+        "proptest::proptest! {\n    // @kotowari[C-t-a-1]\n    #[test]\n    fn my_prop_test(x in 0..100u32) {\n        assert!(x < 101);\n    }\n}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
     // proptest マクロ内の関数がテストとして数えられ、REQ-core-001 に結び付く
     assert!(
         rwt.is_empty(),
-        "proptest function should cover REQ-001: {:?}",
+        "proptest function should cover C-t-a-1: {:?}",
         rwt
     );
 }
 
-// @kotowari[REQ-core-082, EX-core-018, C-core-queries-7]
+// @kotowari[C-core-queries-7]
 #[test]
 fn req_082_two_functions_in_a_path_macro_are_both_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - proptest\n",
+        "tests:\n  rust:\n    macros:\n      - proptest\n",
     )
     .unwrap();
     write_test_file(
@@ -325,7 +307,7 @@ fn req_082_two_functions_in_a_path_macro_are_both_counted() {
 
 // --- REQ-core-083: 読めないファイル ---
 
-// @kotowari[REQ-core-083, C-core-discover-8]
+// @kotowari[C-core-discover-8]
 #[test]
 fn req_083_unparsable_file_is_skipped() {
     let tmp = TempDir::new().unwrap();
@@ -352,7 +334,7 @@ fn req_083_unparsable_file_is_skipped() {
 
 // --- REQ-core-072: 形の誤った印 ---
 
-// @kotowari[REQ-core-072, C-core-markers-4]
+// @kotowari[C-core-markers-4]
 #[test]
 fn req_072_invalid_marker() {
     let tmp = TempDir::new().unwrap();
@@ -370,7 +352,7 @@ fn req_072_invalid_marker() {
     assert!(!im.is_empty(), "should find invalid marker: {:?}", im);
 }
 
-// @kotowari[REQ-core-072, TBL-core-008, C-core-findings-3, C-core-markers-6]
+// @kotowari[C-core-findings-3, C-core-markers-6]
 #[test]
 fn req_072_invalid_marker_detail_is_line_text() {
     let tmp = TempDir::new().unwrap();
@@ -393,7 +375,7 @@ fn req_072_invalid_marker_detail_is_line_text() {
     );
 }
 
-// @kotowari[REQ-core-072, TBL-core-016, C-core-markers-9]
+// @kotowari[C-core-markers-9]
 #[test]
 fn req_072_invalid_marker_outside_test_is_ignored() {
     let tmp = TempDir::new().unwrap();
@@ -415,7 +397,7 @@ fn req_072_invalid_marker_outside_test_is_ignored() {
     );
 }
 
-// @kotowari[REQ-core-072, REQ-core-073, C-core-markers-4]
+// @kotowari[C-core-markers-4]
 #[test]
 fn req_072_invalid_marker_second_on_line_is_detected() {
     let tmp = TempDir::new().unwrap();
@@ -424,7 +406,7 @@ fn req_072_invalid_marker_second_on_line_is_detected() {
     // 1行に正常な印と空の印 → 2つ目も invalid_marker として検出される
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001] @kotowari[]\n#[test]\nfn two_markers_test() {}\n",
+        "// @kotowari[C-t-a-1] @kotowari[]\n#[test]\nfn two_markers_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -439,7 +421,7 @@ fn req_072_invalid_marker_second_on_line_is_detected() {
 
 // --- REQ-core-073: 1行に複数の印 ---
 
-// @kotowari[REQ-core-073, EX-core-015, C-core-markers-2]
+// @kotowari[C-core-markers-2]
 #[test]
 fn req_073_both_markers_on_one_line_bind_to_the_test() {
     let tmp = TempDir::new().unwrap();
@@ -477,27 +459,27 @@ fn req_073_both_markers_on_one_line_bind_to_the_test() {
 
 // --- REQ-core-075: 印の結び付け ---
 
-// @kotowari[REQ-core-075, TBL-core-016, C-core-markers-14]
+// @kotowari[C-core-markers-14]
 #[test]
 fn req_075_marker_before_attributes_binds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001]\n#[test]\nfn before_attr_test() {}\n",
+        "// @kotowari[C-t-a-1]\n#[test]\nfn before_attr_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
     let twi = findings_by_kind(&v, "test_without_id");
     assert!(rwt.is_empty(), "marker before attr should bind: {:?}", rwt);
     assert!(twi.is_empty(), "test should have marker: {:?}", twi);
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, EX-core-306, C-core-markers-8]
+// @kotowari[C-core-markers-8]
 #[test]
 fn ex_core_306_marker_at_body_start_does_not_bind() {
     let tmp = TempDir::new().unwrap();
@@ -523,7 +505,7 @@ fn ex_core_306_marker_at_body_start_does_not_bind() {
     );
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, C-core-markers-8]
+// @kotowari[C-core-markers-8]
 #[test]
 fn req_075_body_start_marker_does_not_add_to_the_marks_before() {
     let tmp = TempDir::new().unwrap();
@@ -548,16 +530,16 @@ fn req_075_body_start_marker_does_not_add_to_the_marks_before() {
     assert_eq!(rwt[0]["detail"], "C-t-a-2");
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, C-core-markers-9]
+// @kotowari[C-core-markers-9]
 #[test]
 fn req_075_marker_in_body_middle_is_ignored() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "#[test]\nfn mid_body_test() {\n    let x = 1;\n    // @kotowari[REQ-001]\n    assert!(x == 1);\n}\n",
+        "#[test]\nfn mid_body_test() {\n    let x = 1;\n    // @kotowari[C-t-a-1]\n    assert!(x == 1);\n}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -571,16 +553,16 @@ fn req_075_marker_in_body_middle_is_ignored() {
     );
 }
 
-// @kotowari[REQ-core-075, TBL-core-035, EX-core-324, C-core-markers-18]
+// @kotowari[C-core-markers-18]
 #[test]
 fn ex_core_324_mark_in_an_attribute_body_is_not_read() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "#[doc = \"@kotowari[REQ-999]\"]\n#[test]\nfn t() {}\n",
+        "#[doc = \"@kotowari[C-t-a-999]\"]\n#[test]\nfn t() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -594,7 +576,7 @@ fn ex_core_324_mark_in_an_attribute_body_is_not_read() {
     assert_eq!(twi[0]["detail"], "t");
 }
 
-// @kotowari[REQ-core-082, TBL-core-017, EX-core-326, C-core-queries-6]
+// @kotowari[C-core-queries-6]
 #[test]
 fn ex_core_326_test_inside_a_function_body_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -612,7 +594,7 @@ fn ex_core_326_test_inside_a_function_body_is_counted() {
     assert_eq!(twi[0]["detail"], "inner");
 }
 
-// @kotowari[REQ-core-082, TBL-core-017, EX-core-330, C-core-queries-7]
+// @kotowari[C-core-queries-7]
 #[test]
 fn ex_core_330_function_in_a_mod_inside_a_macro_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -635,7 +617,7 @@ fn ex_core_330_function_in_a_mod_inside_a_macro_is_counted() {
     assert_eq!(twi[0]["detail"], "inside_module");
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, EX-core-325, C-core-markers-11]
+// @kotowari[C-core-markers-11]
 #[test]
 fn ex_core_325_marks_bind_only_to_the_first_test_on_the_line() {
     let tmp = TempDir::new().unwrap();
@@ -669,7 +651,7 @@ fn ex_core_325_marks_bind_only_to_the_first_test_on_the_line() {
     assert_eq!(names, vec!["a"], "{item}");
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, TBL-core-017, C-core-markers-11, C-core-markers-12, C-core-queries-7]
+// @kotowari[C-core-markers-11, C-core-markers-12, C-core-queries-7]
 #[test]
 fn tbl_016_marks_bind_only_to_the_first_macro_function_on_the_line() {
     let tmp = TempDir::new().unwrap();
@@ -679,11 +661,11 @@ fn tbl_016_marks_bind_only_to_the_first_macro_function_on_the_line() {
         "tests:\n  rust:\n    macros:\n      - my_macro\n",
     )
     .unwrap();
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "my_macro! {\n    // @kotowari[REQ-001]\n    fn a() {} fn b() {}\n}\n",
+        "my_macro! {\n    // @kotowari[C-t-a-1]\n    fn a() {} fn b() {}\n}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -693,7 +675,7 @@ fn tbl_016_marks_bind_only_to_the_first_macro_function_on_the_line() {
     assert_eq!(twi[0]["detail"], "b");
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, TBL-core-017, C-core-markers-11, C-core-markers-12, C-core-queries-7]
+// @kotowari[C-core-markers-11, C-core-markers-12, C-core-queries-7]
 #[test]
 fn tbl_016_macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
     let tmp = TempDir::new().unwrap();
@@ -703,12 +685,12 @@ fn tbl_016_macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
         "tests:\n  rust:\n    macros:\n      - my_macro\n",
     )
     .unwrap();
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     // マクロの中の関数が同じ行の普通のテストより前に始まるので、印はマクロの中の関数に付く
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001]\nmy_macro! { #[allow(dead_code)] fn b() {} } #[test] fn a() {}\n",
+        "// @kotowari[C-t-a-1]\nmy_macro! { #[allow(dead_code)] fn b() {} } #[test] fn a() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -720,27 +702,27 @@ fn tbl_016_macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
 
 // --- REQ-core-076: 問い合わせの無い言語の印 ---
 
-// @kotowari[REQ-core-076, C-core-markers-19]
+// @kotowari[C-core-markers-19]
 #[test]
 fn req_076_unknown_language_scans_raw_text() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.go"),
-        "// @kotowari[REQ-001]\nfunc Test_something(t *testing.T) {}\n",
+        "// @kotowari[C-t-a-1]\nfunc Test_something(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
-    // .go の印は requirement_without_test を消す
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
+    // .go の印は confirmation_without_test を消す
     assert!(
         rwt.is_empty(),
         "unknown lang markers should count for coverage: {:?}",
@@ -748,7 +730,7 @@ fn req_076_unknown_language_scans_raw_text() {
     );
 }
 
-// @kotowari[REQ-core-076, C-core-markers-19]
+// @kotowari[C-core-markers-19]
 #[test]
 fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
     // 問い合わせの無い言語では、印の行は印のある行そのもの（先頭からの行番号）であり、0 ではない
@@ -756,20 +738,24 @@ fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.go"),
-        "// leading\n// @kotowari[REQ-999]\nfunc Test_something(t *testing.T) {}\n",
+        "// leading\n// @kotowari[C-t-a-999]\nfunc Test_something(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ur = findings_by_kind(&v, "unresolved_reference");
-    let req999 = ur.iter().find(|f| f["detail"] == "REQ-999");
-    assert!(req999.is_some(), "should find unresolved REQ-999: {:?}", ur);
+    let req999 = ur.iter().find(|f| f["detail"] == "C-t-a-999");
+    assert!(
+        req999.is_some(),
+        "should find unresolved C-t-a-999: {:?}",
+        ur
+    );
     assert_eq!(
         req999.unwrap()["line"],
         2,
@@ -780,7 +766,7 @@ fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
 
 // --- REQ-core-077: 存在しない ID だけを指す印 ---
 
-// @kotowari[REQ-core-077, C-core-markers-21]
+// @kotowari[C-core-markers-21]
 #[test]
 fn req_077_unresolved_only_marker_still_counts() {
     let tmp = TempDir::new().unwrap();
@@ -788,7 +774,7 @@ fn req_077_unresolved_only_marker_still_counts() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-999]\n#[test]\nfn unresolved_test() {}\n",
+        "// @kotowari[C-t-a-999]\n#[test]\nfn unresolved_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -802,7 +788,7 @@ fn req_077_unresolved_only_marker_still_counts() {
     );
 }
 
-// @kotowari[REQ-core-054, REQ-core-077, C-core-confirm-4]
+// @kotowari[C-core-confirm-4]
 #[test]
 fn req_054_marker_to_known_id_is_not_unresolved() {
     let tmp = TempDir::new().unwrap();
@@ -826,27 +812,9 @@ fn req_054_marker_to_known_id_is_not_unresolved() {
 
 // --- REQ-core-078: review の要求を指す印 ---
 
-// @kotowari[REQ-core-078]
-#[test]
-fn req_078_marker_to_review_requirement_is_not_an_error() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "review");
-    fs::create_dir_all(tmp.path().join("tests")).unwrap();
-    // review の要求にテストがなくても requirement_without_test にならない
-    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
-    assert!(
-        rwt.is_empty(),
-        "review requirements don't need tests: {:?}",
-        rwt
-    );
-}
-
 // --- REQ-core-054: 印から存在しない ID ---
 
-// @kotowari[REQ-core-054, C-core-confirm-4]
+// @kotowari[C-core-confirm-4]
 #[test]
 fn req_054_marker_to_unknown_id_is_unresolved() {
     let tmp = TempDir::new().unwrap();
@@ -854,14 +822,14 @@ fn req_054_marker_to_unknown_id_is_unresolved() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-999]\n#[test]\nfn unresolved_marker_test() {}\n",
+        "// @kotowari[C-t-a-999]\n#[test]\nfn unresolved_marker_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ur = findings_by_kind(&v, "unresolved_reference");
     assert!(
-        ur.iter().any(|f| f["detail"] == "REQ-999"),
+        ur.iter().any(|f| f["detail"] == "C-t-a-999"),
         "should report unresolved marker: {:?}",
         ur
     );
@@ -869,27 +837,9 @@ fn req_054_marker_to_unknown_id_is_unresolved() {
 
 // --- REQ-core-085: テストのない要求 ---
 
-// @kotowari[REQ-core-085]
-#[test]
-fn req_085_fixture_has_no_uncovered_requirement() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
-    fs::create_dir_all(tmp.path().join("tests")).unwrap();
-    fs::write(
-        tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001]\n#[test]\nfn covered_test() {}\n",
-    )
-    .unwrap();
-    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
-    assert!(rwt.is_empty(), "all requirements covered: {:?}", rwt);
-}
-
 // --- REQ-core-086: 印の無いテスト ---
 
-// @kotowari[REQ-core-086, C-core-cover-1]
+// @kotowari[C-core-cover-1]
 #[test]
 fn req_086_fixture_has_no_unmarked_test_and_one_after_removal() {
     let tmp = TempDir::new().unwrap();
@@ -898,7 +848,7 @@ fn req_086_fixture_has_no_unmarked_test_and_one_after_removal() {
     // 印のあるテスト
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001]\n#[test]\nfn marked_test() {}\n",
+        "// @kotowari[C-t-a-1]\n#[test]\nfn marked_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -924,21 +874,21 @@ fn req_086_fixture_has_no_unmarked_test_and_one_after_removal() {
 
 // --- REQ-core-087: 問い合わせの無い言語 ---
 
-// @kotowari[REQ-core-087, C-core-cover-4]
+// @kotowari[C-core-cover-4]
 #[test]
 fn req_087_unknown_language_only_feeds_coverage() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.go"),
-        "// @kotowari[REQ-001]\nfunc Test_a(t *testing.T) {}\n",
+        "// @kotowari[C-t-a-1]\nfunc Test_a(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -954,7 +904,7 @@ fn req_087_unknown_language_only_feeds_coverage() {
 
 // --- REQ-core-072, REQ-core-054: 問い合わせの無い言語の印の検査 ---
 
-// @kotowari[REQ-core-072, REQ-core-054, C-core-markers-20]
+// @kotowari[C-core-markers-20]
 #[test]
 fn req_072_non_query_language_checks_invalid_marker() {
     // .go ファイルの空の印 → invalid_marker が出る
@@ -962,7 +912,7 @@ fn req_072_non_query_language_checks_invalid_marker() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -981,7 +931,7 @@ fn req_072_non_query_language_checks_invalid_marker() {
     );
 }
 
-// @kotowari[REQ-core-054, C-core-confirm-4]
+// @kotowari[C-core-confirm-4]
 #[test]
 fn req_054_non_query_language_checks_unresolved_reference() {
     // .go ファイルの存在しない ID の印 → unresolved_reference が出る
@@ -989,20 +939,20 @@ fn req_054_non_query_language_checks_unresolved_reference() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.go"),
-        "// @kotowari[REQ-999]\nfunc Test_a(t *testing.T) {}\n",
+        "// @kotowari[C-t-a-999]\nfunc Test_a(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ur = findings_by_kind(&v, "unresolved_reference");
     assert!(
-        ur.iter().any(|f| f["detail"] == "REQ-999"),
+        ur.iter().any(|f| f["detail"] == "C-t-a-999"),
         "unresolved_reference should fire for non-query language: {:?}",
         ur
     );
@@ -1010,7 +960,7 @@ fn req_054_non_query_language_checks_unresolved_reference() {
 
 // --- REQ-core-077: 印の中の ID の形でない要素 ---
 
-// @kotowari[REQ-core-077, C-core-confirm-4]
+// @kotowari[C-core-confirm-4]
 #[test]
 fn req_077_malformed_id_in_marker_is_unresolved_reference_rs() {
     let tmp = TempDir::new().unwrap();
@@ -1031,14 +981,14 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_rs() {
     );
 }
 
-// @kotowari[REQ-core-077, C-core-confirm-4]
+// @kotowari[C-core-confirm-4]
 #[test]
 fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1059,7 +1009,7 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
 
 // --- REQ-core-088: IR に文書が無いとき ---
 
-// @kotowari[REQ-core-088, EX-core-019, C-core-cover-5]
+// @kotowari[C-core-cover-5]
 #[test]
 fn req_088_empty_ir_still_checks_tests() {
     let tmp = TempDir::new().unwrap();
@@ -1081,8 +1031,8 @@ fn req_088_empty_ir_still_checks_tests() {
         twi
     );
     assert_eq!(twi[0]["detail"], "unmarked_test");
-    // requirement_without_test は出ない（IR に要求がない）
-    let rwt = findings_by_kind(&v, "requirement_without_test");
+    // confirmation_without_test は出ない（IR に要求がない）
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
     assert!(rwt.is_empty());
     // 終了コード 1（誤りあり）
     assert_eq!(output.status.code(), Some(1));
@@ -1090,17 +1040,17 @@ fn req_088_empty_ir_still_checks_tests() {
 
 // --- TBL-core-016: 空行を挟んだ印は結び付かない ---
 
-// @kotowari[REQ-core-075, TBL-core-016, EX-core-016, C-core-markers-13]
+// @kotowari[C-core-markers-13]
 #[test]
 fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     // 印と #[test] の間に空行がある → 結び付かない
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001]\n\n#[test]\nfn test_a() {}\n",
+        "// @kotowari[C-t-a-1]\n\n#[test]\nfn test_a() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1113,17 +1063,17 @@ fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
     );
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, C-core-markers-13]
+// @kotowari[C-core-markers-13]
 #[test]
 fn tbl_016_blank_line_between_marker_and_function_breaks_binding() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     // 属性の後の印と関数の間に空行がある → 結び付かない
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "#[test]\n// @kotowari[REQ-001]\n\nfn test_a() {}\n",
+        "#[test]\n// @kotowari[C-t-a-1]\n\nfn test_a() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1136,23 +1086,23 @@ fn tbl_016_blank_line_between_marker_and_function_breaks_binding() {
     );
 }
 
-// @kotowari[REQ-core-075, TBL-core-016, C-core-markers-12]
+// @kotowari[C-core-markers-12]
 #[test]
 fn tbl_016_macro_function_boundary_breaks_marker_binding() {
-    // マクロ内で @kotowari[REQ-core-001] → fn a() → fn b()（空行なし）
+    // マクロ内で印 → fn a() → fn b()（空行なし）
     // b には印が無いので test_without_id が出る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+        "tests:\n  rust:\n    macros:\n      - my_macro\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "my_macro! {\n    // @kotowari[REQ-001]\n    fn a() {}\n    fn b() {}\n}\n",
+        "my_macro! {\n    // @kotowari[C-t-a-1]\n    fn a() {}\n    fn b() {}\n}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1173,7 +1123,7 @@ fn tbl_016_macro_function_boundary_breaks_marker_binding() {
 
 // --- TBL-core-001: UTF-8 でないテストファイルで停止 ---
 
-// @kotowari[REQ-core-006, TBL-core-001, C-core-clienv-7]
+// @kotowari[C-core-clienv-7]
 #[test]
 #[cfg(unix)]
 fn tbl_001_unreadable_test_file_stops() {
@@ -1202,7 +1152,7 @@ fn tbl_001_unreadable_test_file_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// @kotowari[REQ-core-006, TBL-core-001, C-core-clienv-7]
+// @kotowari[C-core-clienv-7]
 #[test]
 fn tbl_001_non_utf8_test_file_stops() {
     let tmp = TempDir::new().unwrap();
@@ -1229,7 +1179,7 @@ fn tbl_001_non_utf8_test_file_stops() {
 
 // --- REQ-core-079: ファイルのシンボリックリンクは読む ---
 
-// @kotowari[REQ-core-079, C-core-discover-2, C-core-discover-3]
+// @kotowari[C-core-discover-2, C-core-discover-3]
 #[test]
 #[cfg(unix)]
 fn req_079_file_symlink_is_read() {
@@ -1237,12 +1187,12 @@ fn req_079_file_symlink_is_read() {
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::create_dir_all(tmp.path().join("elsewhere")).unwrap();
     fs::write(
         tmp.path().join("elsewhere/linked_test.rs"),
-        "// @kotowari[REQ-001]\n#[test]\nfn linked_test() {}\n",
+        "// @kotowari[C-t-a-1]\n#[test]\nfn linked_test() {}\n",
     )
     .unwrap();
     // ファイルへのシンボリックリンク → 読まれる
@@ -1253,10 +1203,10 @@ fn req_079_file_symlink_is_read() {
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
     assert!(
         rwt.is_empty(),
-        "ファイルのシンボリックリンクのテストは読まれるので REQ-001 はカバーされるはず: {:?}",
+        "ファイルのシンボリックリンクのテストは読まれるので C-t-a-1 はカバーされるはず: {:?}",
         rwt
     );
     // ディレクトリのシンボリックリンクは辿らない
@@ -1281,7 +1231,7 @@ fn req_079_file_symlink_is_read() {
     );
 }
 
-// @kotowari[REQ-core-018, TBL-core-001, C-core-clienv-7, C-core-config-11, C-core-discover-17]
+// @kotowari[C-core-clienv-7, C-core-config-11, C-core-discover-17]
 #[test]
 #[cfg(unix)]
 fn req_018_unreadable_directory_under_tests_stops() {
@@ -1296,12 +1246,12 @@ fn req_018_unreadable_directory_under_tests_stops() {
     }
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     let sub = tmp.path().join("tests/sub");
     fs::create_dir_all(&sub).unwrap();
     fs::write(
         sub.join("hidden_test.rs"),
-        "// @kotowari[REQ-001]\n#[test]\nfn hidden_test() {}\n",
+        "// @kotowari[C-t-a-1]\n#[test]\nfn hidden_test() {}\n",
     )
     .unwrap();
     fs::set_permissions(&sub, std::fs::Permissions::from_mode(0o000)).unwrap();
@@ -1318,7 +1268,7 @@ fn req_018_unreadable_directory_under_tests_stops() {
 
 // --- REQ-core-019: glob は再帰し、隠しディレクトリを含めない ---
 
-// @kotowari[REQ-core-019, C-core-config-22]
+// @kotowari[C-core-config-22]
 #[test]
 fn req_019_hidden_directory_is_excluded_and_subdirectory_is_included() {
     let tmp = TempDir::new().unwrap();
@@ -1356,16 +1306,16 @@ fn req_019_hidden_directory_is_excluded_and_subdirectory_is_included() {
 
 // --- has_attribute: #[test] の前にコメント行がある関数 ---
 
-// @kotowari[REQ-core-082, TBL-core-017, C-core-queries-4]
+// @kotowari[C-core-queries-4]
 #[test]
 fn req_082_test_attribute_after_comment_is_recognized() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001]\n#[test]\n// intermediate comment\nfn after_comment_test() {}\n",
+        "// @kotowari[C-t-a-1]\n#[test]\n// intermediate comment\nfn after_comment_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1376,25 +1326,25 @@ fn req_082_test_attribute_after_comment_is_recognized() {
         "function with comment between #[test] and fn should be recognized as test: {:?}",
         twi
     );
-    // 認識されていれば REQ-core-001 は印で結び付いているので requirement_without_test は出ない
-    let rwt = findings_by_kind(&v, "requirement_without_test");
+    // 認識されていれば REQ-core-001 は印で結び付いているので confirmation_without_test は出ない
+    let rwt = findings_by_kind(&v, "confirmation_without_test");
     assert!(
-        !rwt.iter().any(|f| f["detail"] == "REQ-001"),
-        "the test after the comment should bind REQ-001: {:?}",
+        !rwt.iter().any(|f| f["detail"] == "C-t-a-1"),
+        "the test after the comment should bind C-t-a-1: {:?}",
         rwt
     );
 }
 
 // --- has_configured_attribute: カスタム属性を持たない関数はテストにならない ---
 
-// @kotowari[REQ-core-082, TBL-core-017, C-core-queries-5]
+// @kotowari[C-core-queries-5]
 #[test]
 fn req_082_function_without_configured_attribute_not_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
+        "tests:\n  rust:\n    attributes:\n      - kani::proof\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("src")).unwrap();
@@ -1411,7 +1361,7 @@ fn req_082_function_without_configured_attribute_not_counted() {
 
 // --- collect_markers の行番号 ---
 
-// @kotowari[REQ-core-118, C-core-markers-7]
+// @kotowari[C-core-markers-7]
 #[test]
 fn req_118_unresolved_reference_line_is_the_marker_line() {
     // A121 で改めた: unresolved_reference の line は印のある行
@@ -1420,14 +1370,18 @@ fn req_118_unresolved_reference_line_is_the_marker_line() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "\n// @kotowari[REQ-999]\n#[test]\nfn marker_line_test() {}\n",
+        "\n// @kotowari[C-t-a-999]\n#[test]\nfn marker_line_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ur = findings_by_kind(&v, "unresolved_reference");
-    let req999 = ur.iter().find(|f| f["detail"] == "REQ-999");
-    assert!(req999.is_some(), "should find unresolved REQ-999: {:?}", ur);
+    let req999 = ur.iter().find(|f| f["detail"] == "C-t-a-999");
+    assert!(
+        req999.is_some(),
+        "should find unresolved C-t-a-999: {:?}",
+        ur
+    );
     assert_eq!(
         req999.unwrap()["line"],
         2,
@@ -1437,7 +1391,7 @@ fn req_118_unresolved_reference_line_is_the_marker_line() {
 
 // --- Step 6: テストの数え方と印 ---
 
-// @kotowari[TBL-core-017, C-core-queries-4]
+// @kotowari[C-core-queries-4]
 #[test]
 fn tbl_017_attribute_path_ending_in_test_is_counted() {
     // "#[ test ]" や "#[core::prelude::v1::test]" も数える
@@ -1459,7 +1413,7 @@ fn tbl_017_attribute_path_ending_in_test_is_counted() {
     );
 }
 
-// @kotowari[TBL-core-017, C-core-queries-7]
+// @kotowari[C-core-queries-7]
 #[test]
 fn tbl_017_nested_function_in_macro_is_not_counted() {
     // マクロの中の入れ子の関数は数えない（最上位だけ）
@@ -1467,8 +1421,9 @@ fn tbl_017_nested_function_in_macro_is_not_counted() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
-    ).unwrap();
+        "tests:\n  rust:\n    macros:\n      - my_macro\n",
+    )
+    .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
@@ -1490,7 +1445,7 @@ fn tbl_017_nested_function_in_macro_is_not_counted() {
     );
 }
 
-// @kotowari[TBL-core-016, TBL-core-017, C-core-markers-8, C-core-markers-12]
+// @kotowari[C-core-markers-8, C-core-markers-12]
 #[test]
 fn tbl_016_macro_function_body_marker_does_not_bind() {
     // マクロの中の関数でも、本体の先頭のコメントの印は結び付かない
@@ -1499,8 +1454,9 @@ fn tbl_016_macro_function_body_marker_does_not_bind() {
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\ntests:\n  rust:\n    macros:\n      - my_macro\n",
-    ).unwrap();
+        "decisions:\n  documents: docs/decisions\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+    )
+    .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
@@ -1523,7 +1479,7 @@ fn tbl_016_macro_function_body_marker_does_not_bind() {
     );
 }
 
-// @kotowari[TBL-core-016, C-core-markers-12]
+// @kotowari[C-core-markers-12]
 #[test]
 fn tbl_016_macro_function_block_comment_marker_binds() {
     // マクロの中の関数でも、通常の関数と同じ規則で複数行のブロックコメントの印が結び付く
@@ -1532,8 +1488,9 @@ fn tbl_016_macro_function_block_comment_marker_binds() {
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\ntests:\n  rust:\n    macros:\n      - my_macro\n",
-    ).unwrap();
+        "decisions:\n  documents: docs/decisions\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+    )
+    .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
@@ -1548,7 +1505,7 @@ fn tbl_016_macro_function_block_comment_marker_binds() {
         "a multi-line block comment marker right before a macro function should bind, just like a normal function: {:?}",
         rwt
     );
-    // 対: 同じ形で印を外すと requirement_without_test が出る（印が結び付いたから空だった、の裏付け）
+    // 対: 同じ形で印を外すと confirmation_without_test が出る（印が結び付いたから空だった、の裏付け）
     fs::write(
         tmp.path().join("tests/test_a.rs"),
         "my_macro! {\n    /* no marker here\n    */\n    fn block_comment_marker() {}\n}\n",
@@ -1565,7 +1522,7 @@ fn tbl_016_macro_function_block_comment_marker_binds() {
     );
 }
 
-// @kotowari[REQ-core-054, C-core-confirm-4]
+// @kotowari[C-core-confirm-4]
 #[test]
 fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
     // A152: 同じテストに同じ ID を指す印が複数あるとき、unresolved_reference は出現ごとに1件
@@ -1574,13 +1531,13 @@ fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-999]\n// @kotowari[REQ-999]\n#[test]\nfn duplicate_marker_test() {}\n",
+        "// @kotowari[C-t-a-999]\n// @kotowari[C-t-a-999]\n#[test]\nfn duplicate_marker_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ur = findings_by_kind(&v, "unresolved_reference");
-    let matching: Vec<_> = ur.iter().filter(|f| f["detail"] == "REQ-999").collect();
+    let matching: Vec<_> = ur.iter().filter(|f| f["detail"] == "C-t-a-999").collect();
     assert_eq!(
         matching.len(),
         2,
@@ -1595,7 +1552,7 @@ fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
     assert_eq!(lines, vec![1, 2]);
 }
 
-// @kotowari[REQ-core-072, C-core-markers-5]
+// @kotowari[C-core-markers-5]
 #[test]
 fn req_072_marker_spanning_lines_is_invalid() {
     // 行をまたぐ印は invalid_marker
@@ -1604,7 +1561,7 @@ fn req_072_marker_spanning_lines_is_invalid() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001\n// ]\n#[test]\nfn spanning_test() {}\n",
+        "// @kotowari[C-t-a-1\n// ]\n#[test]\nfn spanning_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1617,7 +1574,7 @@ fn req_072_marker_spanning_lines_is_invalid() {
     );
 }
 
-// @kotowari[REQ-core-072, C-core-markers-6]
+// @kotowari[C-core-markers-6]
 #[test]
 fn req_072_detail_is_the_raw_line() {
     // invalid_marker の detail は生の行
@@ -1626,7 +1583,7 @@ fn req_072_detail_is_the_raw_line() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[REQ-001\n#[test]\nfn spanning_detail_test() {}\n",
+        "// @kotowari[C-t-a-1\n#[test]\nfn spanning_detail_test() {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1634,34 +1591,12 @@ fn req_072_detail_is_the_raw_line() {
     let im = findings_by_kind(&v, "invalid_marker");
     assert!(!im.is_empty(), "should have invalid_marker");
     assert_eq!(
-        im[0]["detail"], "// @kotowari[REQ-001",
+        im[0]["detail"], "// @kotowari[C-t-a-1",
         "detail should be the raw line text"
     );
 }
 
-// @kotowari[REQ-core-085]
-#[test]
-fn req_085_requirement_without_verification_line_gets_no_coverage_finding() {
-    // "- verification:" の行が無い要求には requirement_without_test は出ない
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\nStatement.\n",
-    ).unwrap();
-    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
-    assert!(
-        rwt.is_empty(),
-        "requirement without verification line should not get requirement_without_test: {:?}",
-        rwt
-    );
-    let vm = findings_by_kind(&v, "verification_missing");
-    assert!(!vm.is_empty(), "should get verification_missing instead");
-}
-
-// @kotowari[REQ-core-081, C-core-discover-7]
+// @kotowari[C-core-discover-7]
 #[test]
 fn req_081_uppercase_extension_has_no_query() {
     // ".RS" は問い合わせの無い言語（大文字小文字を区別）
@@ -1669,8 +1604,9 @@ fn req_081_uppercase_extension_has_no_query() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.RS\"\n    - \"tests/**/*.rs\"\n",
-    ).unwrap();
+        "tests:\n  files:\n    - \"tests/**/*.RS\"\n    - \"tests/**/*.rs\"\n",
+    )
+    .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.RS"),
@@ -1688,7 +1624,7 @@ fn req_081_uppercase_extension_has_no_query() {
     );
 }
 
-// @kotowari[REQ-core-019, C-core-config-23]
+// @kotowari[C-core-config-23]
 #[test]
 fn req_019_hidden_file_matched_by_glob_is_read() {
     // ".foo.rs" は glob が当てれば読まれる
@@ -1710,14 +1646,14 @@ fn req_019_hidden_file_matched_by_glob_is_read() {
     );
 }
 
-// @kotowari[REQ-core-079, REQ-core-018, C-core-config-11, C-core-discover-14]
+// @kotowari[C-core-config-11, C-core-discover-14]
 #[test]
 #[cfg(unix)]
 fn req_079_broken_symlink_in_tests_stops() {
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     symlink(
         tmp.path().join("nowhere.rs"),
@@ -1734,7 +1670,7 @@ fn req_079_broken_symlink_in_tests_stops() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-core-079, REQ-core-018, C-core-config-11, C-core-discover-15]
+// @kotowari[C-core-config-11, C-core-discover-15]
 #[test]
 #[cfg(unix)]
 fn req_079_broken_symlink_outside_glob_stops() {
@@ -1743,7 +1679,7 @@ fn req_079_broken_symlink_outside_glob_stops() {
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     symlink(tmp.path().join("nowhere.txt"), tmp.path().join("notes.txt")).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(
@@ -1755,69 +1691,9 @@ fn req_079_broken_symlink_outside_glob_stops() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-core-124, REQ-core-114, REQ-core-043]
+// @kotowari[C-core-base-6, C-core-document-1, C-core-output-7]
 #[test]
-fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-1000: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`EX-1000` を満たす。\n\n## Examples\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ids = kotowari_core::collect_known_ids(&[doc]);
-    assert!(ids.contains("REQ-1000"), "{:?}", ids);
-    assert!(ids.contains("EX-1000"), "{:?}", ids);
-
-    fs::write(tmp.path().join("docs/ir/a.md"), content).unwrap();
-    fs::create_dir_all(tmp.path().join("tests")).unwrap();
-    fs::write(
-        tmp.path().join("tests/a.rs"),
-        "// @kotowari[REQ-1000, EX-1000]\n#[test]\nfn example() {}\n",
-    )
-    .unwrap();
-    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    let result = parse_json(&output);
-    assert_eq!(output.status.code(), Some(0), "{:?}", result);
-    assert!(
-        result["findings"].as_array().unwrap().is_empty(),
-        "{:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-124, REQ-core-043, REQ-core-114]
-#[test]
-fn req_124_leading_zero_and_short_ids_are_rejected() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_req(tmp.path(), "REQ-001", "review");
-    let path = tmp.path().join("docs/ir/a.md");
-    let content = fs::read_to_string(&path).unwrap()
-        + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## Examples\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
-    let doc = kotowari_core::ir::parse_document("a.md", &content).unwrap();
-    let ids = kotowari_core::collect_known_ids(&[doc]);
-    assert!(ids.contains("REQ-001"), "{:?}", ids);
-    fs::write(path, content).unwrap();
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let headings = findings_by_kind(&result, "unknown_heading");
-    assert_eq!(headings.len(), 2, "{:?}", headings);
-    for heading in ["### REQ-0001: 名前", "### REQ-1: 名前"] {
-        assert_eq!(
-            headings.iter().filter(|f| f["detail"] == heading).count(),
-            1
-        );
-    }
-    let invalid = findings_by_kind(&result, "invalid_id");
-    assert_eq!(invalid.len(), 1, "{:?}", invalid);
-    assert_eq!(invalid[0]["detail"], "EX-0001");
-    assert!(
-        findings_by_kind(&result, "unresolved_reference").is_empty(),
-        "{:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-033, REQ-core-085, REQ-core-110, TBL-core-006, C-core-base-6, C-core-document-1, C-core-output-7]
-#[test]
-fn req_033_requirement_without_test_path_carries_the_subdirectory() {
+fn req_033_confirmation_without_test_path_carries_the_subdirectory() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(
@@ -1834,603 +1710,60 @@ fn req_033_requirement_without_test_path_carries_the_subdirectory() {
 
 // --- REQ-core-137: テストのない具体例 ---
 
-/// 要求と具体例を1つずつ持つ IR の文書を書く。
-/// タグの行は 18 行目、"Scenario:" の行は 19 行目になる。
-fn make_ir_with_scenario(
-    tmp: &std::path::Path,
-    name: &str,
-    req_id: &str,
-    verification_line: &str,
-    tags: &str,
-) {
-    fs::write(
-        tmp.join("docs/ir").join(name),
-        format!(
-            "# Title\n\nScope.\n\n## Requirements\n\n### {req_id}: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{verification_line}\nStatement.\n\n## Examples\n\n```gherkin\n{tags}\nScenario: S\n  Given a\n  When b\n  Then c\n```\n"
-        ),
-    )
-    .unwrap();
-}
-
 fn write_test_file(tmp: &std::path::Path, name: &str, content: &str) {
     fs::create_dir_all(tmp.join("tests")).unwrap();
     fs::write(tmp.join("tests").join(name), content).unwrap();
 }
 
-// @kotowari[REQ-core-137, EX-core-121]
-#[test]
-fn req_137_scenario_without_marker_is_an_error() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let swt = findings_by_kind(&result, "scenario_without_test");
-    assert_eq!(
-        swt.len(),
-        1,
-        "the scenario has no marker of its own: {:?}",
-        result
-    );
-    assert_eq!(swt[0]["detail"], "EX-201");
-    assert_eq!(swt[0]["line"], 18, "the line is the tag line (TBL-019)");
-    assert_eq!(swt[0]["path"], "docs/ir/a.md");
-    assert_eq!(swt[0]["severity"], "error");
-}
-
-// @kotowari[REQ-core-137, EX-core-123]
-#[test]
-fn req_137_review_only_scenario_is_not_required() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-002",
-        "- verification: review\n",
-        "@id=EX-202 @about=REQ-002 @source=docs/decision/records/records.md#A1",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let swt = findings_by_kind(&result, "scenario_without_test");
-    assert!(
-        swt.is_empty(),
-        "a scenario about a review requirement needs no test: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, EX-core-125]
-#[test]
-fn req_137_scenario_about_a_table_only_is_not_required() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Decision tables\n\n### TBL-001: Table\n\n- source: docs/decision/records/records.md#A1\n\n| 入力 | 出力 |\n|---|---|\n| a | b |\n\n## Examples\n\n```gherkin\n@id=EX-203 @about=TBL-001 @source=docs/decision/records/records.md#A1\nScenario: S\n  Given a\n  When b\n  Then c\n```\n",
-    )
-    .unwrap();
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let swt = findings_by_kind(&result, "scenario_without_test");
-    assert!(
-        swt.is_empty(),
-        "a scenario that names no requirement needs no test: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, REQ-core-048]
-#[test]
-fn req_137_requirement_without_verification_line_does_not_count() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let kinds: Vec<&str> = result["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|f| f["kind"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        kinds,
-        vec!["verification_missing"],
-        "a requirement without the 検証 line is not counted for its scenario: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, REQ-core-049]
-#[test]
-fn req_137_requirement_with_invalid_verification_value_does_not_count() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: e2e\n",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let kinds: Vec<&str> = result["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|f| f["kind"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        kinds,
-        vec!["verification_invalid"],
-        "a requirement whose 検証 is none of the four values is not counted for its scenario: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, REQ-core-032]
-#[test]
-fn req_137_duplicate_scenario_uses_the_first_about() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    // パスのバイト順で1つ目の a.md の "@about" は review の REQ-core-002、2つ目の b.md は unit の REQ-core-001
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-002",
-        "- verification: review\n",
-        "@id=EX-201 @about=REQ-002 @source=docs/decision/records/records.md#A1",
-    );
-    make_ir_with_scenario(
-        tmp.path(),
-        "b.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let dup = findings_by_kind(&result, "duplicate_id");
-    assert_eq!(
-        dup.len(),
-        1,
-        "the second scenario is the duplicate: {:?}",
-        result
-    );
-    let swt = findings_by_kind(&result, "scenario_without_test");
-    assert!(
-        swt.is_empty(),
-        "the first scenario's @about decides, and it names a review requirement: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, REQ-core-032]
-#[test]
-fn req_137_duplicate_scenario_reports_once_on_the_first() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    make_ir_with_scenario(
-        tmp.path(),
-        "b.md",
-        "REQ-003",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-003 @source=docs/decision/records/records.md#A1",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let swt = findings_by_kind(&result, "scenario_without_test");
-    assert_eq!(
-        swt.len(),
-        1,
-        "one finding for the duplicated scenario id: {:?}",
-        result
-    );
-    assert_eq!(swt[0]["path"], "docs/ir/a.md", "on the first scenario");
-    assert_eq!(swt[0]["line"], 18, "on the first scenario's tag line");
-    assert_eq!(swt[0]["detail"], "EX-201");
-}
-
-// @kotowari[REQ-core-137, REQ-core-053]
-#[test]
-fn req_137_scenario_without_id_is_not_reported() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let kinds: Vec<&str> = result["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|f| f["kind"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        kinds,
-        vec!["missing_tag"],
-        "a scenario without @id gets missing_tag only: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, REQ-core-114]
-#[test]
-fn req_137_scenario_with_invalid_id_is_not_reported() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=BADID @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let kinds: Vec<&str> = result["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|f| f["kind"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        kinds,
-        vec!["invalid_id"],
-        "a scenario whose @id is malformed gets invalid_id only: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, REQ-core-054]
-#[test]
-fn req_137_scenario_about_an_unknown_id_is_not_required() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-999 @source=docs/decision/records/records.md#A1",
-    );
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let kinds: Vec<&str> = result["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|f| f["kind"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        kinds,
-        vec!["unresolved_reference"],
-        "a scenario whose @about resolves to nothing gets unresolved_reference only: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-137, REQ-core-071, C-core-markers-1]
+// @kotowari[C-core-markers-1]
 #[test]
 fn req_137_one_marker_may_name_several_scenarios() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-202 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
-    )
-    .unwrap();
-    // 1つの印が2つの ID を挙げ、もう1本が同じ EX-core-201 をもう一度挙げる
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1", "C-t-a-2"]);
+    // 1つの印が2つの ID を挙げ、もう1本が同じ C-t-a-1 をもう一度挙げる
     write_test_file(
         tmp.path(),
         "test_a.rs",
-        "// @kotowari[EX-201, EX-202]\n#[test]\nfn req_001_both() {}\n\n// @kotowari[EX-201]\n#[test]\nfn req_001_again() {}\n",
+        "// @kotowari[C-t-a-1, C-t-a-2]\n#[test]\nfn req_001_both() {}\n\n// @kotowari[C-t-a-1]\n#[test]\nfn req_001_again() {}\n",
     );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let swt = findings_by_kind(&result, "scenario_without_test");
+    let cwt = findings_by_kind(&result, "confirmation_without_test");
     assert!(
-        swt.is_empty(),
-        "one marker may name several scenarios, and the count of markers is not read: {:?}",
+        cwt.is_empty(),
+        "one marker may name several rows, and the count of markers is not read: {:?}",
         result
     );
 }
 
-// @kotowari[REQ-core-087, EX-core-124, C-core-cover-3]
+// @kotowari[C-core-cover-3]
 #[test]
 fn req_087_marker_in_a_file_without_query_feeds_scenario_coverage() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+        "tests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
+    // 印は問い合わせの無い言語のファイルにだけある
     write_test_file(
         tmp.path(),
         "test_a.go",
-        "// @kotowari[EX-201]\nfunc Test_a(t *testing.T) {}\n",
-    );
-    // Rust のテストには EX-core-201 を含む印が無い
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
+        "// @kotowari[C-t-a-1]\nfunc Test_a(t *testing.T) {}\n",
     );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let swt = findings_by_kind(&result, "scenario_without_test");
+    let cwt = findings_by_kind(&result, "confirmation_without_test");
     assert!(
-        swt.is_empty(),
-        "the marker in the file of a language without a query counts for the scenario: {:?}",
+        cwt.is_empty(),
+        "the marker in the file of a language without a query counts for the row: {:?}",
         result
     );
 }
 
 // --- REQ-core-085: 具体例の印は要求の分も満たす ---
 
-// @kotowari[REQ-core-085, EX-core-122]
-#[test]
-fn req_085_scenario_marker_covers_its_requirement() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    // 印は EX-core-201 だけで、REQ-core-001 を含む印は無い
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[EX-201]\n#[test]\nfn req_001_scenario() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let rwt = findings_by_kind(&result, "requirement_without_test");
-    assert!(
-        rwt.is_empty(),
-        "the scenario's marker covers its requirement too: {:?}",
-        result
-    );
-    let swt = findings_by_kind(&result, "scenario_without_test");
-    assert!(
-        swt.is_empty(),
-        "the scenario itself is marked: {:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-085, REQ-core-032]
-#[test]
-fn req_085_duplicate_scenario_marker_uses_the_first_about() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    // パスのバイト順で1つ目の a.md の "@about" は REQ-core-001、2つ目の b.md は REQ-core-003
-    make_ir_with_scenario(
-        tmp.path(),
-        "a.md",
-        "REQ-001",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
-    );
-    make_ir_with_scenario(
-        tmp.path(),
-        "b.md",
-        "REQ-003",
-        "- verification: unit\n",
-        "@id=EX-201 @about=REQ-003 @source=docs/decision/records/records.md#A1",
-    );
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[EX-201]\n#[test]\nfn req_001_scenario() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let rwt = findings_by_kind(&result, "requirement_without_test");
-    assert_eq!(
-        rwt.len(),
-        1,
-        "only the requirement of the second scenario stays uncovered: {:?}",
-        result
-    );
-    assert_eq!(
-        rwt[0]["detail"], "REQ-003",
-        "the first scenario's @about is the one that counts"
-    );
-}
-
 // --- ir-references.md の具体例 ---
 
-// @kotowari[REQ-core-124, EX-core-028]
-#[test]
-fn req_124_four_digit_heading_is_read_and_the_other_two_are_unknown_headings() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-1000: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-0001: 名前\n\n### REQ-1: 名前\n",
-    )
-    .unwrap();
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    // REQ-core-1000 は要求として読まれた: テストのない要求として挙がる
-    let missing = findings_by_kind(&result, "requirement_without_test");
-    assert_eq!(missing.len(), 1, "{:?}", result);
-    assert_eq!(missing[0]["detail"], "REQ-1000");
-    let headings = findings_by_kind(&result, "unknown_heading");
-    let details: Vec<&str> = headings
-        .iter()
-        .map(|f| f["detail"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        details,
-        vec!["### REQ-0001: 名前", "### REQ-1: 名前"],
-        "{:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-124, EX-core-029]
-#[test]
-fn req_124_four_digit_id_in_a_tag_and_a_marker_is_read_the_same_way() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-1000: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-0001 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
-    )
-    .unwrap();
-    write_test_file(
-        tmp.path(),
-        "test_a.rs",
-        "// @kotowari[REQ-1000]\n#[test]\nfn req_1000_covered() {}\n",
-    );
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    // EX-core-1000 はシナリオの ID になった: 印の無い具体例として挙がる
-    let swt = findings_by_kind(&result, "scenario_without_test");
-    assert_eq!(swt.len(), 1, "{:?}", result);
-    assert_eq!(swt[0]["detail"], "EX-1000");
-    // EX-core-0001 は ID の形に合わない
-    let invalid = findings_by_kind(&result, "invalid_id");
-    assert_eq!(invalid.len(), 1, "{:?}", result);
-    assert_eq!(invalid[0]["detail"], "EX-0001");
-    // 印の REQ-core-1000 は要求の ID として照合された
-    assert!(
-        findings_by_kind(&result, "requirement_without_test").is_empty(),
-        "{:?}",
-        result
-    );
-}
-
 // --- REQ-core-124, REQ-core-167: ID の名前（2026-09-22-id-namespace.md）---
-
-// @kotowari[REQ-core-124, EX-core-043]
-#[test]
-fn req_124_named_and_unnamed_ids_are_both_read() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    fs::create_dir_all(tmp.path().join("docs/ir/core")).unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/core/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-core-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-002: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-Core-003: 名前\n",
-    )
-    .unwrap();
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    // 名前のある ID も名前の無い ID も要求として読まれた（行の順）
-    let missing = findings_by_kind(&result, "requirement_without_test");
-    let details: Vec<&str> = missing
-        .iter()
-        .map(|f| f["detail"].as_str().unwrap())
-        .collect();
-    assert_eq!(details, vec!["REQ-core-001", "REQ-002"], "{:?}", result);
-    // 大文字を含む名前は ID の形に合わない
-    let headings = findings_by_kind(&result, "unknown_heading");
-    let hd: Vec<&str> = headings
-        .iter()
-        .map(|f| f["detail"].as_str().unwrap())
-        .collect();
-    assert_eq!(hd, vec!["### REQ-Core-003: 名前"], "{:?}", result);
-    // 名前が置き場の第1階層と一致するので不一致は出ない
-    assert!(
-        findings_by_kind(&result, "id_domain_mismatch").is_empty(),
-        "{:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-167, EX-core-044]
-#[test]
-fn req_167_id_name_must_match_the_first_directory_segment() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    fs::create_dir_all(tmp.path().join("docs/ir/core")).unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/core/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-schema-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/b.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-core-002: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n",
-    )
-    .unwrap();
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    // 置き場の第1階層と違う名前、および第1階層を持たない文書の名前付き ID（パスのバイト順）
-    let mismatch = findings_by_kind(&result, "id_domain_mismatch");
-    let details: Vec<&str> = mismatch
-        .iter()
-        .map(|f| f["detail"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        details,
-        vec!["REQ-core-002", "REQ-schema-001"],
-        "{:?}",
-        result
-    );
-}
-
-// @kotowari[REQ-core-167]
-#[test]
-fn req_167_scenario_id_name_is_reported_on_the_tag_line() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    // IR の置き場の直下なので第1階層が無く、"@id" の名前は一致する相手を持たない
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=EX-core-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n```\n",
-    )
-    .unwrap();
-    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    let mismatch = findings_by_kind(&result, "id_domain_mismatch");
-    assert_eq!(mismatch.len(), 1, "{:?}", result);
-    assert_eq!(mismatch[0]["detail"], "EX-core-001");
-    // TBL-core-019: "@id" の値なら "line" はタグの行（"Scenario:" の行ではない）
-    assert_eq!(mismatch[0]["line"], 18, "{:?}", result);
-}

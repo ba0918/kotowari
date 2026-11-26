@@ -5,7 +5,6 @@ use super::*;
 /// `対`を読んだ置き場
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Place {
-    Ir,
     Guide,
     OverviewData,
     Toc,

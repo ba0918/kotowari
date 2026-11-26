@@ -47,7 +47,6 @@ impl CheckPreparation {
             self.guides = crate::guides::check_entries(
                 entries(files),
                 &self.read.discovered.files,
-                &self.read.docs,
                 &self.read.decisions,
                 &mut self.findings,
             )?;
@@ -62,7 +61,6 @@ impl CheckPreparation {
         if self.read.policy.surface() {
             self.surface = Some(crate::surface::check_entries(
                 files.iter().map(|file| &file.analysis),
-                &self.read.docs,
                 &self.read.decisions,
                 entries(unspecified),
                 &mut self.findings,
@@ -73,61 +71,18 @@ impl CheckPreparation {
     pub(super) fn finish(mut self) -> Result<Inspection, crate::StopReason> {
         self.findings
             .extend(self.translations.findings(self.read.config()));
-        // REQ-core-342: ほかの言語の`側`の文の検査と、"files" と "lines" に数えるすべての`側`
-        let sides = crate::translations::ir_sides(&self.translations, self.read.config())?;
-        let (mut side_files, mut side_lines) = (0, 0);
-        for documents in sides.values() {
-            crate::translations::side_findings(
-                documents,
-                &self.read.docs,
-                self.read.config(),
-                &mut self.findings,
-            );
-            side_files += documents.len();
-            side_lines += documents
-                .iter()
-                .map(|document| document.line_count)
-                .sum::<usize>();
-        }
         crate::sort_findings(&mut self.findings);
         let mut status = crate::status::build(
-            &self.read.docs,
-            &self.read.config().ir,
+            &self.read.decisions,
             &self.read.discovered.markers,
             self.read.discovered.tally.clone(),
             self.guides,
             self.surface.unwrap_or_default(),
             &self.findings,
         );
-        // C-core-docs-12、C-core-docs-13: 決定の文書の「未決」の項目も0件のときだけ complete
-        status.complete =
-            status.complete && !crate::decisions::has_open_items(&self.read.decisions);
-        status.decisions = self
-            .read
-            .config()
-            .decisions
-            .documents
-            .is_some()
-            .then(|| crate::decisions::states(&self.read.decisions));
-        status.confirmations = status.decisions.map(|_| {
-            crate::decisions::confirmation_counts(
-                &self.read.decisions,
-                &self.read.discovered.markers,
-            )
-        });
         status.groups = self.groups.clone();
-        status.documents.files += side_files;
-        status.documents.lines += side_lines;
         let status = StatusReport(status);
         let check = CheckReport(crate::CheckResult {
-            files: self.read.docs.len() + side_files,
-            lines: self
-                .read
-                .docs
-                .iter()
-                .map(|doc| doc.line_count)
-                .sum::<usize>()
-                + side_lines,
             counts: crate::count_findings(&self.findings),
             findings: self.findings,
             tests: self.read.discovered.tally.clone(),

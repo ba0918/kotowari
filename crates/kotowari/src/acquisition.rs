@@ -1,6 +1,5 @@
 use crate::{
-    Tool, decisions, guides, ir, overview, sources, surface, test_files as tests_discovery,
-    translations,
+    Tool, decisions, guides, overview, surface, test_files as tests_discovery, translations,
 };
 use kotowari_core::*;
 use std::{
@@ -79,7 +78,7 @@ fn display_from_base(base: &Path, cwd: &Path, path: &Path) -> String {
     )
 }
 
-/// 計画書の検査のエントリポイント（REQ-core-196）。設定、IR、判断の記録、テストのファイルを読まない
+/// 計画書の検査のエントリポイント（REQ-core-196）。設定、決定の文書、テストのファイルを読まない
 pub fn run_plan(cwd: &Path, path: &Path) -> Result<plan::PlanResult, StopReason> {
     let base = find_base(cwd);
     // 計画書のパスはカレントディレクトリからの相対（REQ-core-190）、
@@ -99,7 +98,7 @@ pub fn run_mutants(
 ) -> Result<mutants::MutantsResult, StopReason> {
     let base = find_base(cwd);
     // REQ-core-147: mutants が読むのは設定、結果のファイル、等価の一覧、
-    // 変異の結果と一覧の1件が指すソースだけ。"ir" などの指す先は見ない
+    // 変異の結果と一覧の1件が指すソースだけ。決定の文書の置き場は見ない
     let cfg = load_config(cwd, &base, config_path)?;
 
     // 結果のファイルのパスはカレントディレクトリからの相対（REQ-core-149）、
@@ -147,7 +146,7 @@ fn read_source_lines(base: &Path, file: &str) -> Option<Vec<String>> {
     let bytes = std::fs::read(base.join(file)).ok()?;
     let text = String::from_utf8(bytes).ok()?;
     Some(
-        kotowari_core::ir::split_lines(strip_bom(&text))
+        kotowari_core::split_lines(strip_bom(&text))
             .into_iter()
             .map(str::to_string)
             .collect(),
@@ -203,7 +202,7 @@ pub fn load_config(
     })
 }
 
-/// 設定と置き場から IR の文書とテストのファイルを読み、検査もする。
+/// 設定と置き場から決定の文書とテストのファイルを読み、検査もする。
 /// check はこの指摘を出し、list と query は捨て、status は数だけを出す（REQ-core-151、REQ-core-156、REQ-core-162）。
 /// `ガイド`はここでは読まない。list と query は`ガイド`を読まない（REQ-core-152、REQ-core-158）ので、
 /// check と status だけが `load_with_guides` で続けて読む
@@ -217,7 +216,7 @@ struct Loaded {
     read: ReadModel,
     /// 集めた`テストのファイル`の`基準のディレクトリ`からの相対パス
     test_paths: Vec<String>,
-    /// `IR`の`対`
+    /// 決定の文書とほかの置き場の`対`
     assembly: translations::Assembly,
 }
 
@@ -237,36 +236,15 @@ enum TestReading {
     PathsOnly,
 }
 
-/// 読んだ設定の置き場から、IR、判断の記録、テストのファイルを読む
+/// 読んだ設定の置き場から、決定の文書とテストのファイルを読む
 fn load_configured(
     base: PathBuf,
     cfg: &config::Config,
     reading: TestReading,
 ) -> Result<Loaded, StopReason> {
-    // 設定のパスは基準のディレクトリからの相対（REQ-core-010）
-    let ir_dir = base.join(&cfg.ir);
-    let records_dir = base.join(&cfg.decisions.records);
-    let adr_dir = base.join(&cfg.decisions.adr);
-
-    // REQ-core-018: 置き場が無い、または読めないとき停止（TBL-core-020: 相対パスと OS の誤りの文）
-    for (dir, configured) in [
-        (&ir_dir, &cfg.ir),
-        (&records_dir, &cfg.decisions.records),
-        (&adr_dir, &cfg.decisions.adr),
-    ] {
-        if !dir.is_dir() {
-            let err = std::fs::read_dir(dir)
-                .err()
-                .map(|e| e.to_string())
-                .unwrap_or_else(|| "not a directory".to_string());
-            return Err(StopReason::UnreadableFile(format!("{configured}: {err}")));
-        }
-    }
-
     let mut assembly = translations::Assembly::new(&base, cfg);
-    let mut preparation = ir::prepare(&base, cfg, &mut assembly)?;
+    let mut preparation = RepositoryReadPreparation::new(cfg.clone())?;
     decisions::push(&base, cfg, &mut assembly, &mut preparation)?;
-    let (records, adr) = sources::read_texts(&base, cfg)?;
     let (tests, test_paths) = match reading {
         TestReading::Analyzed => {
             let tests = tests_discovery::analyze(&base, cfg)?;
@@ -285,7 +263,7 @@ fn load_configured(
         }
     };
     Ok(Loaded {
-        read: preparation.finish(records, adr, tests)?,
+        read: preparation.finish(tests)?,
         base,
         test_paths,
         assembly,
@@ -349,7 +327,7 @@ pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspec
     preparation.finish()
 }
 
-/// build と serve の読み取り: check と同じ設定と置き場から IR と判断の記録を読み、`テストのファイル`は
+/// build と serve の読み取り: check と同じ設定と置き場から決定の文書を読み、`テストのファイル`は
 /// パスだけを集め、`全体像の元データ`を読んで検査し描画の入力を作る（REQ-core-278、REQ-core-280）。
 /// "overview" の鍵が無ければ設定の誤りで止まる（REQ-core-279）。ガイドは`対`を集めるためだけに読み、
 /// その検査と面は読まない
@@ -389,7 +367,7 @@ pub fn load_overview(
         &texts.toc,
         &texts.translations,
     );
-    // REQ-core-294: `IR`、`全体像の元データ`、`目次`の`対`の欠けた側と骨組みの食い違いでも書かない
+    // REQ-core-294: `全体像の元データ`と`目次`の`対`の欠けた側と骨組みの食い違いでも書かない
     let blockers = assembly.into_pairs().overview_blockers(read.config());
     Ok((base, overview, blockers))
 }

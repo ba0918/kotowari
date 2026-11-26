@@ -38,7 +38,7 @@ fn mds() -> Command {
     Command::cargo_bin("kotowari-mds").unwrap()
 }
 
-// @kotowari[REQ-core-313, C-schema-cli-26, C-schema-io-2, C-core-libapi-11]
+// @kotowari[C-schema-cli-26, C-schema-io-2, C-core-libapi-11]
 #[test]
 fn directory_check_reports_dot_prefixed_markdown_and_skips_hidden_directories() {
     let root = tempfile::tempdir().unwrap();

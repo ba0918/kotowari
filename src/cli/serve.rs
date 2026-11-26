@@ -152,7 +152,7 @@ fn resolve(cache: &Path, url: &str) -> Option<(PathBuf, Vec<u8>)> {
 
 #[cfg(test)]
 mod tests {
-    // @kotowari[REQ-core-298, C-core-ovcmd-20]
+    // @kotowari[C-core-ovcmd-20]
     #[test]
     fn a_failure_to_accept_while_serving_stops_with_a_port_error() {
         let stopping = AtomicBool::new(false);
@@ -166,7 +166,7 @@ mod tests {
         assert_eq!(detail, "127.0.0.1:4590: too many open files");
     }
 
-    // @kotowari[REQ-core-297, C-core-ovcmd-18]
+    // @kotowari[C-core-ovcmd-18]
     #[test]
     fn an_interrupt_ends_serving_with_exit_code_zero() {
         let stopping = AtomicBool::new(true);
@@ -181,7 +181,7 @@ mod tests {
 
     use super::*;
 
-    // @kotowari[REQ-core-299, C-core-ovcmd-22]
+    // @kotowari[C-core-ovcmd-22]
     #[test]
     fn req_core_299_paths_that_leave_the_cache_do_not_resolve() {
         let dir = tempfile::tempdir().unwrap();

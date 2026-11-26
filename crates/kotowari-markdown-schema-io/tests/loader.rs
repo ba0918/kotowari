@@ -29,7 +29,7 @@ fn directory_checks_dot_prefixed_documents_but_skips_hidden_directories() {
     );
 }
 
-// @kotowari[REQ-core-323, EX-core-500, C-core-libpaths-11]
+// @kotowari[C-core-libpaths-11]
 #[test]
 fn relative_start_and_cache_bases_are_rejected() {
     let root = tempfile::tempdir().unwrap();
@@ -119,7 +119,7 @@ fn execution_failures_are_typed_and_distinct_from_document_findings() {
     );
 }
 
-// @kotowari[REQ-core-323, EX-core-501, C-schema-io-8, C-core-libpaths-4, C-core-libpaths-12, C-core-libpaths-13]
+// @kotowari[C-schema-io-8, C-core-libpaths-4, C-core-libpaths-12, C-core-libpaths-13]
 #[test]
 fn later_current_directory_changes_do_not_change_the_load_base() {
     const CHILD: &str = "KOTOWARI_LOADER_CWD_CHILD";

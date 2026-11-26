@@ -36,8 +36,7 @@ impl SourceText {
 }
 
 /// Lossless enumeration identity is not the lossy display/rule path.
-/// Text is what the producer actually acquired, including any legacy read-path conversion.
-/// IR display paths are relative to the configured IR place; other paths are project-relative.
+/// Text is what the producer actually acquired. Paths are project-relative.
 #[derive(Debug, Clone)]
 pub struct NativeSourceText {
     pub(super) identity: PathBuf,
@@ -108,9 +107,8 @@ pub(super) fn input_stop(error: crate::StopReason) -> InputError {
 #[derive(Debug, Clone, Default)]
 pub struct ReadInputs {
     pub config: crate::config::Config,
-    pub ir: Option<Vec<SourceText>>,
-    pub records: Option<Vec<SourceText>>,
-    pub adr: Option<Vec<SourceText>>,
+    /// 決定の文書。パスは`基準のディレクトリ`からの相対で、決定の文書の置き場の下にある
+    pub decisions: Option<Vec<SourceText>>,
     pub tests: Option<Vec<TestAnalysis>>,
 }
 
@@ -213,9 +211,7 @@ pub(super) fn find_group<'a>(groups: &'a [GroupTally], name: &str) -> Option<&'a
 
 pub struct RepositoryReadInputs {
     pub config: crate::config::Config,
-    pub ir: Vec<NativeSourceText>,
-    pub records: Vec<NativeSourceText>,
-    pub adr: Vec<NativeSourceText>,
+    pub decisions: Vec<NativeSourceText>,
     pub tests: Vec<NativeTestAnalysis>,
 }
 

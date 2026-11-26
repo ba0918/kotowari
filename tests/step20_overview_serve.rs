@@ -11,8 +11,6 @@ use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use tempfile::TempDir;
 
-const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
-
 /// 全体像の元データが扱う決定の文書
 const DECISION: &str = "# CLI\n\nDecides the commands.\n\n## Run\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun.\n";
 
@@ -24,16 +22,10 @@ fn write(tmp: &Path, rel: &str, content: &str) {
 
 fn make_project(config: &str, lead: bool) -> TempDir {
     let tmp = TempDir::new().unwrap();
-    for dir in [".kotowari", "docs/decision/adr"] {
+    for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
     }
-    write(tmp.path(), "docs/ir/cli.md", IR);
     write(tmp.path(), "docs/decisions/cli.md", DECISION);
-    write(
-        tmp.path(),
-        "docs/decision/records/r.md",
-        "# R\n\n## Context\n\nc\n\n## Agreements\n\n- A1 決めた\n  - why: w\n",
-    );
     write(
         tmp.path(),
         ".kotowari/config.yaml",
@@ -163,7 +155,7 @@ fn content_type(head: &str) -> Option<String> {
     })
 }
 
-// @kotowari[EX-core-478, REQ-core-297, REQ-core-299, REQ-core-294, REQ-core-296, C-core-ovcmd-16, C-core-ovcmd-18, C-core-ovcmd-21]
+// @kotowari[C-core-ovcmd-16, C-core-ovcmd-18, C-core-ovcmd-21]
 #[cfg(unix)]
 #[test]
 fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interrupt() {
@@ -202,7 +194,7 @@ fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interr
     assert_eq!(rest, "", "nothing is written per request");
 }
 
-// @kotowari[REQ-core-299, C-core-ovcmd-22]
+// @kotowari[C-core-ovcmd-22]
 #[cfg(unix)]
 #[test]
 fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() {
@@ -232,7 +224,7 @@ fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() 
     assert_eq!(server.0.wait().unwrap().code(), Some(0));
 }
 
-// @kotowari[REQ-core-299, REQ-core-297, C-core-ovcmd-16]
+// @kotowari[C-core-ovcmd-16]
 #[cfg(unix)]
 #[test]
 fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache() {
@@ -282,7 +274,7 @@ fn stopped(tmp: &Path, port: u16) -> (Option<i32>, String, String) {
     )
 }
 
-// @kotowari[EX-core-479, REQ-core-298, TBL-core-001, TBL-core-018, TBL-core-020, C-core-clienv-7, C-core-ovcmd-19, C-core-ovcmd-28]
+// @kotowari[C-core-clienv-7, C-core-ovcmd-19, C-core-ovcmd-28]
 #[test]
 fn ex_core_479_a_port_in_use_stops_with_a_port_error() {
     let tmp = make_project(OVERVIEW, true);
@@ -298,7 +290,7 @@ fn ex_core_479_a_port_in_use_stops_with_a_port_error() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-294, REQ-core-297, C-core-ovcmd-9, C-core-ovcmd-27]
+// @kotowari[C-core-ovcmd-9, C-core-ovcmd-27]
 #[test]
 fn req_core_294_serve_on_data_with_errors_stops_before_binding() {
     let tmp = make_project(OVERVIEW, false);
@@ -315,7 +307,7 @@ fn req_core_294_serve_on_data_with_errors_stops_before_binding() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-279, C-core-ovdata-2]
+// @kotowari[C-core-ovdata-2]
 #[test]
 fn req_core_279_serve_without_the_overview_key_is_a_config_error() {
     let tmp = make_project("", true);
@@ -330,7 +322,7 @@ fn req_core_279_serve_without_the_overview_key_is_a_config_error() {
     );
 }
 
-// @kotowari[REQ-core-280, C-core-ovdata-3]
+// @kotowari[C-core-ovdata-3]
 #[test]
 fn req_core_280_serve_stops_on_an_overlap_with_the_guides() {
     let tmp = make_project(
@@ -354,7 +346,7 @@ fn req_core_280_serve_stops_on_an_overlap_with_the_guides() {
     );
 }
 
-// @kotowari[REQ-core-294, REQ-core-328, C-core-ovtoc-11]
+// @kotowari[C-core-ovtoc-11]
 #[test]
 fn req_core_294_serve_on_toc_errors_stops_before_binding() {
     let tmp = make_project(OVERVIEW, true);
@@ -375,7 +367,7 @@ fn req_core_294_serve_on_toc_errors_stops_before_binding() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[EX-core-543, REQ-core-356, C-core-ovcmd-23]
+// @kotowari[C-core-ovcmd-23]
 #[cfg(unix)]
 #[test]
 fn ex_core_543_serve_answers_only_local_hosts() {

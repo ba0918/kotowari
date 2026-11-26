@@ -5,7 +5,7 @@ use super::*;
 /// `題名`の行と、`題名`の後の最初の空でない行（`題名`が無ければファイルの最初の空でない行）
 pub(super) fn switcher_candidate(text: &str) -> (Option<usize>, Option<(usize, &str)>) {
     // 先頭の BOM は読み飛ばす（REQ-core-111）。BOM は1行目の中にあるので行の番号は変わらない
-    let lines = crate::ir::split_lines(crate::strip_bom(text));
+    let lines = crate::split_lines(crate::strip_bom(text));
     let title = lines.iter().position(|line| line.starts_with("# "));
     let from = title.map_or(0, |title| title + 1);
     let candidate = lines

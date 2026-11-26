@@ -1,8 +1,6 @@
 //! `ガイド`を読み、`ガイドの印`を取り出す（REQ-core-198〜REQ-core-202、REQ-core-206、TBL-core-036）
 
-use crate::fingerprint::fingerprint_of;
-use crate::ir::{IrDocument, is_valid_id, split_lines};
-use crate::{Finding, FindingKind, StopReason};
+use crate::{Finding, FindingKind, StopReason, split_lines};
 use markdown::mdast::Node;
 use std::collections::BTreeMap;
 use std::ops::Range;
@@ -31,25 +29,9 @@ impl GuideTally {
     readonly!(copy files: usize, marks: usize);
 }
 
-/// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、
-/// 同じ文書では行の小さい順）に引く。docs も items もその順に並んでいる。
-/// 決定の文書の決定は、印が指す行き先（"<文書のパス>#<見出しの行き先の名前>"）から引く
-fn fingerprints_by_id(
-    docs: &[IrDocument],
-    decisions: &[crate::decisions::Document],
-) -> BTreeMap<String, Vec<String>> {
+/// 決定の文書の決定の`指紋`を、印が指す行き先（"<文書のパス>#<見出しの行き先の名前>"）から引く
+fn fingerprints_by_id(decisions: &[crate::decisions::Document]) -> BTreeMap<String, Vec<String>> {
     let mut by_id: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for doc in docs {
-        let lines = split_lines(&doc.raw_content);
-        for item in &doc.items {
-            if let Some(id) = item.id() {
-                by_id
-                    .entry(id.to_owned())
-                    .or_default()
-                    .push(fingerprint_of(doc, item, &lines));
-            }
-        }
-    }
     for (target, fingerprint) in crate::decisions::fingerprints(decisions) {
         by_id.entry(target).or_default().push(fingerprint);
     }
@@ -107,9 +89,9 @@ pub struct GuideReader {
     fingerprints: BTreeMap<String, Vec<String>>,
 }
 impl GuideReader {
-    pub(crate) fn new(docs: &[IrDocument], decisions: &[crate::decisions::Document]) -> Self {
+    pub(crate) fn new(decisions: &[crate::decisions::Document]) -> Self {
         Self {
-            fingerprints: fingerprints_by_id(docs, decisions),
+            fingerprints: fingerprints_by_id(decisions),
         }
     }
     /// path を指摘の "path" にして1つの文書を読む
@@ -147,7 +129,6 @@ fn is_current(entry: &GuideEntry, fingerprints: &BTreeMap<String, Vec<String>>) 
 pub(crate) fn check_entries<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     test_files: &[String],
-    docs: &[IrDocument],
     decisions: &[crate::decisions::Document],
     findings: &mut Vec<Finding>,
 ) -> Result<GuideTally, StopReason> {
@@ -157,7 +138,7 @@ pub(crate) fn check_entries<'a>(
     for (path, text) in &files {
         read_marks(path, text, &parsed_comments(text), &mut entries, findings);
     }
-    check_stale(&entries, &fingerprints_by_id(docs, decisions), findings);
+    check_stale(&entries, &fingerprints_by_id(decisions), findings);
     Ok(GuideTally {
         files: files.len(),
         marks: entries.len(),
@@ -257,9 +238,8 @@ fn read_marks(
     }
 }
 
-/// TBL-core-036 の中身を (`ID`, `指紋`) の並びに分ける。形の誤りがあれば None（REQ-core-202）。
-/// `ID` の代わりに決定の文書の決定を指す行き先（"<文書のパス>#<見出しの行き先の名前>"）も受ける。
-/// 行き先は "#" を含み、IR の `ID` は含まないので、2つの形は取り違えない
+/// 印の中身を (行き先, `指紋`) の並びに分ける。形の誤りがあれば None。行き先は決定の文書の決定を
+/// 指す "<文書のパス>#<見出しの行き先の名前>"
 fn parse_entries(inner: &str) -> Option<Vec<(String, String)>> {
     let parts: Vec<&str> = inner.split(',').map(str::trim).collect();
     // 中が空か区切りだけ
@@ -271,9 +251,8 @@ fn parse_entries(inner: &str) -> Option<Vec<(String, String)>> {
         .map(|part| {
             let (id, fingerprint) = part.split_once(':')?;
             let (id, fingerprint) = (id.trim(), fingerprint.trim());
-            ((is_valid_id(id) || crate::decisions::is_decision_target(id))
-                && is_fingerprint(fingerprint))
-            .then(|| (id.to_string(), fingerprint.to_string()))
+            (crate::decisions::is_decision_target(id) && is_fingerprint(fingerprint))
+                .then(|| (id.to_string(), fingerprint.to_string()))
         })
         .collect()
 }

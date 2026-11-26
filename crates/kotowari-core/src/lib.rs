@@ -20,63 +20,46 @@ pub use decisions::{
     ConfirmationCounts, DecisionStates, DecisionTally, is_confirmation_id, is_decision_target,
     is_frozen,
 };
-mod deferred;
-mod deferred_notices;
-mod doc_kind;
-#[cfg(test)]
-#[path = "../tests/document_references.rs"]
-mod document_reference_contract_tests;
+pub mod equivalents;
 #[cfg(test)]
 #[path = "../tests/test_facts.rs"]
 mod fact_contract_tests;
+mod finding;
 #[cfg(test)]
 #[path = "../tests/guides.rs"]
 mod guide_contract_tests;
-#[cfg(test)]
-#[path = "../tests/ir.rs"]
-mod ir_contract_tests;
 #[cfg(test)]
 #[path = "../tests/surface.rs"]
 mod surface_contract_tests;
 #[cfg(test)]
 #[path = "../tests/translations.rs"]
 mod translation_contract_tests;
-pub use doc_kind::DocKind;
-pub mod equivalents;
-mod finding;
-mod finding_map;
 pub use finding::{Finding, FindingKind, count_findings, sort_findings};
 mod fingerprint;
 pub mod guides;
 mod inputs;
-pub mod ir;
+mod lines;
 pub use inputs::{
     CheckInputs, CheckReport, FindingGroup, GroupTally, InputError, Inspection, NativeSourceText,
     NativeSurfaceAnalysis, NativeTestAnalysis, QueryReport, ReadInputs, ReadList, ReadModel,
     RepositoryCheckInputs, RepositoryInspectionPreparation, RepositoryReadInputs,
     RepositoryReadPreparation, SourceText, StatusReport, SurfaceAnalysis, TestAnalysis,
 };
-pub use ir::{IrOptions, ParsedIrDocument as IrDocument, ParsedItem};
+pub use lines::split_lines;
 mod list;
-pub use list::{
-    ConfirmationItem, DecisionItem, ExampleItem, FlagItem, ListItem, RequirementItem, ScenarioItem,
-    TestRef,
-};
+pub use list::{ConfirmationItem, DecisionItem, ListItem, TestRef};
 mod markdown;
 pub mod mutants;
 pub mod plan;
 mod query;
 pub use query::{QueryItem, Reference};
-mod record_form;
 mod schema;
 pub(crate) mod skeleton;
-pub mod sources;
 mod status;
 mod stop;
-pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
+pub use status::{Documents, Findings, Tests};
 pub use stop::StopReason;
 pub mod surface;
-mod terms;
 mod test_markers;
 mod test_side;
 pub mod tests_discovery;
@@ -88,8 +71,6 @@ use std::collections::BTreeMap;
 /// 検査結果の最上位の構造
 #[derive(Clone, serde::Serialize)]
 pub(crate) struct CheckResult {
-    pub(crate) files: usize,
-    pub lines: usize,
     pub findings: Vec<Finding>,
     pub counts: BTreeMap<String, usize>,
     pub tests: BTreeMap<String, TestFileTally>,
@@ -98,9 +79,7 @@ pub(crate) struct CheckResult {
     /// REQ-core-228: "surface.rules" が空の一覧でないときだけ出す
     #[serde(skip_serializing_if = "Option::is_none")]
     pub surface: Option<surface::Unlisted>,
-    /// 決定の文書の置き場を設定に書いたときだけ出す
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub decisions: Option<DecisionTally>,
+    pub decisions: DecisionTally,
     /// 追加の指摘の群の数（TBL-core-042）。出し方は呼び出し側が決める
     #[serde(skip)]
     pub(crate) groups: Vec<GroupTally>,
@@ -241,13 +220,4 @@ pub fn split_outside_quotes(line: &str) -> Vec<&str> {
     }
     parts.push(&line[start..]);
     parts
-}
-
-/// 文書の全項目から ID の集合を作る（形に合う ID だけ）
-pub fn collect_known_ids(docs: &[ir::IrDocument]) -> std::collections::BTreeSet<String> {
-    docs.iter()
-        .flat_map(|d| d.items.iter())
-        .filter_map(|item| item.id().map(|s| s.to_string()))
-        .filter(|id| ir::is_valid_id(id))
-        .collect()
 }

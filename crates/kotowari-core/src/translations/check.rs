@@ -94,22 +94,13 @@ pub(super) fn pair_findings(pair: &Pair, context: &Context, findings: &mut Vec<F
 
 /// 決定の文書の置き場の用語集の`対`か（C-core-docs-20）
 fn is_decision_glossary(pair: &Pair, context: &Context) -> bool {
-    pair.place == Place::Decision
-        && context
-            .decisions
-            .as_deref()
-            .is_some_and(|place| crate::decisions::is_glossary(pair.path(), place))
+    pair.place == Place::Decision && crate::decisions::is_glossary(pair.path(), &context.decisions)
 }
 
 /// `対`の文書の種類（TBL-core-044）
 pub(super) fn skeleton_kind(pair: &Pair, context: &Context) -> crate::skeleton::Kind {
     use crate::skeleton::Kind;
     match pair.place {
-        Place::Ir => match crate::DocKind::of(file_name(pair.path())) {
-            crate::DocKind::Topic => Kind::Topic,
-            crate::DocKind::Glossary => Kind::Glossary,
-            crate::DocKind::Flags => Kind::Flags,
-        },
         Place::Guide => Kind::Guide,
         Place::OverviewData => Kind::OverviewData,
         Place::Toc => Kind::Toc,
@@ -123,10 +114,8 @@ pub(crate) struct Context {
     pub(super) languages: Vec<String>,
     /// `言語の一覧`の順の、各言語の`UI の文字`の "language_name"
     pub(super) names: Vec<String>,
-    pub(super) records: String,
-    pub(super) adr: String,
     /// 決定の文書の置き場
-    pub(super) decisions: Option<String>,
+    pub(super) decisions: String,
     pub(super) sides: std::collections::BTreeMap<String, (String, String)>,
 }
 
@@ -157,8 +146,6 @@ impl Context {
         Self {
             languages,
             names,
-            records: config.decisions.records.clone(),
-            adr: config.decisions.adr.clone(),
             decisions: config.decisions.documents.clone(),
             sides,
         }
@@ -184,7 +171,7 @@ impl Context {
 
 /// `切り替えの行`を持つ`対`か（REQ-core-346、`全体像の元データ`と`目次`は持たない）
 pub(super) fn has_switcher(place: Place) -> bool {
-    matches!(place, Place::Ir | Place::Guide | Place::Decision)
+    matches!(place, Place::Guide | Place::Decision)
 }
 
 /// リンクを検査する`対`か（REQ-core-347）。決定の文書の置き場の用語集は中身を検査しない（C-core-docs-20）
@@ -233,15 +220,6 @@ pub(super) fn side_text(
                     side.path.clone(),
                     Some(link.line),
                     link.destination.clone(),
-                ));
-            }
-            let record = |place: &str| crate::sources::is_under_place(&target, place);
-            if record(&context.records) || record(&context.adr) {
-                findings.push(Finding::new(
-                    FindingKind::LinkToRecord,
-                    side.path.clone(),
-                    Some(link.line),
-                    link.destination,
                 ));
             }
         }

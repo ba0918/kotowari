@@ -8,16 +8,10 @@ fn main() {
         .unwrap()
         .join(format!("project-example-{}", std::process::id()));
     std::fs::create_dir(&root).unwrap();
-    for path in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
+    for path in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(root.join(path)).unwrap();
     }
     std::fs::write(root.join(".kotowari/config.yaml"), "tests:\n  files: []\n").unwrap();
-    std::fs::write(root.join("docs/ir/topic.md"), "# Topic\n").unwrap();
     let project = Project::new(ProjectOptions::new(&root)).unwrap();
     let read = project.read().unwrap();
     let inspection = project.inspect().unwrap();

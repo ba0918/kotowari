@@ -97,7 +97,7 @@ fn surface(kind: &str, name: &str, path: &str, line: usize) -> (String, String, 
     (kind.to_string(), name.to_string(), path.to_string(), line)
 }
 
-// @kotowari[REQ-core-223, C-core-surface-1, C-core-surface-2]
+// @kotowari[C-core-surface-1, C-core-surface-2]
 #[test]
 fn req_223_a_matched_node_is_a_surface_named_by_name_with_one_quote_pair_removed() {
     let tmp = TempDir::new().unwrap();
@@ -117,7 +117,7 @@ fn req_223_a_matched_node_is_a_surface_named_by_name_with_one_quote_pair_removed
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// @kotowari[REQ-core-223, C-core-surface-2]
+// @kotowari[C-core-surface-2]
 #[test]
 fn req_223_only_one_pair_of_quotes_is_removed_and_other_forms_stay() {
     let tmp = TempDir::new().unwrap();
@@ -143,7 +143,7 @@ fn req_223_only_one_pair_of_quotes_is_removed_and_other_forms_stay() {
     );
 }
 
-// @kotowari[REQ-core-223, C-core-surface-1]
+// @kotowari[C-core-surface-1]
 #[test]
 fn req_223_a_match_without_name_is_not_a_surface() {
     let tmp = TempDir::new().unwrap();
@@ -162,7 +162,7 @@ fn req_223_a_match_without_name_is_not_a_surface() {
     assert!(surfaces.is_empty(), "{surfaces:?}");
 }
 
-// @kotowari[REQ-core-223, C-core-surface-3]
+// @kotowari[C-core-surface-3]
 #[test]
 fn req_223_language_is_matched_without_case_and_accepts_aliases() {
     let tmp = TempDir::new().unwrap();
@@ -188,7 +188,7 @@ fn req_223_language_is_matched_without_case_and_accepts_aliases() {
     );
 }
 
-// @kotowari[EX-core-418, REQ-core-223, C-core-surface-3]
+// @kotowari[C-core-surface-3]
 #[test]
 fn ex_core_418_a_rule_is_not_applied_to_a_file_of_another_language() {
     let tmp = TempDir::new().unwrap();
@@ -200,7 +200,7 @@ fn ex_core_418_a_rule_is_not_applied_to_a_file_of_another_language() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// @kotowari[REQ-core-224, C-core-surface-5, C-core-surface-26]
+// @kotowari[C-core-surface-5, C-core-surface-26]
 #[test]
 fn req_224_rule_files_and_ignores_are_applied_and_severity_off_still_applies() {
     let tmp = TempDir::new().unwrap();
@@ -223,7 +223,7 @@ fn req_224_rule_files_and_ignores_are_applied_and_severity_off_still_applies() {
     );
 }
 
-// @kotowari[EX-core-426, REQ-core-236, C-core-surface-7]
+// @kotowari[C-core-surface-7]
 #[test]
 fn ex_core_426_a_file_not_in_a_rule_language_is_not_parsed() {
     let tmp = TempDir::new().unwrap();
@@ -234,7 +234,7 @@ fn ex_core_426_a_file_not_in_a_rule_language_is_not_parsed() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// @kotowari[EX-core-427, REQ-core-236, C-core-surface-6]
+// @kotowari[C-core-surface-6]
 #[test]
 fn ex_core_427_a_syntax_error_in_a_rule_language_file_is_unparsable() {
     let tmp = TempDir::new().unwrap();

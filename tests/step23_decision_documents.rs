@@ -9,12 +9,7 @@ use tempfile::TempDir;
 
 /// 古い形の置き場と、決定の文書の置き場を指す設定を作る。`documents` が None なら鍵を書かない
 fn make_project(tmp: &Path, documents: Option<&str>) {
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
+    for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     let decisions = documents.map_or(String::new(), |place| {
@@ -183,21 +178,6 @@ fn check_reads_the_decision_documents_from_the_configured_place() {
         )]
     );
     assert_eq!(value["decisions"]["documents"], 1);
-}
-
-// @kotowari[C-core-docs-15]
-#[test]
-fn check_without_the_place_in_the_configuration_reads_no_decision_documents() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), None);
-    write(
-        tmp.path(),
-        "docs/decisions/greet.md",
-        &topic(&[bare("挨拶する", "決定")]),
-    );
-    let value = check(tmp.path());
-    assert_eq!(findings(&value), vec![]);
-    assert!(value.get("decisions").is_none(), "{value}");
 }
 
 // @kotowari[C-core-docs-15, C-core-config-10]
@@ -1010,19 +990,6 @@ fn status_counts_the_proposed_and_the_implemented_decisions_apart() {
     );
 }
 
-// @kotowari[C-core-confirm-9]
-#[test]
-fn status_without_the_place_in_the_configuration_shows_no_decision_counts() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), None);
-    let (value, text) = status(tmp.path());
-    assert!(value.get("decisions").is_none(), "{value}");
-    assert!(
-        !text.lines().any(|line| line.starts_with("decisions ")),
-        "{text}"
-    );
-}
-
 // @kotowari[C-core-confirm-5, C-core-list-7]
 #[test]
 fn list_sorts_the_confirmation_rows_with_the_other_items_by_path() {
@@ -1355,36 +1322,6 @@ fn a_repeated_heading_is_pointed_at_with_the_numbered_anchor() {
     );
     let value = check(tmp.path());
     assert_eq!(guide_findings(&value), vec![], "{value}");
-}
-
-// @kotowari[C-core-lang-5]
-#[test]
-fn a_guide_mark_holds_marks_of_the_old_form_and_of_decisions_together() {
-    let tmp = TempDir::new().unwrap();
-    greeting_project(
-        tmp.path(),
-        &greeting(
-            "提案",
-            "困っていた。",
-            "こうする。",
-            "- C-greet-1 挨拶が出る",
-        ),
-    );
-    write_guide(
-        tmp.path(),
-        &format!("REQ-009:51b1f3da, docs/decisions/greet.md#挨拶する:{GREETING_FINGERPRINT}"),
-    );
-    let value = check(tmp.path());
-    assert_eq!(
-        guide_findings(&value),
-        vec![(
-            "guide_stale".to_string(),
-            3,
-            "REQ-009 51b1f3da -".to_string()
-        )],
-        "{value}"
-    );
-    assert_eq!(value["guides"]["marks"], 2, "{value}");
 }
 
 // @kotowari[C-core-lang-5, C-core-guides-15]
@@ -3142,4 +3079,82 @@ fn a_link_from_a_decision_document_into_the_frozen_tree_is_an_error() {
             "../../frozen/ir/greet.md"
         )]
     );
+}
+
+// --- 古い形の置き場を読まない（docs/decisions/core/form-switch.md） ---
+
+// @kotowari[C-core-switch-1]
+#[test]
+fn check_reads_neither_the_ir_place_nor_the_decision_record_place() {
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[bare("挨拶する", "提案")]),
+    );
+    // 古い形の文書として読めば誤りになるものを、古い形の置き場に置く
+    write(tmp.path(), "docs/ir/a.md", "no title\n");
+    write(tmp.path(), "docs/ir/CONTEXT.md", "# 用語集\n");
+    write(tmp.path(), "docs/decision/records/r.md", "no title\n");
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(0), "{stdout}{stderr}");
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(findings(&value), vec![]);
+}
+
+// @kotowari[C-core-switch-6]
+#[test]
+fn check_needs_no_adr_place() {
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    write(tmp.path(), ".kotowari/config.yaml", "tests:\n  files: []\n");
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[bare("挨拶する", "提案")]),
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(0), "{stdout}{stderr}");
+}
+
+// @kotowari[C-core-docs-2]
+#[test]
+fn check_asks_for_no_source_line_and_no_record_per_brainstorm() {
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed("挨拶する", "実装済み", &["C-greet-1 挨拶が出る"])]),
+    );
+    write(
+        tmp.path(),
+        "tests/greet.rs",
+        "// @kotowari[C-greet-1]\n#[test]\nfn greet() {}\n",
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(0), "{stdout}{stderr}");
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(findings(&value), vec![]);
+}
+
+// @kotowari[C-core-document-12]
+#[test]
+fn a_heading_and_a_row_inside_a_code_block_are_not_a_decision_or_a_row() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    let mut text = topic(&[bare("挨拶する", "提案")]);
+    text.push_str("```\n## 中の見出し\n\n- C-greet-9 中の行\n```\n");
+    write(tmp.path(), "docs/decisions/greet.md", &text);
+    let (code, stdout, stderr) = run(tmp.path(), &["list"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let ids: Vec<&str> = value["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, vec!["docs/decisions/greet.md#挨拶する"]);
 }

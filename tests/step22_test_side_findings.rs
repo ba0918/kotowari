@@ -9,13 +9,7 @@ use tempfile::TempDir;
 
 /// 置き場と設定を作る。`extra` の行をそのまま設定に足す
 fn make_project(tmp: &Path, extra: &str) {
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-        "docs/decisions",
-    ] {
+    for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     write(
@@ -24,11 +18,6 @@ fn make_project(tmp: &Path, extra: &str) {
         &format!(
             "decisions:\n  documents: docs/decisions\ntests:\n  files:\n    - \"tests/**/*.rs\"\n{extra}"
         ),
-    );
-    write(
-        tmp,
-        "docs/decision/records/r.md",
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
     );
 }
 
@@ -39,19 +28,9 @@ fn write(tmp: &Path, rel: &str, content: &str) {
     std::fs::write(path, content).unwrap();
 }
 
-/// 1つの`要求`だけを持つ IR の文書。`文`は `statement`
-fn ir_with_requirement(verification: &str, statement: &str) -> String {
-    format!(
-        "# Greeting\n\nScope.\n\n## Requirements\n\n### REQ-greet-001: Greet\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: {verification}\n\n{statement}\n"
-    )
-}
-
 /// テストの指していない確認することの行を1つ持つ決定の文書。ほかの`誤り`は無い
 const UNTESTED_DOC: &str = "# Greeting\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n\
 ### Decision\n\nGreet.\n\n### Confirmations\n\n- C-greet-greet-1 A greeting is shown\n";
-
-/// テストの無い unit の`要求`。ほかの`誤り`は無い
-const UNTESTED: &str = "The system will greet.";
 
 /// コマンドを走らせて (終了コード, 標準出力, 標準エラー) を返す
 fn run(tmp: &Path, args: &[&str]) -> (Option<i32>, String, String) {
@@ -86,7 +65,7 @@ fn findings(stdout: &str) -> Vec<(String, String, String)> {
         .collect()
 }
 
-// @kotowari[EX-core-547, C-core-testside-1, C-core-testside-2, C-core-testside-4]
+// @kotowari[C-core-testside-1, C-core-testside-2, C-core-testside-4]
 #[test]
 fn ex_core_547_a_specification_ahead_of_its_tests_passes_with_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -104,7 +83,7 @@ fn ex_core_547_a_specification_ahead_of_its_tests_passes_with_the_option() {
     );
 }
 
-// @kotowari[EX-core-548, C-core-testside-1]
+// @kotowari[C-core-testside-1]
 #[test]
 fn ex_core_548_the_same_state_stops_without_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -124,7 +103,7 @@ fn untested_with_a_form_error(tmp: &Path) {
     );
 }
 
-// @kotowari[EX-core-549, C-core-testside-6]
+// @kotowari[C-core-testside-6]
 #[test]
 fn ex_core_549_an_error_in_the_ir_stops_even_with_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -139,7 +118,7 @@ fn ex_core_549_an_error_in_the_ir_stops_even_with_the_option() {
     );
 }
 
-// @kotowari[EX-core-550, C-core-testside-8]
+// @kotowari[C-core-testside-8]
 #[test]
 fn ex_core_550_an_unreadable_test_file_that_is_also_a_surface_file_stops() {
     let tmp = TempDir::new().unwrap();
@@ -153,11 +132,6 @@ fn ex_core_550_an_unreadable_test_file_that_is_also_a_surface_file_stops() {
         "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n",
     );
     write(tmp.path(), "src/lib.rs", "fn f( {\n");
-    write(
-        tmp.path(),
-        "docs/ir/greet/greet.md",
-        &ir_with_requirement("review\n- how_to_verify: read it", UNTESTED),
-    );
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
     assert_eq!(code, Some(1), "{stdout}{stderr}");
     assert!(
@@ -170,7 +144,7 @@ fn ex_core_550_an_unreadable_test_file_that_is_also_a_surface_file_stops() {
     );
 }
 
-// @kotowari[TBL-core-047, C-core-testside-8]
+// @kotowari[C-core-testside-8]
 #[test]
 fn tbl_core_047_an_unreadable_test_file_matched_by_surface_files_in_no_rule_language_stops() {
     let tmp = TempDir::new().unwrap();
@@ -184,11 +158,6 @@ fn tbl_core_047_an_unreadable_test_file_matched_by_surface_files_in_no_rule_lang
         "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n",
     );
     write(tmp.path(), "src/notes.py", "def f(:\n");
-    write(
-        tmp.path(),
-        "docs/ir/greet/greet.md",
-        &ir_with_requirement("review\n- how_to_verify: read it", UNTESTED),
-    );
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
     assert_eq!(code, Some(1), "{stdout}{stderr}");
     assert!(
@@ -201,7 +170,7 @@ fn tbl_core_047_an_unreadable_test_file_matched_by_surface_files_in_no_rule_lang
     );
 }
 
-// @kotowari[TBL-core-047, C-core-testside-5]
+// @kotowari[C-core-testside-5]
 #[test]
 fn tbl_core_047_errors_only_in_test_files_pass_with_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -212,11 +181,6 @@ fn tbl_core_047_errors_only_in_test_files_pass_with_the_option() {
         "// @kotowari[REQ-greet-999]\n#[test]\nfn a() {}\n\n// @kotowari[]\n#[test]\nfn b() {}\n",
     );
     write(tmp.path(), "tests/b.rs", "fn f( {\n");
-    write(
-        tmp.path(),
-        "docs/ir/greet/greet.md",
-        &ir_with_requirement("review\n- how_to_verify: read it", UNTESTED),
-    );
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
     assert_eq!(code, Some(0), "{stdout}{stderr}");
     let found = findings(&stdout);
@@ -232,16 +196,11 @@ fn tbl_core_047_errors_only_in_test_files_pass_with_the_option() {
     }
 }
 
-// @kotowari[EX-core-551, C-core-testside-7]
+// @kotowari[C-core-testside-7]
 #[test]
 fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "guides:\n  files:\n    - \"guides/**/*.md\"\n");
-    write(
-        tmp.path(),
-        "docs/ir/greet/greet.md",
-        &ir_with_requirement("review\n- how_to_verify: read it", UNTESTED),
-    );
     write(
         tmp.path(),
         "guides/a.md",
@@ -259,7 +218,7 @@ fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
     );
 }
 
-// @kotowari[REQ-core-357, C-core-testside-2]
+// @kotowari[C-core-testside-2]
 #[test]
 fn req_core_357_the_option_leaves_the_output_unchanged() {
     let tmp = TempDir::new().unwrap();

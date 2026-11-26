@@ -72,7 +72,7 @@ pub(crate) fn frontmatter(yaml: Option<&str>) -> (Option<Vec<String>>, Vec<FormF
 
 #[cfg(test)]
 mod tests {
-    // @kotowari[TBL-core-038, C-core-ovdata-5]
+    // @kotowari[C-core-ovdata-5]
     #[test]
     fn the_embedded_overview_schema_parses() {
         assert!(kotowari_markdown_schema::Schema::parse(super::SCHEMA).is_ok());

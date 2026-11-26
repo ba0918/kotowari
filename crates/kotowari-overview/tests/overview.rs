@@ -6,22 +6,6 @@ use kotowari_core::{Finding, NativeSourceText, ReadModel, RepositoryReadPreparat
 use kotowari_markdown_view::ReferenceState;
 use kotowari_overview::{Overview, inspect};
 
-const RECORD: &str = "docs/decision/records/2026-01-01-x.md";
-
-const CLI: &str = "# CLI\n\nScope.\n\n## Requirements\n\n\
-### REQ-core-001: Commands\n\n- kind: ubiquitous\n- source: docs/decision/records/2026-01-01-x.md#A2\n- verification: unit\n\nThe first statement.\nThe second statement.\n\n\
-### REQ-core-002: Algorithm\n\n- kind: algorithm\n- source: docs/decision/records/2026-01-01-x.md#A2\n- definition: TBL-core-001\n- verification: unit\n\n\
-### REQ-core-900: Later\n\n- kind: ubiquitous\n- source: docs/decision/records/2026-01-01-x.md#A2\n- deferred: docs/decision/records/2026-01-01-x.md#A2\n- verification: unit\n\nLater statement.\n\n\
-## Decision tables\n\n### TBL-core-001: Table name\n\n- source: docs/decision/records/2026-01-01-x.md#A2\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n\
-## Properties\n\n### PROP-core-001: Prop name\n\n- source: docs/decision/records/2026-01-01-x.md#A2\n\nProperty statement.\n\n\
-## Examples\n\n```gherkin\n\
-@id=EX-core-001 @about=REQ-core-001 @source=docs/decision/records/2026-01-01-x.md#A2\nScenario: a scenario\n  Given g\n  When w\n  Then t\n\n\
-@id=EX-core-002 @about=REQ-core-900 @source=docs/decision/records/2026-01-01-x.md#A2\nScenario: a deferred scenario\n  Given g\n  When w\n  Then t\n```\n";
-
-const OTHER: &str = "# Other\n\nScope.\n\n## Requirements\n\n### REQ-core-010: Other\n\n- kind: ubiquitous\n- source: docs/decision/records/2026-01-01-x.md#A2\n- verification: unit\n\nOther statement.\n";
-
-const FLAGS: &str = "# 問題の記録\n\nなし。\n\n## Flags\n\n### FLAG-core-001: 抜け\n\n- kind: gap\n- related: REQ-core-001\n- source: docs/decision/records/2026-01-01-x.md#A2\n\n本文の行。\n";
-
 /// 決定の文書。実装済みの決定と、提案の決定を持つ
 const CLI_DECISIONS: &str = "# CLI\n\nDecides the commands.\n\n\
 ## Run commands\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun them.\n\n\
@@ -32,21 +16,11 @@ const CLI_DECISIONS: &str = "# CLI\n\nDecides the commands.\n\n\
 const OTHER_DECISIONS: &str = "# Other\n\nDecides the rest.\n\n## Rest\n\nStatus: implemented\n\n\
 ### Problem\n\nTrouble.\n\n### Decision\n\nRest.\n\n### Confirmations\n\n- C-core-other-1 Rest\n";
 
-const DECISIONS: &str = "# X\n\n## Context\n\nc\n\n## Agreements\n\n- A1 古い決定\n  - why: w\n  - superseded_by: [A2](#A2)\n- A2 新しい決定\n  - why: w\n";
-
 fn model() -> ReadModel {
     let mut config = kotowari_core::config::Config::default();
     config.tests.files.clear();
-    config.decisions.documents = Some("docs/decisions".into());
     let native = |path: &str, text: &str| NativeSourceText::new(path, path, text);
     let mut preparation = RepositoryReadPreparation::new(config).unwrap();
-    for (path, text) in [
-        ("core/cli.md", CLI),
-        ("core/other.md", OTHER),
-        ("core/FLAGS.md", FLAGS),
-    ] {
-        preparation.push_ir(native(path, text)).unwrap();
-    }
     for (path, text) in [
         ("docs/decisions/core/cli.md", CLI_DECISIONS),
         ("docs/decisions/core/other.md", OTHER_DECISIONS),
@@ -56,33 +30,14 @@ fn model() -> ReadModel {
             .push_decision_document(native(path, text))
             .unwrap();
     }
-    preparation
-        .finish(
-            vec![
-                native(RECORD, DECISIONS),
-                native(
-                    "docs/decision/records/notes.md",
-                    "# Notes\n\n## 背景\n\n一行目\n二行目\n",
-                ),
-            ],
-            vec![native(
-                "docs/decision/adr/0001-a.md",
-                "# ADR\n\n## Decision\n\n決めた\n",
-            )],
-            Vec::new(),
-        )
-        .unwrap()
+    preparation.finish(Vec::new()).unwrap()
 }
 
 fn fingerprint(model: &ReadModel, id: &str) -> String {
     let report = model.query(id).unwrap();
     match report.items()[0].item() {
-        kotowari_core::ListItem::Requirement(item) => item.fingerprint().to_string(),
-        kotowari_core::ListItem::WithExamples(_)
-        | kotowari_core::ListItem::Scenario(_)
-        | kotowari_core::ListItem::Flag(_)
-        | kotowari_core::ListItem::Confirmation(_)
-        | kotowari_core::ListItem::Decision(_) => panic!("{id} is a requirement"),
+        kotowari_core::ListItem::Decision(item) => item.fingerprint().to_string(),
+        kotowari_core::ListItem::Confirmation(_) => panic!("{id} is a decision"),
     }
 }
 
@@ -155,7 +110,7 @@ fn line_of(text: &str, needle: &str) -> usize {
     text.lines().position(|line| line == needle).unwrap() + 1
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-278, C-core-ovdata-1]
+// @kotowari[C-core-ovdata-1]
 #[test]
 fn valid_overview_data_has_no_findings_and_counts_its_files() {
     let model = model();
@@ -165,7 +120,7 @@ fn valid_overview_data_has_no_findings_and_counts_its_files() {
     assert_eq!((overview.files(), overview.marks()), (1, 0));
 }
 
-// @kotowari[EX-core-466, REQ-core-282, REQ-core-027, TBL-core-019, C-core-ovdata-8, C-core-ovdata-9]
+// @kotowari[C-core-ovdata-8, C-core-ovdata-9]
 #[test]
 fn ex_core_466_an_unknown_part_and_a_part_with_an_unknown_key_are_errors() {
     let model = model();
@@ -193,7 +148,7 @@ fn ex_core_466_an_unknown_part_and_a_part_with_an_unknown_key_are_errors() {
     );
 }
 
-// @kotowari[REQ-core-282, REQ-core-027, C-core-ovdata-9]
+// @kotowari[C-core-ovdata-9]
 #[test]
 fn req_core_282_places_name_missing_keys_the_whole_value_and_unreadable_yaml_once_each() {
     let model = model();
@@ -217,7 +172,7 @@ fn req_core_282_places_name_missing_keys_the_whole_value_and_unreadable_yaml_onc
     );
 }
 
-// @kotowari[REQ-core-282, C-core-ovdata-9]
+// @kotowari[C-core-ovdata-9]
 #[test]
 fn req_core_282_each_unknown_key_and_each_value_that_does_not_fit_has_its_own_place() {
     let model = model();
@@ -236,7 +191,7 @@ fn req_core_282_each_unknown_key_and_each_value_that_does_not_fit_has_its_own_pl
     );
 }
 
-// @kotowari[EX-core-467, REQ-core-283, REQ-core-027, C-core-forder-4, C-core-ovdata-11]
+// @kotowari[C-core-forder-4, C-core-ovdata-11]
 #[test]
 fn ex_core_467_a_first_part_that_is_not_lead_is_an_error_without_a_line() {
     let model = model();
@@ -254,7 +209,7 @@ fn ex_core_467_a_first_part_that_is_not_lead_is_an_error_without_a_line() {
     );
 }
 
-// @kotowari[REQ-core-283, C-core-ovdata-11]
+// @kotowari[C-core-ovdata-11]
 #[test]
 fn req_core_283_comments_and_blank_lines_before_the_lead_are_skipped() {
     let model = model();
@@ -271,7 +226,7 @@ fn req_core_283_comments_and_blank_lines_before_the_lead_are_skipped() {
     );
 }
 
-// @kotowari[EX-core-468, REQ-core-284, REQ-core-027, C-core-forder-4, C-core-lang-7, C-core-ovdata-12, C-core-ovdata-23]
+// @kotowari[C-core-forder-4, C-core-lang-7, C-core-ovdata-12, C-core-ovdata-23]
 #[test]
 fn ex_core_468_a_missing_decision_document_and_one_shared_by_two_overviews_are_errors() {
     let model = model();
@@ -299,7 +254,7 @@ fn ex_core_468_a_missing_decision_document_and_one_shared_by_two_overviews_are_e
     );
 }
 
-// @kotowari[REQ-core-284, REQ-core-281]
+// @kotowari[C-core-ovdata-5, C-core-ovdata-23]
 #[test]
 fn req_core_284_a_valid_documents_list_is_checked_beside_other_frontmatter_violations() {
     let model = model();
@@ -319,7 +274,7 @@ fn req_core_284_a_valid_documents_list_is_checked_beside_other_frontmatter_viola
     );
 }
 
-// @kotowari[REQ-core-284]
+// @kotowari[C-core-ovdata-23]
 #[test]
 fn req_core_284_a_glossary_does_not_count_as_a_decision_document() {
     let model = model();
@@ -338,13 +293,13 @@ fn req_core_284_a_glossary_does_not_count_as_a_decision_document() {
     );
 }
 
-// @kotowari[EX-core-469, REQ-core-285, REQ-core-027, C-core-ovdata-13, C-core-lang-8]
+// @kotowari[C-core-ovdata-13, C-core-lang-8]
 #[test]
 fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
     let model = model();
     let text = data(
         "a",
-        "## 節\n\n```view steps\nitems:\n  - title: t\n    refs: [C-core-cli-1, \"docs/decisions/core/cli.md#run-commands\", C-core-cli-999, \"docs/decisions/core/cli.md#none\", REQ-core-001, \"docs/decision/records/2026-01-01-x.md#A2\", foo]\n```\n",
+        "## 節\n\n```view steps\nitems:\n  - title: t\n    refs: [C-core-cli-1, \"docs/decisions/core/cli.md#run-commands\", C-core-cli-999, \"docs/decisions/core/cli.md#none\", foo]\n```\n",
     );
     let overview = run(&model, &[(A, &text)]);
     let line = Some(line_of(&text, "```view steps"));
@@ -356,18 +311,6 @@ fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
                 line,
                 "overview_ref_unresolved".into(),
                 "C-core-cli-999".into()
-            ),
-            (
-                A.into(),
-                line,
-                "overview_ref_unresolved".into(),
-                "REQ-core-001".into()
-            ),
-            (
-                A.into(),
-                line,
-                "overview_ref_unresolved".into(),
-                "docs/decision/records/2026-01-01-x.md#A2".into()
             ),
             (
                 A.into(),
@@ -385,7 +328,7 @@ fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
     );
 }
 
-// @kotowari[REQ-core-285, C-core-ovdata-13]
+// @kotowari[C-core-ovdata-13]
 #[test]
 fn req_core_285_ref_fields_at_any_depth_are_references_and_invalid_parts_are_not_read() {
     let model = model();
@@ -400,15 +343,15 @@ fn req_core_285_ref_fields_at_any_depth_are_references_and_invalid_parts_are_not
     assert_eq!(details, ["nope-1", "nope-2"]);
 }
 
-// @kotowari[EX-core-470, REQ-core-286, C-core-ovdata-14]
+// @kotowari[C-core-ovdata-14]
 #[test]
 fn ex_core_470_a_stale_guide_mark_in_overview_data_is_a_guide_stale_notice() {
     let model = model();
-    let current = fingerprint(&model, "REQ-core-001");
+    let current = fingerprint(&model, "docs/decisions/core/cli.md#run-commands");
     let text = data(
         "a",
         &format!(
-            "## 新しい節\n<!-- @kotowari[REQ-core-001:{current}] -->\n\n文。\n\n## 古い節\n<!-- @kotowari[REQ-core-001:00000000] -->\n\n文。\n"
+            "## 新しい節\n<!-- @kotowari[docs/decisions/core/cli.md#run-commands:{current}] -->\n\n文。\n\n## 古い節\n<!-- @kotowari[docs/decisions/core/cli.md#run-commands:00000000] -->\n\n文。\n"
         ),
     );
     let overview = run(&model, &[(A, &text)]);
@@ -418,18 +361,21 @@ fn ex_core_470_a_stale_guide_mark_in_overview_data_is_a_guide_stale_notice() {
     assert_eq!(overview.marks(), 2);
 }
 
-// @kotowari[REQ-core-286, C-core-ovdata-15]
+// @kotowari[C-core-ovdata-15]
 #[test]
 fn req_core_286_a_malformed_guide_mark_in_overview_data_is_an_invalid_marker() {
     let model = model();
-    let text = data("a", "## 節\n<!-- @kotowari[REQ-core-001] -->\n");
+    let text = data(
+        "a",
+        "## 節\n<!-- @kotowari[docs/decisions/core/cli.md#run-commands] -->\n",
+    );
     let overview = run(&model, &[(A, &text)]);
     let invalid = of_kind(&overview, "invalid_marker");
     assert_eq!(invalid.len(), 1);
     assert_eq!(invalid[0].0, A);
 }
 
-// @kotowari[EX-core-471, REQ-core-281, TBL-core-038, C-core-ovdata-5]
+// @kotowari[C-core-ovdata-5]
 #[test]
 fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
     let model = model();
@@ -447,7 +393,7 @@ fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
     );
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027, C-core-forder-4, C-core-ovdata-5, C-core-ovdata-23]
+// @kotowari[C-core-forder-4, C-core-ovdata-5, C-core-ovdata-23]
 #[test]
 fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_documents_list_of_strings() {
     let model = model();
@@ -474,7 +420,7 @@ fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_documents_list_of_strings(
     }
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027, C-core-ovdata-6]
+// @kotowari[C-core-ovdata-6]
 #[test]
 fn tbl_core_038_the_title_is_exactly_one_heading_of_depth_one() {
     let model = model();
@@ -487,7 +433,7 @@ fn tbl_core_038_the_title_is_exactly_one_heading_of_depth_one() {
     assert_eq!(forms[0].3, "multiple_titles");
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, C-core-ovdata-6]
+// @kotowari[C-core-ovdata-6]
 #[test]
 fn tbl_core_038_before_the_first_section_only_parts_and_comments_are_allowed() {
     let model = model();
@@ -508,7 +454,7 @@ fn tbl_core_038_before_the_first_section_only_parts_and_comments_are_allowed() {
     assert_eq!(found(&run(&model, &[(A, &more_parts)])), []);
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, C-core-ovdata-6]
+// @kotowari[C-core-ovdata-6]
 #[test]
 fn tbl_core_038_a_section_takes_text_lists_tables_code_comments_and_subheadings() {
     let model = model();
@@ -523,7 +469,7 @@ fn tbl_core_038_a_section_takes_text_lists_tables_code_comments_and_subheadings(
     assert_eq!(forms[0].1, Some(line_of(&deep, "#### 深い")));
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-282, C-core-ovdata-7, C-core-ovdata-8]
+// @kotowari[C-core-ovdata-7, C-core-ovdata-8]
 #[test]
 fn tbl_core_038_a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
     let model = model();
@@ -536,7 +482,7 @@ fn tbl_core_038_a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
     assert_eq!(unknown[0].3, "chart");
 }
 
-// @kotowari[REQ-core-305, REQ-core-027, C-core-forder-4, C-core-ovcmd-24]
+// @kotowari[C-core-forder-4, C-core-ovcmd-24]
 #[test]
 fn req_core_305_duplicated_names_and_index_and_style_are_errors() {
     let model = model();
@@ -601,7 +547,7 @@ fn with_refs(refs: &str) -> String {
     )
 }
 
-// @kotowari[C-core-ovcmd-29, REQ-core-291, TBL-core-039, EX-core-474]
+// @kotowari[C-core-ovcmd-29]
 #[test]
 fn references_to_proposed_decisions_and_their_rows_are_deferred_and_the_rest_current() {
     let model = model();
@@ -630,7 +576,7 @@ fn references_to_proposed_decisions_and_their_rows_are_deferred_and_the_rest_cur
     );
 }
 
-// @kotowari[C-core-ovcmd-14, REQ-core-291, TBL-core-039]
+// @kotowari[C-core-ovcmd-14]
 #[test]
 fn a_reference_to_a_decision_or_a_row_carries_the_contents_of_its_target() {
     let model = model();
@@ -684,7 +630,7 @@ fn a_section_is_stale_when_the_decision_its_mark_points_at_changes() {
     assert_eq!(sections, [("今の節", false), ("古い節", true)]);
 }
 
-// @kotowari[REQ-core-291, C-core-ovcmd-13]
+// @kotowari[C-core-ovcmd-13]
 #[test]
 fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
     let model = model();
@@ -700,13 +646,13 @@ fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
     assert_eq!(keys, ["C-core-cli-1", "C-core-other-1"]);
 }
 
-// @kotowari[REQ-core-292, C-core-ovcmd-15]
+// @kotowari[C-core-ovcmd-15]
 #[test]
 fn req_core_292_a_section_is_stale_only_when_a_mark_in_it_is_stale() {
     let model = model();
-    let current = fingerprint(&model, "REQ-core-001");
+    let current = fingerprint(&model, "docs/decisions/core/cli.md#run-commands");
     let text = format!(
-        "{FRONT}\n# a\n\n<!-- @kotowari[REQ-core-001:00000000] -->\n{LEAD}\n## 新しい節 <!-- note -->\n<!-- @kotowari[REQ-core-001:{current}] -->\n\n文。\n\n## 古い節\n<!-- @kotowari[REQ-core-001:00000000] -->\n\n文。\n\n## 印の無い節\n\n文。\n"
+        "{FRONT}\n# a\n\n<!-- @kotowari[docs/decisions/core/cli.md#run-commands:00000000] -->\n{LEAD}\n## 新しい節 <!-- note -->\n<!-- @kotowari[docs/decisions/core/cli.md#run-commands:{current}] -->\n\n文。\n\n## 古い節\n<!-- @kotowari[docs/decisions/core/cli.md#run-commands:00000000] -->\n\n文。\n\n## 印の無い節\n\n文。\n"
     );
     let overview = run(&model, &[(A, &text)]);
     let document = &overview.render_input().documents[0];
@@ -721,7 +667,7 @@ fn req_core_292_a_section_is_stale_only_when_a_mark_in_it_is_stale() {
     );
 }
 
-// @kotowari[REQ-core-292, C-core-ovcmd-15]
+// @kotowari[C-core-ovcmd-15]
 #[test]
 fn req_core_292_only_html_comments_are_removed_from_heading_text() {
     // 型引数のような山括弧は行の中の HTML として読まれるが、消すのはコメントだけ
@@ -736,7 +682,7 @@ fn req_core_292_only_html_comments_are_removed_from_heading_text() {
     assert_eq!(document.sections[0].heading, "Vec<String> の扱い");
 }
 
-// @kotowari[REQ-core-291, REQ-core-292, C-view-rendering-1]
+// @kotowari[C-view-rendering-1]
 #[test]
 fn valid_data_renders_into_the_pages_the_view_returns_for_its_input() {
     let model = model();
@@ -771,7 +717,7 @@ fn valid_data_renders_into_the_pages_the_view_returns_for_its_input() {
     );
 }
 
-// @kotowari[TBL-core-038, C-view-rendering-10]
+// @kotowari[C-view-rendering-10]
 #[test]
 fn parts_after_the_lead_and_before_the_first_section_reach_the_page_in_order() {
     let model = model();
@@ -799,7 +745,7 @@ fn parts_after_the_lead_and_before_the_first_section_reach_the_page_in_order() {
     assert!(at("冒頭の二つ目") < heading);
 }
 
-// @kotowari[REQ-core-294, C-core-ovcmd-8]
+// @kotowari[C-core-ovcmd-8]
 #[test]
 fn data_with_errors_gives_no_pages_and_the_error_count() {
     let model = model();
@@ -809,14 +755,16 @@ fn data_with_errors_gives_no_pages_and_the_error_count() {
     assert_eq!(overview.errors(), 1);
 }
 
-// @kotowari[REQ-core-290, TBL-core-042, C-core-ovout-1]
+// @kotowari[C-core-ovout-1]
 #[test]
 fn the_findings_and_numbers_become_the_overview_group() {
     let model = model();
-    let current = fingerprint(&model, "REQ-core-001");
+    let current = fingerprint(&model, "docs/decisions/core/cli.md#run-commands");
     let text = data(
         "a",
-        &format!("## 節\n<!-- @kotowari[REQ-core-001:{current}, REQ-core-010:00000000] -->\n"),
+        &format!(
+            "## 節\n<!-- @kotowari[docs/decisions/core/cli.md#run-commands:{current}, docs/decisions/core/other.md#rest:00000000] -->\n"
+        ),
     );
     let overview = run(&model, &[(A, &text), (B, "no frontmatter\n")]);
     let errors = overview.errors();
@@ -833,7 +781,7 @@ fn the_findings_and_numbers_become_the_overview_group() {
     );
 }
 
-// @kotowari[REQ-core-283, REQ-core-281, C-core-ovdata-11]
+// @kotowari[C-core-ovdata-11]
 #[test]
 fn req_core_283_a_second_title_before_the_lead_is_the_first_block_after_the_title() {
     let model = model();
@@ -842,7 +790,7 @@ fn req_core_283_a_second_title_before_the_lead_is_the_first_block_after_the_titl
     assert_eq!(of_kind(&overview, "overview_lead_missing").len(), 1);
 }
 
-// @kotowari[REQ-core-284]
+// @kotowari[C-core-ovdata-12]
 #[test]
 fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
     let model = model();
@@ -853,7 +801,7 @@ fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
     assert_eq!(of_kind(&overview, "overview_document_shared"), []);
 }
 
-// @kotowari[REQ-core-288, TBL-core-042, C-core-ovout-1]
+// @kotowari[C-core-ovout-1]
 #[test]
 fn req_core_288_the_number_of_files_counts_every_overview_data_file() {
     let model = model();
@@ -906,7 +854,7 @@ fn pairs(expected: &[(&str, &str)]) -> Vec<(String, String)> {
         .collect()
 }
 
-// @kotowari[EX-core-507, REQ-core-327, REQ-core-331, TBL-core-043, REQ-core-027, C-core-forder-4, C-core-ovtoc-7, C-core-ovtoc-12]
+// @kotowari[C-core-forder-4, C-core-ovtoc-7, C-core-ovtoc-12]
 #[test]
 fn ex_core_507_an_unknown_key_in_a_group_is_a_form_error_and_stops_the_comparison() {
     let overview = run_named(
@@ -919,7 +867,7 @@ fn ex_core_507_an_unknown_key_in_a_group_is_a_form_error_and_stops_the_compariso
     );
 }
 
-// @kotowari[REQ-core-327, TBL-core-043, REQ-core-027, C-core-forder-4, C-core-ovtoc-7]
+// @kotowari[C-core-forder-4, C-core-ovtoc-7]
 #[test]
 fn tbl_core_043_each_form_violation_names_its_place() {
     for (toc, places) in [
@@ -958,7 +906,7 @@ fn tbl_core_043_each_form_violation_names_its_place() {
     }
 }
 
-// @kotowari[REQ-core-327, TBL-core-043, C-core-ovtoc-8]
+// @kotowari[C-core-ovtoc-8]
 #[test]
 fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding() {
     let overview = run_named(
@@ -968,7 +916,7 @@ fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding()
     assert_eq!(toc_findings(&overview), pairs(&[]));
 }
 
-// @kotowari[EX-core-508, REQ-core-328, REQ-core-329, REQ-core-027, C-core-forder-4, C-core-ovtoc-9]
+// @kotowari[C-core-forder-4, C-core-ovtoc-9]
 #[test]
 fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
     let overview = run_named(&["a", "b", "c"], "title: 目次\nitems: [a, z, a]\n");
@@ -985,7 +933,7 @@ fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
     );
 }
 
-// @kotowari[REQ-core-329, C-core-ovtoc-9]
+// @kotowari[C-core-ovtoc-9]
 #[test]
 fn req_core_329_an_unknown_name_repeated_is_only_unknown_each_time() {
     let overview = run_named(
@@ -1003,7 +951,7 @@ fn req_core_329_an_unknown_name_repeated_is_only_unknown_each_time() {
     );
 }
 
-// @kotowari[REQ-core-329, C-core-ovtoc-9]
+// @kotowari[C-core-ovtoc-9]
 #[test]
 fn req_core_329_the_second_place_is_found_depth_first_in_written_order() {
     let overview = run_named(
@@ -1016,7 +964,7 @@ fn req_core_329_the_second_place_is_found_depth_first_in_written_order() {
     );
 }
 
-// @kotowari[EX-core-509, REQ-core-330, REQ-core-027, C-core-forder-4, C-core-ovtoc-10]
+// @kotowari[C-core-forder-4, C-core-ovtoc-10]
 #[test]
 fn ex_core_509_a_group_without_items_is_an_error() {
     let overview = run_named(&["a"], "title: 目次\nitems: [a, {title: 空, items: []}]\n");
@@ -1026,7 +974,7 @@ fn ex_core_509_a_group_without_items_is_an_error() {
     );
 }
 
-// @kotowari[REQ-core-330, REQ-core-328, C-core-ovtoc-10]
+// @kotowari[C-core-ovtoc-10]
 #[test]
 fn req_core_330_an_empty_outermost_group_is_reported_at_the_root() {
     let overview = run_named(&["a"], "title: 目次\nitems: []\n");
@@ -1041,7 +989,7 @@ fn req_core_330_an_empty_outermost_group_is_reported_at_the_root() {
     );
 }
 
-// @kotowari[REQ-core-332, C-core-ovtoc-13]
+// @kotowari[C-core-ovtoc-13]
 #[test]
 fn req_core_332_the_render_input_carries_the_toc_as_written() {
     use kotowari_markdown_view::{TocGroup, TocItem};
@@ -1067,7 +1015,7 @@ fn req_core_332_the_render_input_carries_the_toc_as_written() {
     );
 }
 
-// @kotowari[REQ-core-294, REQ-core-328, C-core-ovtoc-11]
+// @kotowari[C-core-ovtoc-11]
 #[test]
 fn req_core_294_toc_errors_count_as_errors_and_block_the_pages() {
     let overview = run_named(&["a"], "title: 目次\nitems: [z]\n");

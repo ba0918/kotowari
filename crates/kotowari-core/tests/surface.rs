@@ -2,7 +2,7 @@
 
 use kotowari_core::config::Config;
 
-// @kotowari[TBL-core-004, C-core-config-6]
+// @kotowari[C-core-config-6]
 #[test]
 fn tbl_004_surface_keys_default_to_empty_lists_and_no_list_file() {
     let cfg = Config::default();
@@ -11,7 +11,7 @@ fn tbl_004_surface_keys_default_to_empty_lists_and_no_list_file() {
     assert_eq!(cfg.surface.unspecified, None);
 }
 
-// @kotowari[TBL-core-004, REQ-core-224, C-core-config-7]
+// @kotowari[C-core-config-7]
 #[test]
 fn tbl_004_surface_keys_are_read_and_their_paths_normalized() {
     let cfg = Config::parse(
@@ -26,7 +26,7 @@ fn tbl_004_surface_keys_are_read_and_their_paths_normalized() {
     );
 }
 
-// @kotowari[REQ-core-014, C-core-config-16]
+// @kotowari[C-core-config-16]
 #[test]
 fn req_014_an_invalid_surface_files_glob_stops() {
     let result = Config::parse(
@@ -35,7 +35,7 @@ fn req_014_an_invalid_surface_files_glob_stops() {
     assert!(result.is_err(), "invalid glob in surface.files should stop");
 }
 
-// @kotowari[REQ-core-014, C-core-config-14, C-core-config-15]
+// @kotowari[C-core-config-14, C-core-config-15]
 #[test]
 fn req_014_null_or_absolute_surface_values_stop() {
     for yaml in [
