@@ -1,6 +1,6 @@
 use kotowari_core::{Finding, Inspection, StopReason};
 use std::path::Path;
-/// check と同じ経路で読んで検査する。設定は既定の値で、判断の記録の置き場は空で作る
+/// check と同じ経路で読んで検査する。設定は既定の値
 fn inspect(base: &Path) -> Result<Inspection, StopReason> {
     for dir in ["docs/decision/records", "docs/decision/adr"] {
         std::fs::create_dir_all(base.join(dir)).unwrap();

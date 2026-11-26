@@ -1,4 +1,4 @@
-//! 面の検査（docs/ir/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
+//! 面の検査（docs/decisions/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
 
 use kotowari_core::config::Config;
 

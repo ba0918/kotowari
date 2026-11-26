@@ -187,13 +187,13 @@ impl RepositoryInspectionPreparation {
         self.phase = InspectionPhase::Complete;
         Ok(())
     }
-    /// 追加の指摘の群を加える（TBL-core-042）。どの段の間でも加えられる
+    /// 追加の指摘の群を加える。どの段の間でも加えられる
     pub fn group(&mut self, group: FindingGroup) -> Result<(), crate::StopReason> {
         self.inner
             .group(group)
             .map_err(|error| native_error(&error))
     }
-    /// `対`を加える。同じ`先頭の言語`の`側`の`対`は1つにする（REQ-core-337）。どの段の間でも加えられる
+    /// `対`を加える。同じ`先頭の言語`の`側`の`対`は1つにする。どの段の間でも加えられる
     pub fn translations(&mut self, pairs: crate::translations::Pairs) {
         self.inner.translations(pairs);
     }

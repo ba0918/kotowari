@@ -1,4 +1,4 @@
-//! "kotowari plan" が計画書を1つ読み、同梱のスキーマで形を検査すること（docs/ir/core/plan.md）
+//! "kotowari plan" が計画書を1つ読み、同梱のスキーマで形を検査すること（docs/decisions/core/plan.md）
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -30,14 +30,14 @@ fn assert_argument_error(list: &[&str], dir: &Path) {
         first_line.starts_with("argument error: "),
         "{list:?}: got {first_line:?}"
     );
-    // plan はコマンドなので、知らないコマンドとしての停止ではない（REQ-core-001）
+    // plan はコマンドなので、知らないコマンドとしての停止ではない
     assert!(
         !first_line.starts_with("argument error: unknown command"),
         "{list:?}: plan should be a command: {first_line:?}"
     );
 }
 
-// --- REQ-core-190: plan の引数 ---
+// --- plan の引数 ---
 
 // @kotowari[C-core-plan-3]
 #[test]
@@ -85,7 +85,7 @@ fn req_core_004_tool_on_plan_stops() {
     assert_argument_error(&["plan", "--tool", "cargo-mutants", "a.md"], tmp.path());
 }
 
-// --- REQ-core-191〜REQ-core-197: 計画書を読み、指摘を invalid_plan で出す ---
+// --- 計画書を読み、指摘を invalid_plan で出す ---
 
 /// 形の揃った計画書
 const VALID_PLAN: &str = include_str!("../fixtures/plans/valid.md");
@@ -397,7 +397,7 @@ fn req_core_193_the_path_is_normalised_from_the_base() {
     }
 }
 
-// --- REQ-core-192: 計画書の形 ---
+// --- 計画書の形 ---
 
 /// 計画書を "docs/plans/a.md" に置いて "kotowari plan docs/plans/a.md" を実行し、終了コードと標準出力を返す
 fn plan_outcome(plan: &str) -> (Option<i32>, String) {

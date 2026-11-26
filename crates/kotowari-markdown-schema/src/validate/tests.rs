@@ -292,7 +292,7 @@ fn image_only_paragraph_after_code_block_lead_is_not_a_statement() {
 // @kotowari[C-schema-block-21]
 #[test]
 fn nested_list_items_are_not_counted_as_top_level_bullets() {
-    // 親の bullets の本数はトップレベルの親だけを数え、子は数えない（REQ-schema-031）。
+    // 親の bullets の本数はトップレベルの親だけを数え、子は数えない。
     let schema =
         "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 2 }\n";
     let doc = "## 理由\n\n- 親\n  - 子\n";
@@ -381,7 +381,7 @@ fn child_list_without_children_rule_is_undeclared_line() {
 #[test]
 fn child_list_under_declared_field_is_undeclared_line() {
     // フィールド行は children 宣言を持たない。宣言済みフィールド行の下の
-    // 子リストは、閉じた世界では undeclared_line（REQ-schema-001）。
+    // 子リストは、閉じた世界では undeclared_line。
     let schema = r#"
 document:
   sections:
@@ -404,7 +404,7 @@ document:
 #[test]
 fn child_list_under_declared_child_field_is_undeclared_line() {
     // 子フィールド（children.fields の宣言）も children 宣言を持たない。
-    // その下の子リストは undeclared_line（REQ-schema-001）。
+    // その下の子リストは undeclared_line。
     let schema = r#"
 document:
   sections:
@@ -451,7 +451,7 @@ document:
 #[test]
 fn child_bullet_when_references_a_sibling_field() {
     // children.bullets の when は、同じ children ノードの下の兄弟の
-    // children.fields を参照する（REQ-schema-021）。when が真のときだけ pattern が効く。
+    // children.fields を参照する。when が真のときだけ pattern が効く。
     let schema = r#"
 document:
   sections:
@@ -478,7 +478,7 @@ document:
 // @kotowari[C-schema-block-20]
 #[test]
 fn children_are_validated_when_parent_bullets_when_is_true() {
-    // 親の bullets の when が真のとき、子は children の宣言に照合する（REQ-schema-031）。
+    // 親の bullets の when が真のとき、子は children の宣言に照合する。
     let schema = r#"
 document:
   sections:
@@ -504,8 +504,8 @@ document:
 // @kotowari[C-schema-block-20, C-schema-lang-12]
 #[test]
 fn children_are_validated_when_parent_bullets_when_is_false() {
-    // 親の bullets の when は required / pattern / enum にだけ効く（REQ-schema-020）。
-    // children の照合（REQ-schema-031）は when の真偽に関わらず実行する。
+    // 親の bullets の when は required / pattern / enum にだけ効く。
+    // children の照合は when の真偽に関わらず実行する。
     let schema = r#"
 document:
   sections:
@@ -1038,7 +1038,7 @@ document:
     assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// ---- 行の規則（TBL-schema-007、REQ-schema-029〜REQ-schema-034） ----
+// ---- 行の規則 ----
 
 // @kotowari[C-schema-lang-7]
 #[test]
@@ -1294,7 +1294,7 @@ fn image_only_line_is_not_counted_as_statement() {
     assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
 }
 
-// ---- 出現回数・条件付き規則・並び順（REQ-schema-019、REQ-schema-020、REQ-schema-041） ----
+// ---- 出現回数・条件付き規則・並び順 ----
 
 // @kotowari[C-schema-lang-9]
 #[test]

@@ -1,4 +1,4 @@
-# 全体像の元データの Markdown としての形（docs/ir/core/overview-data.md の TBL-core-038）
+# 全体像の元データの Markdown としての形（docs/decisions/core/overview-data.md）
 #
 # 題名はちょうど1つ。題名の後で最初の "## " より前には部品（情報文字列が "view" で始まるフェンス）と
 # HTML のコメントだけを置ける。節の見出しの文字は全体像ごとに自由なので節は宣言せず、開いた世界で

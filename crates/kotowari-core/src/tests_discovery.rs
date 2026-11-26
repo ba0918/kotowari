@@ -1,4 +1,4 @@
-//! テストの発見と印の結び付け（REQ-core-071〜REQ-core-088）
+//! テストの発見と印の結び付け
 
 pub use crate::test_markers::{InvalidMarkers, Marker, MarkerIds, parse_markers_in_line};
 use crate::{Finding, FindingKind};
@@ -8,7 +8,7 @@ use std::path::Path;
 /// 発見されたテスト
 #[derive(Debug, Clone)]
 pub struct DiscoveredTest {
-    /// `テスト`の名前。`問い合わせ`が "$NAME" を捕まえなければ None（REQ-core-180）
+    /// `テスト`の名前。`問い合わせ`が "$NAME" を捕まえなければ None
     pub name: Option<String>,
     /// `テスト`の節の最初の行の全体の文字から前後の空白を除いたもの
     pub first_line_text: String,
@@ -21,7 +21,7 @@ pub struct DiscoveredTest {
     pub invalid_markers: InvalidMarkers,
 }
 
-/// `印`の1つの出現。`ID` ごとに1件で、同じ行の同じ `ID` の2つ目も1件（TBL-core-026 の "tests"）
+/// `印`の1つの出現。`ID` ごとに1件で、同じ行の同じ `ID` の2つ目も1件
 #[derive(Debug, Clone)]
 pub struct TestMarker {
     /// 印に書かれた `ID`
@@ -36,11 +36,11 @@ pub struct TestMarker {
 
 /// テストの発見の結果
 pub struct DiscoveredTests {
-    /// TBL-core-021: 読んだテストのファイルの拡張子ごとの数
+    /// 読んだテストのファイルの拡張子ごとの数
     pub tally: BTreeMap<String, crate::TestFileTally>,
-    /// TBL-core-026: 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
+    /// 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
     pub markers: Vec<TestMarker>,
-    /// 読んだ`テストのファイル`の`基準のディレクトリ`からの相対パス。バイト順（REQ-core-199 の重なりの判定）
+    /// 読んだ`テストのファイル`の`基準のディレクトリ`からの相対パス。バイト順
     pub files: Vec<String>,
 }
 
@@ -133,7 +133,7 @@ fn record_test_markers(
                 name: test.name.clone(),
             });
         }
-        // REQ-core-072: テストに結び付く空・不正な印
+        // テストに結び付く空・不正な印
         for (line_num, raw) in &test.invalid_markers {
             findings.push(Finding::new(
                 FindingKind::InvalidMarker,
@@ -171,7 +171,7 @@ fn check_test_markers(
     known_ids: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
-    // REQ-core-054, REQ-core-118: unresolved_reference の line は印のある行
+    // unresolved_reference の line は印のある行
     for (id, marker_line) in &test.marker_ids {
         if !id.is_empty() && !known_ids.contains(id) {
             findings.push(Finding::new(

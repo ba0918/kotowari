@@ -1,9 +1,8 @@
-# 変異テストを16に分けて並列に回す、呼び出し専用のワークフロー（判断の記録
-# docs/decision/records/2026-10-04-mutants-in-ci.md の A3）。PR（mutants.yml）とリリース（release.yml）が使う。
+# 変異テストを16に分けて並列に回す、呼び出し専用のワークフロー。PR（mutants.yml）とリリース（release.yml）が使う。
 #
 # 分担ごとに scripts/mutants.sh が自分の結果を kotowari mutants に読ませ、等価の一覧の分を除いた
 # 見逃しがあれば失敗する。ランナーにはユーザーの systemd が無いので、sudo の systemd-run のスコープで
-# メモリに上限をかける（A11）。
+# メモリに上限をかける。
 name: mutants-run
 
 on:
@@ -28,12 +27,12 @@ defaults:
 env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: "4"
-  # メモリと CPU に上限をかけたスコープで回す（判断の記録 2026-10-04-mutants-in-ci.md の A11、A15）。
+  # メモリと CPU に上限をかけたスコープで回す。
   # 4コアのランナーに 300% を渡し、ビルドの並列数をそれに合わせる
   MUTANTS_SERVICE: scope
   MUTANTS_CPU_QUOTA: "300%"
   MUTANTS_BUILD_JOBS: "3"
-  # 日付で固定した nightly（A16）
+  # 日付で固定した nightly
   MUTANTS_TOOLCHAIN: nightly-2026-10-03
   MUTANTS_JOBS: "1"
   # 手元の scripts/mutants.sh と同じ版（出力の終了コードの扱いがこの版に合わせてある）

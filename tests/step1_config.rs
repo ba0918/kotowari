@@ -24,7 +24,7 @@ fn make_project(tmp: &Path) {
     fs::write(tmp.join(".kotowari/config.yaml"), "").unwrap();
 }
 
-// --- REQ-core-006: UTF-8 でない設定で停止 ---
+// --- UTF-8 でない設定で停止 ---
 
 // @kotowari[C-core-clienv-7]
 #[test]
@@ -41,7 +41,7 @@ fn req_006_non_utf8_config_stops() {
         .stdout("");
 }
 
-// --- REQ-core-009: 基準のディレクトリの決め方 ---
+// --- 基準のディレクトリの決め方 ---
 
 // @kotowari[C-core-base-1]
 #[test]
@@ -63,7 +63,7 @@ fn req_009_falls_back_to_cwd() {
     // CWD に決定の文書の置き場を直接作る
     let tmp = TempDir::new().unwrap();
     fs::create_dir_all(tmp.path().join("docs/decisions")).unwrap();
-    // .kotowari/ なし → CWD が基準 → 既定の設定ファイルも無い → REQ-core-012 で既定値
+    // .kotowari/ なし → CWD が基準 → 既定の設定ファイルも無い → 既定の値
     cmd().arg("check").current_dir(tmp.path()).assert().code(0);
 }
 
@@ -93,7 +93,7 @@ fn req_009_base_from_a_subdirectory_is_the_ancestor_with_dot_kotowari() {
     );
 }
 
-// --- REQ-core-010: 設定の値は基準のディレクトリからの相対 ---
+// --- 設定の値は基準のディレクトリからの相対 ---
 
 // @kotowari[C-core-base-5]
 #[test]
@@ -113,7 +113,7 @@ fn req_010_config_values_are_relative_to_base() {
     cmd().arg("check").current_dir(&sub).assert().code(0);
 }
 
-// --- PROP-core-001: 設定のパスは基準を変えない ---
+// --- 設定のパスは基準を変えない ---
 
 // @kotowari[C-core-base-4]
 #[test]
@@ -132,7 +132,7 @@ fn prop_001_config_path_does_not_move_the_base() {
         .code(0);
 }
 
-// --- REQ-core-003: 設定のパスの基準 ---
+// --- 設定のパスの基準 ---
 
 // @kotowari[C-core-config-2]
 #[test]
@@ -198,7 +198,7 @@ fn req_003_list_query_and_status_read_the_config_given_by_config() {
     }
 }
 
-// --- REQ-core-011: 既定の設定ファイルの場所 ---
+// --- 既定の設定ファイルの場所 ---
 
 // @kotowari[C-core-config-1]
 #[test]
@@ -211,7 +211,7 @@ fn req_011_reads_dot_kotowari_config_by_default() {
         .code(0);
 }
 
-// --- REQ-core-012: 設定ファイルが無いときは既定の値 ---
+// --- 設定ファイルが無いときは既定の値 ---
 
 // @kotowari[C-core-config-4]
 #[test]
@@ -223,7 +223,7 @@ fn req_012_missing_config_uses_defaults() {
     cmd().arg("check").current_dir(tmp.path()).assert().code(0);
 }
 
-// --- REQ-core-013: キーと既定の値 ---
+// --- キーと既定の値 ---
 
 // @kotowari[C-core-config-6]
 #[test]
@@ -239,7 +239,7 @@ fn req_013_defaults_match_the_table() {
     );
 }
 
-// --- REQ-core-014: 設定の誤り ---
+// --- 設定の誤り ---
 
 // @kotowari[C-core-config-12]
 #[test]
@@ -318,7 +318,7 @@ fn req_018_unreadable_dir_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// --- REQ-core-015: 一覧は既定を置き換える ---
+// --- 一覧は既定を置き換える ---
 
 // @kotowari[C-core-config-19]
 #[test]
@@ -328,7 +328,7 @@ fn req_015_list_replaces_default() {
     assert_eq!(cfg.tests.files, vec!["my/**/*.rs"]);
 }
 
-// --- REQ-core-016: 空の一覧 ---
+// --- 空の一覧 ---
 
 // @kotowari[C-core-config-20]
 #[test]
@@ -338,7 +338,7 @@ fn req_016_empty_list_means_none() {
     assert!(cfg.vague_words.is_empty());
 }
 
-// --- REQ-core-017: 入れ子のキー ---
+// --- 入れ子のキー ---
 
 // @kotowari[C-core-config-21]
 #[test]
@@ -350,7 +350,7 @@ fn req_017_nested_keys() {
     assert_eq!(cfg.tests.rust.attributes, vec!["kani::proof"]);
 }
 
-// --- REQ-core-018: 置き場が無いとき停止 ---
+// --- 置き場が無いとき停止 ---
 
 // @kotowari[C-core-clienv-7, C-core-clienv-12, C-core-cli-14, C-core-config-10]
 #[test]
@@ -364,7 +364,7 @@ fn req_018_missing_decisions_dir_stops_with_its_relative_path_and_the_os_error()
     assert_eq!(output.status.code(), Some(2));
     assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    // 詳細は設定の値のままの相対パスで、絶対パスを含まない（TBL-core-020）
+    // 詳細は設定の値のままの相対パスで、絶対パスを含まない
     let expected = format!("unreadable file: docs/decisions: {os_error}");
     assert_eq!(stderr.lines().next(), Some(expected.as_str()));
 }
@@ -487,7 +487,7 @@ fn req_014_null_tests_rust_stops() {
 // @kotowari[C-core-config-26]
 #[test]
 fn req_014_windows_drive_letter_like_path_is_not_absolute() {
-    // A161: 絶対パスの判定は先頭の "/" だけ。"a:b" をドライブ文字として拒まない
+    // 絶対パスの判定は先頭の "/" だけ。"a:b" をドライブ文字として拒まない
     let yaml = "decisions:\n  documents: a:b\n";
     let result = kotowari_core::config::Config::parse(yaml);
     assert!(
@@ -766,7 +766,7 @@ fn req_110_path_carries_the_subdirectory() {
     );
 }
 
-// --- REQ-core-020: 直下の kotowari.toml を読まない ---
+// --- 直下の kotowari.toml を読まない ---
 
 // @kotowari[C-core-config-3]
 #[test]
@@ -814,7 +814,7 @@ fn req_020_kotowari_toml_beside_the_base_is_not_read() {
     assert_eq!(default_after.stdout, default_before.stdout);
 }
 
-// --- REQ-core-090: スキーマのファイルを読まない ---
+// --- スキーマのファイルを読まない ---
 
 // @kotowari[C-core-formc-1]
 #[test]
@@ -847,7 +847,7 @@ fn req_090_schema_file_is_not_read() {
     );
 }
 
-// --- REQ-core-091: 外部の mdschema を使わない ---
+// --- 外部の mdschema を使わない ---
 
 // @kotowari[C-core-formc-2]
 #[test]
@@ -880,7 +880,7 @@ fn req_091_check_runs_the_same_with_an_empty_path() {
     );
 }
 
-// --- REQ-core-102: 状態を保存しない ---
+// --- 状態を保存しない ---
 
 /// ディレクトリの全エントリを、相対パスと（ファイルなら）中身のバイト列で写し取る
 fn snapshot(root: &Path) -> Vec<(String, Option<Vec<u8>>)> {
@@ -945,7 +945,7 @@ fn req_102_check_writes_nothing_under_home_tmpdir_or_base() {
     );
 }
 
-// --- TBL-core-004: キーと既定の値 ---
+// --- キーと既定の値 ---
 
 /// 表の鍵をすべて書いた設定（"overview" と "labels" は組み合わせの条件があるので除く）
 const ALL_KEYS: &str = "decisions:
@@ -1031,7 +1031,7 @@ fn req_014_only_the_config_keys_of_the_table_are_accepted() {
     }
 }
 
-// --- REQ-core-121: 同梱の問い合わせは外せない ---
+// --- 同梱の問い合わせは外せない ---
 
 // @kotowari[C-core-qrules-2]
 #[test]
@@ -1073,7 +1073,7 @@ fn req_121_bundled_query_stays_when_rules_are_added() {
 fn tbl_004_tests_rules_is_read_and_defaults_to_empty() {
     let cfg = kotowari_core::config::Config::parse("tests:\n  rules:\n    - ./rules/a.yml\n")
         .expect("the key should be read");
-    // REQ-core-110: 設定の値のパスは正規化する
+    // 設定の値のパスは正規化する
     assert_eq!(cfg.tests.rules, vec!["rules/a.yml".to_string()]);
     assert!(
         kotowari_core::config::Config::default()
@@ -1103,7 +1103,7 @@ fn req_014_absolute_tests_rules_stops() {
     );
 }
 
-// --- TBL-core-004: 等価の一覧を指す鍵 ---
+// --- 等価の一覧を指す鍵 ---
 
 // @kotowari[C-core-config-6, C-core-config-7]
 #[test]
@@ -1111,7 +1111,7 @@ fn tbl_004_mutants_equivalents_is_read_and_has_no_default() {
     let cfg =
         kotowari_core::config::Config::parse("mutants:\n  equivalents: ./docs/equivalents.yaml\n")
             .expect("the key should be read");
-    // REQ-core-110: 設定の値のパスは正規化する
+    // 設定の値のパスは正規化する
     assert_eq!(
         cfg.mutants.equivalents.as_deref(),
         Some("docs/equivalents.yaml")
@@ -1138,7 +1138,7 @@ fn req_014_mutants_equivalents_that_is_not_a_string_stops() {
     assert!(result.is_err(), "a value that is not a string should stop");
 }
 
-// --- REQ-core-335、REQ-core-352: 言語の一覧と UI の文字の誤り ---
+// --- 言語の一覧と UI の文字の誤り ---
 
 /// 設定の本文を書いて check を走らせる
 fn check_with_config(config: &str) -> std::process::Output {

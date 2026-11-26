@@ -1,5 +1,5 @@
 //! スキル kotowari の references に写した本体の値が、本体のコードと一致することの検査
-//! （REQ-core-125、REQ-core-126。REQ-core-127 は src/cli/tests.rs）。
+//! （コマンドの一覧は src/cli/tests.rs）。
 //! 突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
 #![expect(
     clippy::unwrap_used,
@@ -80,7 +80,7 @@ fn only_yaml_block(markdown: &str) -> String {
     blocks.pop().unwrap()
 }
 
-// --- REQ-core-125: 指摘の種類の一致 ---
+// --- 指摘の種類の一致 ---
 
 // @kotowari[C-core-skillref-1, C-core-skillref-4]
 #[test]
@@ -96,7 +96,7 @@ fn req_125_findings_reference_kinds_match_the_code() {
     );
 }
 
-// --- REQ-core-126: 既定の一致 ---
+// --- 既定の一致 ---
 
 // @kotowari[C-core-skillref-3]
 #[test]
@@ -130,6 +130,6 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
     );
 }
 
-// --- REQ-core-127: 停止の文言の一致 ---
+// --- 停止の文言の一致 ---
 // 停止の文言は core、kotowari ライブラリ、CLI の3か所に持つので、3つを読めるバイナリの単体テスト
 // （src/cli/tests.rs）で突き合わせる

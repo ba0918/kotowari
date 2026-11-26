@@ -92,7 +92,7 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
     );
 }
 
-// --- REQ-core-055, REQ-core-056: 見ないもの ---
+// --- 見ないもの ---
 
 /// CLI を通して検査するプロジェクトを一時ディレクトリに作る
 fn make_cli_project(tmp: &std::path::Path) {
@@ -225,7 +225,7 @@ fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
     );
 }
 
-// --- REQ-core-178: 見出しの下の行は1行ずつ文として読む ---
+// --- 見出しの下の行は1行ずつ文として読む ---
 
 // @kotowari[C-core-forder-4, C-core-document-5]
 #[test]

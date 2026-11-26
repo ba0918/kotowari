@@ -301,7 +301,7 @@ fn separator_with_a_value_puts_the_split_array_under_the_value_key() {
 #[test]
 fn a_crlf_document_gives_the_same_values_as_the_lf_document() {
     // CRLF も1つの行区切り。値の行は元の行を改行1つでつなぐので、改行の形に依らず
-    // LF の文書と同じ値になる。この規則は読み方に依らない（REQ-schema-063）
+    // LF の文書と同じ値になる。この規則は読み方に依らない
     let schema = "document:\n  sections:\n    - name: 理由\n      statement:\n        repeat: { min: 0 }\n        extract: lines\n      fields:\n        - name: タグ\n          required: false\n          separator: \",\"\n          extract: tags\n      bullets:\n        repeat: { min: 0 }\n        extract: reasons\n        children:\n          bullets:\n            repeat: { min: 0 }\n";
     let doc = "# 題名\n\n## 理由\n\n一行目\n二行目\n\n- 親\n  - 子\n- 続く\n\n  継続の段落\n- タグ: a,b\n折り返し,c\n";
     for reading in ["paragraph", "line"] {
@@ -378,7 +378,7 @@ document:
 "#;
     let doc = "## 状況\n\n背景。\n\n- 箇条1\n- 箇条2\n\n| a |\n|---|\n| x |\n\n```gherkin\nScenario: 例\n```\n";
     let v = values(schema, doc);
-    // 部分の間は元の文書の空行を残し、表とコードブロックは抜く（REQ-schema-063）
+    // 部分の間は元の文書の空行を残し、表とコードブロックは抜く
     assert_eq!(v["sections"]["body"], "背景。\n\n- 箇条1\n- 箇条2");
 }
 
@@ -397,7 +397,7 @@ document:
 "#;
     let doc = "## 状況\n\n- 理由1\n\n  続きの段落\n  - 入れ子\n";
     let v = values(schema, doc);
-    // 子の箇条書きの行は、そのままのインデントで親の抽出要素に含める（REQ-schema-031、TBL-schema-008）
+    // 子の箇条書きの行は、そのままのインデントで親の抽出要素に含める
     assert_eq!(v["sections"]["body"], "- 理由1\n\n  続きの段落\n  - 入れ子");
 }
 
@@ -608,7 +608,7 @@ document:
 "#;
     let doc = "## 要求\n\n### REQ-001: 名前\n\n- 種類: algorithm\n\n  継続の説明\n";
     let v = values(schema, doc);
-    // 継続段落はフィールド行の一部なので、項目の本文のフィールド行にも含める（REQ-schema-030）
+    // 継続段落はフィールド行の一部なので、項目の本文のフィールド行にも含める
     assert_eq!(
         v["items"],
         json!(["REQ-001: 名前\n- 種類: algorithm\n\n  継続の説明"])
@@ -632,7 +632,7 @@ document:
 "#;
     let doc = "## 要求\n\n### REQ-001: 名前\n\n- 種類: algorithm\n\n本文。\n";
     let v = values(schema, doc);
-    // 見出しと本文は改行でつなぎ、本文の部分の間は元の文書の空行を残す（REQ-schema-063）
+    // 見出しと本文は改行でつなぎ、本文の部分の間は元の文書の空行を残す
     assert_eq!(
         v["items"],
         json!(["REQ-001: 名前\n- 種類: algorithm\n\n本文。"])
@@ -1032,7 +1032,7 @@ document:
 // @kotowari[C-schema-block-20]
 #[test]
 fn child_of_declared_field_does_not_shadow_declared_child_field() {
-    // 宣言済みフィールド行の下の子は未宣言の構造（REQ-schema-003）なので、子フィールドの
+    // 宣言済みフィールド行の下の子は未宣言の構造なので、子フィールドの
     // 抽出で拾わない。拾うと正当な子フィールドの値を覆い隠す。
     let schema = r#"
 document:
@@ -1392,7 +1392,7 @@ document:
 #[test]
 fn item_object_keys_come_from_the_schema_not_the_document() {
     // 同じ配置パスを宣言していれば、文書の見出しの語とフィールド行の名前が
-    // 変わっても出力のキーは変わらない。出力の契約はスキーマが持つ（A22）。
+    // 変わっても出力のキーは変わらない。出力の契約はスキーマが持つ。
     let japanese = "document:\n  sections:\n    - name: 蔵書\n      items:\n      - repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: 著者\n            extract: author\n";
     let english = "document:\n  sections:\n    - name: Books\n      items:\n      - repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: Author\n            extract: author\n";
     let japanese_doc = "## 蔵書\n\n### ISBN-1: 吾輩は猫である\n\n- 著者: 夏目漱石\n";

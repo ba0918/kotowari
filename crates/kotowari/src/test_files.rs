@@ -2,7 +2,7 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 /// glob の一覧に当たるファイルを集める。`テストのファイル`（"tests.files"）と`ガイド`（"guides.files"）が
-/// 同じ走査と`除外`を使う（REQ-core-019、REQ-core-079、REQ-core-018、REQ-core-198）。
+/// 同じ走査と`除外`を使う。
 /// (`基準のディレクトリ`からの相対パス, 絶対パス) を相対パスのバイト順に並べて返す
 pub fn collect_files(
     base: &Path,
@@ -23,7 +23,7 @@ pub fn collect_files(
 }
 
 /// glob の一覧に当たるファイルを集める。隠しディレクトリは、glob がパスの成分で名指ししたものだけに入る
-/// （REQ-core-019 の "overview.files" の例外）。ほかは `collect_files` と同じ走査で、
+/// （"overview.files" の例外）。ほかは `collect_files` と同じ走査で、
 /// (`基準のディレクトリ`からの相対パス, 絶対パス) を相対パスのバイト順に並べて返す
 pub fn collect_named_hidden(
     base: &Path,
@@ -49,9 +49,8 @@ pub fn collect_named_hidden(
 }
 
 /// 基準のディレクトリを辿り、wanted に当たるファイルを集める。隠しディレクトリは named_hidden に
-/// 当たるものだけに入り（REQ-core-019）、ディレクトリのシンボリックリンクは辿らない（REQ-core-079、A102）。
+/// 当たるものだけに入り、ディレクトリのシンボリックリンクは辿らない。
 /// 辿る途中で読めないディレクトリと、先の無いシンボリックリンクは読めないファイルとして止める
-/// （REQ-core-018、A96、A146）
 fn walk(
     base: &Path,
     wanted: &GlobSet,

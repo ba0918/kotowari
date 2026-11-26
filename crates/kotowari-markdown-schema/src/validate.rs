@@ -17,7 +17,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     if let Some(title) = &doc_rule.title {
         validate_title(title, &document.titles, &mut findings);
     } else if !open {
-        // title 規則が無い `#` 見出しは閉じた世界で undeclared_heading（REQ-schema-001）
+        // title 規則が無い `#` 見出しは閉じた世界で undeclared_heading
         for heading in &document.titles {
             findings.push(Finding::at(
                 FindingKind::UndeclaredHeading,
@@ -34,7 +34,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         None => open,
     };
     let rules = ContainerRules::for_preamble(doc_rule.preamble.as_ref());
-    // 前置部と文書そのものは開始行を持つノードではないので、欠落の指摘は行を持たない（REQ-schema-008）
+    // 前置部と文書そのものは開始行を持つノードではないので、欠落の指摘は行を持たない
     validate_container(
         &rules,
         &document.preamble,
@@ -108,13 +108,13 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     }
 
     // 前置部領域の深さ3の見出し。題名より前の見出しは open では許し、閉じた
-    // 世界では undeclared_heading（REQ-schema-001、REQ-schema-002）。題名より後の見出しは宣言済みの前置部の
+    // 世界では undeclared_heading。題名より後の見出しは宣言済みの前置部の
     // 中の未宣言の構造として open でも undeclared_heading、その内側の行は
-    // undeclared_line にする（REQ-schema-003）。前置部が未宣言のときは閉じた世界だけで
+    // undeclared_line にする。前置部が未宣言のときは閉じた世界だけで
     // 同じ扱いになり、open では未宣言の構造ごと許す。
     if !doc_rule.items.is_empty() {
         // 文書の直下の項目を宣言したスキーマでは、最初の節より前の深さ3の見出しを
-        // その項目として読む（REQ-schema-061）。含む節が無いので欠落の指摘は行を持たない
+        // その項目として読む。含む節が無いので欠落の指摘は行を持たない
         validate_items(
             &doc_rule.items,
             &document.preamble_items(),
@@ -149,7 +149,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         ));
     }
 
-    // 行を持つ指摘には、その行の生の文字をそのまま添える（REQ-schema-008）
+    // 行を持つ指摘には、その行の生の文字をそのまま添える
     for finding in &mut findings {
         if let Some(line) = finding.line {
             finding.raw = document.raw_line(line).map(str::to_string);
@@ -167,7 +167,7 @@ fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Findin
         ));
         return;
     };
-    // 題名が2つ以上あっても、1つ目の題名は照合する（2026-09-24-review2-gaps の A1）
+    // 題名が2つ以上あっても、1つ目の題名は照合する
     if let Some(pattern) = &title.pattern
         && !pattern.is_match(&first.text)
     {
@@ -181,7 +181,7 @@ fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Findin
             ),
         ));
     }
-    // 2つ目以降の題名ごとに1件（REQ-schema-022）
+    // 2つ目以降の題名ごとに1件
     findings.extend(headings[1..].iter().map(|heading| {
         Finding::at(
             FindingKind::MultipleTitles,
@@ -198,7 +198,7 @@ fn validate_items(
     findings: &mut Vec<Finding>,
 ) {
     // 項目の見出しは、宣言した順で最初に選ぶ規則のものになる。どの規則も選ばない見出しは、
-    // open でも見出しと内側の行を誤りにする（REQ-schema-003、REQ-schema-027）
+    // open でも見出しと内側の行を誤りにする
     let mut item_lines: Vec<Vec<usize>> = vec![Vec::new(); item_rules.len()];
     for item in items {
         let Some(index) = select_item(item_rules, &item.text) else {
@@ -239,7 +239,7 @@ fn validate_items(
     }
 }
 
-/// ID の規則が選んだ見出しを、":" の前の ID と後の名前の形に照らす（TBL-schema-006）。
+/// ID の規則が選んだ見出しを、":" の前の ID と後の名前の形に照らす。
 fn validate_item_id(item_rule: &ItemRule, item: &Item, findings: &mut Vec<Finding>) {
     if !item.has_id_separator {
         findings.push(Finding::at(
@@ -262,7 +262,7 @@ fn validate_item_id(item_rule: &ItemRule, item: &Item, findings: &mut Vec<Findin
     }
 }
 
-/// 宣言の無い項目の見出しと、その内側の行をすべて誤りにする（REQ-schema-001、REQ-schema-003）
+/// 宣言の無い項目の見出しと、その内側の行をすべて誤りにする
 fn push_undeclared_item(findings: &mut Vec<Finding>, line: usize, name: &str, blocks: &[Block]) {
     findings.push(Finding::at(
         FindingKind::UndeclaredHeading,
@@ -357,9 +357,9 @@ impl<'a> ContainerRules<'a> {
 }
 
 /// 宣言されていない行の指摘をブロックの種別に応じた文言で作る。
-/// 文の対象外の行種別（ブロック引用・水平線・画像など）は None を返す（REQ-schema-032）。
+/// 文の対象外の行種別（ブロック引用・水平線・画像など）は None を返す。
 fn undeclared_line_for_block(block: &Block) -> Option<Finding> {
-    // 呼ぶ側が生の行を読み直して種別を決めずに済むよう、読んだ規則種別を添える（REQ-schema-055）
+    // 呼ぶ側が生の行を読み直して種別を決めずに済むよう、読んだ規則種別を添える
     let (detail, line, rule_kind) = match block {
         // 深さ4以上の見出しは行の指摘でなく、見出しの深さの指摘にする
         Block::Subheading { depth, line, .. } => {
@@ -409,7 +409,7 @@ fn push_undeclared_line(findings: &mut Vec<Finding>, block: &Block) {
 
 /// 箇条書きとして1本を検証する。箇条書きが宣言されていれば本数を数え、
 /// pattern を照合する。無ければ undeclared_line（閉じた世界）。
-/// `Block::Bullet` と、宣言された名前と一致しない `- 名前: 値` 行（TBL-schema-007）が共有する。
+/// `Block::Bullet` と、宣言された名前と一致しない `- 名前: 値` 行が共有する。
 fn validate_bullet(
     rules: &ContainerRules,
     block: &Block,
@@ -433,7 +433,7 @@ fn validate_bullet(
         None => {
             if !open {
                 // 宣言されていない箇条書きと、その内側の子の行を undeclared_line にする。
-                // 宣言していない構造の内側の行も undeclared_line（REQ-schema-001）
+                // 宣言していない構造の内側の行も undeclared_line
                 push_undeclared_line(findings, block);
                 push_undeclared_children(findings, block);
             }
@@ -441,12 +441,12 @@ fn validate_bullet(
     }
 }
 
-/// 箇条書きの子の行を、親の `children` の宣言に照合する（REQ-schema-031）。
+/// 箇条書きの子の行を、親の `children` の宣言に照合する。
 /// `children.fields` で宣言された名前と一致する `- 名前: 値` はフィールド行として
 /// 検証し、一致しない `- 名前: 値` は箇条書きとして検証する。`children` に宣言が
 /// 無い子、または親が `children` を持たないのに子リストがある場合は
 /// undeclared_line にする。親の bullets 規則が宣言されているので、open でも
-/// 宣言済みの構造の中の未宣言の子は undeclared_line になる（REQ-schema-003）。
+/// 宣言済みの構造の中の未宣言の子は undeclared_line になる。
 fn validate_children(block: &Block, children: Option<&Children>, findings: &mut Vec<Finding>) {
     let child_blocks = block.children();
     let Some(children) = children else {
@@ -474,13 +474,13 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
                     validate_field_value(field, value, *line, findings);
                 }
                 // 子フィールドも children 宣言を持たない。宣言済み子フィールド行の
-                // 下の子リストは undeclared_line（REQ-schema-001）
+                // 下の子リストは undeclared_line
                 push_undeclared_children(findings, child);
             }
             // 規則の無い子の箇条書きは、"open: true" の子の規則なら中身ごと受ける
             Block::Field { .. } | Block::Bullet { .. }
                 if children.open && children.bullets.is_none() => {}
-            // 一致しない `- 名前: 値` 行は箇条書きとして検証する（TBL-schema-007）
+            // 一致しない `- 名前: 値` 行は箇条書きとして検証する
             Block::Field { .. } | Block::Bullet { .. } => {
                 validate_child_bullet(
                     child,
@@ -526,7 +526,7 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
             );
         }
     }
-    // 子は親の本数には数えず、children.bullets の規則で別に数える（REQ-schema-031）
+    // 子は親の本数には数えず、children.bullets の規則で別に数える
     if let Some(child_bullets) = children.bullets.as_deref()
         && when_allows(child_bullets.when.as_ref(), &children.fields, child_blocks)
     {
@@ -548,8 +548,8 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
 
 /// 子の箇条書きを1本検証する。`children.bullets` が宣言されていれば本数を数え、
 /// pattern を照合して、さらに深い入れ子を再帰する。宣言されていなければ
-/// undeclared_line（REQ-schema-001）。`sibling_blocks` は同じ children ノードの下の兄弟の
-/// 行で、when の探索スコープに使う（REQ-schema-021）。
+/// undeclared_line。`sibling_blocks` は同じ children ノードの下の兄弟の
+/// 行で、when の探索スコープに使う。
 fn validate_child_bullet(
     block: &Block,
     children: &Children,
@@ -558,7 +558,7 @@ fn validate_child_bullet(
     findings: &mut Vec<Finding>,
 ) {
     let Some(bullets) = children.bullets.as_deref() else {
-        // children に宣言が無い子は undeclared_line（REQ-schema-001）
+        // children に宣言が無い子は undeclared_line
         push_undeclared_line(findings, block);
         push_undeclared_children(findings, block);
         return;
@@ -624,7 +624,7 @@ fn validate_declared_bullet(
             ),
         ));
     }
-    // when は required / pattern / enum にだけ効く。子の照合は常に行う（REQ-schema-020）。
+    // when は required / pattern / enum にだけ効く。子の照合は常に行う。
     validate_children(block, bullets.children.as_ref(), findings);
 }
 
@@ -671,11 +671,11 @@ fn validate_container(
                             validate_field_value(field, value, *line, findings);
                         }
                         // フィールド行は children 宣言を持たない。宣言済みフィールド行の
-                        // 下の子リストは undeclared_line（REQ-schema-001）
+                        // 下の子リストは undeclared_line
                         push_undeclared_children(findings, block);
                     }
                     None => {
-                        // TBL-schema-007: 宣言された名前と一致しない `- 名前: 値` 行は
+                        // 宣言された名前と一致しない `- 名前: 値` 行は
                         // 箇条書きとして扱う。pattern は元の行に適用する
                         validate_bullet(rules, block, blocks, &mut seen.bullets, open, findings);
                     }
@@ -703,7 +703,7 @@ fn validate_container(
                 line,
                 row_lines,
             } => match rules.table {
-                // select で選ばれなかった表は宣言していない表として扱う（REQ-schema-059）
+                // select で選ばれなかった表は宣言していない表として扱う
                 Some(table) if table_selection.is_none_or(|s| s.takes(*line)) => {
                     seen.tables.push(*line);
                     validate_table_shape(table, header, rows, *line, row_lines, findings);
@@ -752,7 +752,7 @@ fn validate_container(
                     push_undeclared_line(findings, block);
                 }
             }
-            // 順序付きリストはどの規則種別にも属さない。閉じた世界では undeclared_line にする（TBL-schema-007）
+            // 順序付きリストはどの規則種別にも属さない。閉じた世界では undeclared_line にする
             Block::OrderedList { .. } => {
                 if !open {
                     push_undeclared_line(findings, block);
@@ -922,7 +922,7 @@ fn validate_statement_value(
     }
 }
 
-/// 表を、宣言されたヘッダに照らす（REQ-schema-033）。header を宣言しないときは
+/// 表を、宣言されたヘッダに照らす。header を宣言しないときは
 /// ヘッダも列数も検査しない。
 fn validate_table_shape(
     table: &Table,
@@ -942,10 +942,10 @@ fn validate_table_shape(
             format!("table header {header:?} does not match expected {expected:?}"),
         ));
     }
-    // ヘッダより多いセルは文書を読むときに捨ててあるので、足りない行だけが残る（REQ-schema-033）
+    // ヘッダより多いセルは文書を読むときに捨ててあるので、足りない行だけが残る
     for (index, row) in rows.iter().enumerate() {
         if row.len() < header.len() {
-            // 違反したのはその行なので、ヘッダの行ではなくその行を指す（REQ-schema-008）
+            // 違反したのはその行なので、ヘッダの行ではなくその行を指す
             let row_line = row_lines.get(index).copied().unwrap_or(line);
             findings.push(Finding::at(
                 FindingKind::TableHeaderMismatch,
@@ -960,7 +960,7 @@ fn validate_table_shape(
     }
 }
 
-/// コードブロックを、宣言された言語と行の pattern に照らす（REQ-schema-034）。
+/// コードブロックを、宣言された言語と行の pattern に照らす。
 /// 空行は行の照合の対象外。
 fn validate_codeblock_shape(
     codeblock: &CodeBlock,
@@ -982,7 +982,7 @@ fn validate_codeblock_shape(
         return;
     };
     for (i, code_line) in value.lines().enumerate() {
-        // REQ-schema-034: 取り除くのは行頭の空白だけ。末尾まで落とすと "...$" の照合が変わる
+        // 取り除くのは行頭の空白だけ。末尾まで落とすと "...$" の照合が変わる
         let code_line = code_line.trim_start();
         if code_line.is_empty() {
             continue;
@@ -997,10 +997,10 @@ fn validate_codeblock_shape(
     }
 }
 
-/// フィールド行の値を、宣言された区切り・pattern・enum に照らす（REQ-schema-029）。
+/// フィールド行の値を、宣言された区切り・pattern・enum に照らす。
 /// 前置部と節のフィールド行にも、箇条書きの子フィールド行にも同じ規則を当てる。
 fn validate_field_value(field: &Field, value: &str, line: usize, findings: &mut Vec<Finding>) {
-    // 制約は区切った要素ごとに課す（REQ-schema-029）。照合の前に前後の空白を取り除く
+    // 制約は区切った要素ごとに課す。照合の前に前後の空白を取り除く
     let values: Vec<String> = match field.effective_separator() {
         Some(sep) => split_trimmed(value, sep),
         None => vec![value.to_string()],
@@ -1042,7 +1042,7 @@ fn split_trimmed(value: &str, sep: &str) -> Vec<String> {
 
 /// `when` の条件を評価する。参照フィールドが無いとき eq は偽、ne は真。
 /// 宣言された名前と一致しない `- 名前: 値` 行はフィールド行ではなく箇条書きなので、
-/// 参照フィールドとしては数えない（TBL-schema-007、REQ-schema-021）。
+/// 参照フィールドとしては数えない。
 fn when_allows(when: Option<&When>, fields: &[Field], blocks: &[Block]) -> bool {
     let Some(when) = when else {
         return true;
@@ -1087,13 +1087,13 @@ fn bounds(required: Option<bool>, repeat: Option<&Repeat>) -> (u64, Option<u64>)
 struct Occurrence<'a> {
     /// 現れた行（1始まり）。出現回数はこの長さ
     lines: &'a [usize],
-    /// スキーマが宣言したノードの名前。節とフィールド行だけが持つ（REQ-schema-008）
+    /// スキーマが宣言したノードの名前。節とフィールド行だけが持つ
     name: Option<&'a str>,
     /// detail の中でノードを指す言い回し
     what: String,
-    /// それを含むノードの開始行。欠落の指摘の行に使う（REQ-schema-008）
+    /// それを含むノードの開始行。欠落の指摘の行に使う
     container_line: Option<usize>,
-    /// 数えたノードの規則種別。出現回数の指摘に添える（REQ-schema-057）
+    /// 数えたノードの規則種別。出現回数の指摘に添える
     rule_kind: RuleKind,
 }
 
@@ -1108,10 +1108,10 @@ fn check_occurrence(
     let what = &occurrence.what;
     let (min, max) = bounds;
     let finding = if count < min {
-        // 欠落したノードには行が無いので、それを含むノードの開始行を指す（REQ-schema-008）
+        // 欠落したノードには行が無いので、それを含むノードの開始行を指す
         let line = occurrence.container_line;
         if repeat_style {
-            // 下限の指摘は数えたノードの規則種別を持つ（REQ-schema-057）
+            // 下限の指摘は数えたノードの規則種別を持つ
             Finding::maybe_at(
                 FindingKind::RepeatMinNotMet,
                 line,
@@ -1128,12 +1128,12 @@ fn check_occurrence(
     } else if let Some(max) = max
         && count > max
     {
-        // 上限を超えた最初のノードが違反したノードなので、その行を指す（REQ-schema-008）
+        // 上限を超えた最初のノードが違反したノードなので、その行を指す
         let line = usize::try_from(max)
             .ok()
             .and_then(|index| occurrence.lines.get(index))
             .copied();
-        // 上限の指摘は数えたノードの規則種別を持つ（REQ-schema-057）
+        // 上限の指摘は数えたノードの規則種別を持つ
         Finding::maybe_at(
             FindingKind::RepeatMaxExceeded,
             line,

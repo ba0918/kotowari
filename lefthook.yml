@@ -1,18 +1,17 @@
-# commit と push のゲート（判断の記録 docs/decision/records/2026-09-17-decision-log.md の A15、A19）
+# commit と push のゲート
 #
 # pre-commit: 秘密情報の検査（lefthook の導入前から入っていたグローバルのフック。
 #   lefthook install が .git/hooks/pre-commit.old に退避したものをそのまま走らせる）と、
-#   kotowari 自身の IR の検査。check はリポジトリの今のコードで走らせる。
+#   kotowari 自身の決定の文書の検査。check はリポジトリの今のコードで走らせる。
 #   --allow-test-findings を付け、テスト側の指摘はコミットでは止めない。仕様の承認のコミットは
-#   実装より先で、そのときテストはまだ無いため（A19）。どの指摘がテスト側かは kotowari が決め、
-#   ここに種類を並べない（docs/decision/records/2026-10-06-spec-first-commit.md の A2、A8）。
+#   実装より先で、そのときテストはまだ無いため。どの指摘がテスト側かは kotowari が決め、
+#   ここに種類を並べない。
 #   ほかの誤り（終了コード1）と停止（終了コード2）は止める。
 #   ステージした Rust のファイルは rustfmt にかけ直してステージし直す。放っておくと整形が崩れていくため。
 #   edition は Cargo.toml と同じ 2024 を渡す（rustfmt を直に呼ぶと cargo の edition を読まない）。
-# pre-push: テスト全件と、テスト側の指摘も含めた check の終了コード0。テストの無い要求は push で止まる。
+# pre-push: テスト全件と、テスト側の指摘も含めた check の終了コード0。テストの無い確認することの行は push で止まる。
 #   変異テストはここでは回さない。push のたびに1〜2時間止まっていたため、見逃し0件の関門は
-#   PR の CI（.github/workflows/mutants.yml）とリリースの CI（release.yml）に移した
-#   （判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A1〜A4）。
+#   PR の CI（.github/workflows/mutants.yml）とリリースの CI（release.yml）に移した。
 pre-commit:
   commands:
     rustfmt:

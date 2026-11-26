@@ -1,4 +1,4 @@
-//! 指摘の種類、重大度、指摘と、その並べ方と数え方（TBL-core-005、TBL-core-007）
+//! 指摘の種類、重大度、指摘と、その並べ方と数え方
 
 use std::collections::BTreeMap;
 
@@ -50,7 +50,7 @@ finding_kinds! {
     GuideStale => "guide_stale",
     UnresolvedReference => "unresolved_reference",
     VagueWord => "vague_word",
-    // 全体像の元データの指摘（TBL-core-008）。core はこの種類を作らず、追加の指摘の群として受け取って並べ、数える
+    // 全体像の元データの指摘。core はこの種類を作らず、追加の指摘の群として受け取って並べ、数える
     OverviewFormInvalid => "overview_form_invalid",
     OverviewPartUnknown => "overview_part_unknown",
     OverviewPartInvalid => "overview_part_invalid",
@@ -59,13 +59,13 @@ finding_kinds! {
     OverviewDocumentShared => "overview_document_shared",
     OverviewRefUnresolved => "overview_ref_unresolved",
     OverviewNameConflict => "overview_name_conflict",
-    // 目次の指摘（TBL-core-008）。全体像の元データの指摘と同じく kotowari-overview が作る
+    // 目次の指摘。全体像の元データの指摘と同じく kotowari-overview が作る
     OverviewTocInvalid => "overview_toc_invalid",
     OverviewTocPageMissing => "overview_toc_page_missing",
     OverviewTocPageUnknown => "overview_toc_page_unknown",
     OverviewTocPageDuplicate => "overview_toc_page_duplicate",
     OverviewTocGroupEmpty => "overview_toc_group_empty",
-    // 対の指摘（TBL-core-008）
+    // 対の指摘
     TranslationMissing => "translation_missing",
     TranslationRecordInvalid => "translation_record_invalid",
     TranslationStale => "translation_stale",
@@ -204,19 +204,19 @@ impl Finding {
     }
 }
 
-/// REQ-core-024: 指摘を TBL-core-007 の順（path → line → kind → detail）に並べる
+/// 指摘を 順（path → line → kind → detail）に並べる
 pub fn sort_findings(findings: &mut [Finding]) {
     findings.sort_by(|a, b| {
         a.path
             .cmp(&b.path)
-            // TBL-core-007: line は null が先、その後は小さい順（Option の順序が None を先に置く）
+            // line は null が先、その後は小さい順（Option の順序が None を先に置く）
             .then_with(|| a.line.cmp(&b.line))
             .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
             .then_with(|| a.detail.cmp(&b.detail))
     });
 }
 
-/// PROP-core-002: 種類ごとの指摘の数。1件も無い種類は持たない
+/// 種類ごとの指摘の数。1件も無い種類は持たない
 pub fn count_findings(findings: &[Finding]) -> BTreeMap<String, usize> {
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
     for f in findings {

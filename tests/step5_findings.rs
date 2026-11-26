@@ -35,7 +35,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
         .collect()
 }
 
-// --- REQ-core-025: 文字の出力に使う種類の語 ---
+// --- 文字の出力に使う種類の語 ---
 
 // @kotowari[C-core-output-8]
 #[test]
@@ -53,7 +53,7 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
     );
 }
 
-// --- REQ-core-024: FindingKind と str の等価 ---
+// --- FindingKind と str の等価 ---
 
 // @kotowari[C-core-forder-1]
 #[test]
@@ -71,9 +71,9 @@ fn req_024_a_finding_kind_equals_only_its_own_name() {
     );
 }
 
-// --- REQ-core-029: 誤りの種類の detail ---
+// --- 誤りの種類の detail ---
 
-// --- REQ-core-030: 警告の種類の detail ---
+// --- 警告の種類の detail ---
 
 // --- 注意は表の種類だけ ---
 
@@ -162,7 +162,7 @@ fn req_031_check_reports_notices_only_for_the_notice_kinds() {
     }
 }
 
-// --- REQ-core-027: 文書全体への指摘は null ---
+// --- 文書全体への指摘は null ---
 
 // @kotowari[C-core-forder-4]
 #[test]
@@ -179,7 +179,7 @@ fn req_027_document_wide_findings_have_null_line() {
     );
 }
 
-// --- REQ-core-028: 行は1始まり ---
+// --- 行は1始まり ---
 
 // @kotowari[C-core-forder-3]
 #[test]
@@ -207,7 +207,7 @@ fn req_028_lines_start_at_one() {
     assert_eq!(line, 7, "### Bad Heading is on line 7 (1-indexed)");
 }
 
-// --- REQ-core-024: 指摘の並び ---
+// --- 指摘の並び ---
 
 // @kotowari[C-core-forder-1]
 #[test]
@@ -248,13 +248,13 @@ fn req_024_sorted_by_path_line_kind_detail() {
     }
 }
 
-// --- PROP-core-003: findings は並んでいる ---
+// --- findings は並んでいる ---
 
 // @kotowari[C-core-forder-2]
 #[test]
 fn prop_003_findings_are_sorted() {
     // run_check を通して、ライブラリが返す findings が
-    // TBL-core-007（path → line → kind → detail）で並んでいることを検証する。
+    // path → line → kind → detail の順で並んでいることを検証する。
     //
     // 決定の文書の指摘（後のファイル名の文書）とテスト発見の指摘（前のファイル
     // 名のテストファイル）が交互に追加されるため、ソートしないと壊れる。
@@ -292,7 +292,7 @@ fn prop_003_findings_are_sorted() {
             .unwrap()
             .check()
             .expect("run_check should succeed");
-        // findings が TBL-core-007 の順で並んでいることを検証する
+        // findings が 順で並んでいることを検証する
         let findings = result.findings();
         for i in 1..findings.len() {
             let a = &findings[i - 1];
@@ -349,7 +349,7 @@ fn tbl_019_marker_findings_line_is_the_marker_line() {
     );
 }
 
-// --- REQ-core-174: 宣言の外の行・コードブロック・用語集の題名 ---
+// --- 宣言の外の行・コードブロック・用語集の題名 ---
 
 // @kotowari[C-core-clienv-6]
 #[test]

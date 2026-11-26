@@ -1,4 +1,4 @@
-//! 取得した入力を core に渡す公開の型（TBL-core-042）
+//! 取得した入力を core に渡す公開の型
 
 use super::*;
 
@@ -147,13 +147,13 @@ pub struct CheckInputs {
     pub guides: Option<Vec<SourceText>>,
     pub surface: Option<Vec<SurfaceAnalysis>>,
     pub unspecified: Option<Vec<SourceText>>,
-    /// 追加の指摘の群。渡したものだけを加える（TBL-core-042）
+    /// 追加の指摘の群。渡したものだけを加える
     pub groups: Vec<FindingGroup>,
-    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
+    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む
     pub translations: crate::translations::Pairs,
 }
 
-/// 名前を付けた追加の指摘の群（TBL-core-042）。core は群の意味を知らず、指摘をほかの指摘と
+/// 名前を付けた追加の指摘の群。core は群の意味を知らず、指摘をほかの指摘と
 /// 合わせて並べて数え、名前と数を結果に持たせるだけである
 #[derive(Debug, Clone)]
 pub struct FindingGroup {
@@ -220,6 +220,6 @@ pub struct RepositoryCheckInputs {
     pub guides: Option<Vec<NativeSourceText>>,
     pub surface: Option<Vec<NativeSurfaceAnalysis>>,
     pub unspecified: Option<Vec<NativeSourceText>>,
-    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
+    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む
     pub translations: crate::translations::Pairs,
 }

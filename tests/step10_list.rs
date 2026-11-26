@@ -1,4 +1,4 @@
-//! "kotowari list" の項目の組み立てと出力（REQ-core-151〜REQ-core-155、TBL-core-026）
+//! "kotowari list" の項目の組み立てと出力
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -66,9 +66,9 @@ fn item<'a>(v: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {
 const DECISION_DOC: &str = "# 題名\n\n範囲。\n\n## 例\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n\
 ### 決めたこと\n\nこうする。\n\n### 確認すること\n\n- C-t-a-1 確かめる\n";
 
-// --- REQ-core-151: list の読み取り ---
+// --- list の読み取り ---
 
-// --- REQ-core-153: 項目の形 ---
+// --- 項目の形 ---
 
 // @kotowari[C-core-list-4]
 #[test]
@@ -96,9 +96,9 @@ fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     );
 }
 
-// --- REQ-core-154: 一覧の順 ---
+// --- 一覧の順 ---
 
-// --- REQ-core-155: 出力の形 ---
+// --- 出力の形 ---
 
 // @kotowari[C-core-list-8]
 #[test]
@@ -113,7 +113,7 @@ fn req_155_json_top_level_has_only_items() {
     );
 }
 
-// --- REQ-core-152、REQ-core-155: 対の blob hash ---
+// --- 対の blob hash ---
 
 /// "languages: [ja, en]" と日本語の`UI の文字`のすべての鍵を書いた設定に、extra を足す
 fn make_bilingual_project(tmp: &Path, extra: &str) {

@@ -1,4 +1,4 @@
-//! 入力の受け入れ。要る群が揃っているか、同じ入力が重ならないかを見る（REQ-core-315）
+//! 入力の受け入れ。要る群が揃っているか、同じ入力が重ならないかを見る
 
 use super::*;
 
@@ -24,7 +24,7 @@ impl Policy {
     pub(super) fn unspecified(&self) -> bool {
         self.surface() && self.config.surface.unspecified.is_some()
     }
-    /// REQ-core-334: 言語が1つなら`対`を読まない
+    /// 言語が1つなら`対`を読まない
     pub(super) fn translations(&self) -> bool {
         self.config.languages().len() > 1
     }

@@ -1,8 +1,6 @@
-# Rust の関門: 整形、lint、テストを PR と main で回す（判断の記録
-# docs/decision/records/2026-10-06-ci-rust-gates.md）。main のブランチ保護で必須にするのは "Rust gates" のジョブ。
+# Rust の関門: 整形、lint、テストを PR と main で回す。main のブランチ保護で必須にするのは "Rust gates" のジョブ。
 # ツールチェーンは rust-toolchain.toml の版を入れる。
-# 同じジョブで、依存のライセンスと既知の脆弱性も検査する（判断の記録
-# docs/decision/records/2026-11-24-unattended-merge.md の A18）。必須の検査を増やさずにマージを止める側に置くため。
+# 同じジョブで、依存のライセンスと既知の脆弱性も検査する。必須の検査を増やさずにマージを止める側に置くため。
 name: CI
 
 on:

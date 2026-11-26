@@ -163,7 +163,7 @@ impl ReadList {
     pub fn items(&self) -> &[crate::list::ListItem] {
         &self.0.items
     }
-    /// `対`ごとの blob hash。`言語の一覧`の言語が2つ以上のときだけ持つ（REQ-core-155）
+    /// `対`ごとの blob hash。`言語の一覧`の言語が2つ以上のときだけ持つ
     pub fn translations(&self) -> Option<&[crate::translations::Translation]> {
         self.1.as_deref()
     }
@@ -213,7 +213,7 @@ impl ReadModel {
     pub fn list(&self) -> ReadList {
         self.list_with(&crate::translations::Pairs::default())
     }
-    /// "items" と、`言語の一覧`の言語が2つ以上なら pairs の "translations"（REQ-core-155）
+    /// "items" と、`言語の一覧`の言語が2つ以上なら pairs の "translations"
     pub fn list_with(&self, pairs: &crate::translations::Pairs) -> ReadList {
         let mut items = crate::decisions::list_items(&self.decisions, &self.discovered.markers);
         items.sort_by(|a, b| a.location().cmp(&b.location()));
@@ -235,7 +235,7 @@ impl ReadModel {
             .map(|document| crate::decision_parse::parsed(document, Vec::new()))
             .collect()
     }
-    /// ほかの文書の`ガイドの印`を`ガイド`と同じ規則で読むもの（REQ-core-286）
+    /// ほかの文書の`ガイドの印`を`ガイド`と同じ規則で読むもの
     pub fn guide_reader(&self) -> crate::guides::GuideReader {
         crate::guides::GuideReader::new(&self.decisions)
     }

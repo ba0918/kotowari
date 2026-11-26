@@ -1,4 +1,4 @@
-//! 取得した入力の受け入れと、読み取りと検査の段取り（REQ-core-310〜REQ-core-317）
+//! 取得した入力の受け入れと、読み取りと検査の段取り
 
 use std::{
     collections::{BTreeMap, BTreeSet},

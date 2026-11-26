@@ -1,25 +1,25 @@
-//! `等価の一覧`の読み取り（REQ-core-143、REQ-core-148）。一覧のファイルの形を知るのはこのモジュールだけ。
+//! `等価の一覧`の読み取り。一覧のファイルの形を知るのはこのモジュールだけ。
 
 use crate::mutants::{normalize_source_path, trim_spaces_and_tabs};
 use crate::{Finding, FindingKind, StopReason};
 use serde_json::Value;
 
-/// 1件が持つ鍵。この5つちょうどでなければ形の誤り（REQ-core-143）
+/// 1件が持つ鍵。この5つちょうどでなければ形の誤り
 const KEYS: [&str; 5] = ["file", "change", "text", "class", "why"];
 
-/// 一覧に書ける分類（A17: 「等価」だけ）
+/// 一覧に書ける分類（「等価」だけ）
 const EQUIVALENT: &str = "equivalent";
 
 /// 形の正しい`等価の一覧`の1件
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Equivalent {
-    /// REQ-core-110 の正規化を掛けた "file"（比べるときに使う）
+    /// 正規化を掛けた "file"（比べるときに使う）
     pub file: String,
     /// 変更の説明
     pub change: String,
     /// 変異が入る行の元の文面
     pub text: String,
-    /// A57: 一覧に書かれたままの "file" と "change" を ": " でつないだ detail
+    /// 一覧に書かれたままの "file" と "change" を ": " でつないだ detail
     pub detail: String,
 }
 
@@ -28,7 +28,7 @@ pub struct Equivalent {
 pub struct EquivalentList {
     /// 形の正しい1件
     pub(crate) entries: Vec<Equivalent>,
-    /// 形の誤った1件への equivalent_invalid（A53: この1件には equivalent_stale を出さない）
+    /// 形の誤った1件への equivalent_invalid（この1件には equivalent_stale を出さない）
     pub(crate) findings: Vec<Finding>,
 }
 impl EquivalentList {
@@ -36,9 +36,9 @@ impl EquivalentList {
 }
 
 /// 一覧の中身を読む。`display` は一覧のファイルの`基準のディレクトリ`からの相対パス。
-/// YAML として読めないか最上位が並びでないときは設定の誤りで`停止`する（REQ-core-148）。
+/// YAML として読めないか最上位が並びでないときは設定の誤りで`停止`する。
 pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason> {
-    // REQ-core-148: 空（0バイトか注釈だけ）の一覧は0件
+    // 空（0バイトか注釈だけ）の一覧は0件
     let items = crate::config::read_yaml_sequence(text, display)?;
 
     let mut entries = Vec::new();
@@ -46,7 +46,7 @@ pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason
     for item in &items {
         match read_entry(item) {
             Ok(entry) => entries.push(entry),
-            // REQ-core-143: 形の誤った1件は1件ごとに誤りを出し、どの変異の結果とも一致させない
+            // 形の誤った1件は1件ごとに誤りを出し、どの変異の結果とも一致させない
             Err(detail) => findings.push(Finding::new(
                 FindingKind::EquivalentInvalid,
                 display.to_string(),
@@ -58,7 +58,7 @@ pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason
     Ok(EquivalentList { entries, findings })
 }
 
-/// 1件を読む。形が正しくなければ equivalent_invalid の detail を返す（REQ-core-143）
+/// 1件を読む。形が正しくなければ equivalent_invalid の detail を返す
 fn read_entry(item: &Value) -> Result<Equivalent, String> {
     let detail = written_detail(item);
 
@@ -85,11 +85,11 @@ fn read_entry(item: &Value) -> Result<Equivalent, String> {
     if class != EQUIVALENT {
         return Err(detail);
     }
-    // A53: "why" は前後の半角空白とタブを除いて空なら空
+    // "why" は前後の半角空白とタブを除いて空なら空
     if trim_spaces_and_tabs(why).is_empty() {
         return Err(detail);
     }
-    // A51: 絶対パスか ".." の要素を含む "file" は基準のディレクトリの外を指す
+    // 絶対パスか ".." の要素を含む "file" は基準のディレクトリの外を指す
     let Ok(file) = normalize_source_path(file) else {
         return Err(detail);
     };
@@ -102,7 +102,7 @@ fn read_entry(item: &Value) -> Result<Equivalent, String> {
     })
 }
 
-/// A57、REQ-core-143: 書かれたままの "file" と "change" を ": " でつなぐ。
+/// 書かれたままの "file" と "change" を ": " でつなぐ。
 /// 無いか文字列でない方は空の文字列にする
 fn written_detail(item: &Value) -> String {
     let written = |key: &str| item.get(key).and_then(Value::as_str).unwrap_or("");

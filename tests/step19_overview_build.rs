@@ -1,4 +1,4 @@
-//! "kotowari overview build"（docs/ir/core/overview-commands.md、docs/ir/core/cli.md）
+//! "kotowari overview build"（docs/decisions/core/overview-commands.md、docs/decisions/core/cli.md）
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"

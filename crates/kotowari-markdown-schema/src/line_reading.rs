@@ -1,4 +1,4 @@
-//! `読み方` "line" の文書の木。生の行を1行ずつ読み分ける（TBL-schema-011 の "line" の列）。
+//! `読み方` "line" の文書の木。生の行を1行ずつ読み分ける。
 //!
 //! 段落の読み方は mdast の木から組むが、行の読み方は CommonMark の段落・遅延継続・
 //! 字下げのコードブロック・下線の見出し・引用・HTML を作らないので、`Document` が保つ
@@ -10,7 +10,7 @@ use crate::document::{Block, Document, RawLine, TreeBuilder, inline_text, table_
 use crate::schema::Reading;
 use markdown::mdast::Node;
 
-/// スキーマの`読み方`で読んだ文書の木（TBL-schema-011）。検証と抽出は同じ木を読む
+/// スキーマの`読み方`で読んだ文書の木。検証と抽出は同じ木を読む
 pub(crate) enum ReadDocument<'a> {
     /// "paragraph": 解析した木のまま
     Parsed(&'a Document),
@@ -37,7 +37,7 @@ impl Document {
         }
     }
 
-    /// 同じ生の行を `読み方` "line" で読み直した木（TBL-schema-011）。
+    /// 同じ生の行を `読み方` "line" で読み直した木。
     pub(crate) fn read_by_line(&self) -> Document {
         let lines = &self.lines;
         let mut reader = LineReader::default();
@@ -55,7 +55,7 @@ impl Document {
     }
 }
 
-/// 開いている一覧の行。子の一覧の行とブロックを受ける（REQ-schema-031）。
+/// 開いている一覧の行。子の一覧の行とブロックを受ける。
 struct OpenItem {
     /// マーカーの後の中身が始まる桁。これ以上字下げした行はこの行の子になる
     content_column: usize,
@@ -108,7 +108,7 @@ impl LineReader {
             self.list_line(text, line, &marker);
             return index + 1;
         }
-        // それ以外の行は1行ずつ`文`（TBL-schema-011）
+        // それ以外の行は1行ずつ`文`
         self.close_list();
         self.tree.blocks(vec![Block::Statement {
             text: text.trim().to_string(),
@@ -134,7 +134,7 @@ impl LineReader {
     fn list_line(&mut self, text: &str, line: usize, marker: &ListMarker) {
         self.close_deeper_than(marker.indent);
         let nested = !self.open.is_empty();
-        // 子の行は元の字下げを保ち、最上位の行は行頭の字下げを除く（TBL-schema-008）
+        // 子の行は元の字下げを保ち、最上位の行は行頭の字下げを除く
         let line_text = if nested {
             text.to_string()
         } else {
@@ -143,7 +143,7 @@ impl LineReader {
         let content = marker.content.clone();
         self.extend_open(line);
         if marker.ordered {
-            // 順序付きの行は子を持たない。子にあたる行はその後ろの兄弟になる（TBL-schema-007）
+            // 順序付きの行は子を持たない。子にあたる行はその後ろの兄弟になる
             self.attach_here(Block::OrderedList {
                 text: content,
                 line,
@@ -222,7 +222,7 @@ fn indent_width(text: &str) -> usize {
     width
 }
 
-/// CommonMark の ATX 見出しの行なら、その深さ（TBL-schema-011）。行頭の空白は3つまで、
+/// CommonMark の ATX 見出しの行なら、その深さ。行頭の空白は3つまで、
 /// "#" は1〜6個で、その後が空白か行末。
 fn heading_depth(text: &str) -> Option<u8> {
     let spaces = text.len() - text.trim_start_matches(' ').len();
@@ -250,7 +250,7 @@ fn heading_text(text: &str) -> String {
     text.trim().trim_start_matches('#').trim().to_string()
 }
 
-/// 水平線の行（同じ記号3つ以上と空白だけ）。行の読み方では`文`になる（TBL-schema-011）。
+/// 水平線の行（同じ記号3つ以上と空白だけ）。行の読み方では`文`になる。
 fn is_thematic_break(text: &str) -> bool {
     let body = text.trim();
     let Some(mark) = body.chars().next() else {
@@ -261,7 +261,7 @@ fn is_thematic_break(text: &str) -> bool {
         && body.chars().filter(|&c| c == mark).count() >= 3
 }
 
-/// 一覧の行のマーカー（TBL-schema-007）。
+/// 一覧の行のマーカー。
 struct ListMarker {
     indent: usize,
     content_column: usize,
@@ -296,7 +296,7 @@ impl ListMarker {
     }
 }
 
-/// "```" か "~~~" のフェンスの開始（TBL-schema-011）。
+/// "```" か "~~~" のフェンスの開始。
 struct Fence {
     mark: char,
     length: usize,
@@ -359,7 +359,7 @@ fn strip_indent(text: &str, width: usize) -> &str {
     &text[spaces.min(width)..]
 }
 
-/// 見出しの行と区切りの行で始まる GFM の表を`表`として読む（TBL-schema-011）。
+/// 見出しの行と区切りの行で始まる GFM の表を`表`として読む。
 /// 縦棒で始まらない表も受け、表の終わりは GFM に任せる。表にならなければ None で、
 /// その行は`文`になる。
 fn table_at(lines: &[String], index: usize) -> Option<(Block, usize)> {

@@ -101,7 +101,7 @@ document:
 // @kotowari[C-schema-extract-7, C-schema-extract-51]
 #[test]
 fn extract_accepts_the_shorthand_and_a_named_group_in_of() {
-    // 略記（`extract: <名前>`）は `{ path: <名前> }` と同じに読む（REQ-schema-048）
+    // 略記（`extract: <名前>`）は `{ path: <名前> }` と同じに読む
     let yaml = r#"
 document:
   title:
@@ -212,7 +212,7 @@ fn invalid_item_id_regex_is_an_error() {
 // @kotowari[C-schema-cli-22]
 #[test]
 fn an_empty_name_in_the_value_or_an_of_key_of_an_element_object_is_schema_invalid() {
-    // "value" と "of" の鍵も同じ置き場の配置パスに数える（TBL-schema-009）ので、
+    // "value" と "of" の鍵も同じ置き場の配置パスに数えるので、
     // ドットで区切った名前が空なら path と同じく schema_invalid にする
     let schema = |extract: &str| {
         format!(
@@ -256,7 +256,7 @@ document:
 #[test]
 fn item_child_field_extract_without_item_extract_is_schema_invalid() {
     // item の bullets.children.fields も「項目の内部のフィールド行」なので、
-    // extract を宣言すると schema_invalid（REQ-schema-039）。
+    // extract を宣言すると schema_invalid。
     let yaml = r#"
 document:
   sections:
@@ -269,7 +269,7 @@ document:
               - name: superseded_by
                 extract: superseded_by
 "#;
-    // item の bullets.children.fields に extract を宣言すると schema_invalid（REQ-schema-039）
+    // item の bullets.children.fields に extract を宣言すると schema_invalid
     assert_rejected(
         yaml,
         "item internals declare extract but the item itself does not",
@@ -280,7 +280,7 @@ document:
 #[test]
 fn item_deep_child_field_extract_without_item_extract_is_schema_invalid() {
     // 再帰的な入れ子（item の bullets.children.bullets.children.fields）も
-    // 項目の内部のフィールド行なので schema_invalid（REQ-schema-039）。
+    // 項目の内部のフィールド行なので schema_invalid。
     let yaml = r#"
 document:
   sections:
@@ -296,7 +296,7 @@ document:
                   - name: 補足
                     extract: note
 "#;
-    // item の入れ子の子フィールドに extract を宣言すると schema_invalid（REQ-schema-039）
+    // item の入れ子の子フィールドに extract を宣言すると schema_invalid
     assert_rejected(
         yaml,
         "item internals declare extract but the item itself does not",
@@ -390,7 +390,7 @@ document:
           bullets:
             extract: nested
 "#;
-    // children.bullets に extract を宣言すると schema_invalid（TBL-schema-008）
+    // children.bullets に extract を宣言すると schema_invalid
     assert_rejected(yaml, "children bullets cannot declare extract");
 }
 
@@ -408,7 +408,7 @@ document:
               bullets:
                 extract: nested
 "#;
-    // 再帰的な children.bullets にも extract を宣言できない（TBL-schema-008）
+    // 再帰的な children.bullets にも extract を宣言できない
     assert_rejected(yaml, "children bullets cannot declare extract");
 }
 
@@ -443,7 +443,7 @@ document:
           header: [用語, 意味]
           extract: glossary
 "#;
-    // 項目が extract を持たないまま内部の表に宣言すると停止する（REQ-schema-039）
+    // 項目が extract を持たないまま内部の表に宣言すると停止する
     assert_rejected(
         yaml,
         "item internals declare extract but the item itself does not",
@@ -462,7 +462,7 @@ document:
           lang: gherkin
           extract: scenarios
 "#;
-    // 項目が extract を持たないまま内部のコードブロックに宣言すると停止する（REQ-schema-039）
+    // 項目が extract を持たないまま内部のコードブロックに宣言すると停止する
     assert_rejected(
         yaml,
         "item internals declare extract but the item itself does not",
@@ -498,7 +498,7 @@ document:
           header: [用語, 意味]
           repeat: { min: 2, max: 1 }
 "#;
-    // 項目の表の repeat も min > max なら停止する（REQ-schema-019）
+    // 項目の表の repeat も min > max なら停止する
     assert_rejected(yaml, "repeat min is greater than max");
 }
 
@@ -514,7 +514,7 @@ document:
           lang: gherkin
           repeat: { min: 2, max: 1 }
 "#;
-    // 項目のコードブロックの repeat も min > max なら停止する（REQ-schema-019）
+    // 項目のコードブロックの repeat も min > max なら停止する
     assert_rejected(yaml, "repeat min is greater than max");
 }
 
@@ -529,7 +529,7 @@ document:
         - name: 状態
           extract: { path: id, of: { id: id } }
 "#;
-    // of: id は項目にだけ宣言できる（REQ-schema-048）
+    // of: id は項目にだけ宣言できる
     assert_rejected(yaml, "field extract cannot use \"id\" in of");
 }
 
@@ -544,7 +544,7 @@ document:
         - name: 状態
           extract: { path: x, of: { x: column } }
 "#;
-    // of の知らない語は停止する（REQ-schema-048）
+    // of の知らない語は停止する
     assert_rejected(yaml, "unknown variant `column`");
 }
 
@@ -574,7 +574,7 @@ document:
 // @kotowari[C-schema-extract-5]
 #[test]
 fn nested_extract_declaration_loads() {
-    // 抽出の宣言は path・value・of・group を持つ1つの入れ子である（REQ-schema-048）
+    // 抽出の宣言は path・value・of・group を持つ1つの入れ子である
     let yaml = r#"
 document:
   sections:
@@ -603,7 +603,7 @@ document:
 // @kotowari[C-schema-extract-5]
 #[test]
 fn legacy_sequence_extract_is_schema_invalid() {
-    // 書式の並びは受けない（REQ-schema-048）
+    // 書式の並びは受けない
     let yaml = r#"
 document:
   sections:
@@ -614,7 +614,7 @@ document:
             - status
             - { path: status_line, of: { line: line } }
 "#;
-    // 旧来の書式の並びは schema_invalid の停止になる（REQ-schema-048）
+    // 旧来の書式の並びは schema_invalid の停止になる
     assert_rejected(yaml, "expected an extract path, or a mapping with \"path\"");
 }
 
@@ -629,7 +629,7 @@ document:
         - name: 状態
           extract: { of: { status_line: line } }
 "#;
-    // 配置パスの無い宣言は schema_invalid の停止になる（REQ-schema-048）
+    // 配置パスの無い宣言は schema_invalid の停止になる
     assert_rejected(yaml, "extract requires \"path\"");
 }
 
@@ -637,7 +637,7 @@ document:
 #[test]
 fn duplicate_key_between_an_inner_node_and_a_derived_value_is_schema_invalid() {
     // 項目のオブジェクトの中で、内側のフィールド行の配置パスと外側の
-    // 導かれる値の鍵が重なるスキーマは、文書を読まずに停止する（TBL-schema-009）
+    // 導かれる値の鍵が重なるスキーマは、文書を読まずに停止する
     let yaml = r#"
 document:
   sections:
@@ -648,7 +648,7 @@ document:
           - name: 状態
             extract: line
 "#;
-    // 要素オブジェクトの中で鍵が重複したら停止する（TBL-schema-009）
+    // 要素オブジェクトの中で鍵が重複したら停止する
     assert_rejected(yaml, "has the key \"line\" twice");
 }
 
@@ -663,14 +663,14 @@ document:
         header: [a, b]
         extract: { path: glossary, value: cells, of: { cells: line } }
 "#;
-    // 要素の値の鍵と導かれる値の鍵が重複したら停止する（TBL-schema-009）
+    // 要素の値の鍵と導かれる値の鍵が重複したら停止する
     assert_rejected(yaml, "has the key \"cells\" twice");
 }
 
 // @kotowari[C-schema-cli-18, C-schema-cli-19]
 #[test]
 fn a_parent_key_is_a_duplicate_but_a_sibling_key_is_not() {
-    // 判定は配置パス全体で行う。a と a.b は親子で重複、a.b と a.c は別の鍵（TBL-schema-009）
+    // 判定は配置パス全体で行う。a と a.b は親子で重複、a.b と a.c は別の鍵
     let parent_and_child = r#"
 document:
   sections:
@@ -687,7 +687,7 @@ document:
         header: [x]
         extract: { path: glossary, value: a.b, of: { "a.c": line } }
 "#;
-    // a と a.b は片方が他方の親なので重複（TBL-schema-009）
+    // a と a.b は片方が他方の親なので重複
     assert_rejected(parent_and_child, "has the key \"a\" twice");
     assert!(
         parse_schema(siblings).is_ok(),

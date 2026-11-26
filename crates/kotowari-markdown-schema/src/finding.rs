@@ -1,6 +1,6 @@
-//! 指摘のモデル（REQ-schema-008、TBL-schema-002）。
+//! 指摘のモデル。
 
-/// 指摘の種別。REQ-schema-008 の「種類」で、TBL-schema-002 の分類を割ったもの。
+/// 指摘の種別。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum FindingKind {
@@ -33,7 +33,7 @@ pub enum FindingKind {
 }
 
 impl FindingKind {
-    /// 指摘の「種類」の文字列（REQ-schema-008）。snake_case。
+    /// 指摘の「種類」の文字列。snake_case。
     pub fn as_str(&self) -> &'static str {
         match self {
             FindingKind::MissingTitle => "missing_title",
@@ -68,7 +68,7 @@ impl FindingKind {
 
 /// 規則種別。スキーマが文書の構造を記述するノードの種類（docs/decisions/schema/CONTEXT.md）。
 /// 宣言していない行の`指摘`と`出現回数`の`指摘`が、どの種別として読んだか・数えたかを持つ
-/// （REQ-schema-055、REQ-schema-057）。
+/// 。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum RuleKind {
@@ -117,8 +117,8 @@ pub struct Finding {
     /// 行番号が指す行の生の文字。字下げと末尾の空白を含み、組み立て直さない。
     /// 行を持たない指摘は None。
     pub(crate) raw: Option<String>,
-    /// 宣言していない行をどの`規則種別`として読んだか（REQ-schema-055）、
-    /// または`出現回数`の`指摘`がどの`規則種別`のノードを数えたか（REQ-schema-057）。
+    /// 宣言していない行をどの`規則種別`として読んだか、
+    /// または`出現回数`の`指摘`がどの`規則種別`のノードを数えたか。
     /// そのどちらでもない指摘は None。
     pub(crate) rule_kind: Option<RuleKind>,
     /// 指摘の詳細（英語）

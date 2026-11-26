@@ -1,10 +1,10 @@
-//! 元データの形の検査（REQ-core-281、TBL-core-038）。Markdown としての形は kotowari-markdown-schema の
+//! 元データの形の検査。Markdown としての形は kotowari-markdown-schema の
 //! スキーマで、frontmatter は Markdown の形の外なのでここで検査する
 
 use kotowari_markdown_schema::{Document, Schema, ValidationOptions};
 use serde_json::Value;
 
-/// 形のスキーマ。パッケージの中に置いてコンパイル時に取り込む（TBL-core-038）
+/// 形のスキーマ。パッケージの中に置いてコンパイル時に取り込む
 const SCHEMA: &str = include_str!("../schemas/overview.yaml");
 
 /// 形に合わない所の行（文書全体にかかるものは None）と、kotowari-markdown-schema の指摘の種類の名前
@@ -36,7 +36,7 @@ impl Form {
 }
 
 /// frontmatter の行の違反の detail。kotowari-markdown-schema は frontmatter を検査せず、
-/// 当てはまる種類の名前が無い（TBL-core-038）
+/// 当てはまる種類の名前が無い
 const FRONTMATTER: &str = "frontmatter";
 
 /// 扱う決定の文書の一覧の鍵（C-core-ovdata-23）

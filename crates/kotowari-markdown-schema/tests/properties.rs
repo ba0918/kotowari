@@ -78,7 +78,7 @@ fn findings_of(schema: &Schema, source: &str) -> Vec<(String, Option<usize>, Str
 }
 
 proptest! {
-    /// REQ-schema-028: 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
+    /// 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
     // @kotowari[C-schema-block-2]
     #[test]
     fn markers_do_not_change_how_list_lines_are_read(
@@ -110,7 +110,7 @@ proptest! {
 }
 
 proptest! {
-    /// REQ-schema-028: マーカーを1行ごとに混ぜても、すべて "-" のときと読み分けは変わらない。
+    /// マーカーを1行ごとに混ぜても、すべて "-" のときと読み分けは変わらない。
     // @kotowari[C-schema-block-2]
     #[test]
     fn mixed_markers_read_the_same_as_hyphens(
@@ -165,7 +165,7 @@ fn every_leaf_is_a_string(value: &Value) -> bool {
 }
 
 proptest! {
-    /// REQ-schema-037: 数や日付に見える値でも、抽出した値は文字列のままである。
+    /// 数や日付に見える値でも、抽出した値は文字列のままである。
     // @kotowari[C-schema-extract-1]
     #[test]
     fn extracted_leaves_are_always_strings(

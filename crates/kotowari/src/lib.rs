@@ -28,7 +28,7 @@ pub use kotowari_core::{
     Tests,
 };
 pub use kotowari_core::{is_confirmation_id, is_decision_target};
-/// check と status の結果の中の、全体像の元データの群の名前（REQ-core-288）
+/// check と status の結果の中の、全体像の元データの群の名前
 pub use kotowari_overview::GROUP as OVERVIEW_GROUP;
 pub use kotowari_overview::Page;
 use std::path::{Path, PathBuf};
@@ -36,7 +36,7 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone)]
 pub struct ProjectOptions {
     pub start: PathBuf,
-    /// 設定ファイルのパス。相対パスは開始位置から解く（REQ-core-323）
+    /// 設定ファイルのパス。相対パスは開始位置から解く
     pub config: Option<PathBuf>,
 }
 impl ProjectOptions {
@@ -51,9 +51,9 @@ impl ProjectOptions {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum ErrorKind {
-    /// 全体像の元データに誤りがあり、全体像を書かない（REQ-core-294）
+    /// 全体像の元データに誤りがあり、全体像を書かない
     OverviewData,
-    /// 全体像の置き場がシンボリックリンクかディレクトリでないか、作成、書き込み、削除に失敗した（REQ-core-324）
+    /// 全体像の置き場がシンボリックリンクかディレクトリでないか、作成、書き込み、削除に失敗した
     CacheFailure,
     InputMissing,
     InvalidInput,
@@ -85,7 +85,7 @@ impl Error {
     pub fn detail(&self) -> &str {
         &self.detail
     }
-    /// 種類が UnknownQuery のときの知らない ID。ほかの種類では None（REQ-core-312）
+    /// 種類が UnknownQuery のときの知らない ID。ほかの種類では None
     pub fn unknown_id(&self) -> Option<&str> {
         self.unknown_id.as_deref()
     }
@@ -96,14 +96,14 @@ impl std::fmt::Display for Error {
     }
 }
 impl std::error::Error for Error {}
-/// 全体像の元データの誤りで止まるときの、標準エラーの1行目で詳細の前に出る文言（TBL-core-018）
+/// 全体像の元データの誤りで止まるときの、標準エラーの1行目で詳細の前に出る文言
 const OVERVIEW_ERROR: &str = "overview error";
-/// 全体像の置き場が使えずに止まるときの文言（TBL-core-018）
+/// 全体像の置き場が使えずに止まるときの文言
 const CACHE_ERROR: &str = "cache error";
 impl Error {
     /// core の停止の理由に無い、このライブラリの失敗の文言のすべて
     pub const WORDINGS: &'static [&'static str] = &[OVERVIEW_ERROR, CACHE_ERROR];
-    /// 置き場の誤り。詳細は`基準のディレクトリ`からの相対パスと、あれば OS の誤りの文（TBL-core-020）
+    /// 置き場の誤り。詳細は`基準のディレクトリ`からの相対パスと、あれば OS の誤りの文
     fn cache(path: &str, error: Option<std::io::Error>) -> Self {
         let detail = match error {
             Some(error) => format!("{CACHE_ERROR}: {path}: {error}"),
@@ -146,7 +146,7 @@ impl From<InputError> for Error {
     }
 }
 
-/// 結果のファイルを作った変異テストの道具（REQ-core-149）
+/// 結果のファイルを作った変異テストの道具
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tool {
     CargoMutants,
@@ -179,7 +179,7 @@ impl MutantsReport {
         self.0.counts()
     }
 }
-/// 検査と描画を済ませ、まだ何も書いていない全体像（TBL-core-041 の overview_prepare）
+/// 検査と描画を済ませ、まだ何も書いていない全体像（overview_prepare の結果）
 #[derive(Debug, Clone)]
 pub struct OverviewPrepared {
     base: PathBuf,
@@ -190,18 +190,18 @@ impl OverviewPrepared {
     pub fn pages(&self) -> &[Page] {
         &self.pages
     }
-    /// 書く先の置き場。`基準のディレクトリ`の ".kotowari/cache/overview/"（REQ-core-296）
+    /// 書く先の置き場。`基準のディレクトリ`の ".kotowari/cache/overview/"
     pub fn directory(&self) -> PathBuf {
         self.base.join(cache::CACHE)
     }
     /// `基準のディレクトリ`の ".kotowari/cache/overview/" の下へ書く。同じ名前で同じバイト列の
-    /// ファイルは書かず、今回返さなかったファイルを消す（REQ-core-293）
+    /// ファイルは書かず、今回返さなかったファイルを消す
     pub fn write(&self) -> Result<OverviewBuild, Error> {
         cache::write(&self.base, &self.pages)
     }
 }
 
-/// 全体像を書いた結果（REQ-core-295）
+/// 全体像を書いた結果
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct OverviewBuild {
     written: Vec<String>,
@@ -278,8 +278,8 @@ impl Project {
             &options.results,
         )?))
     }
-    /// 全体像の元データを検査して描画し、何も書かない（TBL-core-041）。元データに誤りがあれば
-    /// OverviewData の失敗を返す（REQ-core-294）
+    /// 全体像の元データを検査して描画し、何も書かない。元データに誤りがあれば
+    /// OverviewData の失敗を返す
     pub fn overview_prepare(&self) -> Result<OverviewPrepared, Error> {
         let (base, overview, blockers) =
             acquisition::load_overview(&self.options.start, self.options.config.as_deref())?;
@@ -290,7 +290,7 @@ impl Project {
         let pages = overview.pages().map_err(Error::overview_data)?;
         Ok(OverviewPrepared { base, pages })
     }
-    /// overview_prepare に続けて ".kotowari/cache/overview/" の下へ書く（TBL-core-041）
+    /// overview_prepare に続けて ".kotowari/cache/overview/" の下へ書く
     pub fn overview_build(&self) -> Result<OverviewBuild, Error> {
         self.overview_prepare()?.write()
     }

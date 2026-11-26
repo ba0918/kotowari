@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-# リリースのタグから、配る製品の情報を key=value の行で出す（判断の記録
-# docs/decision/records/2026-09-26-release-flow.md の A4、A7）。release.yml の meta のジョブが
+# リリースのタグから、配る製品の情報を key=value の行で出す。release.yml の meta のジョブが
 # $GITHUB_OUTPUT に足す。
 #
 #   release-meta.sh <タグ>   タグは <製品>-v<版>（kotowari-v0.1.0、kotowari-mds-v0.2.0）

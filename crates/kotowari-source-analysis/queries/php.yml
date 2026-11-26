@@ -1,4 +1,4 @@
-# 同梱の問い合わせ: Php（TBL-core-034）
+# 同梱の問い合わせ: Php（docs/decisions/core/test-queries.md）
 # 属性（"#[Test]"）はメソッドの節の中にある。"@test" の docblock はメソッドの直前のコメントの節で見る
 id: kotowari-php-test
 language: php

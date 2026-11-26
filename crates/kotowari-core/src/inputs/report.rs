@@ -31,7 +31,7 @@ impl StatusReport {
     pub fn confirmations(&self) -> &crate::ConfirmationCounts {
         &self.0.confirmations
     }
-    /// 追加の指摘の群の数。渡した順に並ぶ（TBL-core-042）
+    /// 追加の指摘の群の数。渡した順に並ぶ
     pub fn groups(&self) -> &[GroupTally] {
         &self.0.groups
     }
@@ -62,14 +62,14 @@ impl CheckReport {
     pub fn counts(&self) -> &BTreeMap<String, usize> {
         &self.0.counts
     }
-    /// 追加の指摘の群の数。渡した順に並ぶ（TBL-core-042）
+    /// 追加の指摘の群の数。渡した順に並ぶ
     pub fn groups(&self) -> &[GroupTally] {
         &self.0.groups
     }
     pub fn group(&self, name: &str) -> Option<&GroupTally> {
         find_group(&self.0.groups, name)
     }
-    /// finding が`テスト側の指摘`か（TBL-core-047）。"--allow-test-findings" の終了コードの判断に使う
+    /// finding が`テスト側の指摘`か。"--allow-test-findings" の終了コードの判断に使う
     pub fn is_test_side_finding(&self, finding: &crate::Finding) -> bool {
         self.0.test_side.contains(finding)
     }

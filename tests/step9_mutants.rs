@@ -12,7 +12,7 @@ fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
 }
 
-/// TBL-core-024 の鍵だけを持つ変異の1件
+/// 鍵だけを持つ変異の1件
 fn mutant(file: &str, line: u64, column: u64, name: &str, summary: &str) -> String {
     format!(
         r#"{{"scenario":{{"Mutant":{{"file":{file:?},"name":{name:?},"span":{{"start":{{"line":{line},"column":{column}}}}}}}}},"summary":{summary:?}}}"#
@@ -81,7 +81,7 @@ fn first_stderr_line(output: &std::process::Output) -> String {
         .to_string()
 }
 
-/// 結果の誤りで停止し、詳細が結果のファイルの相対パスで始まることを見る（TBL-core-018、TBL-core-020）
+/// 結果の誤りで停止し、詳細が結果のファイルの相対パスで始まることを見る
 fn assert_results_error(results: &str) {
     let tmp = project(results);
     let output = run_in(tmp.path(), &[]);
@@ -97,7 +97,7 @@ fn assert_results_error(results: &str) {
     );
 }
 
-// --- REQ-core-144: 結果の誤り ---
+// --- 結果の誤り ---
 
 // @kotowari[C-core-mutin-5]
 #[test]
@@ -169,7 +169,7 @@ fn req_144_path_outside_the_base_stops() {
 // @kotowari[C-core-mutin-3]
 #[test]
 fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
-    // 基準の実行が無く、TBL-core-024 に挙げていない鍵 "extra" を持つ1件
+    // 基準の実行が無く、読まない鍵 "extra" を持つ1件
     let entry = r#"{"scenario":{"Mutant":{"file":"src/a.rs","name":"src/a.rs:3:5: replace f with ()","span":{"start":{"line":3,"column":5}},"extra":1}},"summary":"CaughtMutant","extra":1}"#;
     let tmp = project(&outcomes(&[entry.to_string()]));
     let output = run_in(tmp.path(), &[]);
@@ -182,7 +182,7 @@ fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
     assert_eq!(json_of(&output)["mutants"]["caught"], 1);
 }
 
-// --- REQ-core-139、REQ-core-140: 見逃しと時間切れの指摘 ---
+// --- 見逃しと時間切れの指摘 ---
 
 // @kotowari[C-core-equiv-1, C-core-mutin-1, C-core-mutin-2, C-core-mutants-3]
 #[test]
@@ -241,7 +241,7 @@ fn req_139_caught_and_unviable_mutants_yield_nothing() {
 // @kotowari[C-core-equiv-13, C-core-mutin-2, C-core-mutants-5, C-core-mutants-8]
 #[test]
 fn req_140_timeout_is_a_notice_even_when_listed() {
-    // EX-core-206 の Given: その変異に合う形の正しい1件と、その文面を持つソースを置く
+    // その変異に合う形の正しい1件と、その文面を持つソースを置く
     // （SRC_A、CHANGE、valid_entry、project_with_list はこのファイルの後ろで定義している）
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "Timeout")]),
@@ -256,11 +256,11 @@ fn req_140_timeout_is_a_notice_even_when_listed() {
     assert_eq!(findings[0]["severity"], "notice");
     assert_eq!(findings[0]["path"], "src/a.rs");
     assert_eq!(findings[0]["line"], 3);
-    // PROP-core-005: "timeout" は mutant_timeout の指摘の数に等しい。
-    // 一覧に載っていても "equivalent" には数えない（REQ-core-140: 一覧との一致を見ない）
+    // "timeout" は mutant_timeout の指摘の数に等しい。
+    // 一覧に載っていても "equivalent" には数えない（一覧との一致を見ない）
     assert_eq!(v["mutants"]["timeout"], 1);
     assert_eq!(v["mutants"]["equivalent"], 0);
-    // 一覧の1件の文面は今のソースにあるので古くない（REQ-core-142）
+    // 一覧の1件の文面は今のソースにあるので古くない
     assert!(
         findings_of(&v, "equivalent_stale").is_empty(),
         "{findings:?}"
@@ -280,7 +280,7 @@ fn req_139_duplicate_mutants_yield_one_finding_each() {
     assert_eq!(v["mutants"]["survived"], 2);
 }
 
-// --- REQ-core-145、REQ-core-146: 集計 ---
+// --- 集計 ---
 
 // @kotowari[C-core-mutants-9, C-core-mutants-10]
 #[test]
@@ -316,7 +316,7 @@ fn req_146_summary_is_the_last_line_after_findings() {
     );
 }
 
-// --- REQ-core-147: 読む範囲 ---
+// --- 読む範囲 ---
 
 // @kotowari[C-core-mutants-1]
 #[test]
@@ -360,7 +360,7 @@ fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
         "{:?}",
         v["findings"]
     );
-    // REQ-core-147 が定めるのは鍵の集合（3つだけ）で、鍵の順ではない。
+    // 決めてあるのは鍵の集合（3つだけ）で、鍵の順ではない。
     // 並べてから比べるのは、JSON の鍵の順が serde_json の preserve_order の
     // 有無で変わり、同じ workspace の別のクレートの都合で入れ替わるため
     let mut keys: Vec<&str> = v.as_object().unwrap().keys().map(|k| k.as_str()).collect();
@@ -368,11 +368,11 @@ fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
     assert_eq!(keys, ["counts", "findings", "mutants"]);
 }
 
-// --- REQ-core-143、REQ-core-148: 等価の一覧 ---
+// --- 等価の一覧 ---
 
-/// EX-core-211 の場面のソース。3行目が "    if a == b {"
+/// 3行目が "    if a == b {"
 const SRC_A: &str = "fn f() {\n    let x = 1;\n    if a == b {\n    }\n}\n";
-/// EX-core-211 の場面の変更の説明
+/// 場面の変更の説明
 const CHANGE: &str = "replace == with != in f";
 
 /// 等価の一覧の1件（値はすべて引用符でくくる）
@@ -385,7 +385,7 @@ fn entry(fields: &[(&str, &str)]) -> String {
     yaml
 }
 
-/// EX-core-211 の形の正しい1件
+/// 形の正しい1件
 fn valid_entry() -> String {
     entry(&[
         ("file", "src/a.rs"),
@@ -418,7 +418,7 @@ fn findings_of<'a>(v: &'a serde_json::Value, kind: &str) -> Vec<&'a serde_json::
         .collect()
 }
 
-/// EX-core-211 の場面（3行目の見逃しが1件、ソースあり）で一覧を読ませる
+/// 場面（3行目の見逃しが1件、ソースあり）で一覧を読ませる
 fn run_with_list_output(list: &str) -> std::process::Output {
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
@@ -452,7 +452,7 @@ fn req_143_blank_why_is_invalid_and_suppresses_nothing() {
     let survived = findings_of(&v, "mutant_survived");
     assert_eq!(survived.len(), 1);
     assert_eq!(survived[0]["line"], 3);
-    // A53: 形の誤った1件に equivalent_stale は出さない
+    // 形の誤った1件に equivalent_stale は出さない
     assert!(findings_of(&v, "equivalent_stale").is_empty());
 }
 
@@ -585,7 +585,7 @@ fn req_148_check_ignores_a_missing_list_file() {
     );
 }
 
-// --- REQ-core-141、REQ-core-142: 一覧との一致と、文面の無くなった1件 ---
+// --- 一覧との一致と、文面の無くなった1件 ---
 
 // @kotowari[C-core-equiv-5, C-core-mutants-8]
 #[test]
@@ -599,7 +599,7 @@ fn req_141_listed_survivor_is_counted_as_equivalent() {
     );
     assert_eq!(v["mutants"]["survived"], 0);
     assert_eq!(v["mutants"]["equivalent"], 1);
-    // 文面が今のソースにある1件は古くない（REQ-core-142）
+    // 文面が今のソースにある1件は古くない
     assert!(
         findings_of(&v, "equivalent_stale").is_empty(),
         "{:?}",
@@ -738,7 +738,7 @@ fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
 // @kotowari[C-core-equiv-8]
 #[test]
 fn req_141_lone_cr_ends_a_line_of_the_source() {
-    // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで分けると3行目が見つからない
+    // 行の区切りは単独の "\r" も行の終わりに数える。"\n" だけで分けると3行目が見つからない
     let lone_cr = "fn f() {\r    let x = 1;\r    if a == b {\r    }\r}\r";
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
@@ -757,7 +757,7 @@ fn req_141_lone_cr_ends_a_line_of_the_source() {
 // @kotowari[C-core-equiv-5, C-core-input-1]
 #[test]
 fn req_111_source_with_a_bom_still_matches_on_its_first_line() {
-    // REQ-core-111: 読むファイルの先頭の BOM は読み飛ばす。REQ-core-147 はソースを mutants が読むファイルに挙げる。
+    // 読むファイルの先頭の BOM は読み飛ばす。ソースは mutants が読むファイルである。
     // 読み飛ばさないと1行目の文面に BOM が残り、一覧の1件と一致しない
     const CHANGE_ON_LINE_ONE: &str = "replace f with ()";
     let tmp = project_with_list(
@@ -865,7 +865,7 @@ fn req_148_list_of_comments_only_is_zero_entries() {
 // @kotowari[C-core-equiv-1]
 #[test]
 fn req_148_blank_lines_between_comments_are_still_empty() {
-    // REQ-core-148 の「空（0バイトか注釈だけ）」は空行を内容に数えない
+    // 「空（0バイトか注釈だけ）」は空行を内容に数えない
     let tmp = project_with_list(
         &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
         "# 今は1件も無い\n\n# あとで足す\n",

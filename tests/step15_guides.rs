@@ -1,4 +1,4 @@
-//! ガイドの印（REQ-core-198〜REQ-core-206、TBL-core-036）と、その設定の鍵 "guides.files"
+//! ガイドの印と、その設定の鍵 "guides.files"
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -99,7 +99,7 @@ fn listed_fingerprint(tmp: &Path, id: &str) -> String {
         .to_string()
 }
 
-// --- REQ-core-014、TBL-core-004: "guides.files" の鍵 ---
+// --- "guides.files" の鍵 ---
 
 // @kotowari[C-core-config-16]
 #[test]
@@ -125,7 +125,7 @@ fn req_014_an_unreadable_guides_glob_is_a_config_error() {
     assert!(stderr.starts_with("config error: "), "{stderr}");
 }
 
-// --- REQ-core-203、TBL-core-026: 指紋 ---
+// --- 指紋 ---
 
 // @kotowari[C-core-guides-4]
 #[test]
@@ -140,9 +140,9 @@ fn req_203_crlf_line_endings_do_not_change_the_fingerprint() {
     assert_eq!(listed_fingerprint(tmp.path(), D_ID), "1423c6c3");
 }
 
-// --- REQ-core-198、REQ-core-199、REQ-core-206: ガイドのファイルを集める ---
+// --- ガイドのファイルを集める ---
 
-/// 空の置き場だけを作り、設定を `config` にする（`IR`も`判断の記録`も1つも無い）
+/// 空の置き場だけを作り、設定を `config` にする（決定の文書は1つも無い）
 fn make_empty_project(tmp: &Path, config: &str) {
     for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
@@ -150,7 +150,7 @@ fn make_empty_project(tmp: &Path, config: &str) {
     write(tmp, ".kotowari/config.yaml", config);
 }
 
-/// EX-core-368 の設定。"docs/guide.md" は両方の glob に当たる
+/// "docs/guide.md" は両方の glob に当たる
 const OVERLAPPING: &str =
     "guides:\n  files:\n    - \"docs/**/*.md\"\ntests:\n  files:\n    - \"**/*\"\n";
 
@@ -273,9 +273,9 @@ fn req_152_list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() 
     }
 }
 
-// --- REQ-core-200、REQ-core-201、REQ-core-202、TBL-core-036: ガイドの印を読む ---
+// --- ガイドの印を読む ---
 
-/// EX-core-362 の`IR`と、"REQ-001" に印を付けたテストと、`ガイド`の "guides/a.md" を作る。
+/// 古い形の文書と、それに印を付けたテストと、`ガイド`の "guides/a.md" を作る。
 /// `ガイド`を除けば`指摘`は出ない
 fn write_ex_362_project(tmp: &Path, guide: &str) {
     make_project(tmp, GUIDES_MD);
@@ -470,9 +470,9 @@ fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
     assert_eq!(v["guides"]["marks"], 0);
 }
 
-// --- REQ-core-204、REQ-core-031、REQ-core-162: 指紋の照合と guide_stale ---
+// --- 指紋の照合と guide_stale ---
 
-/// EX-core-362 の`ガイドの印`
+/// `ガイドの印`
 /// 決定 "名前" に今の`指紋`で付けた印の`ガイド`
 const MARK_D: &str = "# ガイド\n\n<!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] -->\n";
 

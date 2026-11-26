@@ -1,5 +1,5 @@
 //! 全体像の元データの読み込みと検査を check、status、list、query から見る
-//! （docs/ir/core/overview-data.md、docs/ir/core/overview-output.md）
+//! （docs/decisions/core/overview-data.md、docs/decisions/core/overview-output.md）
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -11,7 +11,7 @@ use tempfile::TempDir;
 /// 全体像の元データが扱う決定の文書
 const DECISION: &str = "# CLI\n\nDecides the commands.\n\n## Run\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nRun.\n";
 
-/// 誤りの無い IR と判断の記録と、`config` を設定に持つプロジェクト
+/// 誤りの無い決定の文書と、`config` を設定に持つプロジェクト
 fn make_project(tmp: &Path, config: &str) {
     for dir in [".kotowari", "docs/decisions", "tests"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
@@ -331,7 +331,7 @@ fn req_core_290_overview_findings_are_sorted_with_the_other_findings() {
         "docs/a.md",
         &without_lead("docs/decisions/cli.md"),
     );
-    // docs/ir/ の IR の誤りより docs/a.md が先、docs/z.md は後に並ぶ
+    // docs/decisions/ の誤りより docs/a.md が先、docs/z.md は後に並ぶ
     write(
         tmp.path(),
         "docs/z.md",

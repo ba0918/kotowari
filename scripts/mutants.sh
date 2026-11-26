@@ -12,17 +12,15 @@
 #   MUTANTS_TOOLCHAIN   cargo-mutants を動かす日付つきの nightly（既定 nightly-2026-10-03）
 #   MUTANTS_CPU_QUOTA   境界の CPU の上限（既定 400%）。MUTANTS_BUILD_JOBS はその中のビルドの並列数（既定 4）
 #   MUTANTS_JOBS     同時に回す変異の数（既定 1。手元で3や4に上げると、写しのビルドが CPU を取り合って
-#                    遅くなり、偽の時間切れも出た。判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A6）
+#                    遅くなり、偽の時間切れも出た）
 #   MUTANTS_SERVICE  systemd（既定。メモリ上限つきのユーザーのサービスで回す）、scope（sudo の
 #                    systemd-run でメモリ上限つきのスコープに入れて回す。ユーザーの systemd が無い
-#                    CI のランナー用。判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A11）
+#                    CI のランナー用）
 #                    か none（上限なしでそのまま回す）
 #
-# 見逃し0件の関門は PR とリリースの CI が持つ（判断の記録
-# docs/decision/records/2026-10-04-mutants-in-ci.md の A1〜A6）。手元では好きなときに回す。
+# 見逃し0件の関門は PR とリリースの CI が持つ。手元では好きなときに回す。
 #
-# 走らせ方は 2026-09-17 の実測で固めた（判断の記録 docs/decision/records/2026-09-17-mutation-tests.md
-# の A4、A23、A29）。安定版の cargo だと更新時刻の判定で変異が再コンパイルされず、幻の見逃しが出る
+# 走らせ方は 2026-09-17 の実測で固めた。安定版の cargo だと更新時刻の判定で変異が再コンパイルされず、幻の見逃しが出る
 # ので nightly と内容ハッシュの判定を使う。メモリを食い尽くす変異があるので上限つきのサービスで走らせる。
 
 set -euo pipefail
@@ -39,9 +37,9 @@ readonly STOP_TRIES=20
 readonly STOP_INTERVAL=0.3
 readonly JOBS="${MUTANTS_JOBS:-1}"
 readonly SERVICE="${MUTANTS_SERVICE:-systemd}"
-# 日付で固定した nightly（判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A16）
+# 日付で固定した nightly
 readonly TOOLCHAIN="${MUTANTS_TOOLCHAIN:-nightly-2026-10-03}"
-# 境界の CPU の上限と、その中のビルドの並列数（同じ記録の A15）
+# 境界の CPU の上限と、その中のビルドの並列数
 readonly CPU_QUOTA="${MUTANTS_CPU_QUOTA:-400%}"
 readonly BUILD_JOBS="${MUTANTS_BUILD_JOBS:-4}"
 
@@ -188,7 +186,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# A29: 関門の抜け道を塞ぐ。ソースの #[mutants::skip] はその変異を測らせない
+# 関門の抜け道を塞ぐ。ソースの #[mutants::skip] はその変異を測らせない
 guard_skip_attribute() {
     if grep -rn 'mutants::skip' src/ crates/ >/dev/null 2>&1; then
         grep -rn 'mutants::skip' src/ crates/ >&2 || true
@@ -199,7 +197,7 @@ guard_skip_attribute() {
 # 変異テストを走らせ、結果を kotowari mutants に読ませる
 run_mutants() {
     guard_skip_attribute
-    # A23: 結果のファイルは毎回その場で作る（古い結果を読ませる余地を無くす）
+    # 結果のファイルは毎回その場で作る（古い結果を読ませる余地を無くす）
     rm -rf -- mutants.out
 
     # cargo-mutants は TMPDIR の下に作業の写しを作る。この実行だけのディレクトリを渡して、
@@ -223,7 +221,7 @@ run_mutants() {
     # --test-workspace=true: 既定では変異を入れた crate のテストしか走らない。kotowari-core の
     # 振る舞いを確かめるテストの大半はルートの crate の tests/ にあるので、これが無いと
     # kotowari-core の変異がほぼすべて見逃しになる
-    # 境界の中から、所属する cgroup とメモリと CPU の上限を最初に出す（A15）。"max" は上限が無いこと
+    # 境界の中から、所属する cgroup とメモリと CPU の上限を最初に出す。"max" は上限が無いこと
     local -a mutants_command=(sh -c 'g="/sys/fs/cgroup$(cut -d: -f3 /proc/self/cgroup)"
 echo "mutants.sh: cgroup $g memory.max $(cat "$g/memory.max" 2>/dev/null) cpu.max $(cat "$g/cpu.max" 2>/dev/null)"
 exec "$@"' sh
@@ -270,7 +268,7 @@ exec "$@"' sh
 
     if [ ! -f "$RESULTS" ]; then
         # 候補が0件のとき、cargo-mutants は結果のファイルを作らずに0で終わる。同じ範囲と分担で
-        # 候補を並べ直し、成功して0件のときだけ通す（A17）
+        # 候補を並べ直し、成功して0件のときだけ通す
         [ "$status" -eq 0 ] || die "the mutation testing tool wrote no result file (exit $status)"
         local listed
         listed="$(CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true CARGO_BUILD_FINGERPRINT=content \
@@ -310,8 +308,7 @@ run_full() {
 
 # 標準入力の行は git の pre-push と同じ "<ローカルの参照> <ローカルの SHA> <リモートの参照> <リモートの SHA>"。
 # タグなら、同じ製品の1つ前のリリースのタグとの差分だけを回し、前のタグが無いときだけ全体を回す
-# （判断の記録 docs/decision/records/2026-09-27-release-mutants-scope.md の A1。回す場所はリリースの CI、
-# docs/decision/records/2026-10-04-mutants-in-ci.md の A4）。それ以外は origin/main との差分だけ
+# （回す場所はリリースの CI）。それ以外は origin/main との差分だけ
 choose_from_stdin() {
     local local_ref local_sha remote_ref chosen tag product previous
     chosen='diff origin/main'

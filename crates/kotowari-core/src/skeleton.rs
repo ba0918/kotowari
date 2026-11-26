@@ -1,12 +1,12 @@
-//! `対`の`側`の`骨組み`と、その食い違い（REQ-core-344、REQ-core-345、TBL-core-044、TBL-core-045）
+//! `対`の`側`の`骨組み`と、その食い違い
 //!
-//! `骨組み`は文書の種類ごとに TBL-core-044 の行の順に並んだ部分で、部分は要素の並びである。
+//! `骨組み`は文書の種類ごとに 行の順に並んだ部分で、部分は要素の並びである。
 //! 要素はその`側`の行を持つ。自然言語の文は要素に入れない。
 
 use markdown::mdast::Node;
 use serde_json::Value;
 
-/// `対`にする文書の種類（TBL-core-044 の文書の列）
+/// `対`にする文書の種類
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Guide,
@@ -73,7 +73,7 @@ pub(crate) fn skeleton(kind: Kind, text: &str, root: Option<&Node>) -> Skeleton 
 }
 
 /// 2つの`骨組み`を比べ、最初に一致しない部分の名前と、その部分で最初に食い違った要素の other の行。
-/// 食い違いが数の違いか、要素が other に無いことなら行は None（REQ-core-345）
+/// 食い違いが数の違いか、要素が other に無いことなら行は None
 pub(crate) fn compare(first: &Skeleton, other: &Skeleton) -> Option<(&'static str, Option<usize>)> {
     for ((name, left), (_, right)) in first.iter().zip(other) {
         // 行の番号そのものは比べない
@@ -215,7 +215,7 @@ impl<'a> Markdown<'a> {
             .collect()
     }
 
-    /// `部品`の種類と、値から TBL-core-045 の文の欄の文字列を除いたもの
+    /// `部品`の種類と、値から 文の欄の文字列を除いたもの
     fn parts(&self) -> Vec<Element> {
         self.nodes(|node| matches!(node, Node::Code(code) if code.lang.as_deref() == Some("view")))
             .into_iter()
@@ -268,7 +268,7 @@ fn ends_with_escape(text: &str) -> bool {
     text.bytes().rev().take_while(|b| *b == b'\\').count() % 2 == 1
 }
 
-/// TBL-core-045: 部品の種類ごとの文の欄
+/// 部品の種類ごとの文の欄
 fn sentence_fields(kind: &str) -> &'static [&'static str] {
     match kind {
         "lead" => &["conclusion", "points"],

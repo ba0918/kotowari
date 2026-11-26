@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "toc",
-  "description": "The table of contents of the overview pages: one group at the top (TBL-core-043)",
+  "description": "The table of contents of the overview pages: one group at the top",
   "$ref": "#/$defs/group",
   "$defs": {
     "group": {

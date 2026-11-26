@@ -1,8 +1,8 @@
-//! `対`の`指摘`（REQ-core-338〜REQ-core-349）
+//! `対`の`指摘`
 
 use super::*;
 
-/// `一致の記録`を読んだもの。誤りなら TBL-core-008 の detail
+/// `一致の記録`を読んだもの。誤りなら translation_record_invalid の detail
 pub(super) fn read_record(
     pair: &Pair,
 ) -> Result<std::collections::BTreeMap<String, String>, &'static str> {
@@ -45,7 +45,7 @@ pub(super) fn read_record(
     Ok(record)
 }
 
-/// 欠けた側、`一致の記録`、古い側の`指摘`（REQ-core-338、REQ-core-339、REQ-core-341）
+/// 欠けた側、`一致の記録`、古い側の`指摘`
 pub(super) fn pair_findings(pair: &Pair, context: &Context, findings: &mut Vec<Finding>) {
     let missing = |path: &str, detail: &str| {
         Finding::new(
@@ -97,7 +97,7 @@ fn is_decision_glossary(pair: &Pair, context: &Context) -> bool {
     pair.place == Place::Decision && crate::decisions::is_glossary(pair.path(), &context.decisions)
 }
 
-/// `対`の文書の種類（TBL-core-044）
+/// `対`の文書の種類
 pub(super) fn skeleton_kind(pair: &Pair, context: &Context) -> crate::skeleton::Kind {
     use crate::skeleton::Kind;
     match pair.place {
@@ -151,7 +151,7 @@ impl Context {
         }
     }
 
-    /// その`側`のあるべき`切り替えの行`（REQ-core-346）
+    /// その`側`のあるべき`切り替えの行`
     pub(crate) fn switcher(&self, first: &str, language: &str) -> String {
         self.languages
             .iter()
@@ -169,18 +169,18 @@ impl Context {
     }
 }
 
-/// `切り替えの行`を持つ`対`か（REQ-core-346、`全体像の元データ`と`目次`は持たない）
+/// `切り替えの行`を持つ`対`か（`全体像の元データ`と`目次`は持たない）
 pub(super) fn has_switcher(place: Place) -> bool {
     matches!(place, Place::Guide | Place::Decision)
 }
 
-/// リンクを検査する`対`か（REQ-core-347）。決定の文書の置き場の用語集は中身を検査しない（C-core-docs-20）
+/// リンクを検査する`対`か。決定の文書の置き場の用語集は中身を検査しない（C-core-docs-20）
 fn has_links(pair: &Pair, context: &Context) -> bool {
     !matches!(pair.place, Place::Toc) && !is_decision_glossary(pair, context)
 }
 
 /// 1つの`側`を検査し、`切り替えの行`を空にした文と、リンクを検査する`対`ならその文を
-/// CommonMark と GFM として読んだ木を返す（REQ-core-346〜REQ-core-349）
+/// CommonMark と GFM として読んだ木を返す
 pub(super) fn side_text(
     pair: &Pair,
     side: &Side,
@@ -227,7 +227,7 @@ pub(super) fn side_text(
     (checked, root)
 }
 
-/// REQ-core-345: ほかの言語の`側`の`骨組み`が`先頭の言語`の`側`と食い違えば、`側`ごとに1件
+/// ほかの言語の`側`の`骨組み`が`先頭の言語`の`側`と食い違えば、`側`ごとに1件
 pub(super) fn structure_findings(pair: &Pair, context: &Context, findings: &mut Vec<Finding>) {
     let kind = skeleton_kind(pair, context);
     let skeleton = |side: &Side, findings: &mut Vec<Finding>| {

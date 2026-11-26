@@ -1,4 +1,4 @@
-//! 部品の中身の検査（REQ-core-282）と参照の取り出し（REQ-core-285）
+//! 部品の中身の検査と参照の取り出し
 
 use serde_json::Value;
 use std::collections::BTreeMap;

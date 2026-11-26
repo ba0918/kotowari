@@ -2,7 +2,7 @@
 
 use crate::config::Config;
 
-/// TBL-core-046 の鍵と英語の文字
+/// 鍵と英語の文字
 const ENGLISH: [(&str, &str); 17] = [
     ("language_name", "English"),
     ("index_link", "Overview"),

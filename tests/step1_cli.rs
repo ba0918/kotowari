@@ -15,7 +15,7 @@ fn valid_project_dir() -> &'static Path {
         .leak()
 }
 
-// --- REQ-core-001: コマンドは7つ ---
+// --- コマンドは7つ ---
 
 // @kotowari[C-core-cli-1, C-core-cli-5]
 #[test]
@@ -67,9 +67,9 @@ fn req_001_the_commands_run_and_other_words_are_not_commands() {
         .code(2);
 }
 
-// --- REQ-core-004: 引数の誤り ---
+// --- 引数の誤り ---
 
-// REQ-core-008: 受けるオプションの集合を固定するのはこのテスト（否定側）
+// 受けるオプションの集合を固定するのはこのテスト（否定側）
 // @kotowari[C-core-clienv-7, C-core-clienv-11, C-core-cli-4, C-core-cli-14, C-core-cli-16]
 #[test]
 fn req_004_unknown_option_stops() {
@@ -81,7 +81,7 @@ fn req_004_unknown_option_stops() {
         .stdout("")
         .get_output()
         .clone();
-    // REQ-core-005: 標準エラーの1行目は理由の文言と詳細（TBL-core-018）
+    // 標準エラーの1行目は理由の文言と詳細
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(
         stderr.lines().next(),
@@ -180,7 +180,7 @@ fn req_004_options_without_a_command_names_all_seven_commands() {
     );
 }
 
-// --- REQ-core-107: --help と --version ---
+// --- --help と --version ---
 
 // @kotowari[C-core-clienv-1]
 #[test]
@@ -221,7 +221,7 @@ fn req_107_help_wins_over_argument_errors() {
         .code(0);
 }
 
-// --- REQ-core-004: 引数の誤り（追加） ---
+// --- 引数の誤り（追加） ---
 
 // @kotowari[C-core-cli-8, C-core-cli-14]
 #[test]
@@ -272,7 +272,7 @@ fn req_002_options_before_or_after_check() {
         .code(0);
 }
 
-// --- REQ-core-005: 停止の出力の形 ---
+// --- 停止の出力の形 ---
 
 // @kotowari[C-core-clienv-8, C-core-cli-14]
 #[test]
@@ -287,7 +287,7 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     fs::write(tmp.path().join("bad.yaml"), "unknown_key: 1\n").unwrap();
     let sub = tmp.path().join("sub");
     fs::create_dir_all(&sub).unwrap();
-    // sub/ から "--config ../bad.yaml" を指す（CWD からの相対、REQ-core-003）
+    // sub/ から "--config ../bad.yaml" を指す（CWD からの相対）
     let out = cmd()
         .args(["check", "--config", "../bad.yaml"])
         .current_dir(&sub)
@@ -301,7 +301,7 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     );
 }
 
-// --- REQ-core-021: 既定は json ---
+// --- 既定は json ---
 
 // @kotowari[C-core-output-1]
 #[test]
@@ -320,7 +320,7 @@ fn req_021_default_format_is_json() {
 // @kotowari[C-core-clienv-8, C-core-cli-14]
 #[test]
 fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
-    // A164: 基準の外にある設定ファイルの詳細は "../" を含む基準からの相対パス
+    // 基準の外にある設定ファイルの詳細は "../" を含む基準からの相対パス
     use std::fs;
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
@@ -345,7 +345,7 @@ fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
     );
 }
 
-// --- REQ-core-002、REQ-core-144: "kotowari mutants" の引数が結果のファイルに届く ---
+// --- "kotowari mutants" の引数が結果のファイルに届く ---
 
 /// 捕まえた変異が1件だけの結果のファイル
 const ONE_CAUGHT_RESULT: &str = r#"{"outcomes":[
@@ -396,7 +396,7 @@ fn req_144_missing_result_file_is_an_unreadable_file() {
     );
 }
 
-// --- REQ-core-149: mutants の引数 ---
+// --- mutants の引数 ---
 
 /// 読める結果のファイルを置いた一時ディレクトリを作る
 fn dir_with_results(names: &[&str]) -> tempfile::TempDir {
@@ -456,7 +456,7 @@ fn req_004_tool_on_check_is_an_argument_error() {
     assert_argument_error(&["check", "--tool", "cargo-mutants"], valid_project_dir());
 }
 
-// --- REQ-core-152: list の停止 ---
+// --- list の停止 ---
 
 // @kotowari[C-core-cli-7, C-core-list-14]
 #[test]
@@ -492,7 +492,7 @@ fn req_152_unreadable_config_stops_like_check() {
     assert_stops_like_check(&["list"]);
 }
 
-// --- REQ-core-008: 作らないコマンド ---
+// --- 作らないコマンド ---
 
 // @kotowari[C-core-cli-17]
 #[test]
@@ -501,7 +501,7 @@ fn req_008_render_is_an_argument_error() {
     assert_argument_error(&["render"], valid_project_dir());
 }
 
-// --- REQ-core-157、REQ-core-163、REQ-core-004: query と status の引数 ---
+// --- query と status の引数 ---
 
 // @kotowari[C-core-query-5]
 #[test]

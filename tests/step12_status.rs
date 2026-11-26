@@ -1,4 +1,4 @@
-//! "kotowari status" の集計と出力（REQ-core-162〜REQ-core-166、TBL-core-028）
+//! "kotowari status" の集計と出力
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -64,7 +64,7 @@ fn write_ex_258_project(tmp: &Path) {
     );
 }
 
-// --- REQ-core-162、REQ-core-165: 集計と complete ---
+// --- 集計と complete ---
 
 // @kotowari[C-core-status-5, C-core-status-6, C-core-status-9]
 #[test]
@@ -79,7 +79,7 @@ fn req_162_complete_project_counts_and_exit_zero() {
     assert_eq!(v["complete"], true);
 }
 
-// --- TBL-core-028: 数え方 ---
+// --- 数え方 ---
 
 // @kotowari[C-core-status-5, C-core-status-9]
 #[test]
@@ -141,7 +141,7 @@ fn the_documents_group_counts_the_decision_documents_read_and_their_lines() {
     );
 }
 
-// --- REQ-core-166: 出力の形 ---
+// --- 出力の形 ---
 
 // @kotowari[C-core-status-12]
 #[test]

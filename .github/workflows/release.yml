@@ -1,4 +1,4 @@
-# タグの push を受けて GitHub Release を作る（判断の記録 docs/decision/records/2026-09-26-release-flow.md の A4、A7、A8）。
+# タグの push を受けて GitHub Release を作る。
 #
 # タグは scripts/release.sh が作り、人が push する。ここではチェックをもう一度回し、
 # Linux x86_64 と macOS arm64 のバイナリを作り、変更履歴のその版の節を本文にした Release を作る。
@@ -91,7 +91,7 @@ jobs:
         run: scripts/check-versions.sh "$TAG"
 
   # 同じ製品の1つ前のリリースのタグとの差分（前のタグが無ければ全体）の変異を回し、見逃しがあれば
-  # バイナリを作らない（判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A4）。
+  # バイナリを作らない。
   # 範囲の選び方は scripts/mutants.sh plan に pre-push と同じ形の行を渡して決める
   mutants-scope:
     name: 変異テストの範囲を決める

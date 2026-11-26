@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# CI の変異テストの1つの分担を回す（判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A3）。
+# CI の変異テストの1つの分担を回す。
 # mutants-run.yml の各分担がこれを呼び、範囲の形に応じて scripts/mutants.sh の副コマンドを選ぶ。
 #
 #   mutants-shard.sh <範囲> <分担の番号> <分担の数>

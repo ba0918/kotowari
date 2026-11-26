@@ -1,6 +1,6 @@
 //! 文書の行の区切り
 
-/// 行を "\n"、"\r\n"、単独の "\r" で分割する。"\r\n" は1つの行の終わりに数える（TBL-core-010）
+/// 行を "\n"、"\r\n"、単独の "\r" で分割する。"\r\n" は1つの行の終わりに数える
 pub fn split_lines(content: &str) -> Vec<&str> {
     let mut lines = Vec::new();
     let mut rest = content;

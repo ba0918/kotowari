@@ -1,4 +1,4 @@
-//! "kotowari overview serve"（docs/ir/core/overview-commands.md の REQ-core-297〜REQ-core-299）。
+//! "kotowari overview serve"（docs/decisions/core/overview-commands.md）。
 //! サーバは URL の1行を読んでから要求を送り、時間を待たない
 #![expect(
     clippy::unwrap_used,

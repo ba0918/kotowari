@@ -1,9 +1,9 @@
-//! `テスト側の指摘`の範囲（TBL-core-047）
+//! `テスト側の指摘`の範囲
 
 use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
-/// TBL-core-047 の「`テスト側の指摘`である条件」の列
+/// 「`テスト側の指摘`である条件」の列
 enum Condition {
     Always,
     InTestFile,
@@ -84,7 +84,7 @@ impl TestSideFiles {
             tests: tests.iter().cloned().collect(),
         }
     }
-    /// finding が TBL-core-047 の条件に当たるか。表の種類の重大度はどれも "error" なので、
+    /// finding が 表の種類の重大度はどれも "error" なので、
     /// 重大度は見ない
     pub(crate) fn contains(&self, finding: &Finding) -> bool {
         let in_tests = self.tests.contains(finding.path());

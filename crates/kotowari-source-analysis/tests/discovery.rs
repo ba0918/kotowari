@@ -70,7 +70,7 @@ fn req_082_macro_function_and_marker_lines_use_additive_offset() {
     let tests = discover_in_rust_file(content, "test_e.rs", &config).expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].line, 7, "function line: {:?}", tests);
-    // 本体の先頭の印は結び付かず、invalid_marker にも数えない（TBL-core-016）
+    // 本体の先頭の印は結び付かず、invalid_marker にも数えない
     assert_eq!(
         tests[0].marker_ids,
         vec![("REQ-999".to_string(), 5)],

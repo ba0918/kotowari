@@ -1,4 +1,4 @@
-//! 全体像の元データの読み込みと、置き場の重なりの検査（REQ-core-278、REQ-core-280）
+//! 全体像の元データの読み込みと、置き場の重なりの検査
 
 use kotowari_core::translations::Place;
 use kotowari_core::{FindingGroup, ReadModel, SourceText, StopReason, config::Config};
@@ -9,13 +9,13 @@ use std::path::Path;
 pub(crate) struct Texts {
     pub(crate) data: Vec<SourceText>,
     pub(crate) toc: SourceText,
-    /// `先頭の言語`でない言語ごとの`側`（REQ-core-343）
+    /// `先頭の言語`でない言語ごとの`側`
     pub(crate) translations: Vec<kotowari_overview::Translation>,
 }
 
 /// "overview" の鍵があれば、"overview.files" に当たり拡張子が小文字の ".md" のファイルと、"overview.toc"
-/// の指す`目次`を読む。隠しディレクトリは glob が名指ししたものだけに入る（REQ-core-019）。読む前に、
-/// 元データとガイドとテストの置き場との重なり（REQ-core-280）、次に`目次`の重なり（REQ-core-326）を
+/// の指す`目次`を読む。隠しディレクトリは glob が名指ししたものだけに入る。読む前に、
+/// 元データとガイドとテストの置き場との重なり、次に`目次`の重なりを
 /// 検査する。鍵が無ければ何も読まずに None
 pub(crate) fn read_texts(
     base: &Path,
@@ -52,7 +52,7 @@ pub(crate) fn read_texts(
             SourceText::new(path, text).map_err(|error| StopReason::MappingError(error.to_string()))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    // REQ-core-325: 読めないときと UTF-8 でないときは、元データと同じ理由で止まる
+    // 読めないときと UTF-8 でないときは、元データと同じ理由で止まる
     let text = crate::acquisition::read_utf8_file(&base.join(&overview.toc), &overview.toc)?;
     let toc = SourceText::new(overview.toc.as_str(), text)
         .map_err(|error| StopReason::MappingError(error.to_string()))?;
@@ -108,7 +108,7 @@ fn translations(
         .collect()
 }
 
-/// REQ-core-326: `目次`のファイルが、元データ、ガイド、テストの走査で読むファイルのどれかに入るか。
+/// `目次`のファイルが、元データ、ガイド、テストの走査で読むファイルのどれかに入るか。
 /// 当たった鍵はこの順の最初のもの
 fn validate_toc_overlap<'a>(
     toc: &str,
@@ -130,7 +130,7 @@ fn validate_toc_overlap<'a>(
     )))
 }
 
-/// REQ-core-280: パスのバイト順で最初の重なったファイル。ガイドとテストの重なり（REQ-core-199）は
+/// パスのバイト順で最初の重なったファイル。ガイドとテストの重なりは
 /// 呼ぶ側が先に判定するので、3つすべてに当たるファイルはここまで来ない
 fn validate_overlap<'a>(
     overview: impl IntoIterator<Item = &'a str>,
@@ -158,7 +158,7 @@ fn validate_overlap<'a>(
     }
 }
 
-/// check と status に加える "overview" の群。鍵が無ければ数は両方 0（REQ-core-288）
+/// check と status に加える "overview" の群。鍵が無ければ数は両方 0
 pub(crate) fn group(read: &ReadModel, texts: Option<Texts>) -> FindingGroup {
     match texts {
         Some(texts) => kotowari_overview::inspect_translations(
@@ -172,7 +172,7 @@ pub(crate) fn group(read: &ReadModel, texts: Option<Texts>) -> FindingGroup {
     }
 }
 
-/// "overview" の鍵が無いまま build か serve を実行したとき（REQ-core-279）
+/// "overview" の鍵が無いまま build か serve を実行したとき
 pub(crate) fn not_configured() -> StopReason {
     StopReason::ConfigError("overview is not configured".into())
 }

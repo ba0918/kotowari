@@ -1,4 +1,4 @@
-//! スキーマの意味の検査（TBL-schema-009）。型に読めたスキーマが、宣言として成り立つかを見る。
+//! スキーマの意味の検査。型に読めたスキーマが、宣言として成り立つかを見る。
 
 use super::*;
 
@@ -26,7 +26,7 @@ pub(super) fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
     reject_root_paths_on_the_type_key(schema)
 }
 
-/// 要素オブジェクトの外、文書の値の根に置く配置パスの衝突を停止にする（TBL-schema-009）。
+/// 要素オブジェクトの外、文書の値の根に置く配置パスの衝突を停止にする。
 /// 題名・前置部・節・項目と、それらの直下のノードの配置パスはすべて同じ置き場に並ぶ。
 fn reject_colliding_root_paths(document: &Document) -> Result<(), SchemaError> {
     let mut paths: Vec<String> = Vec::new();
@@ -82,7 +82,6 @@ fn collect_root_paths(document: &Document, paths: &mut Vec<String>) {
 
 /// "ast --schema" は根の "type" に "name" を置くので、"name" を宣言した`スキーマ`で根の
 /// 配置パスが "type" の鍵を使うと "name" が消える。衝突と同じく停止にする
-/// （TBL-schema-009、2026-09-24-review2-gaps の A2）
 fn reject_root_paths_on_the_type_key(schema: &Schema) -> Result<(), SchemaError> {
     if schema.name.is_none() {
         return Ok(());
@@ -198,7 +197,7 @@ fn validate_item(item: &Item) -> Result<(), SchemaError> {
         repeat.validate()?;
     }
     // 項目の内部に extract を宣言するなら、項目自身も extract を持つ必要がある。
-    // 内部の配置パスは項目オブジェクトの中の相対パスなので、置き場が要る（REQ-schema-039、REQ-schema-047）
+    // 内部の配置パスは項目オブジェクトの中の相対パスなので、置き場が要る
     let internal = item_internal_extract_paths(item);
     if item.extract.is_none() && !internal.is_empty() {
         return Err(SchemaError(
@@ -206,7 +205,7 @@ fn validate_item(item: &Item) -> Result<(), SchemaError> {
         ));
     }
     reject_of_words(item.extract.as_ref(), "item", ITEM_OF)?;
-    // 内側の配置パスも項目オブジェクトの中の鍵なので、重複の判定に含める（TBL-schema-009）
+    // 内側の配置パスも項目オブジェクトの中の鍵なので、重複の判定に含める
     reject_duplicate_element_keys(item.extract.as_ref(), "item", &internal)?;
     validate_table(item.table.as_ref())?;
     validate_codeblock(item.codeblock.as_ref())?;
@@ -223,7 +222,7 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         if let Some(repeat) = &table.repeat {
             repeat.validate()?;
         }
-        // どの表を選ぶかはヘッダで決めるので、ヘッダの無い select は停止にする（TBL-schema-009）
+        // どの表を選ぶかはヘッダで決めるので、ヘッダの無い select は停止にする
         if table.select.is_some() && table.header.is_none() {
             return Err(SchemaError("table select requires a header".into()));
         }
@@ -236,7 +235,7 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
     Ok(())
 }
 
-/// 1つの要素オブジェクトの中で鍵が重複するスキーマを停止にする（TBL-schema-009）。鍵は
+/// 1つの要素オブジェクトの中で鍵が重複するスキーマを停止にする。鍵は
 /// `value`、`of` の鍵、そして内側のノードの配置パス（`internal` で渡す）である。
 /// 判定は配置パス全体で行い、`a.b` と `a.c` は別の鍵、`a` と `a.b` は重複とする。
 fn reject_duplicate_element_keys(
@@ -254,7 +253,7 @@ fn reject_duplicate_element_keys(
 }
 
 /// 同じ置き場の配置パスのうち、同じパスか一方が他方の手前の段にあたるものを停止にする
-/// （TBL-schema-009）。`a.b` と `a.c` は別の鍵、`a` と `a.b` は衝突とする。
+/// 。`a.b` と `a.c` は別の鍵、`a` と `a.b` は衝突とする。
 fn reject_colliding_keys(keys: &[&str], place: &str) -> Result<(), SchemaError> {
     for (index, key) in keys.iter().enumerate() {
         for other in &keys[index + 1..] {
@@ -295,8 +294,7 @@ fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> 
     Ok(())
 }
 
-/// 同じ置き場で同じ名前を2度宣言したスキーマを停止にする（TBL-schema-009、
-/// 2026-09-24-review4-gaps の A3、A5）。検査と抽出で効く宣言が食い違うか、値が黙って消える
+/// 同じ置き場で同じ名前を2度宣言したスキーマを停止にする。検査と抽出で効く宣言が食い違うか、値が黙って消える
 fn reject_duplicate_names<'a>(
     names: impl Iterator<Item = &'a str>,
     what: &str,
@@ -369,14 +367,14 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
 
 /// ノードが `of` に宣言できる語の名前。`line` と `raw` はどのノードにも、`id` は項目だけ、
 /// `name` は項目と節だけ、`end` は項目と節と箇条書きだけ、名前付きキャプチャ（`group`）は
-/// 題名と箇条書きだけ（REQ-schema-048）。
+/// 題名と箇条書きだけ。
 const OUTSIDE_ITEM_OF: &[&str] = &["line", "raw"];
 const TITLE_OF: &[&str] = &["line", "raw", "group"];
 const SECTION_OF: &[&str] = &["line", "raw", "name", "end"];
 const ITEM_OF: &[&str] = &["line", "id", "name", "raw", "end"];
 const BULLETS_OF: &[&str] = &["line", "raw", "end", "group"];
 
-/// ノードが受け付けない `of` の語を schema_invalid の停止にし、受け付ける語の一覧を示す（REQ-schema-065）。
+/// ノードが受け付けない `of` の語を schema_invalid の停止にし、受け付ける語の一覧を示す。
 fn reject_of_words(
     extract: Option<&Extract>,
     node: &str,

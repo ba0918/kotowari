@@ -1,5 +1,5 @@
-//! 対の読み方、一致の記録、骨組み、切り替えの行、リンク（docs/ir/core/translation-pairs.md、
-//! docs/ir/core/translation-structure.md）
+//! 対の読み方、一致の記録、骨組み、切り替えの行、リンク（docs/decisions/core/translation-pairs.md、
+//! docs/decisions/core/translation-structure.md）
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::path::Path;
 use tempfile::TempDir;
 
-/// TBL-core-046 の17の鍵と、日本語の`UI の文字`
+/// 17の鍵と、日本語の`UI の文字`
 const JAPANESE: [(&str, &str); 17] = [
     ("language_name", "日本語"),
     ("index_link", "一覧"),
@@ -49,7 +49,7 @@ fn language_config(languages: Option<&[&str]>) -> String {
     out
 }
 
-/// 置き場と設定と判断の記録を作る。extra は設定に足す行
+/// 置き場と設定を作る。extra は設定に足す行
 fn make_project(tmp: &Path, languages: Option<&[&str]>, extra: &str) {
     for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
@@ -181,7 +181,7 @@ fn pair(path: &str, detail: &str) -> (String, String) {
 const A_HASH: &str = "78981922613b2afb6025042ff6bd878ac1994e85";
 const EMPTY_HASH: &str = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391";
 
-/// EX-core-518 のガイドの対と一致の記録
+/// ガイドの対と一致の記録
 fn guide_pair_with_record(tmp: &Path, record: Option<&str>) {
     make_project(tmp, JA_EN, GUIDES);
     write(tmp, "guides/a.md", "a\n");
@@ -729,7 +729,7 @@ fn req_core_343_overview_and_contents_forms_are_checked_on_every_side() {
         !findings(&report, "overview_toc_invalid").is_empty(),
         "{report}"
     );
-    // 目次の空の群は目次の形の検査（REQ-core-330）で、目次のどの側にも出る
+    // 目次の空の群は目次の形の検査で、目次のどの側にも出る
     write(
         tmp.path(),
         ".kotowari/toc.en.yaml",
@@ -872,7 +872,7 @@ fn ex_core_532_overview_data_has_no_switcher_line() {
     );
 }
 
-/// EX-core-533 の決定の文書の対と、英語のガイド
+/// 決定の文書の対と、英語のガイド
 fn guide_linking(tmp: &Path, english: &str) {
     make_project(tmp, JA_EN, GUIDES);
     write(tmp, "docs/decisions/a.md", &decision_topic("文。"));

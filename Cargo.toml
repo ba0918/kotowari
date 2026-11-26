@@ -33,7 +33,7 @@ members = ["crates/kotowari", "crates/kotowari-core", "crates/kotowari-source-an
 exclude = ["experiments"]
 resolver = "3"
 
-# 版と lint はここで1回だけ宣言し、すべてのメンバーが継承する（判断の記録 docs/decision/records/2026-10-06-ci-rust-gates.md）
+# 版と lint はここで1回だけ宣言し、すべてのメンバーが継承する
 [workspace.package]
 edition = "2024"
 rust-version = "1.99"

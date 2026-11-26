@@ -1,11 +1,11 @@
-//! `面`の検査（docs/ir/core/surface.md）。`面の規則`で`面のファイル`から`面`を取り出す。
+//! `面`の検査（docs/decisions/core/surface.md）。`面の規則`で`面のファイル`から`面`を取り出す。
 
 use crate::split_lines;
 use crate::{Finding, FindingKind, StopReason};
 use serde_json::Value;
 use std::collections::BTreeSet;
 
-/// `面の規則`で取り出した`面`1つ（REQ-core-223）
+/// `面の規則`で取り出した`面`1つ
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Surface {
     /// 当てた`面の規則`の "id"
@@ -18,7 +18,7 @@ pub struct Surface {
     pub line: usize,
 }
 
-/// `面`の種類と名前の組の数（TBL-core-028 の "surface"）
+/// `面`の種類と名前の組の数
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize)]
 pub struct SurfaceTally {
     /// `面`の種類と名前の組の数
@@ -32,7 +32,7 @@ impl SurfaceTally {
     readonly!(copy total: usize, specified: usize, unspecified: usize);
 }
 
-/// "kotowari check" の "surface"（TBL-core-005、REQ-core-228）
+/// "kotowari check" の "surface"
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub struct Unlisted {
     /// `未記載の面の一覧`で外した`面`の種類と名前の組の数
@@ -42,7 +42,7 @@ impl Unlisted {
     readonly!(copy unspecified: usize);
 }
 
-/// 形の正しい`未記載の面の一覧`の1件（REQ-core-232）
+/// 形の正しい`未記載の面の一覧`の1件
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Unspecified {
     kind: String,
@@ -121,7 +121,7 @@ pub(crate) fn check_entries<'a>(
 }
 
 /// 1件を読む。鍵と値の組で、"kind"、"name"、"why" のちょうど3つの鍵の値がどれも文字列で、
-/// "why" が前後の半角空白とタブを除いて空でないときだけ形が正しい（REQ-core-233）
+/// "why" が前後の半角空白とタブを除いて空でないときだけ形が正しい
 fn read_entry(item: &Value) -> Option<Unspecified> {
     const KEYS: [&str; 3] = ["kind", "name", "why"];
     let map = item.as_object()?;
@@ -140,15 +140,14 @@ fn read_entry(item: &Value) -> Option<Unspecified> {
 }
 
 /// 一覧に書かれたままの "kind" と "name" を半角空白1つで区切る。無いか文字列でない方は空の文字列
-/// （REQ-core-233、REQ-core-234）
 fn written_detail(item: &Value) -> String {
     let written = |key: &str| item.get(key).and_then(Value::as_str).unwrap_or("");
     format!("{} {}", written("kind"), written("name"))
 }
 
 /// 決定の文書に無く一覧のどの1件にも一致しない`面`に、種類と名前の組ごとに1件の surface_without_spec を出す。
-/// 場所は`面のファイル`のパスのバイト順、次に行の小さい順で最初の`面`（REQ-core-227）。
-/// 一致する`面`が無いか、一致する`面`が決定の文書にある1件には surface_unspecified_stale を出す（REQ-core-234）
+/// 場所は`面のファイル`のパスのバイト順、次に行の小さい順で最初の`面`。
+/// 一致する`面`が無いか、一致する`面`が決定の文書にある1件には surface_unspecified_stale を出す
 fn report(
     surfaces: &[Surface],
     decisions: &[crate::decisions::Document],
@@ -177,7 +176,7 @@ fn report(
         }
     }
     let mut tally = SurfaceTally::default();
-    // 種類と名前の組ごとに、面のファイルのパスのバイト順、次に行の小さい順で最初の面だけを見る（REQ-core-227）
+    // 種類と名前の組ごとに、面のファイルのパスのバイト順、次に行の小さい順で最初の面だけを見る
     let mut ordered: Vec<&Surface> = surfaces.iter().collect();
     ordered.sort_by(|a, b| a.path.cmp(&b.path).then(a.line.cmp(&b.line)));
     let mut seen: BTreeSet<(&str, &str)> = BTreeSet::new();

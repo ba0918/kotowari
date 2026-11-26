@@ -1,4 +1,4 @@
-//! "kotowari query" の1件の組み立てと出力（REQ-core-156〜REQ-core-161、TBL-core-027）
+//! "kotowari query" の1件の組み立てと出力
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -49,7 +49,7 @@ fn run_query(tmp: &Path, id: &str) -> serde_json::Value {
     serde_json::from_str(&stdout).expect("valid JSON")
 }
 
-// --- REQ-core-156: query の読み取り ---
+// --- query の読み取り ---
 
 // @kotowari[C-core-query-3]
 #[test]
@@ -74,7 +74,7 @@ fn req_156_duplicate_ids_are_all_listed() {
     assert_eq!(paths, vec!["docs/decisions/a.md", "docs/decisions/b.md"]);
 }
 
-// --- REQ-core-157: 無い ID ---
+// --- 無い ID ---
 
 // @kotowari[C-core-clienv-7, C-core-query-7]
 #[test]
@@ -90,11 +90,11 @@ fn req_157_unknown_id_stops() {
     );
 }
 
-// --- TBL-core-027: body と referenced_by ---
+// --- body と referenced_by ---
 
-// --- REQ-core-160: 逆引きの並び ---
+// --- 逆引きの並び ---
 
-// --- REQ-core-161: 出力の形 ---
+// --- 出力の形 ---
 
 // @kotowari[C-core-query-11]
 #[test]

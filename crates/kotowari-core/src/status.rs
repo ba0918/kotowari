@@ -12,9 +12,9 @@ use std::collections::BTreeMap;
 pub struct StatusResult {
     pub documents: Documents,
     pub tests: Tests,
-    /// "kotowari check" の "guides" と同じ（TBL-core-005）
+    /// "kotowari check" の "guides" と同じ
     pub guides: GuideTally,
-    /// `面`の数。"surface.rules" が空の一覧なら3つとも 0（REQ-core-229）
+    /// `面`の数。"surface.rules" が空の一覧なら3つとも 0
     pub surface: SurfaceTally,
     pub findings: Findings,
     /// 状態ごとの決定の数（C-core-confirm-9）
@@ -23,7 +23,7 @@ pub struct StatusResult {
     pub confirmations: crate::decisions::ConfirmationCounts,
     /// `誤り`が0件で、決定の文書の「未決」の節に項目が無いときだけ true（C-core-docs-12、C-core-docs-13）
     pub complete: bool,
-    /// 追加の指摘の群の数（TBL-core-042）。check と同じ
+    /// 追加の指摘の群の数。check と同じ
     #[serde(skip)]
     pub(crate) groups: Vec<crate::GroupTally>,
 }
@@ -38,12 +38,12 @@ impl Documents {
     readonly!(copy files: usize, lines: usize);
 }
 
-/// `印`と読んだ`テストのファイル`（TBL-core-028）
+/// `印`と読んだ`テストのファイル`
 #[derive(Debug, Clone, Serialize)]
 pub struct Tests {
     /// `印`の出現の数。1つの`印`に `ID` が複数あれば `ID` ごとに1つ
     pub(crate) marks: usize,
-    /// TBL-core-021: "kotowari check" の "tests" と同じ
+    /// "kotowari check" の "tests" と同じ
     pub(crate) files: BTreeMap<String, TestFileTally>,
 }
 impl Tests {
@@ -51,7 +51,7 @@ impl Tests {
     readonly!(borrow files: BTreeMap<String, TestFileTally>);
 }
 
-/// "kotowari check" の`指摘`の数（TBL-core-028）
+/// "kotowari check" の`指摘`の数
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct Findings {
     pub(crate) error: usize,

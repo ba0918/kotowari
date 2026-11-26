@@ -26,7 +26,7 @@ impl Assembly {
         }
     }
 
-    /// `言語の一覧`の言語が2つ以上か（REQ-core-334）
+    /// `言語の一覧`の言語が2つ以上か
     pub(crate) fn enabled(&self) -> bool {
         self.languages.len() > 1
     }

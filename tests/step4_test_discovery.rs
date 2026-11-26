@@ -6,7 +6,7 @@ use assert_cmd::Command;
 use std::fs;
 use tempfile::TempDir;
 
-// --- TBL-core-016: 関数本体の先頭のコメントの印は無視する ---
+// --- 関数本体の先頭のコメントの印は無視する ---
 
 fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
@@ -54,7 +54,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
         .collect()
 }
 
-// --- REQ-core-079: テストのファイル ---
+// --- テストのファイル ---
 
 // @kotowari[C-core-discover-1]
 #[test]
@@ -78,7 +78,7 @@ fn req_079_reads_files_matching_the_globs() {
     );
 }
 
-// --- REQ-core-080: tree-sitter で読む ---
+// --- tree-sitter で読む ---
 
 // @kotowari[C-core-discover-4]
 #[test]
@@ -101,7 +101,7 @@ fn req_080_uses_tree_sitter_with_bundled_rust_query() {
     );
 }
 
-// --- REQ-core-081: 拡張子と言語の対応 ---
+// --- 拡張子と言語の対応 ---
 
 // @kotowari[C-core-discover-7]
 #[test]
@@ -158,7 +158,7 @@ fn ex_core_295_upper_case_extension_decides_no_language() {
 // @kotowari[C-core-document-7, C-core-document-8, C-core-markers-7]
 #[test]
 fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
-    // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで数えると、
+    // 行の区切りは単独の "\r" も行の終わりに数える。"\n" だけで数えると、
     // "\r" の後の印が前の行に報告される
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -199,7 +199,7 @@ fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
     );
 }
 
-// --- REQ-core-082: Rust のテスト ---
+// --- Rust のテスト ---
 
 // @kotowari[C-core-queries-4]
 #[test]
@@ -269,7 +269,7 @@ fn req_082_macro_body_functions_are_counted_by_last_segment() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let rwt = findings_by_kind(&v, "confirmation_without_test");
-    // proptest マクロ内の関数がテストとして数えられ、REQ-core-001 に結び付く
+    // proptest マクロ内の関数がテストとして数えられ、確認することの行に結び付く
     assert!(
         rwt.is_empty(),
         "proptest function should cover C-t-a-1: {:?}",
@@ -305,7 +305,7 @@ fn req_082_two_functions_in_a_path_macro_are_both_counted() {
     assert_eq!(names, vec!["first_prop", "second_prop"]);
 }
 
-// --- REQ-core-083: 読めないファイル ---
+// --- 読めないファイル ---
 
 // @kotowari[C-core-discover-8]
 #[test]
@@ -332,7 +332,7 @@ fn req_083_unparsable_file_is_skipped() {
     );
 }
 
-// --- REQ-core-072: 形の誤った印 ---
+// --- 形の誤った印 ---
 
 // @kotowari[C-core-markers-4]
 #[test]
@@ -419,7 +419,7 @@ fn req_072_invalid_marker_second_on_line_is_detected() {
     );
 }
 
-// --- REQ-core-073: 1行に複数の印 ---
+// --- 1行に複数の印 ---
 
 // @kotowari[C-core-markers-2]
 #[test]
@@ -433,13 +433,13 @@ fn req_073_both_markers_on_one_line_bind_to_the_test() {
         "// @kotowari[C-t-a-1] @kotowari[TBL-002]\n#[test]\nfn req_001_two_markers() {}\n",
     );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    // REQ-core-001 に結び付いた: テストのない要求として挙がらない
+    // 確認することの行に結び付いた: テストの無い行として挙がらない
     assert!(
         findings_by_kind(&result, "confirmation_without_test").is_empty(),
         "the first marker binds C-t-a-1 to the test: {:?}",
         result
     );
-    // TBL-core-002 にも結び付いた: IR に無い ID として印の行から挙がる
+    // 知らない ID にも結び付いた: 仕様に無い ID として印の行から挙がる
     let unresolved = findings_by_kind(&result, "unresolved_reference");
     assert_eq!(
         unresolved.len(),
@@ -457,7 +457,7 @@ fn req_073_both_markers_on_one_line_bind_to_the_test() {
     );
 }
 
-// --- REQ-core-075: 印の結び付け ---
+// --- 印の結び付け ---
 
 // @kotowari[C-core-markers-14]
 #[test]
@@ -700,7 +700,7 @@ fn tbl_016_macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
     assert_eq!(twi[0]["detail"], "a");
 }
 
-// --- REQ-core-076: 問い合わせの無い言語の印 ---
+// --- 問い合わせの無い言語の印 ---
 
 // @kotowari[C-core-markers-19]
 #[test]
@@ -764,7 +764,7 @@ fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
     );
 }
 
-// --- REQ-core-077: 存在しない ID だけを指す印 ---
+// --- 存在しない ID だけを指す印 ---
 
 // @kotowari[C-core-markers-21]
 #[test]
@@ -810,9 +810,9 @@ fn req_054_marker_to_known_id_is_not_unresolved() {
     );
 }
 
-// --- REQ-core-078: review の要求を指す印 ---
+// --- review の要求を指す印 ---
 
-// --- REQ-core-054: 印から存在しない ID ---
+// --- 印から存在しない ID ---
 
 // @kotowari[C-core-confirm-4]
 #[test]
@@ -835,9 +835,9 @@ fn req_054_marker_to_unknown_id_is_unresolved() {
     );
 }
 
-// --- REQ-core-085: テストのない要求 ---
+// --- テストのない要求 ---
 
-// --- REQ-core-086: 印の無いテスト ---
+// --- 印の無いテスト ---
 
 // @kotowari[C-core-cover-1]
 #[test]
@@ -872,7 +872,7 @@ fn req_086_fixture_has_no_unmarked_test_and_one_after_removal() {
     assert_eq!(twi2.len(), 1, "should have one test_without_id: {:?}", twi2);
 }
 
-// --- REQ-core-087: 問い合わせの無い言語 ---
+// --- 問い合わせの無い言語 ---
 
 // @kotowari[C-core-cover-4]
 #[test]
@@ -902,7 +902,7 @@ fn req_087_unknown_language_only_feeds_coverage() {
     );
 }
 
-// --- REQ-core-072, REQ-core-054: 問い合わせの無い言語の印の検査 ---
+// --- 問い合わせの無い言語の印の検査 ---
 
 // @kotowari[C-core-markers-20]
 #[test]
@@ -958,7 +958,7 @@ fn req_054_non_query_language_checks_unresolved_reference() {
     );
 }
 
-// --- REQ-core-077: 印の中の ID の形でない要素 ---
+// --- 印の中の ID の形でない要素 ---
 
 // @kotowari[C-core-confirm-4]
 #[test]
@@ -1007,7 +1007,7 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
     );
 }
 
-// --- REQ-core-088: IR に文書が無いとき ---
+// --- IR に文書が無いとき ---
 
 // @kotowari[C-core-cover-5]
 #[test]
@@ -1038,7 +1038,7 @@ fn req_088_empty_ir_still_checks_tests() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-// --- TBL-core-016: 空行を挟んだ印は結び付かない ---
+// --- 空行を挟んだ印は結び付かない ---
 
 // @kotowari[C-core-markers-13]
 #[test]
@@ -1121,7 +1121,7 @@ fn tbl_016_macro_function_boundary_breaks_marker_binding() {
     );
 }
 
-// --- TBL-core-001: UTF-8 でないテストファイルで停止 ---
+// --- UTF-8 でないテストファイルで停止 ---
 
 // @kotowari[C-core-clienv-7]
 #[test]
@@ -1177,13 +1177,13 @@ fn tbl_001_non_utf8_test_file_stops() {
     );
 }
 
-// --- REQ-core-079: ファイルのシンボリックリンクは読む ---
+// --- ファイルのシンボリックリンクは読む ---
 
 // @kotowari[C-core-discover-2, C-core-discover-3]
 #[test]
 #[cfg(unix)]
 fn req_079_file_symlink_is_read() {
-    // A102 で改めた: ファイルのシンボリックリンクは読む（ディレクトリのリンクは辿らない）
+    // ファイルのシンボリックリンクは読む（ディレクトリのリンクは辿らない）
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1266,7 +1266,7 @@ fn req_018_unreadable_directory_under_tests_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// --- REQ-core-019: glob は再帰し、隠しディレクトリを含めない ---
+// --- glob は再帰し、隠しディレクトリを含めない ---
 
 // @kotowari[C-core-config-22]
 #[test]
@@ -1326,7 +1326,7 @@ fn req_082_test_attribute_after_comment_is_recognized() {
         "function with comment between #[test] and fn should be recognized as test: {:?}",
         twi
     );
-    // 認識されていれば REQ-core-001 は印で結び付いているので confirmation_without_test は出ない
+    // 認識されていれば確認することの行は印で結び付いているので confirmation_without_test は出ない
     let rwt = findings_by_kind(&v, "confirmation_without_test");
     assert!(
         !rwt.iter().any(|f| f["detail"] == "C-t-a-1"),
@@ -1364,7 +1364,7 @@ fn req_082_function_without_configured_attribute_not_counted() {
 // @kotowari[C-core-markers-7]
 #[test]
 fn req_118_unresolved_reference_line_is_the_marker_line() {
-    // A121 で改めた: unresolved_reference の line は印のある行
+    // unresolved_reference の line は印のある行
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1525,7 +1525,7 @@ fn tbl_016_macro_function_block_comment_marker_binds() {
 // @kotowari[C-core-confirm-4]
 #[test]
 fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
-    // A152: 同じテストに同じ ID を指す印が複数あるとき、unresolved_reference は出現ごとに1件
+    // 同じテストに同じ ID を指す印が複数あるとき、unresolved_reference は出現ごとに1件
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1674,7 +1674,7 @@ fn req_079_broken_symlink_in_tests_stops() {
 #[test]
 #[cfg(unix)]
 fn req_079_broken_symlink_outside_glob_stops() {
-    // A159: 走査は基準のディレクトリ全体（隠しディレクトリを除く）を歩いてから glob で選ぶので、
+    // 走査は基準のディレクトリ全体（隠しディレクトリを除く）を歩いてから glob で選ぶので、
     // glob に当たらない場所（既定は src/**/*.rs, tests/**/*.rs）の先の無いシンボリックリンクでも停止する
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
@@ -1708,7 +1708,7 @@ fn req_033_confirmation_without_test_path_carries_the_subdirectory() {
     assert_eq!(missing[0]["detail"], "C-network-timeout-1");
 }
 
-// --- REQ-core-137: テストのない具体例 ---
+// --- テストのない具体例 ---
 
 fn write_test_file(tmp: &std::path::Path, name: &str, content: &str) {
     fs::create_dir_all(tmp.join("tests")).unwrap();
@@ -1762,8 +1762,8 @@ fn req_087_marker_in_a_file_without_query_feeds_scenario_coverage() {
     );
 }
 
-// --- REQ-core-085: 具体例の印は要求の分も満たす ---
+// --- 具体例の印は要求の分も満たす ---
 
 // --- ir-references.md の具体例 ---
 
-// --- REQ-core-124, REQ-core-167: ID の名前（2026-09-22-id-namespace.md）---
+// --- ID の名前（2026-09-22-id-namespace.md）---

@@ -25,7 +25,7 @@ fn parse_json(output: &std::process::Output) -> serde_json::Value {
     serde_json::from_str(&stdout).expect("valid JSON")
 }
 
-// --- REQ-core-021: 出力の形の値 ---
+// --- 出力の形の値 ---
 
 // @kotowari[C-core-output-2]
 #[test]
@@ -40,7 +40,7 @@ fn req_021_format_values_are_json_and_text() {
         .unwrap();
     assert_eq!(output.status.code(), Some(0));
     let stdout = String::from_utf8_lossy(&output.stdout);
-    // REQ-core-022: 標準出力の全体が1つの JSON の値
+    // 標準出力の全体が1つの JSON の値
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("should be valid JSON");
     assert!(v.is_object());
 
@@ -58,7 +58,7 @@ fn req_021_format_values_are_json_and_text() {
     );
 }
 
-// --- REQ-core-023: JSON の中身 ---
+// --- JSON の中身 ---
 
 // @kotowari[C-core-output-3]
 #[test]
@@ -98,7 +98,7 @@ fn req_023_finding_keys_match_the_table() {
     }
 }
 
-// --- PROP-core-002: counts と findings の一致 ---
+// --- counts と findings の一致 ---
 
 // @kotowari[C-core-output-4]
 #[test]
@@ -136,7 +136,7 @@ fn prop_002_counts_match_findings() {
     }
 }
 
-// --- REQ-core-025: 文字の出力 ---
+// --- 文字の出力 ---
 
 // @kotowari[C-core-output-8]
 #[test]
@@ -223,7 +223,7 @@ fn req_025_text_line_for_a_document_without_a_title() {
     );
 }
 
-// --- REQ-core-007: 終了コード ---
+// --- 終了コード ---
 
 // @kotowari[C-core-cli-15]
 #[test]
@@ -286,7 +286,7 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     assert_eq!(output3.status.code(), Some(2), "stop should exit 2");
 }
 
-// --- REQ-core-128, TBL-core-021, PROP-core-004: 読んだテストのファイルの申告 ---
+// --- 読んだテストのファイルの申告 ---
 
 /// "tests.files" の glob を指定したプロジェクトを作る
 fn make_project_with_test_globs(tmp: &std::path::Path, globs: &[&str]) {
@@ -309,7 +309,7 @@ fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
 // @kotowari[C-core-output-12]
 #[test]
 fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
-    // EX-core-035: ".rs" が2つと ".go" が1つ
+    // ".rs" が2つと ".go" が1つ
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
@@ -417,7 +417,7 @@ fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
 // @kotowari[C-core-output-14]
 #[test]
 fn tbl_021_unparsable_file_is_counted() {
-    // EX-core-038: tree-sitter で読めないファイルも "files" に数える
+    // tree-sitter で読めないファイルも "files" に数える
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
     write_test_file(tmp.path(), "lib/ok.rs", "pub fn ok() {}\n");

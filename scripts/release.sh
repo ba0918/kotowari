@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-# 製品の版を上げ、変更履歴を昇格し、チェックを通ったらコミットと注釈付きのタグを作る
-# （判断の記録 docs/decision/records/2026-09-26-release-flow.md の A4、A6、A9）。
+# 製品の版を上げ、変更履歴を昇格し、チェックを通ったらコミットと注釈付きのタグを作る。
 #
 #   release.sh <製品> <版>     製品は kotowari か kotowari-mds。例: release.sh kotowari 0.1.0
 #

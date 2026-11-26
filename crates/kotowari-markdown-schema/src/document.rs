@@ -21,11 +21,11 @@ pub struct Document {
     pub(crate) sections: Vec<Section>,
     /// 前置部領域（最初の節より前）に出た深さ3の見出しとその内側の行。
     /// 題名より後の見出しは宣言済みの前置部の中の未宣言の構造として、open でも
-    /// undeclared_heading / undeclared_line の対象になる（REQ-schema-003）。題名より前の
+    /// undeclared_heading / undeclared_line の対象になる。題名より前の
     /// 見出しは open では許す
     pub(crate) stray_preamble_headings: Vec<StrayPreambleHeading>,
     /// 文書の生の行。1始まりの行番号で `raw_line` から引く。指摘が指す行の
-    /// 生の文字は組み立て直さずここから取る（REQ-schema-008）
+    /// 生の文字は組み立て直さずここから取る
     pub(crate) lines: Vec<String>,
     /// 文書の先頭の frontmatter が占める行数。無ければ 0。行の読み方はこの次の行から読む
     pub(crate) frontmatter_lines: usize,
@@ -47,7 +47,7 @@ impl Document {
 }
 
 impl Document {
-    /// 最初の節より前の深さ3の見出しを、文書の直下の`項目`として読んだもの（REQ-schema-061）。
+    /// 最初の節より前の深さ3の見出しを、文書の直下の`項目`として読んだもの。
     /// スキーマが文書の直下の項目を宣言したときだけ使う。
     pub(crate) fn preamble_items(&self) -> Vec<Item> {
         self.stray_preamble_headings
@@ -68,9 +68,9 @@ impl Document {
 }
 
 impl Document {
-    /// 行 `line` の深さ `depth` の見出しに始まる要素の最後の行（REQ-schema-062）。次に現れる
+    /// 行 `line` の深さ `depth` の見出しに始まる要素の最後の行。次に現れる
     /// 同じ深さかそれより浅い見出しの手前の行で、無ければ文書の最後の行。見出しは読み方ごとに
-    /// 組んだ木の見出しなので、コードブロックの中の見出しの形の行は数えない（TBL-schema-011）。
+    /// 組んだ木の見出しなので、コードブロックの中の見出しの形の行は数えない。
     pub(crate) fn end_line(&self, line: usize, depth: u8) -> usize {
         let titles = self.titles.iter().map(|h| (h.line, h.depth));
         let sections = self
@@ -103,7 +103,7 @@ pub struct StrayPreambleHeading {
     pub heading: Heading,
     pub blocks: Vec<Block>,
     /// 題名より前に出たか。題名より前の見出しは open では許し、前置部領域の
-    /// 見出しは宣言済みの前置部の内側の未宣言の構造として open でも誤りになる（REQ-schema-003）
+    /// 見出しは宣言済みの前置部の内側の未宣言の構造として open でも誤りになる
     pub before_title: bool,
 }
 
@@ -115,7 +115,7 @@ pub struct Heading {
 }
 
 /// 文の1行。生の行とその行番号（1始まり）。行ごとの抽出と、指摘が指す行の
-/// 生の文字に使う（TBL-schema-008、REQ-schema-008）。
+/// 生の文字に使う。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawLine {
     pub line: usize,
@@ -145,7 +145,7 @@ pub struct Item {
     pub id: String,
     /// 見出しの ID より後
     pub title: String,
-    /// 見出しに `:` があるか。無いときは invalid_id の対象（TBL-schema-006）
+    /// 見出しに `:` があるか。無いときは invalid_id の対象
     pub has_id_separator: bool,
     pub line: usize,
     pub blocks: Vec<Block>,
@@ -155,51 +155,51 @@ pub struct Item {
 #[derive(Debug, Clone)]
 pub enum Block {
     Field {
-        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）
+        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う
         line_text: String,
         /// マーカーを除いた元の行テキスト（`名前: 値` の原形）。箇条書きとして
-        /// 扱うとき（TBL-schema-007）の pattern はこの元の行に適用する
+        /// 扱うときの pattern はこの元の行に適用する
         text: String,
-        /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
+        /// lead 段落の最後の行。lead 段落が無ければマーカーの行
         lead_end: usize,
         /// 一覧の項目の最後の行。継続段落と子を含む
         end: usize,
         name: String,
         value: String,
-        /// フィールド行の子である継続段落の行の範囲。REQ-schema-030 ではフィールド行の一部として扱う
+        /// フィールド行の子である継続段落の行の範囲。フィールド行の一部として扱う
         continuation: Vec<LineSpan>,
-        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
+        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）
         children: Vec<Block>,
         line: usize,
     },
     Bullet {
-        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）
+        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う
         line_text: String,
         text: String,
-        /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
+        /// lead 段落の最後の行。lead 段落が無ければマーカーの行
         lead_end: usize,
         /// 一覧の項目の最後の行。継続段落と子を含む
         end: usize,
-        /// リスト項目の子である継続段落の行の範囲。REQ-schema-030 では箇条書きの一部として扱う
+        /// リスト項目の子である継続段落の行の範囲。箇条書きの一部として扱う
         continuation: Vec<LineSpan>,
-        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
+        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）
         children: Vec<Block>,
         line: usize,
     },
-    /// 順序付きリストの項目（`1. ` など）。箇条書きの対象外（TBL-schema-007）。
+    /// 順序付きリストの項目（`1. ` など）。箇条書きの対象外。
     /// 閉じた世界では undeclared_line になる。抽出では値に含めない。
     OrderedList { text: String, line: usize },
     Statement {
         text: String,
         line: usize,
-        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む（TBL-schema-008）
+        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む
         raw_lines: Vec<RawLine>,
     },
     Table {
         header: Vec<String>,
         rows: Vec<Vec<String>>,
         line: usize,
-        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない（TBL-schema-008）
+        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない
         row_lines: Vec<usize>,
     },
     Code {
@@ -272,7 +272,7 @@ enum BlockOwner {
 }
 
 /// 見出しとブロックの並びから、題名・前置部・節・項目の木を組み立てる。
-/// 段落の読み方と行の読み方が共有する（TBL-schema-011）。
+/// 段落の読み方と行の読み方が共有する。
 #[derive(Default)]
 pub(crate) struct TreeBuilder {
     doc: Document,
@@ -293,8 +293,7 @@ impl TreeBuilder {
                     depth: 1,
                     line,
                 });
-                // 題名はそれまでの節と項目を終える。要素の範囲（REQ-schema-062）と同じ区切り方にする
-                // （review7-gaps の A3）
+                // 題名はそれまでの節と項目を終える。要素の範囲と同じ区切り方にする
                 self.owner = BlockOwner::Preamble;
             }
             2 => {
@@ -327,8 +326,8 @@ impl TreeBuilder {
                     };
                 }
                 BlockOwner::Preamble | BlockOwner::StrayPreambleHeading(_) => {
-                    // 前置部領域の深さ3の見出し。内側の行をここに集める（REQ-schema-003）。
-                    // 題名より前に出たかどうかで open の扱いが変わる（REQ-schema-002）
+                    // 前置部領域の深さ3の見出し。内側の行をここに集める。
+                    // 題名より前に出たかどうかで open の扱いが変わる
                     doc.stray_preamble_headings.push(StrayPreambleHeading {
                         heading: Heading {
                             text,
@@ -423,7 +422,7 @@ fn raw_line_of(lines: &[String], line: usize) -> String {
         .unwrap_or_default()
 }
 
-/// ノードが覆う行の生の行と行番号（TBL-schema-008、REQ-schema-008）。
+/// ノードが覆う行の生の行と行番号。
 fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
     let Some(position) = node.position() else {
         return Vec::new();
@@ -443,7 +442,7 @@ fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
 fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
     let line = start_line(node);
     match node {
-        // 画像だけの行（例: `![alt](img.png)`）は文の対象外（REQ-schema-032）
+        // 画像だけの行（例: `![alt](img.png)`）は文の対象外
         Node::Paragraph(_) if is_image_only_paragraph(node) => vec![Block::Other { line }],
         Node::Paragraph(_) => {
             vec![Block::Statement {
@@ -516,7 +515,7 @@ pub(crate) fn table_block_from_node(table: &markdown::mdast::Table, line_offset:
     }
     let mut rows = rows.into_iter();
     let header: Vec<String> = rows.next().unwrap_or_default();
-    // ヘッダより多いセルは捨てる（REQ-schema-033）
+    // ヘッダより多いセルは捨てる
     let rows = rows
         .map(|mut row| {
             row.truncate(header.len());
@@ -528,20 +527,20 @@ pub(crate) fn table_block_from_node(table: &markdown::mdast::Table, line_offset:
         rows,
         line: line_at(table.position.as_ref()) + line_offset,
         // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
-        // 現れないので、残りがデータ行そのものになる（TBL-schema-008）
+        // 現れないので、残りがデータ行そのものになる
         row_lines: row_lines.into_iter().skip(1).collect(),
     }
 }
 
 /// リスト項目を1つ以上のブロックにする。先頭の段落がフィールド行か箇条書きかを
-/// 決め、続く段落（継続段落）は箇条書きの一部にする（REQ-schema-030）。順序付きリストの
-/// 項目は箇条書きの対象外で、閉じた世界では undeclared_line になる（TBL-schema-007）。
-/// 入れ子のリストは親の箇条書きの子ブロックとして保持する（REQ-schema-031）。コードブロック・
+/// 決め、続く段落（継続段落）は箇条書きの一部にする。順序付きリストの
+/// 項目は箇条書きの対象外で、閉じた世界では undeclared_line になる。
+/// 入れ子のリストは親の箇条書きの子ブロックとして保持する。コードブロック・
 /// 表などの子もブロックとして子に残し、閉じた世界の undeclared_line の対象にする。
 /// 先頭がコードブロック・表などで lead の段落が無いとき、後続の段落は文として
-/// 扱う（REQ-schema-030）。文の出現回数・規則（REQ-schema-032）の対象になり、閉じた世界では
-/// undeclared_line になる。ただし画像だけの段落は文に数えない（REQ-schema-032）。`preserve_indent` が真のとき、子の行の元のインデントを
-/// 保ったまま元の行を取る（TBL-schema-008 の「元の行を保った文字列」のため）。
+/// 扱う。文の出現回数・規則の対象になり、閉じた世界では
+/// undeclared_line になる。ただし画像だけの段落は文に数えない。`preserve_indent` が真のとき、子の行の元のインデントを
+/// 保ったまま元の行を取る（「元の行を保った文字列」のため）。
 fn blocks_from_list_item(
     item: &markdown::mdast::ListItem,
     src: &str,
@@ -559,14 +558,14 @@ fn blocks_from_list_item(
         )]
         match child {
             // 先頭の段落だけがフィールド行・箇条書き・順序付き項目の lead になる。
-            // 続く段落は継続段落として lead に付く（REQ-schema-030）。
+            // 続く段落は継続段落として lead に付く。
             Node::Paragraph(_) => {
                 if i == 0 {
                     let text = raw_slice(src, child);
                     let lead_end = child.position().map_or(item_line, |p| p.end.line);
                     let line_text = original_item_line(item, src, preserve_indent);
                     lead_block = Some(if ordered {
-                        // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line（TBL-schema-007）
+                        // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line
                         Block::OrderedList {
                             text,
                             line: item_line,
@@ -585,8 +584,8 @@ fn blocks_from_list_item(
                 } else {
                     // lead が無い項目（先頭がコードブロック・表など）の段落は
                     // 文として扱う。継続段落は lead に付く場合だけだから、この
-                    // 段落はどこにも吸われない（REQ-schema-030）。画像だけの段落は
-                    // blocks_from_node が文の対象外にする（REQ-schema-032）。
+                    // 段落はどこにも吸われない。画像だけの段落は
+                    // blocks_from_node が文の対象外にする。
                     extra.extend(blocks_from_node(child, src, lines));
                 }
             }
@@ -598,7 +597,7 @@ fn blocks_from_list_item(
                     }
                 }
                 match &mut lead_block {
-                    // 入れ子のリストは親の子として保持する（REQ-schema-031）
+                    // 入れ子のリストは親の子として保持する
                     Some(Block::Field { children, .. }) | Some(Block::Bullet { children, .. }) => {
                         children.extend(nested)
                     }
@@ -618,7 +617,7 @@ fn blocks_from_list_item(
         }
     }
     // 中身の無い項目（"-" や "1." だけの行）も1本として残す。捨てると宣言していない行が
-    // 指摘にならずに消える（REQ-schema-001）
+    // 指摘にならずに消える
     if item.children.is_empty() {
         lead_block = Some(if ordered {
             Block::OrderedList {
@@ -675,8 +674,8 @@ fn is_image(node: &Node) -> bool {
 }
 
 /// リスト項目の元の1行目（マーカーとその直後の空白を含む）。行頭のインデントは
-/// トップレベルの箇条書きとして扱うため取り除く（TBL-schema-008）。子の行は `preserve_indent`
-/// が真で、元のインデントを保ったままの行を取る（TBL-schema-008 の「元の行を保った
+/// トップレベルの箇条書きとして扱うため取り除く。子の行は `preserve_indent`
+/// が真で、元のインデントを保ったままの行を取る（「元の行を保った
 /// 文字列」のため）。行末の空白（ハード改行）は元の行の
 /// 一部として残す
 fn original_item_line(
@@ -720,7 +719,7 @@ fn split_field(text: &str) -> Option<(String, String)> {
 
 impl Block {
     /// 一覧の行1つ。中身が "名前: 値" の形ならフィールド行、そうでなければ箇条書きにする。
-    /// 宣言と一致しないフィールド行を箇条書きとして扱うのは検証と抽出の側（TBL-schema-007）。
+    /// 宣言と一致しないフィールド行を箇条書きとして扱うのは検証と抽出の側。
     /// 継続段落と子は読み進めながら足す
     pub(crate) fn list_line(
         line_text: String,
@@ -752,7 +751,7 @@ impl Block {
         }
     }
 
-    /// ブロックが現れた行番号（1始まり）。導かれる値の `line` と `raw` の抽出に使う（REQ-schema-048）。
+    /// ブロックが現れた行番号（1始まり）。導かれる値の `line` と `raw` の抽出に使う。
     pub fn line(&self) -> usize {
         match self {
             Block::Field { line, .. }
@@ -800,7 +799,7 @@ fn span_of(node: &Node) -> LineSpan {
 }
 
 /// 項目見出しを ID と題名に分ける。`:` が無ければ全体を ID にし、区切りが
-/// 無いことを返す（TBL-schema-006 の判定に使う）。
+/// 無いことを返す。
 fn split_item_heading(text: &str) -> (String, String, bool) {
     match text.find(':') {
         Some(idx) => (
@@ -827,7 +826,7 @@ pub(crate) fn inline_text(children: &[Node]) -> String {
             Node::Strong(s) => out.push_str(&inline_text(&s.children)),
             Node::Link(l) => out.push_str(&inline_text(&l.children)),
             Node::LinkReference(l) => out.push_str(&inline_text(&l.children)),
-            // GFM の打ち消し線も中の文字を残す（review7-gaps の A2）
+            // GFM の打ち消し線も中の文字を残す
             Node::Delete(d) => out.push_str(&inline_text(&d.children)),
             _ => {}
         }
@@ -864,7 +863,7 @@ fn line_at(position: Option<&markdown::unist::Position>) -> usize {
 fn slice_at(src: &str, position: Option<&markdown::unist::Position>) -> String {
     match position {
         // 複数行にまたがる範囲は、行を改行1つでつなぎ直す。CRLF と単独の CR も
-        // split_lines と同じく1つの行区切りとして扱う（REQ-schema-063）
+        // split_lines と同じく1つの行区切りとして扱う
         Some(pos) => src[pos.start.offset..pos.end.offset]
             .trim()
             .replace("\r\n", "\n")

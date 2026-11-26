@@ -1,4 +1,4 @@
-//! 面の検査（docs/ir/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
+//! 面の検査（docs/decisions/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
@@ -275,7 +275,7 @@ fn decision_doc(decision: &str, rest: &str) -> String {
     )
 }
 
-/// EX-core-407 の場面: "--format" を`要求`の`文`に二重引用符で書いた IR と、面の規則と "src/cli.rs"
+/// "--format" を`要求`の`文`に二重引用符で書いた IR と、面の規則と "src/cli.rs"
 fn ex_407_project(tmp: &Path) {
     make_project(tmp, SURFACE_RS);
     write(tmp, "rules/surface.yml", FLAG_RULE);
@@ -413,7 +413,7 @@ fn req_227_no_surface_is_extracted_when_surface_rules_is_empty() {
 
 // --- S4: 未記載の面の一覧 ---
 
-/// EX-core-408 の場面（"--format" だけが決定の文書にある）に、"surface.unspecified" と一覧の中身を足す
+/// 場面（"--format" だけが決定の文書にある）に、"surface.unspecified" と一覧の中身を足す
 fn ex_408_project_with_list(tmp: &Path, list: &str) {
     make_project(
         tmp,
@@ -653,7 +653,7 @@ fn req_229_mutants_does_not_read_the_surface_list_rules_or_files() {
 
 // --- S5: check の出力と status ---
 
-/// EX-core-407 の場面: "--format" を`要求`の`文`に書き、"--verbose" を`未記載の面の一覧`に載せる
+/// "--format" を`要求`の`文`に書き、"--verbose" を`未記載の面の一覧`に載せる
 fn ex_407_ir(tmp: &Path) {
     write(
         tmp,
@@ -861,7 +861,7 @@ fn ex_core_427_check_reports_the_unparsable_surface_file_beside_a_test_file_one(
 
 // --- 決定の文書に引用された面 ---
 
-/// EX-core-407 の面の規則と "src/cli.rs"。IR は無い。
+/// 面の規則と "src/cli.rs"。IR は無い。
 /// `sections` は決定1つの (節の名前, 中身) の並び
 fn decision_project(tmp: &Path, sections: &[(&str, &str)]) {
     make_project(tmp, SURFACE_RS);

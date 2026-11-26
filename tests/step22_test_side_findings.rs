@@ -1,4 +1,4 @@
-//! テスト側の指摘を終了コードに数えない check（docs/ir/core/test-side-findings.md）
+//! テスト側の指摘を終了コードに数えない check（docs/decisions/core/test-side-findings.md）
 #![expect(
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"

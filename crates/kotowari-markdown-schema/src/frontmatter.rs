@@ -13,7 +13,7 @@ pub enum SchemaRef {
     Url(String),
 }
 
-/// frontmatter を読めなかった理由。TBL-schema-009 の「frontmatter が壊れている」に相当する。
+/// frontmatter を読めなかった理由。「frontmatter が壊れている」に相当する。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FrontmatterError(pub String);
 
@@ -38,7 +38,7 @@ struct Frontmatter {
     schema: SchemaValue,
 }
 
-/// `$schema` キーの値。キーの有無と null を区別する（REQ-schema-014 は null を停止にする）。
+/// `$schema` キーの値。キーの有無と null を区別する（null は停止にする）。
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 enum SchemaValue {
     /// キーが無い。スキーマを持たない文書
@@ -80,7 +80,7 @@ where
     }
 
     // gray_matter の Pod は null を visit_unit、文字列を visit_str で渡す。
-    // 数値・配列などは visit_* が無く型エラーになり、REQ-schema-014 の「"$schema" の値が文字列でない」として扱う
+    // 数値・配列などは visit_* が無く型エラーになり、「"$schema" の値が文字列でない」として扱う
     deserializer.deserialize_any(Visitor)
 }
 

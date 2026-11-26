@@ -42,7 +42,7 @@ fn item(value: &ListItem) -> Value {
 }
 pub fn list(value: &ReadList) -> Value {
     let mut out = json!({"items":value.items().iter().map(item).collect::<Vec<_>>()});
-    // REQ-core-155: "translations" は言語が2つ以上のときだけ出す
+    // "translations" は言語が2つ以上のときだけ出す
     if let Some(translations) = value.translations() {
         out["translations"] = json!(
             translations
@@ -93,7 +93,7 @@ fn file_tallies(values: &std::collections::BTreeMap<String, kotowari::TestFileTa
             .collect(),
     )
 }
-/// REQ-core-288、REQ-core-289: "overview" の群。群が無ければ両方 0
+/// "overview" の群。群が無ければ両方 0
 fn overview(group: Option<&kotowari::GroupTally>) -> Value {
     json!({"files":group.map_or(0, |group| group.files()),"marks":group.map_or(0, |group| group.marks())})
 }
@@ -116,7 +116,7 @@ pub fn status(value: &StatusReport) -> Value {
     let rows = value.confirmations();
     json!({"documents":{"files":d.files(),"lines":d.lines()},"tests":{"marks":t.marks(),"files":file_tallies(t.files())},"guides":{"files":g.files(),"marks":g.marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP)),"surface":{"total":u.total(),"specified":u.specified(),"unspecified":u.unspecified()},"decisions":{"proposed":decisions.proposed(),"implemented":decisions.implemented()},"confirmations":{"with_tests":rows.with_tests(),"without_tests":rows.without_tests(),"by_reading":rows.by_reading()},"findings":{"error":f.error(),"notice":f.notice()},"complete":value.complete()})
 }
-/// REQ-core-295: "written"、"removed"、"unchanged" の3つの鍵だけ
+/// "written"、"removed"、"unchanged" の3つの鍵だけ
 pub fn overview_build(value: &kotowari::OverviewBuild) -> Value {
     json!({"written":value.written(),"removed":value.removed(),"unchanged":value.unchanged()})
 }

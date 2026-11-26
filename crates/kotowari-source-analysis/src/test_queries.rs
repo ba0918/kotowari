@@ -1,6 +1,6 @@
-//! 言語ごとの`問い合わせ`（REQ-core-080〜REQ-core-083、REQ-core-180〜REQ-core-182）
+//! 言語ごとの`問い合わせ`
 //!
-//! 拡張子から言語を決め（TBL-core-031）、その言語の ast-grep のルールを当てて`テスト`の節を見つける。
+//! 拡張子から言語を決め、その言語の ast-grep のルールを当てて`テスト`の節を見つける。
 
 use ast_grep_config::{GlobalRules, RuleCollection, RuleConfig, Severity, from_yaml_string};
 use ast_grep_core::tree_sitter::StrDoc;
@@ -10,7 +10,7 @@ use kotowari_core::config::Config;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-/// 同梱の`問い合わせ`（REQ-core-182）。"language" を書いたルール
+/// 同梱の`問い合わせ`。"language" を書いたルール
 const BUNDLED_RULES: &[&str] = &[
     include_str!("../queries/rust.yml"),
     include_str!("../queries/python.yml"),
@@ -23,16 +23,16 @@ const BUNDLED_SHARED_RULES: &[(&str, &[&str])] = &[(
     &["typescript", "tsx", "javascript"],
 )];
 
-/// 拡張子から言語を決める。表に無い拡張子は言語が決まらない（TBL-core-031）
+/// 拡張子から言語を決める。表に無い拡張子は言語が決まらない
 pub fn language_of(path: &str) -> Option<SupportLang> {
     SupportLang::from_path(path)
 }
 
 /// ast-grep のルールの集まり。`問い合わせ`（"tests.rules" と同梱のルール）と`面の規則`
-/// （"surface.rules"）がそれぞれ別の集まりを持ち、読み方と当て方だけを共有する（REQ-core-224）
+/// （"surface.rules"）がそれぞれ別の集まりを持ち、読み方と当て方だけを共有する
 pub struct RuleSet {
     /// ルールごとの1件だけの集まり。RuleCollection は "files" のあるルールを後ろに回すので、
-    /// 並びの順（REQ-core-181 の名前の順）を保つために分けて持つ
+    /// 並びの順を保つために分けて持つ
     rules: Vec<RuleCollection<SupportLang>>,
     /// ルールが1つ以上ある言語
     languages: Vec<SupportLang>,
@@ -46,7 +46,7 @@ impl RuleSet {
             if !languages.contains(&rule.language) {
                 languages.push(rule.language);
             }
-            // REQ-core-188、REQ-core-224: "severity" は見ない。RuleCollection は "off" のルールを外すので付け替える
+            // "severity" は見ない。RuleCollection は "off" のルールを外すので付け替える
             if matches!(rule.severity, Severity::Off) {
                 rule.severity = Severity::Hint;
             }
@@ -59,7 +59,7 @@ impl RuleSet {
         Ok(RuleSet { rules, languages })
     }
 
-    /// 設定の鍵 `key` に並んだルールのファイルだけから集まりを作る（REQ-core-224）
+    /// 設定の鍵 `key` に並んだルールのファイルだけから集まりを作る
     pub fn from_texts(texts: &[kotowari_core::SourceText], key: &str) -> Result<Self, String> {
         Self::build(read_rule_texts(texts, key)?, key)
     }
@@ -69,7 +69,7 @@ impl RuleSet {
         self.languages.contains(&lang)
     }
 
-    /// その言語のルールのうち、"files" と "ignores" がそのファイルに当てることを許すもの（REQ-core-187）
+    /// その言語のルールのうち、"files" と "ignores" がそのファイルに当てることを許すもの
     fn rules_for(&self, lang: SupportLang, rel_path: &str) -> Vec<&RuleConfig<SupportLang>> {
         self.rules
             .iter()
@@ -85,7 +85,7 @@ pub struct TestQueries {
 
 impl TestQueries {
     /// 同梱のルール、"tests.rust.attributes" のルール、"tests.rules" のファイルのルールを読む。
-    /// ルールのファイルが読めなければ設定の誤りで停止する（REQ-core-189）
+    /// ルールのファイルが読めなければ設定の誤りで停止する
     pub fn from_texts(
         config: &Config,
         texts: &[kotowari_core::SourceText],
@@ -103,7 +103,7 @@ impl TestQueries {
     }
 }
 
-/// 設定の鍵 `key` に並んだルールのファイルを順に読む。同じパスの2回目は設定の誤り（REQ-core-189）
+/// 設定の鍵 `key` に並んだルールのファイルを順に読む。同じパスの2回目は設定の誤り
 fn read_rule_texts(
     texts: &[kotowari_core::SourceText],
     key: &str,
@@ -142,7 +142,7 @@ fn bundled_rules(config: &Config) -> Result<Vec<RuleConfig<SupportLang>>, String
 }
 
 // ルールのファイルを1つ読む。無い、ファイルでない、読めない、UTF-8 でない、
-// ルールとして読めないときは設定の誤りで、詳細は `key` とそのパス（REQ-core-189、REQ-core-225）
+// ルールとして読めないときは設定の誤りで、詳細は `key` とそのパス
 
 /// ルールの "language" の値だけを読むための形。ほかのキーは読み捨てる
 #[derive(serde::Deserialize)]
@@ -150,7 +150,7 @@ struct LanguageOnly {
     language: Option<String>,
 }
 
-/// ルールのうち、"language" が知らない言語の最初のものの値（REQ-core-189）。
+/// ルールのうち、"language" が知らない言語の最初のものの値。
 /// ast-grep と同じ `SupportLang` の読み方で突き合わせるので、大文字小文字と別名の受け方は変わらない。
 /// "language" の値だけを読めないときは、ルールとして読むほうの誤りに任せる
 fn unknown_language(yaml: &str) -> Option<String> {
@@ -166,7 +166,7 @@ fn parse_rules(yaml: &str) -> Result<Vec<RuleConfig<SupportLang>>, String> {
 }
 
 /// "tests.rust.attributes" の1つを、その属性の付いた関数に当たるルールにする。
-/// 属性から "#["、"]"、引数を除いたパスの文字が完全に一致するものだけに当てる（TBL-core-017）
+/// 属性から "#["、"]"、引数を除いたパスの文字が完全に一致するものだけに当てる
 fn configured_attribute_rule(path: &str) -> String {
     let pattern = format!("^{}$", regex::escape(path)).replace('\'', "''");
     format!(
@@ -207,7 +207,7 @@ pub struct ParsedFile {
 }
 
 impl ParsedFile {
-    /// 構文の誤りが1つでもあれば None（REQ-core-083）。構文木を作れなかったときも None
+    /// 構文の誤りが1つでもあれば None。構文木を作れなかったときも None
     pub fn parse(content: &str, lang: SupportLang) -> Option<Self> {
         let root = ast_grep_core::AstGrep::try_new(content, lang).ok()?;
         if root.root().get_inner_node().has_error() {
@@ -220,7 +220,7 @@ impl ParsedFile {
         self.root.root()
     }
 
-    /// その言語の`問い合わせ`をすべて当てる。同じ節に複数当たっても1つと数える（REQ-core-181）
+    /// その言語の`問い合わせ`をすべて当てる。同じ節に複数当たっても1つと数える
     pub fn find_tests(
         &self,
         queries: &TestQueries,
@@ -264,7 +264,7 @@ pub struct NamedMatch {
 }
 
 impl ParsedFile {
-    /// その言語の規則をすべて当て、"$NAME" を捕まえた当たりをルールごとに返す（REQ-core-223）
+    /// その言語の規則をすべて当て、"$NAME" を捕まえた当たりをルールごとに返す
     pub fn find_named(
         &self,
         rules: &RuleSet,
@@ -293,7 +293,7 @@ impl ParsedFile {
     }
 }
 
-/// 最初と最後が同じ引用符なら、その1文字ずつを外す（REQ-core-180、REQ-core-223）
+/// 最初と最後が同じ引用符なら、その1文字ずつを外す
 fn strip_quotes(text: &str) -> String {
     for quote in ['\'', '"', '`'] {
         if text.len() >= 2 && text.starts_with(quote) && text.ends_with(quote) {
