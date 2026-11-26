@@ -2,14 +2,11 @@ use kotowari_core::{Finding, Inspection, StopReason};
 use std::path::Path;
 /// check と同じ経路で読んで検査する。設定は既定の値
 fn inspect(base: &Path) -> Result<Inspection, StopReason> {
-    for dir in ["docs/decision/records", "docs/decision/adr"] {
-        std::fs::create_dir_all(base.join(dir)).unwrap();
-    }
     crate::acquisition::load_with_guides(base, None)
 }
 /// check と同じ経路で、"docs/decisions" の決定の文書を読んで検査する
 fn inspect_decisions(base: &Path) -> Result<Inspection, StopReason> {
-    for dir in ["docs/ir", "docs/decisions", ".kotowari"] {
+    for dir in ["docs/decisions", ".kotowari"] {
         std::fs::create_dir_all(base.join(dir)).unwrap();
     }
     std::fs::write(

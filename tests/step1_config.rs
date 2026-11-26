@@ -780,8 +780,12 @@ fn req_020_kotowari_toml_beside_the_base_is_not_read() {
         "the base project should check cleanly"
     );
 
-    // 読まれれば置き場が "elsewhere" になり、置き場が無いことを理由に停止する値
-    fs::write(tmp.path().join("kotowari.toml"), "ir = \"elsewhere\"\n").unwrap();
+    // 読まれれば決定の文書の置き場が "elsewhere" になり、置き場が無いことを理由に停止する値
+    fs::write(
+        tmp.path().join("kotowari.toml"),
+        "[decisions]\ndocuments = \"elsewhere\"\n",
+    )
+    .unwrap();
     let after = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(
         after.status.code(),
@@ -803,7 +807,11 @@ fn req_020_kotowari_toml_beside_the_base_is_not_read() {
         Some(0),
         "defaults should check cleanly"
     );
-    fs::write(tmp.path().join("kotowari.toml"), "ir = \"elsewhere\"\n").unwrap();
+    fs::write(
+        tmp.path().join("kotowari.toml"),
+        "[decisions]\ndocuments = \"elsewhere\"\n",
+    )
+    .unwrap();
     let default_after = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(
         default_after.status.code(),

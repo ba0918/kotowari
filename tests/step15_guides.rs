@@ -210,7 +210,7 @@ fn ex_369_without_the_guides_key_no_guide_is_read() {
     write(
         tmp.path(),
         "docs/guide.md",
-        "# ガイド\n\n<!-- @kotowari[REQ-001:00000000] -->\n",
+        "# ガイド\n\n<!-- @kotowari[docs/decisions/a/a.md#名前:00000000] -->\n",
     );
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "json"]);
     assert_ne!(code, Some(2), "{stderr}");
@@ -275,18 +275,6 @@ fn req_152_list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() 
 
 // --- ガイドの印を読む ---
 
-/// 古い形の文書と、それに印を付けたテストと、`ガイド`の "guides/a.md" を作る。
-/// `ガイド`を除けば`指摘`は出ない
-fn write_ex_362_project(tmp: &Path, guide: &str) {
-    make_project(tmp, GUIDES_MD);
-    write(
-        tmp,
-        "tests/a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001() {}\n",
-    );
-    write(tmp, "guides/a.md", guide);
-}
-
 /// 決定の文書 D_001 と、その確認することの行に印を付けたテストと、`ガイド`の "guides/a.md" を作る。
 /// `ガイド`を除けば`指摘`は出ない
 fn write_decision_project(tmp: &Path, guide: &str) {
@@ -339,15 +327,15 @@ fn req_200_the_ex_362_project_without_a_guide_mark_has_no_findings() {
 #[test]
 fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(
+    write_decision_project(
         tmp.path(),
         concat!(
             "# ガイド\n\n",
-            "```\n<!-- @kotowari[REQ-001] -->\n```\n\n",
-            "@kotowari[REQ-001] の形で書く\n\n",
+            "```\n<!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] -->\n```\n\n",
+            "@kotowari[docs/decisions/a/a.md#名前:1423c6c3] の形で書く\n\n",
             // 字下げの形のコードブロックとコードスパンも読まない
-            "    <!-- @kotowari[REQ-001] -->\n\n",
-            "本文の `<!-- @kotowari[REQ-001] -->` は例\n",
+            "    <!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] -->\n\n",
+            "本文の `<!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] -->` は例\n",
         ),
     );
     let (_, v) = check_json(tmp.path());
@@ -376,8 +364,8 @@ guides/a.md:5 [error] invalid_marker <!-- @kotowari[docs/decisions/a/a.md#名前
 #[test]
 fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
     let tmp = TempDir::new().unwrap();
-    let line = "<!-- @kotowari[REQ-001:00000000, foo:51b1f3da] -->";
-    write_ex_362_project(tmp.path(), &format!("# ガイド\n\n{line}\n"));
+    let line = "<!-- @kotowari[docs/decisions/a/a.md#名前:00000000, foo:1423c6c3] -->";
+    write_decision_project(tmp.path(), &format!("# ガイド\n\n{line}\n"));
     let (_, v) = check_json(tmp.path());
     assert_eq!(
         findings_on(&v, "guides/a.md"),
@@ -447,9 +435,9 @@ fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_n
 #[test]
 fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(
+    write_decision_project(
         tmp.path(),
-        "# ガイド\n\n<!-- @kotowari[ , ] -->\n\n<!--\n  @kotowari[REQ-001:51b1f3da\n  ]\n-->\n",
+        "# ガイド\n\n<!-- @kotowari[ , ] -->\n\n<!--\n  @kotowari[docs/decisions/a/a.md#名前:1423c6c3\n  ]\n-->\n",
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(
@@ -463,7 +451,7 @@ fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
             (
                 "invalid_marker".to_string(),
                 6,
-                "  @kotowari[REQ-001:51b1f3da".to_string()
+                "  @kotowari[docs/decisions/a/a.md#名前:1423c6c3".to_string()
             ),
         ]
     );

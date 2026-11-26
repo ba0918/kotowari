@@ -215,9 +215,16 @@ fn req_024_sorted_by_path_line_kind_detail() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 複数の文書に指摘を出す
+    fs::write(tmp.path().join("docs/decisions/b.md"), "no title\n").unwrap();
+    fs::write(
+        tmp.path().join("docs/decisions/a.md"),
+        "# A\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n### Decision\n\n適切に挨拶する。など。\n\n### Confirmations\n\n- C-a-2 Two\n- C-a-1 One\n- C-a-1 Again\n",
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
+    assert!(findings.len() >= 5, "{v}");
 
     // path でソートされていること
     for i in 1..findings.len() {

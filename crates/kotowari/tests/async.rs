@@ -50,8 +50,8 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
             sync.list().unwrap().items().len()
         );
         assert_eq!(
-            send(adapter.query("REQ-999")).await.err().unwrap().kind(),
-            sync.query("REQ-999").err().unwrap().kind()
+            send(adapter.query("C-t-999")).await.err().unwrap().kind(),
+            sync.query("C-t-999").err().unwrap().kind()
         );
         let read = send(send(adapter.read()).await.unwrap());
         let inspection = send(send(adapter.inspect()).await.unwrap());

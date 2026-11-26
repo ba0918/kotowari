@@ -159,7 +159,7 @@ fn req_core_004_allow_test_findings_on_a_command_other_than_check_stops() {
         ][..],
         &["plan", "a.md", "--allow-test-findings"],
         &["list", "--allow-test-findings"],
-        &["query", "REQ-001", "--allow-test-findings"],
+        &["query", "C-t-a-1", "--allow-test-findings"],
         &["status", "--allow-test-findings"],
         &["overview", "build", "--allow-test-findings"],
         &["overview", "serve", "--allow-test-findings"],

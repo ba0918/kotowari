@@ -206,11 +206,11 @@ fn ex_core_556_the_unknown_id_can_be_taken_from_a_failed_query() {
     let dir = project();
     let error = Project::new(ProjectOptions::new(dir.path()))
         .unwrap()
-        .query("REQ-core-999")
+        .query("C-core-t-999")
         .err()
         .unwrap();
     assert_eq!(error.kind(), kotowari::ErrorKind::UnknownQuery);
-    assert_eq!(error.unknown_id(), Some("REQ-core-999"));
+    assert_eq!(error.unknown_id(), Some("C-core-t-999"));
 }
 
 // @kotowari[C-core-libapi-10, C-core-libapi-5]

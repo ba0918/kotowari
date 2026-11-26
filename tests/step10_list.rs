@@ -256,3 +256,45 @@ fn req_152_with_two_languages_list_stops_on_the_guide_places_as_check_does() {
         .unwrap();
     assert_eq!(stderr, check);
 }
+
+// @kotowari[C-core-list-3, C-core-list-7, C-core-list-9]
+#[test]
+fn tests_are_one_entry_per_marker_occurrence_in_path_and_line_order_and_a_null_name_is_a_dash() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.rs", "tests/**/*.go"]);
+    write(tmp.path(), "docs/decisions/t/a.md", DECISION_DOC);
+    write(
+        tmp.path(),
+        "tests/b.rs",
+        "// @kotowari[C-t-a-1, C-t-a-1]\n#[test]\nfn b() {}\n",
+    );
+    write(
+        tmp.path(),
+        "tests/a.go",
+        "// @kotowari[C-t-a-1]\nfunc A() {}\n",
+    );
+    let v = run_list(tmp.path());
+    let tests = item(&v, "C-t-a-1")["tests"].clone();
+    assert_eq!(
+        tests,
+        serde_json::json!([
+            {"path": "tests/a.go", "line": 1, "name": null},
+            {"path": "tests/b.rs", "line": 1, "name": "b"},
+            {"path": "tests/b.rs", "line": 1, "name": "b"},
+        ]),
+        "{v}"
+    );
+    let (code, text, stderr) = run_list_raw(tmp.path(), &["--format", "text"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let lines: Vec<&str> = text.lines().collect();
+    let row = lines
+        .iter()
+        .position(|line| line.starts_with("C-t-a-1 "))
+        .unwrap();
+    assert!(lines[row].ends_with(" tests=3"), "{text}");
+    assert_eq!(
+        &lines[row + 1..row + 4],
+        ["  tests/a.go:1 -", "  tests/b.rs:1 b", "  tests/b.rs:1 b"],
+        "{text}"
+    );
+}

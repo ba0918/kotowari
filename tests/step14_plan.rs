@@ -60,7 +60,11 @@ fn ex_core_342_two_plan_files_stop() {
 fn ex_core_343_config_on_plan_stops() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: docs/ir\n").unwrap();
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: []\n",
+    )
+    .unwrap();
     std::fs::write(tmp.path().join("a.md"), "# a\n").unwrap();
     assert_argument_error(
         &["plan", "--config", ".kotowari/config.yaml", "a.md"],
