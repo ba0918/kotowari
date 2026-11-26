@@ -12,9 +12,13 @@ Status: implemented
 
 The brainstorm skill kotowari-brainstorm does not end until the question tree is exhausted, and does not compromise. Adoption is the opposite: its core is to leave undecided what it does not decide and move on. Putting both in the same skill would hollow out the rules of one of them. A procedure with scenes that ask the person belongs to a workflow skill, and the kotowari skill is a dictionary of how to write.
 
+The brainstorm's approval procedure has steps made for a brainstorm. The step that shows the scene solved has nothing to show in an adoption, which builds nothing. The list of decisions to build this time, and the step that hands it to kotowari-cycle, do not fit an adoption either. Unless it is fixed which steps are followed, the form of approval changes from one adoption to the next.
+
 ### Decision
 
 The adoption procedure is held as the workflow skill kotowari-adopt. Approval uses kotowari-brainstorm's approval procedure, by naming it.
+
+Of the steps of the approval procedure, the step that shows the scene solved is not done. The step that rebuilds the overview is done only when the configuration has the `overview` key. In place of the list of decisions to build this time, the proposed decisions written are shown, when there are any. The commit and the step that cuts the branch and the working tree are done as written. After approval, the adoption does not go on to kotowari-cycle; it hands over the request text after approval. The request text names that branch, its working tree, and the decisions written.
 
 ### Rejected options
 
@@ -23,6 +27,7 @@ The adoption procedure is held as the workflow skill kotowari-adopt. Approval us
 ### Confirmations
 
 - C-core-adopt-1 (by reading) `agent/skills/kotowari-adopt/` exists, and that skill says that approval is done by naming kotowari-brainstorm's approval procedure
+- C-core-adopt-30 (by reading) The kotowari-adopt skill says that, of the approval procedure, the step that shows the scene solved is not done, the step that rebuilds the overview is done only when the configuration has the `overview` key, the proposed decisions written are shown, when there are any, in place of the list of decisions to build this time, the commit and the step that cuts the branch and the working tree are done as written, and, in place of going on to kotowari-cycle, the request text is handed over naming that branch, its working tree and the decisions written
 
 ## A request to bring in an existing specification or existing code is routed to kotowari-adopt at the entry
 
@@ -66,7 +71,7 @@ In an existing project, what agrees between the legacy material and the implemen
 
 For behaviour where the legacy material and the implementation agree, the result the user expected has itself faded from memory over the gap in time, and asking item by item what was expected yields no answer. The risk of fixing in place what two sources agree on is smaller than the loss of adoption stalling to review everything. Behaviour that has no statement in the legacy material but is visible to users and checked by a test carries evidence that someone has kept it on purpose. A decision in the remaining decision records weighs more than a ratification. For behaviour that exists only in the legacy material, if the person separates what will be built from what will not, what will be built can be placed in the specification in a form that asks for no test. Checking everything by running it is too heavy a cost, so the possibility of a misreading is left where it can be seen, as rows that could not be read through.
 
-Even for a topic that already has a decision document, the way its decisions are divided can be doubtful. Rewriting decisions on the spot during adoption hides their relation to what the person decided. The reason for not writing in the decision documents the legacy statements the person answered will not be built, and the reason for making behaviour with no legacy statement and no test a ratification candidate, are not recorded. The legacy material is not rewritten, so the statements not to be built remain in the legacy material.
+Even for a topic that already has a decision document, the way its decisions are divided can be doubtful. Rewriting decisions on the spot during adoption hides their relation to what the person decided. When an existing decision is still "proposed", which of the form the person decided and has not built yet and the implementation's behaviour becomes the specification cannot be decided on the spot during adoption. The reason for not writing in the decision documents the legacy statements the person answered will not be built, and the reason for making behaviour with no legacy statement and no test a ratification candidate, are not recorded. The legacy material is not rewritten, so the statements not to be built remain in the legacy material.
 
 ### Decision
 
@@ -74,7 +79,7 @@ The rows of the list are sorted to the destinations in the following table. "Leg
 
 | Subject | Situation | Destination |
 |---|---|---|
-| Legacy statement | A decision in the legacy decision records that agrees with the implementation | Not asked for ratification in the list; written as a decision whose state is "implemented", as that decision says |
+| Legacy statement | A decision in the legacy decision records that agrees with the implementation | Only shown in the list and not asked for ratification; written as a decision whose state is "implemented", as that decision says |
 | Legacy statement | Agrees with the implementation (no decision record decided it) | Ratification candidate |
 | Legacy statement | Disagrees with the implementation | An "Open" item |
 | Legacy statement | After reading, no confidence whether it agrees or disagrees with the implementation | An "Open" item |
@@ -85,18 +90,20 @@ The rows of the list are sorted to the destinations in the following table. "Leg
 | Behaviour with no legacy statement | Internal behaviour not visible to users | Not written |
 | Ratification candidate | The person did not remove it in the list | A decision whose state is "implemented" |
 | Ratification candidate | The person removed it in the list | An "Open" item |
-| Existing decision | Agrees with the implementation | Kept as it is |
-| Existing decision | Disagrees with the implementation, or no confidence whether it agrees | Neither rewritten nor deleted; made an "Open" item that links to that decision |
+| Existing decision | Its state is "proposed" | Neither rewritten nor deleted; made an "Open" item that links to that decision |
+| Existing decision | Its state is "implemented", and it agrees with the implementation | Kept as it is |
+| Existing decision | Its state is "implemented", and it disagrees with the implementation, or no confidence whether it agrees | Neither rewritten nor deleted; made an "Open" item that links to that decision |
 
 Each "Open" item is written, one per item, in the "Open" section of the topic document. It states what disagrees (for a row the person removed, the disagreement between the person's expectation and the implementation; for a row with no confidence, what could not be read through) and where the legacy material is, and that the user decides it, when that feature is next brainstormed. It is not decided on the spot during adoption.
 
-When a decision in the legacy decision records is used, it is used as it is even when it states no reason, and the legacy material is not rewritten.
+The legacy material is not rewritten. How a decision in the legacy decision records is written is decided in [A decision in the legacy decision records that agrees with the implementation counts as ratified, and the reason the record gives goes in its "Problem"](#a-decision-in-the-legacy-decision-records-that-agrees-with-the-implementation-counts-as-ratified-and-the-reason-the-record-gives-goes-in-its-problem).
 
 ### Confirmations
 
 - C-core-adopt-4 (by reading) The kotowari-adopt skill has every row of the table above written with the same destination
 - C-core-adopt-5 (by reading) The kotowari-adopt skill says that disagreements and rows that could not be read through are not decided during adoption, and are written in the "Open" section of the topic document with what disagrees (or what could not be read through), where the legacy material is, and that the user decides it when that feature is brainstormed
 - C-core-adopt-23 (by reading) The kotowari-adopt skill says that a decision the topic already has is neither rewritten nor deleted, and a disagreement with the implementation is made an "Open" item that links to that decision
+- C-core-adopt-29 (by reading) The kotowari-adopt skill says that when a decision the topic already has is "proposed", the row is made an "Open" item that links to that decision, and that decision is not rewritten
 
 ## Of the ratification candidates, the person removes only the rows that feel wrong, and rows they are unsure of stay and are ratified
 
@@ -145,12 +152,12 @@ For the person to find the rows in the list that feel wrong, what the legacy mat
 
 A behaviour row of the list sets out the legacy statement, the implementation's behaviour, where the grounds test is ("none" if there is none), and how that row is checked ([A confirmation row written by ratification is not made "(by reading)" because it has no test](#a-confirmation-row-written-by-ratification-is-not-made-by-reading-because-it-has-no-test)).
 
-The rows that become "Open" items and the breakdown of test destinations are only shown in the list; the person is not asked about them. The diff of the decision documents the person reads at approval is the final version of the list.
+The rows that become "Open" items, the rows of decisions in the legacy decision records that agree with the implementation, and the breakdown of test destinations are only shown in the list; the person is not asked about them. The diff of the decision documents the person reads at approval is the final version of the list.
 
 ### Confirmations
 
 - C-core-adopt-9 (by reading) The kotowari-adopt skill says that a behaviour row of the list sets out the legacy statement, the implementation's behaviour, where the grounds test is (none if there is none), and how it is checked
-- C-core-adopt-10 (by reading) The kotowari-adopt skill says that the rows that become "Open" and the test breakdown are only shown, and that the diff of the decision documents read at approval is the final version of the list
+- C-core-adopt-10 (by reading) The kotowari-adopt skill says that the rows that become "Open", the rows of decisions in the legacy decision records that agree with the implementation, and the test breakdown are only shown, and that the diff of the decision documents read at approval is the final version of the list
 
 ## A confirmation row written by ratification is not made "(by reading)" because it has no test
 
@@ -177,15 +184,37 @@ Status: implemented
 
 ### Problem
 
-A ratification is not something the person judged item by item on its content. If the decision does not pretend its content was judged and honestly shows its weight, people who read it later will not misjudge it.
+A ratification is not something the person judged item by item on its content. If the decision does not pretend its content was judged and honestly shows its weight, people who read it later will not misjudge it. Writing "the legacy material and the implementation agreed" for a candidate with no legacy material is untrue.
 
 ### Decision
 
-The "Problem" of a decision written by ratification states in one sentence that the legacy material and the implementation agreed, so it was taken as the specification without review.
+The "Problem" of a decision written by ratifying a candidate whose legacy material and implementation agreed states in one sentence that the legacy material and the implementation agreed, so it was taken as the specification without review. The "Problem" of a decision written by ratifying a candidate with no legacy material states in one sentence that there was no legacy material, and the implementation's behaviour was taken as the specification without review.
 
 ### Confirmations
 
-- C-core-adopt-24 (by reading) The kotowari-adopt skill says that the "Problem" of a decision written by ratification states in one sentence that the legacy material and the implementation agreed, so it was taken as the specification without review
+- C-core-adopt-24 (by reading) The kotowari-adopt skill says that the "Problem" of a decision written by ratifying a candidate whose legacy material and implementation agreed states in one sentence that the legacy material and the implementation agreed, so it was taken as the specification without review
+- C-core-adopt-26 (by reading) The kotowari-adopt skill says that the "Problem" of a decision written by ratifying a candidate with no legacy material states in one sentence that there was no legacy material, and the implementation's behaviour was taken as the specification without review
+
+## A decision in the legacy decision records that agrees with the implementation counts as ratified, and the reason the record gives goes in its "Problem"
+
+Status: implemented
+
+### Problem
+
+A decision in the legacy decision records is something a person decided before. If it is not counted as ratified, it contradicts the rule that behaviour the person has not ratified is not written. Writing in its "Problem" the same one sentence as a ratification, "taken as the specification without review", makes what a person decided look like something whose content was not judged. Adding a reason to a record that states none makes the added reason look like something the person decided.
+
+### Decision
+
+A decision in the legacy decision records that agrees with the implementation is something a person decided before, so it counts as already ratified. It is only shown in the list, and the person is not asked to ratify it ([A row of the list sets out the legacy statement, the implementation's behaviour and the grounds test, and rows that become "Open" are only shown](#a-row-of-the-list-sets-out-the-legacy-statement-the-implementations-behaviour-and-the-grounds-test-and-rows-that-become-open-are-only-shown)).
+
+Its "Problem" holds the reason the record gives. When the record gives no reason, it says that no reason remains in the records, and no reason is invented. The legacy material is not rewritten.
+
+How its confirmation rows are checked is decided the same way as for the rows of a decision written by ratification ([A confirmation row written by ratification is not made "(by reading)" because it has no test](#a-confirmation-row-written-by-ratification-is-not-made-by-reading-because-it-has-no-test)).
+
+### Confirmations
+
+- C-core-adopt-27 (by reading) The kotowari-adopt skill says that a decision in the legacy decision records that agrees with the implementation counts as ratified, that its "Problem" holds the reason the record gives, and that when the record gives none it says that no reason remains in the records, without inventing one
+- C-core-adopt-28 (by reading) The kotowari-adopt skill says that how the confirmation rows of a decision written from the legacy decision records are checked is decided the same way as for the rows of a decision written by ratification
 
 ## Terms are not sorted in an intake
 
@@ -363,10 +392,3 @@ When, in adoption, the "Decision" or the "Confirmations" of a ratified decision 
 ### Confirmations
 
 - C-core-adopt-22 (by reading) The kotowari-adopt skill says that when a ratified decision quotes the name of a surface of the topic, that surface's entry is removed from the list in the same run, and the entry of a surface that became "Open" or that the person removed stays
-
-## Open
-
-- What the "Problem" of a ratified decision says when the candidate has no legacy material. The one sentence decided for ratified decisions says that the legacy material and the implementation agreed, which is not true for such a candidate. The user decides, at the next brainstorm of this topic.
-- How a decision taken from the legacy decision records that agrees with the implementation is written: what its "Problem" holds, how its confirmation rows are checked, and whether its row appears in the list. It is written as "implemented" without being asked for ratification, while the workflow topic says behaviour the person has not ratified is not written; whether such a decision counts as already ratified is not stated. The user decides, at the next brainstorm of this topic.
-- Where a row goes when the topic already has a decision for it and that decision is still "proposed". The table has no row for this case. The user decides, at the next brainstorm of this topic.
-- Which steps of the brainstorm's approval procedure an adoption follows. The procedure has steps made for a brainstorm (showing the scene, rebuilding the overview, the list of decisions to build, cutting the branch and the working tree). The user decides, at the next brainstorm of this topic.

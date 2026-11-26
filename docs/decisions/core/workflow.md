@@ -127,13 +127,13 @@ Status: implemented
 
 ### Problem
 
-When taking existing code without a specification into kotowari, until now one decision record was written per intake, and behaviour without tests was sent to the issue records. Since neither is kept any more, a destination is needed. Of the 6 cases where tests were added because of check's "no test" finding (the survey in [check counts, per confirmation row, whether a test points at it](confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it)), 4 were existing code that was given a specification later.
+When taking existing code without a specification into kotowari, until now one decision record was written per intake, and behaviour without tests was sent to the issue records. Since neither is kept any more, a destination is needed. A decision in the legacy decision records is not asked for ratification in an intake, so unless it counts as already ratified, it contradicts the rule that behaviour the person has not ratified is not written. Of the 6 cases where tests were added because of check's "no test" finding (the survey in [check counts, per confirmation row, whether a test points at it](confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it)), 4 were existing code that was given a specification later.
 
 ### Decision
 
 In an intake, behaviour the person has ratified is written in the topic document as a decision whose state is "implemented". Confirmation rows without tests come out as check errors, and those become the list of work for writing tests. No per-intake record is written. Until the tests are in place, check keeps reporting errors. For errors about missing tests, the current practice of not stopping at commit and stopping at push (`--allow-test-findings`) is kept.
 
-Behaviour that the code merely has and the person has not ratified is not written. If why it is that way is not known, "no reason remains" is written in the Problem section. No reason is invented.
+Behaviour that the code merely has and the person has not ratified is not written. A decision in the legacy decision records that agrees with the implementation is something a person decided before, so it counts as already ratified ([A decision in the legacy decision records that agrees with the implementation counts as ratified, and the reason the record gives goes in its "Problem"](adoption.md#a-decision-in-the-legacy-decision-records-that-agrees-with-the-implementation-counts-as-ratified-and-the-reason-the-record-gives-goes-in-its-problem)). If why it is that way is not known, "no reason remains" is written in the Problem section. No reason is invented.
 
 ### Rejected options
 
@@ -144,3 +144,4 @@ Behaviour that the code merely has and the person has not ratified is not writte
 
 - C-core-flow-12 (by reading) The intake skill says that behaviour the person has ratified is written as an "implemented" decision, and no per-intake record is written
 - C-core-flow-13 (by reading) The intake skill says that behaviour the person has not ratified is not written, and if the reason is not known that is written, without inventing a reason
+- C-core-flow-14 (by reading) The intake skill says that a decision in the legacy decision records that agrees with the implementation counts as already ratified

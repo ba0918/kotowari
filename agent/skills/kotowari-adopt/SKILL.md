@@ -62,19 +62,27 @@ has no rows for terms: terms are not sorted.
 
 The person answers two things only. Of the ratification candidates, they remove only the rows that
 feel wrong; a row they are unsure of stays and is ratified. For each legacy statement with no
-implementation, they say whether it will be built. The rows that become items under `## 未決`, how
-each row is checked, and the test breakdown are shown, not asked. Also show, as a count only, the
+implementation, they say whether it will be built. The rows that become items under `## 未決`, the
+rows of decisions in the legacy decision records that agree with the implementation, how each row is
+checked, and the test breakdown are shown, not asked. Also show, as a count only, the
 behaviors found outside the scope (below), with the names of the topics they suggest next.
 
 ### 3. Approval
 
 Write the topic document from the answers, then approve once by kotowari-brainstorm's
-**Finishing**, step 3 ("Approve in this order"). The diff of the decision documents the person reads
-there is the final version of the list. Of that step, 3.2 (showing the scene) does not apply: an
-adoption builds nothing. In 3.4, show the proposed decisions written, when there are any, in place
-of the list of decisions to build. Step 4 applies as written (the commit, and the branch with its
-worktree); the request text of **After approval** names that branch, its worktree, and the decisions
-written, each as `path#anchor`.
+**Finishing**, step 3 ("Approve in this order"), and commit by its step 4. The diff of the decision
+documents the person reads there is the final version of the list.
+
+- 3.1 (running check) applies as written.
+- 3.2 (showing the scene solved) is not done: an adoption builds nothing.
+- 3.3 (rebuilding the overview) is done only when the configuration has the `overview` key, as
+  written.
+- In 3.4, show the proposed decisions written, when there are any, in place of the list of
+  decisions to build.
+- Step 4 applies as written up to the branch with its worktree (the commit, cutting the branch,
+  checking it out in its worktree). Do not go on to kotowari-cycle: in place of that hand-off, give
+  the request text of **After approval**, which names that branch, its worktree, and the decisions
+  written.
 
 ## Sorting behaviors
 
@@ -90,7 +98,7 @@ the legacy material, and does not include existing decisions.
 
 | Subject | Situation | Destination |
 |---|---|---|
-| Legacy statement | A decision in the legacy decision records that agrees with the implementation | Not asked for ratification in the list; written as an implemented decision, as that decision says |
+| Legacy statement | A decision in the legacy decision records that agrees with the implementation | Only shown in the list, not asked for ratification; written as an implemented decision, as that decision says |
 | Legacy statement | Agrees with the implementation (no decision record decided it) | Ratification candidate |
 | Legacy statement | Disagrees with the implementation | An item under `## 未決` |
 | Legacy statement | After reading, no confidence whether it agrees or disagrees | An item under `## 未決` |
@@ -101,8 +109,9 @@ the legacy material, and does not include existing decisions.
 | Behavior with no legacy statement | Internal, not visible to users | Not written |
 | Ratification candidate | The person did not remove it in the list | An implemented decision |
 | Ratification candidate | The person removed it in the list | An item under `## 未決` |
-| Existing decision | Agrees with the implementation | Kept as it is |
-| Existing decision | Disagrees with the implementation, or no confidence whether it agrees | Neither rewritten nor deleted; an item under `## 未決` that links to that decision |
+| Existing decision | Its state is proposed | Neither rewritten nor deleted; an item under `## 未決` that links to that decision |
+| Existing decision | Its state is implemented, and it agrees with the implementation | Kept as it is |
+| Existing decision | Its state is implemented, and it disagrees with the implementation, or no confidence whether it agrees | Neither rewritten nor deleted; an item under `## 未決` that links to that decision |
 
 Disagreements and rows that could not be read through are not decided during adoption. Write each
 as one item under `## 未決` at the end of the topic document: what disagrees (for a row the person
@@ -110,17 +119,23 @@ removed, the disagreement between their expectation and the implementation; for 
 confidence, what could not be read through), where the legacy material is, and that the person
 decides it when that feature is next brainstormed.
 
-A decision taken from the legacy decision records is used as it is, even when it states no reason;
-the legacy material is never rewritten.
+An existing decision is never rewritten here, whatever its state: when the topic already has a
+proposed decision for a row, the row becomes an item under `## 未決` that links to that decision.
+
+The legacy material is never rewritten. How a decision taken from the legacy decision records is
+written is under **Decisions written by ratification**.
 
 ## Decisions written by ratification
 
 Write each ratified row as one decision whose state is `実装済み`, in the form of the kotowari
 skill's `references/decision-documents.md`. Behavior the person has not ratified is not written.
 
-- **Problem**: one sentence saying that the legacy material and the implementation agreed, so it
-  was taken as the specification without review. When why the behavior is that way is not known,
-  also write that no reason remains; never invent one. Write no rejected options nobody considered.
+- **Problem**: for a candidate whose legacy material and implementation agreed, one sentence saying
+  that the legacy material and the implementation agreed, so it was taken as the specification
+  without review. For a candidate marked "no legacy material", one sentence saying that there was
+  no legacy material, and the implementation's behavior was taken as the specification without
+  review. When why the behavior is that way is not known, also write that no reason remains; never
+  invent one. Write no rejected options nobody considered.
 - **Decision**: what the implementation does, as the row set it out (a decision table for a row
   that is one).
 - **Confirmations**: decide how each row is checked by what the behavior is, never by whether a
@@ -128,6 +143,12 @@ skill's `references/decision-documents.md`. Behavior the person has not ratified
   become rows checked by tests; something outside the code (a document, an operating procedure)
   becomes a `（読んで確認）` row. Making a row `（読んで確認）` because it has no test hides the
   missing test in the specification; do not.
+
+A decision in the legacy decision records that agrees with the implementation was decided by a
+person before, so it counts as already ratified: it is only shown in the list, never asked, and is
+written as an implemented decision, as that decision says. Its **Problem** holds the reason the
+record gives; when the record gives none, it says that no reason remains in the records — never
+invent one. Its **Confirmations** are checked as decided above for a ratified row.
 
 ## Sorting tests
 
@@ -160,7 +181,8 @@ When the project checks surfaces (`surface.rules` in the configuration; the koto
 
 ## After approval
 
-Hand the person one request text, in the conversation only — do not write it to a file. It holds:
+Hand the person one request text, in the conversation only — do not write it to a file. It names
+the branch and worktree cut at approval and the decisions written, each as `path#anchor`, and holds:
 
 - for each confirmation row with a grounds test, review whether the test checks the row
   sufficiently, and place a marker with that row's ID only on the sufficient ones (the kotowari
