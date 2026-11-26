@@ -2115,3 +2115,83 @@ fn a_deeper_heading_inside_a_section_of_a_decision_is_no_error() {
     );
     assert_eq!(findings(&check(tmp.path())), vec![]);
 }
+
+/// 状態の行と最初の節の間に `between` を置いた、提案の決定が1つの文書。`english` なら英語の綴りで書く
+fn proposed_with_preamble(english: bool, between: &str) -> String {
+    if english {
+        format!(
+            "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n{between}\n\n\
+             ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n"
+        )
+    } else {
+        format!(
+            "# 挨拶\n\n挨拶の仕方を決める。\n\n## 挨拶する\n\n状態: 提案\n\n{between}\n\n\
+             ### 問題\n\n困っていた。\n\n### 決めたこと\n\nこうする。\n"
+        )
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_block_between_the_state_line_and_the_first_section_is_an_error_at_its_first_line() {
+    let between = "補足の段落。\n\n- 一覧\n  の続き\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n\
+                   ```text\nx\n```\n\n#### 小見出し";
+    for english in [false, true] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &proposed_with_preamble(english, between),
+        );
+        let (code, stdout, _) = run(tmp.path(), &["check"]);
+        let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+        let path = "docs/decisions/greet.md";
+        assert_eq!(
+            findings(&value),
+            vec![
+                finding("unknown_line", path, 9, "補足の段落。"),
+                finding("unknown_line", path, 11, "- 一覧"),
+                finding("unknown_line", path, 14, "| a | b |"),
+                finding("unknown_line", path, 18, "```text"),
+                finding("unknown_heading", path, 22, "#### 小見出し"),
+            ],
+            "english={english}"
+        );
+        assert_eq!(code, Some(1), "english={english}");
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_first_paragraph_that_is_not_a_state_line_is_only_a_state_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &proposed_with_preamble(false, "").replace("状態: 提案", "状態は提案。"),
+    );
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![finding(
+            "decision_state_invalid",
+            "docs/decisions/greet.md",
+            5,
+            ""
+        )]
+    );
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_link_reference_definition_after_the_state_line_is_no_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &proposed_with_preamble(false, "[挨拶]: #挨拶する"),
+    );
+    assert_eq!(findings(&check(tmp.path())), vec![]);
+}

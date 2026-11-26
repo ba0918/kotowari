@@ -223,6 +223,8 @@ struct Building {
     /// 状態の行を探すのは、見出しの直後の段落だけ。(行, 書いた綴りの組, 値)
     state_line: Option<(usize, &'static Keywords, String)>,
     awaiting_state: bool,
+    /// 最初の "###" の見出しより前か。状態の行と最初の節の間には、リンクの参照の定義のほか何も置けない
+    before_sections: bool,
     sections: BTreeSet<Section>,
     section: Option<Section>,
     confirmations: Vec<Confirmation>,
@@ -239,6 +241,7 @@ impl Building {
             quotable: Vec::new(),
             state_line: None,
             awaiting_state: true,
+            before_sections: true,
             sections: BTreeSet::new(),
             section: None,
             confirmations: Vec::new(),
@@ -759,6 +762,12 @@ fn read_decision_block(
     skipped: &mut Vec<Finding>,
 ) {
     let awaiting_state = std::mem::replace(&mut building.awaiting_state, false);
+    if matches!(node, Node::Heading(heading) if heading.depth == 3) {
+        building.before_sections = false;
+    } else if building.before_sections && !awaiting_state && !matches!(node, Node::Definition(_)) {
+        // 状態の行の場所の最初のブロックが状態の行でなければ、decision_state_invalid が出ている
+        misplaced(path, node, lines, skipped);
+    }
     read_fingerprinted(node, text, building);
     #[expect(
         clippy::wildcard_enum_match_arm,
