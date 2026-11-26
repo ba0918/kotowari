@@ -289,6 +289,14 @@ document:
     );
 }
 
+// @kotowari[C-schema-extract-36]
+#[test]
+fn separator_with_a_value_puts_the_split_array_under_the_value_key() {
+    let schema = "document:\n  preamble:\n    fields:\n      - name: タグ\n        separator: \",\"\n        extract: { path: tags, value: text }\n";
+    let v = values(schema, "# 題名\n\n- タグ: a, b\n");
+    assert_eq!(v["tags"], json!({ "text": ["a", "b"] }));
+}
+
 // @kotowari[REQ-schema-063, C-schema-extract-37]
 #[test]
 fn a_crlf_document_gives_the_same_values_as_the_lf_document() {
