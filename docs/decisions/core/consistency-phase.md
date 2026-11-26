@@ -96,7 +96,7 @@ It may be skipped only when the diff neither adds nor changes behaviour visible 
 
 ## The consistency phase run on a direct fix also takes the decision documents as its counterpart
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
