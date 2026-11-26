@@ -6,7 +6,7 @@ Decides how the process skills write the overview source data, the unit of an ov
 
 ## The overview source data starts with the opening conclusion, and shows the chain of decisions, the behavior and the current state with parts suited to the subject
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -49,7 +49,7 @@ The separation of the overview and guides comes with examples of the boundary. A
 
 ## The unit of an overview is something users can call one feature by name, and a person decides it
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -87,7 +87,7 @@ Where to put a new overview in the table of contents, and whether to split a con
 
 ## The brainstorm approval procedure has a step that rebuilds the overview, and the overview is not subject to approval
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
