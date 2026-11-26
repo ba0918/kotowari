@@ -401,8 +401,12 @@ fn read(
             continue;
         }
         match &mut place {
+            // 題名と最初の決定の間は話題の段落で、一覧や表もその文として読む。"###" とそれより深い見出しは
+            // 形に無い
             Place::Head => {
-                if title.is_some() && matches!(node, Node::Paragraph(_)) {
+                if let Node::Heading(_) = node {
+                    misplaced(path, node, &lines, skipped);
+                } else if title.is_some() && matches!(node, Node::Paragraph(_)) {
                     lead = true;
                 }
             }

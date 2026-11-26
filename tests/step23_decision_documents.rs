@@ -2228,3 +2228,44 @@ fn a_block_in_the_open_section_that_is_not_a_list_is_an_error_and_status_is_inco
         assert!(!complete(tmp.path()), "{open}");
     }
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_heading_deeper_than_a_decision_before_the_first_decision_is_an_error_at_its_line() {
+    for english in [false, true] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &implemented_after(english, "### 背景\n\n#### 細目"),
+        );
+        marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1"]);
+        let path = "docs/decisions/greet.md";
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![
+                finding("unknown_heading", path, 5, "### 背景"),
+                finding("unknown_heading", path, 7, "#### 細目"),
+            ],
+            "english={english}"
+        );
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn paragraphs_lists_and_tables_before_the_first_decision_are_part_of_the_lead() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &implemented_after(
+            false,
+            "二つ目の段落。\n\n- 隣の話題\n\n| a | b |\n|---|---|\n| 1 | 2 |",
+        ),
+    );
+    marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1"]);
+    assert_eq!(findings(&check(tmp.path())), vec![]);
+}

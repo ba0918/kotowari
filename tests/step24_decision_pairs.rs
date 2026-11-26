@@ -743,3 +743,36 @@ fn a_paragraph_in_the_open_section_on_the_japanese_side_only_is_an_error_on_that
         )]
     );
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_heading_before_the_first_decision_on_both_sides_is_an_error_on_each_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &english("greet", "proposed", &["C-greet-1 Shown"])
+            .replace("## Greet\n", "### Background\n\n## Greet\n"),
+        &japanese("greet", "提案", &["C-greet-1 出る"])
+            .replace("## 挨拶する\n", "### 背景\n\n## 挨拶する\n"),
+    );
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![
+            finding(
+                "unknown_heading",
+                "docs/decisions/greet/greet.ja.md",
+                Some(7),
+                "### 背景"
+            ),
+            finding(
+                "unknown_heading",
+                "docs/decisions/greet/greet.md",
+                Some(7),
+                "### Background"
+            ),
+        ]
+    );
+}
