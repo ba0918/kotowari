@@ -204,6 +204,21 @@ fn req_139_survived_mutant_is_an_error() {
     assert_eq!(output.status.code(), Some(1));
 }
 
+// @kotowari[C-core-mutin-4]
+#[test]
+fn c_core_mutin_4_a_result_file_written_with_a_leading_dot_is_output_normalized() {
+    let tmp = project(&outcomes(&[
+        BASELINE_SUCCESS.to_string(),
+        mutant_at("./src/a.rs", 3, "replace f with ()", "MissedMutant"),
+    ]));
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    let findings = v["findings"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0]["kind"], "mutant_survived");
+    assert_eq!(findings[0]["path"], "src/a.rs");
+}
+
 // @kotowari[REQ-core-139, REQ-core-145, EX-core-205, C-core-mutin-2, C-core-mutants-4]
 #[test]
 fn req_139_caught_and_unviable_mutants_yield_nothing() {
