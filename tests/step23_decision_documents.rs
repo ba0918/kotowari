@@ -512,6 +512,30 @@ fn a_row_confirmed_by_reading_needs_no_test() {
     );
 }
 
+// @kotowari[C-core-markers-22]
+#[test]
+fn a_mark_pointing_at_a_row_confirmed_by_reading_is_not_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "実装済み",
+            &[
+                "C-greet-1 （読んで確認）skill に書いてある",
+                "C-greet-2 名前が入る",
+            ],
+        )]),
+    );
+    marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1", "C-greet-2"]);
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(0), "{stdout}{stderr}");
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(findings(&value), vec![]);
+}
+
 // @kotowari[C-core-confirm-3, C-core-findings-9]
 #[test]
 fn two_confirmations_with_the_same_id_are_an_error() {
