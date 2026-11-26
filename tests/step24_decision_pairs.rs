@@ -889,3 +889,27 @@ fn a_vague_word_in_decision_or_confirmations_of_another_side_is_a_finding_on_tha
     let path = "docs/decisions/greet/greet.ja.md".to_string();
     assert_eq!(vague, vec![(path.clone(), 17), (path, 21)]);
 }
+
+// @kotowari[C-core-list-12]
+#[test]
+fn list_gives_the_path_and_blob_hash_of_each_side_of_a_decision_document_pair() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let first = english("greet", "proposed", &["C-greet-1 Shown"]);
+    let side = japanese("greet", "提案", &["C-greet-1 出る"]);
+    write_pair(tmp.path(), DIR, "greet", &first, &side);
+    let (code, stdout, stderr) = run(tmp.path(), &["list"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let hash = |text: &str| kotowari_core::translations::blob_hash(text.as_bytes()).to_string();
+    assert_eq!(
+        value["translations"],
+        serde_json::json!([{
+            "path": "docs/decisions/greet/greet.md",
+            "sides": [
+                {"language": "en", "path": "docs/decisions/greet/greet.md", "blob": hash(&first)},
+                {"language": "ja", "path": "docs/decisions/greet/greet.ja.md", "blob": hash(&side)}
+            ]
+        }])
+    );
+}

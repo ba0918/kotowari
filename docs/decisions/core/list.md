@@ -121,7 +121,7 @@ For this, with two or more languages, the locations of guides, overview source d
 
 ## Pairs of decision documents are output in translations too
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
