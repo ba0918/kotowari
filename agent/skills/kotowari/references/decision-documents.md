@@ -89,13 +89,14 @@ names the missing section in the spelling of the decision's state line.
 
 | Part | How check reads it |
 |---|---|
-| Title | The first `#` heading. A document without one is missing_title |
-| Lead | At least one paragraph between the title and the first decision, the switcher line not counted; without it, topic_lead_missing |
+| Title | The first `#` heading. A document without one is missing_title; each later `#` heading is multiple_titles |
+| Lead | At least one paragraph between the title and the first decision, the switcher line not counted; without it, topic_lead_missing. More paragraphs, lists and tables there are part of the lead; a `###` or deeper heading there is unknown_heading |
 | Decision | Every `##` heading other than `## 未決` starts one decision, up to the next `##` heading |
-| State | The first paragraph under the decision's heading, `状態: 提案` or `状態: 実装済み`; anything else, or no such paragraph, is decision_state_invalid |
-| Sections | `###` headings. `### 問題` and `### 決めたこと` are required (decision_section_missing); `### 見送った案` and `### 確認すること` are not |
+| State | The first paragraph under the decision's heading, `状態: 提案` or `状態: 実装済み`; anything else, or no such paragraph, is decision_state_invalid. Any other block before the first `###` section is unknown_line (a heading, unknown_heading); only a link reference definition may stand there |
+| Sections | `###` headings. `### 問題` and `### 決めたこと` are required (decision_section_missing); `### 見送った案` and `### 確認すること` are not; a `###` heading with any other name is unknown_heading |
 | Rows | Each item of a list under `### 確認すること` is one row; its first word is its ID |
-| Open section | `## 未決`, placed last; each item of a list under it is one open item. It is not a decision |
+| Open section | `## 未決`, placed last; each item of a list under it is one open item. Any other block under it (a paragraph, a heading) is unknown_line or unknown_heading, so write every open question as a list item. It is not a decision |
+| Code blocks | A fenced code block never closed swallows what follows it: unclosed_code_block at its opening line |
 
 ### Languages: a pair of sides
 
@@ -114,7 +115,9 @@ and `x.ja.md` is the Japanese side, which is the side the person reads and appro
   targets of guide marks and the quoted surfaces from the first-language side only. Another side
   is read only for its headings and links: a link there must point at a document and heading that
   exist, in its own language (`confirmations.ja.md#<Japanese anchor>`), or it is
-  link_target_missing or link_language_mismatch.
+  link_target_missing or link_language_mismatch. Errors that leave content unread
+  (unclosed_code_block, multiple_titles, unknown_heading, unknown_line) are raised on each side
+  itself, since the skeleton below does not compare paragraphs or lists.
 - The skeleton of the sides must match, or the other side is translation_structure_mismatch: the
   headings (their levels and order, and which keyword section each `###` is, not their words), the
   state of each decision, and each row's ID with whether it is confirmed by reading.
