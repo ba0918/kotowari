@@ -413,6 +413,36 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
     }
 }
 
+/// 用語集のファイルの名前。置き場のまとまりのフォルダの直下にあれば、話題の文書として読まない（C-core-docs-20）
+const GLOSSARY: &str = "CONTEXT.md";
+
+/// 置き場のまとまりのフォルダの直下の用語集か。置き場の直下と、まとまりの下のフォルダのものは違う
+pub(crate) fn is_glossary(path: &str, place: &str) -> bool {
+    crate::sources::relative_to_place(path, &crate::normalize_path(place))
+        .and_then(|relative| relative.split_once('/'))
+        .is_some_and(|(group, name)| !group.is_empty() && name == GLOSSARY)
+}
+
+/// リンクの行き先としてだけ読む文書。形を検査せず、見出しの行き先の名前だけを持つ。
+/// links が真ならその文書の中のリンクも持ち、check_links がその行き先を確かめる
+pub(crate) fn parse_target(path: &str, text: &str, links: bool) -> Document {
+    let root = crate::markdown::parse(text).ok();
+    Document {
+        path: path.to_owned(),
+        decisions: Vec::new(),
+        open_items: 0,
+        anchors: root
+            .as_ref()
+            .map(|root| heading_anchors(root).into_values().collect())
+            .unwrap_or_default(),
+        links: root
+            .as_ref()
+            .filter(|_| links)
+            .map(crate::translations::markdown_links)
+            .unwrap_or_default(),
+    }
+}
+
 /// 文書のすべての見出しの、リンクの行き先になる名前を見出しの行から引く。
 /// 同じ名前の2つ目からは "-1"、"-2" を付ける
 fn heading_anchors(root: &Node) -> std::collections::BTreeMap<usize, String> {
@@ -490,14 +520,21 @@ fn has_scheme(destination: &str) -> bool {
 }
 
 /// 決定の文書の中のリンクのうち、置き場の中を指すものが、無い文書か無い見出しを指していれば指摘する。
-/// 置き場の外を指すリンク、Markdown の文書でないファイルを指すリンク、スキームで始まるリンクは見ない
-pub(crate) fn check_links(documents: &[Document], place: &str, findings: &mut Vec<Finding>) {
+/// 置き場の外を指すリンク、Markdown の文書でないファイルを指すリンク、スキームで始まるリンクは見ない。
+/// targets は話題の文書でない、行き先としてだけ読んだ文書
+pub(crate) fn check_links(
+    documents: &[Document],
+    targets: &[Document],
+    place: &str,
+    findings: &mut Vec<Finding>,
+) {
     let by_path: std::collections::BTreeMap<&str, &Document> = documents
         .iter()
+        .chain(targets)
         .map(|doc| (doc.path.as_str(), doc))
         .collect();
     let inside = |path: &str| place.is_empty() || path.starts_with(&format!("{place}/"));
-    for doc in documents {
+    for doc in documents.iter().chain(targets) {
         let directory = doc.path.rsplit_once('/').map_or("", |(dir, _)| dir);
         for link in &doc.links {
             if has_scheme(&link.destination) {

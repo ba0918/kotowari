@@ -9,6 +9,8 @@ pub(super) struct ReadPreparation {
     pub(super) decisions: Vec<crate::decisions::Document>,
     /// 決定の文書を読んだときに出た形の指摘
     pub(super) decision_findings: Vec<crate::Finding>,
+    /// 決定の文書の置き場の、話題の文書でなくリンクの行き先としてだけ読んだ文書（用語集）
+    pub(super) decision_targets: Vec<crate::decisions::Document>,
 }
 
 impl ReadPreparation {
@@ -19,9 +21,20 @@ impl ReadPreparation {
             docs: vec![],
             decisions: vec![],
             decision_findings: vec![],
+            decision_targets: vec![],
         }
     }
     pub(super) fn parse_decisions(&mut self, source: &Text) {
+        let place = self.policy.config.decisions.documents.as_deref();
+        if place.is_some_and(|place| crate::decisions::is_glossary(&source.path, place)) {
+            // C-core-docs-20: 用語集は中身を検査しないので、その中のリンクも見ない
+            self.decision_targets.push(crate::decisions::parse_target(
+                &source.path,
+                &source.text,
+                false,
+            ));
+            return;
+        }
         let document =
             crate::decisions::parse(&source.path, &source.text, &mut self.decision_findings);
         self.decisions.push(document);
@@ -80,7 +93,7 @@ impl ReadPreparation {
             .then(|| crate::decisions::tally(&decisions));
         crate::decisions::check_ids(&decisions, &mut findings);
         if let Some(place) = &config.decisions.documents {
-            crate::decisions::check_links(&decisions, place, &mut findings);
+            crate::decisions::check_links(&decisions, &self.decision_targets, place, &mut findings);
         }
         let mut known_ids = crate::collect_known_ids(&docs);
         known_ids.extend(crate::decisions::known_ids(&decisions));

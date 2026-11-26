@@ -1630,3 +1630,82 @@ fn an_english_state_line_with_another_value_is_an_error() {
         )]
     );
 }
+
+// @kotowari[C-core-docs-20]
+#[test]
+fn a_glossary_in_a_group_folder_is_not_read_as_a_topic_document() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet/CONTEXT.md",
+        "# 用語集\n\n| 用語 | 意味 |\n|---|---|\n| 挨拶 | 会ったときの言葉 |\n\n## 状態のない見出し\n\n- C-bad 形の誤った行\n",
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &format!(
+            "# 挨拶\n\n挨拶の仕方を決める。[用語](CONTEXT.md#用語集)\n\n{}",
+            bare("挨拶する", "提案")
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(findings(&value), vec![]);
+    assert_eq!(
+        value["decisions"],
+        serde_json::json!({"documents": 1, "decisions": 1, "confirmations": 0})
+    );
+}
+
+// @kotowari[C-core-docs-20]
+#[test]
+fn a_link_to_a_heading_missing_from_the_glossary_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(tmp.path(), "docs/decisions/greet/CONTEXT.md", "# 用語集\n");
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &format!(
+            "# 挨拶\n\n挨拶の仕方を決める。[用語](CONTEXT.md#無い見出し)\n\n{}",
+            bare("挨拶する", "提案")
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "link_target_missing",
+            "docs/decisions/greet/greet.md",
+            3,
+            "CONTEXT.md#無い見出し"
+        )]
+    );
+}
+
+// @kotowari[C-core-docs-20]
+#[test]
+fn a_glossary_name_outside_a_group_folder_is_read_as_a_topic_document() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(tmp.path(), "docs/decisions/CONTEXT.md", "# 用語集\n");
+    write(tmp.path(), "docs/decisions/a/b/CONTEXT.md", "# 用語集\n");
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![
+            finding(
+                "topic_lead_missing",
+                "docs/decisions/CONTEXT.md",
+                1,
+                "用語集"
+            ),
+            finding(
+                "topic_lead_missing",
+                "docs/decisions/a/b/CONTEXT.md",
+                1,
+                "用語集"
+            ),
+        ]
+    );
+}
