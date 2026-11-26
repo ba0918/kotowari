@@ -526,3 +526,32 @@ fn list_shows_the_decision_document_pairs() {
         .collect();
     assert_eq!(paths, vec!["docs/decisions/greet/greet.md".to_string()]);
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn an_unclosed_code_block_on_the_japanese_side_is_an_error_on_that_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &english("greet", "proposed", &["C-greet-1 Shown"]),
+        &format!(
+            "{}\n```text\n",
+            japanese("greet", "提案", &["C-greet-1 出る"])
+        ),
+    );
+    let (code, stdout, _) = run(tmp.path(), &["check"]);
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "unclosed_code_block",
+            "docs/decisions/greet/greet.ja.md",
+            Some(23),
+            "```text"
+        )]
+    );
+    assert_eq!(code, Some(1));
+}

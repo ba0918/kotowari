@@ -1709,3 +1709,115 @@ fn a_glossary_name_outside_a_group_folder_is_read_as_a_topic_document() {
         ]
     );
 }
+
+/// 決定の前に `before` を置いた、実装済みの決定が1つの文書。`english` なら英語の綴りで書く。
+/// 確認することの行は1行（C-greet-1）で、どの印も指していない
+fn implemented_after(english: bool, before: &str) -> String {
+    if english {
+        format!(
+            "# Greetings\n\nDecides how to greet.\n\n{before}\n\n## Greet\n\nStatus: implemented\n\n\
+             ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n### Confirmations\n\n\
+             - C-greet-1 A greeting is shown\n"
+        )
+    } else {
+        format!(
+            "# 挨拶\n\n挨拶の仕方を決める。\n\n{before}\n\n## 挨拶する\n\n状態: 実装済み\n\n\
+             ### 問題\n\n困っていた。\n\n### 決めたこと\n\nこうする。\n\n### 確認すること\n\n\
+             - C-greet-1 挨拶が出る\n"
+        )
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn an_unclosed_code_block_is_an_error_at_its_opening_line_and_check_fails() {
+    for english in [false, true] {
+        for fence in ["```text", " ```", "~~~"] {
+            let tmp = TempDir::new().unwrap();
+            make_project(tmp.path(), Some("docs/decisions"));
+            write(
+                tmp.path(),
+                "docs/decisions/greet.md",
+                &implemented_after(english, fence),
+            );
+            let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+            let value: serde_json::Value =
+                serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
+            assert_eq!(
+                findings(&value),
+                vec![finding(
+                    "unclosed_code_block",
+                    "docs/decisions/greet.md",
+                    5,
+                    fence
+                )],
+                "english={english} fence={fence:?}"
+            );
+            assert_eq!(code, Some(1), "english={english} fence={fence:?}");
+        }
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_closed_code_block_is_no_error_and_the_decision_after_it_is_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &implemented_after(false, "```text\n```"),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "confirmation_without_test",
+            "docs/decisions/greet.md",
+            22,
+            "C-greet-1"
+        )]
+    );
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn an_unclosed_code_block_under_a_confirmation_row_is_an_error_and_the_next_rows_are_still_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "実装済み",
+            &["C-greet-1 挨拶が出る\n  ```text", "C-greet-2 名前が入る"],
+        )]),
+    );
+    let (code, stdout, _) = run(tmp.path(), &["check"]);
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(
+        findings(&value),
+        vec![
+            finding(
+                "confirmation_without_test",
+                "docs/decisions/greet.md",
+                19,
+                "C-greet-1"
+            ),
+            finding(
+                "unclosed_code_block",
+                "docs/decisions/greet.md",
+                20,
+                "  ```text"
+            ),
+            finding(
+                "confirmation_without_test",
+                "docs/decisions/greet.md",
+                21,
+                "C-greet-2"
+            ),
+        ]
+    );
+    assert_eq!(code, Some(1));
+}

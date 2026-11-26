@@ -48,11 +48,9 @@ impl ReadPreparation {
             .is_some_and(|place| crate::decisions::is_glossary(&first, place));
         if glossary || language != languages[0] {
             // C-core-docs-20: 用語集は中身を検査しないので、その中のリンクも見ない
-            self.decision_targets.push(crate::decisions::parse_target(
-                &source.path,
-                text,
-                !glossary,
-            ));
+            let content = (!glossary).then_some(&mut self.decision_findings);
+            self.decision_targets
+                .push(crate::decisions::parse_target(&source.path, text, content));
             return;
         }
         let document = crate::decisions::parse(&source.path, text, &mut self.decision_findings);

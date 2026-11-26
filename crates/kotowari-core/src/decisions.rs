@@ -353,6 +353,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
     let mut lead = false;
     let mut open_items = 0;
     let lines: Vec<&str> = text.lines().collect();
+    unclosed_code_blocks(path, &root, text, &lines, findings);
     let anchored = heading_anchors(&root);
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
     for node in blocks {
@@ -416,6 +417,48 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         open_items,
         anchors: anchored.into_values().collect(),
         links: crate::translations::markdown_links(&root),
+    }
+}
+
+/// 閉じないコードブロックを、開きの行とその行の文字で unclosed_code_block にする。閉じないコードブロックは
+/// それを囲むもの（文書か一覧の項目）の終わりまでを呑むので、その後ろの決定と行は読まれない。
+/// 囲みの開き方は Markdown の読み手に任せ、閉じたかは、コードブロックの元の文字の最後の行が、開きと同じ
+/// 文字の、開き以上の長さの並びだけかで見る
+fn unclosed_code_blocks(
+    path: &str,
+    node: &Node,
+    text: &str,
+    lines: &[&str],
+    findings: &mut Vec<Finding>,
+) {
+    if let Node::Code(_) = node
+        && let Some(position) = node.position()
+        && let Some(source) = text.get(position.start.offset..position.end.offset)
+    {
+        let opening = source.trim_start();
+        let fence = opening.chars().next().filter(|c| matches!(c, '`' | '~'));
+        if let Some(fence) = fence {
+            let length = opening.chars().take_while(|&c| c == fence).count();
+            let source_lines = crate::ir::split_lines(source.trim_end());
+            let closing = source_lines
+                .last()
+                .map(|last| last.trim_start_matches(['>', ' ', '\t']).trim_end())
+                .filter(|_| source_lines.len() > 1)
+                .unwrap_or_default();
+            let closed = closing.chars().count() >= length && closing.chars().all(|c| c == fence);
+            if !closed {
+                let line = position.start.line;
+                findings.push(Finding::new(
+                    FindingKind::UnclosedCodeBlock,
+                    path.to_owned(),
+                    Some(line),
+                    lines.get(line - 1).copied().unwrap_or_default().to_owned(),
+                ));
+            }
+        }
+    }
+    for child in node.children().into_iter().flatten() {
+        unclosed_code_blocks(path, child, text, lines, findings);
     }
 }
 
@@ -490,10 +533,16 @@ pub(crate) fn is_glossary(path: &str, place: &str) -> bool {
         .is_some_and(|(group, name)| !group.is_empty() && name == GLOSSARY)
 }
 
-/// リンクの行き先としてだけ読む文書。形を検査せず、見出しの行き先の名前だけを持つ。
-/// links が真ならその文書の中のリンクも持ち、check_links がその行き先を確かめる
-pub(crate) fn parse_target(path: &str, text: &str, links: bool) -> Document {
+/// リンクの行き先としてだけ読む文書。決定の形を検査せず、見出しの行き先の名前だけを持つ。
+/// content があれば（ほかの言語の側）その文書の中のリンクも持ち、check_links がその行き先を確かめる。
+/// そのときは、読み飛ばされる中身を作る誤り（閉じないコードブロック）を content に積む
+pub(crate) fn parse_target(path: &str, text: &str, content: Option<&mut Vec<Finding>>) -> Document {
     let root = crate::markdown::parse(text).ok();
+    let links = content.is_some();
+    if let (Some(findings), Some(root)) = (content, &root) {
+        let lines: Vec<&str> = text.lines().collect();
+        unclosed_code_blocks(path, root, text, &lines, findings);
+    }
     Document {
         path: path.to_owned(),
         decisions: Vec::new(),
