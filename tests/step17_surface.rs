@@ -959,6 +959,25 @@ fn a_decision_quotes_a_name_only_as_the_whole_content_of_a_cell_outside_code() {
     );
 }
 
+// @kotowari[C-core-surface-12]
+#[test]
+fn quotes_are_paired_within_a_cell_and_not_across_the_cells_of_a_row() {
+    let tmp = TempDir::new().unwrap();
+    // 行の文字のまま対にすると "x | " が引用の中身になり、"--format" は引用されない
+    decision_project(
+        tmp.path(),
+        &[
+            ("問題", "困っていた。"),
+            (
+                "決めたこと",
+                "| 鍵 | 値 |\n|---|---|\n| \"x | \"--format\" |",
+            ),
+        ],
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
 // @kotowari[C-core-status-8, C-core-surface-11]
 #[test]
 fn a_name_quoted_in_a_decision_is_counted_as_specified_by_status() {

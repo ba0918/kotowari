@@ -1373,7 +1373,8 @@ pub(crate) fn query_items(
 }
 
 /// ブロックの元の文字。表はセルごとに分け、コードブロックは入れない。一覧と引用の中の
-/// ブロックも1つずつ同じく見る
+/// ブロックも1つずつ同じく見る。セルの元の文字は前後の "|" と空白を含むが、それらは
+/// 引用符の対にもバッククォートの対にも加わらない
 fn quotable_texts(node: &Node, text: &str, out: &mut Vec<String>) {
     let source = |node: &Node| {
         node.position()
@@ -1393,18 +1394,6 @@ fn quotable_texts(node: &Node, text: &str, out: &mut Vec<String>) {
         | Node::Blockquote(_) => {
             for child in node.children().into_iter().flatten() {
                 quotable_texts(child, text, out);
-            }
-        }
-        Node::TableCell(cell) => {
-            let span = cell
-                .children
-                .first()
-                .zip(cell.children.last())
-                .and_then(|(first, last)| {
-                    Some(first.position()?.start.offset..last.position()?.end.offset)
-                });
-            if let Some(content) = span.and_then(|span| text.get(span)) {
-                out.push(content.to_owned());
             }
         }
         _ => out.extend(source(node)),
