@@ -2692,3 +2692,22 @@ fn check_json_reports_an_unclosed_fence_at_its_opening_line_and_exits_with_one()
     assert_eq!(findings[0]["line"], 8);
     assert_eq!(findings[0]["text"], "```");
 }
+
+// @kotowari[C-schema-resolve-1]
+#[test]
+fn check_reads_the_frontmatter_of_a_document_with_lone_carriage_returns() {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", "document:\n  title: {}\n");
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        "---\r$schema: ./schema.yaml\r---\r# 題名\r",
+    );
+    let output = mds().args(["check"]).arg(&doc).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}

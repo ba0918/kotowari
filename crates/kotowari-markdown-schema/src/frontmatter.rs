@@ -88,9 +88,12 @@ where
 /// `$schema` 以外のキーは無視する。壊れた YAML、null や文字列でない `$schema`、
 /// 空の `$schema` はエラー。
 pub fn frontmatter_schema(src: &str) -> Result<Option<SchemaRef>, FrontmatterError> {
+    // gray_matter は LF と CRLF の区切りしか見ないので、単独の CR で区切った文書の frontmatter を
+    // 見落とす。文書の木と同じく3つの区切りを読むため、LF にそろえてから渡す
+    let normalized = src.replace("\r\n", "\n").replace('\r', "\n");
     let matter = Matter::<YAML>::new();
     let result = matter
-        .parse::<Frontmatter>(src)
+        .parse::<Frontmatter>(&normalized)
         .map_err(|e| FrontmatterError(format!("{e}")))?;
     let Some(frontmatter) = result.data else {
         return Ok(None);
@@ -159,6 +162,15 @@ mod tests {
 
     fn adr() -> &'static str {
         "---\n$schema: ../.kotowari/schemas/adr.yaml\ntitle: 例\n---\n# 題名\n"
+    }
+
+    // @kotowari[C-schema-resolve-1]
+    #[test]
+    fn reads_the_schema_ref_of_a_document_whose_lines_end_with_a_lone_carriage_return() {
+        let ref_ = frontmatter_schema("---\r$schema: ./a.yaml\r---\r# 題名\r")
+            .unwrap()
+            .unwrap();
+        assert_eq!(ref_, SchemaRef::Relative("./a.yaml".into()));
     }
 
     // @kotowari[REQ-schema-011, REQ-schema-015, C-schema-resolve-1]

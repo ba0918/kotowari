@@ -23,6 +23,10 @@ Entries are written for someone upgrading from one release to the next: what cha
 - **BREAKING** When reading by paragraph (the default), a block quote, an HTML block and a thematic break inside a node that does not declare `open: true` are now `undeclared_line` findings, with the rule kind `block_quote`, `html` or `thematic_break`; they used to pass silently, even in the closed world. Image-only paragraphs, link reference definitions and blocks of only HTML comments are still ignored. To keep accepting such blocks, declare `open: true` on the node that holds them.
 - A heading of depth 4 or more is now read as a line of the preamble, section or item that contains it: it no longer ends that node for anything that follows it, and the lines after it are checked and extracted with the same node. Without a `subheading` rule it is still `heading_level_mismatch`, also inside a node that declares `open: true` and inside an undeclared section in the open world. Findings come out in document order, so a `heading_level_mismatch` is no longer listed after all other findings.
 
+### Fixed
+
+- A document whose lines end with a lone carriage return (CR, without LF) had its frontmatter overlooked, so `kotowari-mds` stopped with `schema_not_found` although the document declared `$schema`. The frontmatter is now read with all three line breaks (LF, CRLF and CR), as the rest of the document already was.
+
 ## [0.2.1] - 2026-11-25
 
 ### Changed
