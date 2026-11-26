@@ -163,7 +163,8 @@ impl Pairs {
             .collect()
     }
     /// 全体像を書かずに止める`誤り`の数。`IR`、`全体像の元データ`、`目次`の`対`の translation_missing と
-    /// translation_structure_mismatch（REQ-core-294）。全体像は決定の文書を描かないので、その`対`は数えない
+    /// translation_structure_mismatch（REQ-core-294）。決定の文書の`対`は参照の本文に使うだけで、`側`が
+    /// 欠ければ参照は表示名だけになり、ページは描けるので数えない
     pub fn overview_blockers(&self, config: &crate::config::Config) -> usize {
         let places: std::collections::BTreeMap<&str, Place> = self
             .iter()
