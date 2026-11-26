@@ -71,7 +71,7 @@ pub struct Document {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Section {
     pub heading: String,
-    /// IR が変わった後にまだ見直していない節か（C-view-rendering-15）
+    /// 決定が変わった後にまだ見直していない節か（C-view-rendering-15）
     pub stale: bool,
     pub blocks: Vec<Block>,
 }

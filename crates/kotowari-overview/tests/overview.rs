@@ -830,7 +830,7 @@ fn run_named(names: &[&'static str], toc: &str) -> Overview {
         .iter()
         .map(|(path, text)| (path.as_str(), text.as_str()))
         .collect();
-    // 元データは別の IR の文書を持たないので、2つ目以降は overview_document_shared になる。目次の指摘だけを見る
+    // 元データは別の決定の文書を持たないので、2つ目以降は overview_document_shared になる。目次の指摘だけを見る
     run_with_toc(&model(), &files, toc)
 }
 

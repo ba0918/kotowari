@@ -163,7 +163,7 @@ pub fn validate_overlap<'a>(
 }
 
 /// どの`項目`と`シナリオ`の`指紋`とも同じでない1件ごとに guide_stale を出す。
-/// detail の今の`指紋`は、`IR`に無ければ "-"、あれば1つ目の`指紋`
+/// detail の今の`指紋`は、指す決定が無ければ "-"、あれば1つ目の`指紋`
 fn check_stale(
     entries: &[GuideEntry],
     fingerprints: &BTreeMap<String, Vec<String>>,

@@ -1,5 +1,4 @@
 //! 決定の文書の読み取りと検査（docs/decisions/core/decision-documents.md、docs/decisions/core/confirmations.md）。
-//! 古い形の IR とは別の経路で読み、古い形の検査には確認することの ID だけを渡す。
 //!
 //! 形は本体に埋め込んだスキーマ（`schemas/decision.yaml`）で mds のエンジンが読み分け、ここは
 //! エンジンの抽出の値を決定ごとにまとめ、エンジンの指摘を kotowari の指摘に写す
@@ -1205,7 +1204,7 @@ pub(crate) fn tally(documents: &[Document]) -> DecisionTally {
     }
 }
 
-/// 確認することの ID の形（`C-<まとまりと話題の短い名前>-<連番>`）。名前は IR の ID の名前と同じ形で、
+/// 確認することの ID の形（`C-<まとまりと話題の短い名前>-<連番>`）。名前は小文字の英字で始まり小文字の英数字と "-" が続く形で、
 /// 連番は 1 から始まり先頭の 0 を認めない
 pub fn is_confirmation_id(id: &str) -> bool {
     let Some((name, number)) = id.strip_prefix("C-").and_then(|rest| rest.rsplit_once('-')) else {
@@ -1316,7 +1315,7 @@ fn row_items(
     markers: &[crate::tests_discovery::TestMarker],
 ) -> Vec<crate::list::ListItem> {
     let tests_by_id = crate::list::tests_by_id(markers);
-    // 形の誤った ID の行は check が invalid_id にしている。IR の ID の無い項目と同じく出さない
+    // 形の誤った ID の行は check が invalid_id にしているので、一覧には出さない
     rows(documents)
         .filter(|(_, _, row)| is_confirmation_id(&row.id))
         .map(|(doc, decision, row)| {

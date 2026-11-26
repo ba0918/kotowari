@@ -1,6 +1,6 @@
 //! 参照を解き、参照の表の1件を作る（C-core-ovcmd-13、C-core-ovcmd-14、C-core-ovcmd-29、
 //! C-core-ovlang-11）。参照が指すのは決定の見出し（"<文書のパス>#<見出しの行き先の名前>"）か、
-//! 確認することの ID だけで、古い形の IR の ID と出典の形は解かない
+//! 確認することの ID と決定の行き先だけを解く
 
 use kotowari_core::{ParsedDecision, ParsedDecisionDocument, ReadModel};
 use kotowari_markdown_view::{Reference, ReferenceState};

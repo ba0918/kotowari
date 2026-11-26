@@ -2,9 +2,7 @@
 //!
 //! このクレートの仕様は `docs/decisions/schema/` の決定の文書ただ1つである。コメントから
 //! 仕様を参照するときは、決定の見出しか確認することの ID（`C-schema-…`）を書く。
-//! コメントに残る `REQ-schema-nnn`・`TBL-schema-nnn`・`EX-schema-nnn`・`PROP-schema-nnn` は
-//! 凍結した古い IR（`docs/frozen/ir/schema/`）の ID で、今の ID との対応は
-//! `docs/frozen/maps/schema/` にある。`docs/spec/` の節番号（`R<n>`）は参照しない。
+//! `docs/spec/` の節番号（`R<n>`）は参照しない。
 #![deny(clippy::print_stdout, clippy::print_stderr)]
 
 pub mod ast;

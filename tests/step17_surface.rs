@@ -251,7 +251,7 @@ fn req_236_a_file_already_unparsable_as_a_test_file_is_not_reported_twice() {
     assert_eq!(v["counts"]["unparsable_file"], 1, "{v}");
 }
 
-// --- S3: IR にあるかの判定と surface_without_spec ---
+// --- S3: 決定の文書にあるかの判定と surface_without_spec ---
 
 /// "surface.files" を "src/**/*.rs" に、"surface.rules" を "rules/surface.yml" にする設定の行
 const SURFACE_RS: &str =
@@ -275,7 +275,7 @@ fn decision_doc(decision: &str, rest: &str) -> String {
     )
 }
 
-/// "--format" を`要求`の`文`に二重引用符で書いた IR と、面の規則と "src/cli.rs"
+/// 面の規則と "src/cli.rs"
 fn ex_407_project(tmp: &Path) {
     make_project(tmp, SURFACE_RS);
     write(tmp, "rules/surface.yml", FLAG_RULE);
@@ -743,7 +743,7 @@ fn ex_core_423_a_listed_surface_now_in_the_ir_is_not_counted() {
     assert_eq!(v["surface"]["unspecified"], 0, "{v}");
 }
 
-/// 面が4つ（"--format" と "--config" は IR に、"--verbose" は一覧に、"--tool" はどこにも無い）のプロジェクト。
+/// 面が4つ（"--format" と "--config" は決定の文書に、"--verbose" は一覧に、"--tool" はどこにも無い）のプロジェクト。
 /// "--config" は2か所にあっても種類と名前の組で1つに数える
 fn four_surfaces(tmp: &Path) {
     ex_408_project_with_list(tmp, &entry("flag", "--verbose", "理由"));
@@ -861,7 +861,7 @@ fn ex_core_427_check_reports_the_unparsable_surface_file_beside_a_test_file_one(
 
 // --- 決定の文書に引用された面 ---
 
-/// 面の規則と "src/cli.rs"。IR は無い。
+/// 面の規則と "src/cli.rs"。決定の文書は無い。
 /// `sections` は決定1つの (節の名前, 中身) の並び
 fn decision_project(tmp: &Path, sections: &[(&str, &str)]) {
     make_project(tmp, SURFACE_RS);

@@ -1007,14 +1007,14 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
     );
 }
 
-// --- IR に文書が無いとき ---
+// --- 決定の文書が無いとき ---
 
 // @kotowari[C-core-cover-5]
 #[test]
 fn req_088_empty_ir_still_checks_tests() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // IR 文書なし
+    // 決定の文書なし
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/test_a.rs"),
@@ -1031,7 +1031,7 @@ fn req_088_empty_ir_still_checks_tests() {
         twi
     );
     assert_eq!(twi[0]["detail"], "unmarked_test");
-    // confirmation_without_test は出ない（IR に要求がない）
+    // confirmation_without_test は出ない（確認することの行が無い）
     let rwt = findings_by_kind(&v, "confirmation_without_test");
     assert!(rwt.is_empty());
     // 終了コード 1（誤りあり）

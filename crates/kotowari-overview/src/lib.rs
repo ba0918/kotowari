@@ -101,7 +101,7 @@ pub fn inspect(read: &ReadModel, files: &[SourceText], toc: &SourceText) -> Over
 }
 
 /// files と toc を`先頭の言語`の`側`とし、translations をほかの言語の`側`として検査する。
-/// `全体像の元データ`の形、`部品`、lead、参照、`ガイドの印`と`目次`の形はどの`側`にも、扱う IR の文書、
+/// `全体像の元データ`の形、`部品`、lead、参照、`ガイドの印`と`目次`の形はどの`側`にも、扱う決定の文書、
 /// ページの名前の重なり、`目次`との照合は`先頭の言語`の`側`だけに行う。
 /// 描画の入力は言語ごとに作る
 pub fn inspect_translations(

@@ -23,9 +23,9 @@ pub struct Surface {
 pub struct SurfaceTally {
     /// `面`の種類と名前の組の数
     pub(crate) total: usize,
-    /// そのうち`IR`にあるものの数
+    /// そのうち決定の文書にあるものの数
     pub(crate) specified: usize,
-    /// `IR`になく`未記載の面の一覧`の形の正しい1件に一致したものの数
+    /// 決定の文書になく`未記載の面の一覧`の形の正しい1件に一致したものの数
     pub(crate) unspecified: usize,
 }
 impl SurfaceTally {
