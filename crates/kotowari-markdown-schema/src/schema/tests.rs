@@ -129,6 +129,13 @@ fn unknown_key_is_an_error() {
     assert_rejected(yaml, "unknown field `bogus`");
 }
 
+// @kotowari[C-schema-doc-9]
+#[test]
+fn extraction_on_the_preamble_itself_is_an_error() {
+    let yaml = "document:\n  preamble:\n    extract: front\n    fields:\n      - name: 状態\n";
+    assert_rejected(yaml, "unknown field `extract`");
+}
+
 // @kotowari[REQ-schema-018, C-schema-lang-4]
 #[test]
 fn type_violation_is_an_error() {
