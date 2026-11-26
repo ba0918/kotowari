@@ -6,6 +6,8 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-27
+
 ### Added
 
 - A preamble, a section, an item and the child rules of a bullet (`children`) can declare `open: true`. Such a node accepts, with their contents, blocks of the kinds it has no rule for (paragraphs, ordered lists, tables, code blocks, quotes, bullets), while its own rules keep every constraint. This is separate from the schema's top-level `open` and `check --open`, which still do not relax a declared node.
@@ -109,7 +111,8 @@ $ cargo install --git https://github.com/ba0918/mds
 
 Requires Rust 1.89 or newer.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.2.1...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.3.0...HEAD
+[0.3.0]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.2.1...kotowari-mds-v0.3.0
 [0.2.1]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.2.0...kotowari-mds-v0.2.1
 [0.2.0]: https://github.com/ba0918/kotowari/releases/tag/kotowari-mds-v0.2.0
 [0.1.0]: https://github.com/ba0918/mds/releases/tag/v0.1.0
