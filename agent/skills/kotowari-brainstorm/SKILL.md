@@ -110,7 +110,7 @@ decision, and remove the item. Change the decision documents after the person de
 
 Write each decision into its topic document as soon as the person makes it, in the form of the
 kotowari skill's `references/decision-documents.md`, with the state `提案` (proposed). Keep no
-record per brainstorm and do not restate the decisions in another document: the topic documents
+record per brainstorm and no IR, and do not restate the decisions in another document: the topic documents
 are the only place the decisions go, and a resume reads them back from the working tree.
 
 When `languages` lists two or more tags, each topic document is a pair: write every side in the
