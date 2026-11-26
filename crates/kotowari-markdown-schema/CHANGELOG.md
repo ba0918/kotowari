@@ -8,10 +8,12 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ### Added
 
+- A preamble, a section, an item and the child rules of a bullet (`children`) can declare `open: true`. Such a node accepts, with their contents, blocks of the kinds it has no rule for (paragraphs, ordered lists, tables, code blocks, quotes, bullets), while its own rules keep every constraint. This is separate from the schema's top-level `open` and `check --open`, which still do not relax a declared node.
 - A preamble, a section and an item can declare `subheading`, a rule for headings of depth 4 or more, with `required`, `repeat` and `pattern` (no `extract`). A heading that does not match the pattern is the new finding `subheading_pattern_mismatch`; a count outside the bounds is `repeat_min_not_met` or `repeat_max_exceeded` with the rule kind `subheading`.
 
 ### Changed
 
+- **BREAKING** When reading by paragraph (the default), a block quote, an HTML block and a thematic break inside a node that does not declare `open: true` are now `undeclared_line` findings, with the rule kind `block_quote`, `html` or `thematic_break`; they used to pass silently, even in the closed world. Image-only paragraphs, link reference definitions and blocks of only HTML comments are still ignored. To keep accepting such blocks, declare `open: true` on the node that holds them.
 - A heading of depth 4 or more is now read as a line of the preamble, section or item that contains it: it no longer ends that node for anything that follows it, and the lines after it are checked and extracted with the same node. Without a `subheading` rule it is still `heading_level_mismatch`, also inside a node that declares `open: true` and inside an undeclared section in the open world. Findings come out in document order, so a `heading_level_mismatch` is no longer listed after all other findings.
 
 ## [0.2.1] - 2026-11-25
