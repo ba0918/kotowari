@@ -81,7 +81,23 @@ the existing stop rules.
 
 ## Opening and asking
 
-1. Judge the line.
+1. Delete the plan, then judge the line. Run git here in the worktree (`git -C <worktree>`),
+   with `<plan>` standing for the branch's plan, `docs/plans/<branch>.md`. Record the head
+   (`git rev-parse HEAD`). When the head has the plan (`git ls-tree --name-only HEAD -- <plan>`
+   prints it), cycle itself removes it and commits that path alone, in the repository's commit
+   conventions (`git rm -q -- <plan>`, then `git commit -m <message> -- <plan>`, which leaves
+   anything else that is staged out of the commit and still staged). Then, on every converged run,
+   with a plan or without, it confirms with git that nothing but the plan changed since the
+   recorded head (`git diff --name-only --no-renames <recorded> HEAD -- . ':(exclude)<plan>'`
+   prints nothing) and that the head has no plan (`git ls-tree --name-only HEAD -- <plan>` prints
+   nothing). When the commit fails or either confirmation does not hold, push nothing: put the
+   branch back at the recorded head with the plan restored (`git reset -q --soft <recorded>`, then
+   `git restore -q --source=HEAD --staged --worktree -- <plan>`), write `ending` `hand_back` with
+   the output of both confirmations, and the commit's error output when it failed, as its reason,
+   and report them. A resume reaches this step again through step 6 of cycle's **Loop** and runs
+   all of it again. The review and the consistency phase are not run again for this commit; the
+   line is judged over it as over any other commit. Any other file under `docs/plans/` is not the
+   plan: the reviews read it, and it is merged like any other file.
 2. Push the branch (`git push -u origin <branch>`) and, when there is none yet, create the pull
    request against the merge target
    (`gh pr create --base <target> --head <branch> --title <one line> --body-file <file>`). The

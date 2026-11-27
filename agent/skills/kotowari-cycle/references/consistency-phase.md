@@ -18,7 +18,8 @@ they do not write is the implementer's to decide with grounds; it is not a hole 
   a direct edit, the main session's) commit on a finding in a decision document, the change it left
   uncommitted in the worktree is in range too. The phase commits its own fixes only, never that
   change; when a resolution changes that code, it edits it in place and leaves it uncommitted for
-  whoever made it.
+  whoever made it. The range leaves out the branch's plan, `docs/plans/<branch>.md`: it is not
+  read, and no finding is raised on it. Any other file under `docs/plans/` is in range.
 - The counterpart: the place of the decision documents and a file listing the decisions the cycle
   received, one `path#anchor` per line. For a small task without a specification, the request.
 - The open findings of earlier runs that await a fix, with their IDs and commits; the open ones

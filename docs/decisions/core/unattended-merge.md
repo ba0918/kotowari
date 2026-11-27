@@ -2,7 +2,7 @@
 
 English | [日本語](unattended-merge.ja.md)
 
-This document covers how the workflow skills carry one request from the approval of its specification to the merge without waiting for a person: what the cycle, which no longer writes a plan, takes as input, the line that decides whether a person confirms the merge, how the merge is made, and what is kept in the findings file about the run. Writing the details the implementing side decided, with what, why and the evidence, in the commit body and the pull request body is decided in the workflow topic's [Details found during implementation are decided by the implementing side](workflow.md#details-found-during-implementation-are-decided-by-the-implementing-side). The step inside the cycle that looks at agreement with the specification is decided in [Consistency phase](consistency-phase.md).
+This document covers how the workflow skills carry one request from the approval of its specification to the merge without waiting for a person: what the cycle takes as input, when a plan is written, by whom, and when it is deleted, the line that decides whether a person confirms the merge, how the merge is made, and what is kept in the findings file about the run. Writing the details the implementing side decided, with what, why and the evidence, in the commit body and the pull request body is decided in the workflow topic's [Details found during implementation are decided by the implementing side](workflow.md#details-found-during-implementation-are-decided-by-the-implementing-side). The step inside the cycle that looks at agreement with the specification is decided in [Consistency phase](consistency-phase.md).
 
 ## The brainstorm and the approval of the specification stay with the person, and from then on to the merge nothing waits for a person
 
@@ -31,30 +31,109 @@ What is carried to the merge without waiting for a person is a request the cycle
 - C-core-merge-1 (by reading) The kotowari-brainstorm skill says that when the person has committed the approved specification, or said it may be committed, it goes on to kotowari-cycle in the same flow unless the person says to put it off
 - C-core-merge-2 (by reading) The kotowari-iterate skill says that a converged run merges in the same way as the cycle, and the `references/merge.md` of kotowari-cycle says that a change the main session edits directly ends at the commit
 
-## There is no step that writes a plan and no approval of one
+## A plan is written only when the work is more than a single implementer can hold, by the implementer, committed on the working branch, and without approval
 
 Status: implemented
 
 ### Problem
 
-Even with the approval of the plan removed, if a step that writes a plan remains, one more thing to write remains between the specification and the implementation. Deciding the procedure can be made the implementer's job.
+Even with the approval of the plan removed, if a step that writes a plan always remains, one more thing to write remains between the specification and the implementation. Deciding the procedure can be made the implementer's job.
+
+On the other hand, when a plan is only the implementer's uncommitted working notes, the remaining procedure is not left in git when the implementer's context runs out on a large request. The implementer that takes over has only the git history and the decisions still "proposed" as clues. The request that removed the code reading the old form was more than one implementer could hold, and stopping at a boundary and reporting was added by hand to the delegation text to make up for it. The command that checks the form of a plan was kept, yet no skill said to write in that form.
+
+After the approval of the specification no person comes in along the way, so there is no scene where a person takes over part way. A handover happens when the implementer changes, and its cause is the amount of work. Even when the session running the cycle changes, the implementer works in a separate context, so the amount an implementer can hold does not change.
 
 ### Decision
 
-A plan is not handled as a deliverable to approve, and is not placed as a step of the workflow either. There is no workflow skill that writes a plan. Only when the implementer judges it necessary for a large request does the implementer write one, as its own working notes. No person reads them, and they are not committed. The order of implementation and the files to touch are decided by the implementer.
+A plan is not handled as a deliverable to approve, and is not placed as a step of the workflow that every request passes either. There is no workflow skill that writes a plan.
 
-The command that checks the form of a plan stays ([kotowari plan checks the form of a plan against the schema bundled in the binary](plan.md#kotowari-plan-checks-the-form-of-a-plan-against-the-schema-bundled-in-the-binary)).
+A plan is written only when the work is more than a single implementer can hold. The cycle judges the amount before the first delegation, and when it judges that a plan is to be written, it writes the reason as one line in the findings file. The amount is not decided by a numeric limit. The one who writes is the implementer that received the delegation. The delegation that writes the plan and the delegation that implements are not separated. The implementer writes the plan, brings it to a form in which `kotowari plan` reports no error, commits it on the working branch, and goes on to implement. No person reads it, and no person approves it.
+
+A plan is one per branch, placed at `docs/plans/<branch name>.md`. Its form is as decided in [A plan is written with fixed plan-wide sections and steps that have eight fields](plan.md#a-plan-is-written-with-fixed-plan-wide-sections-and-steps-that-have-eight-fields). The kotowari-implement skill points at the material that describes the form of a plan.
+
+When an implementer finds part way that it cannot hold the work, it commits at a boundary where the tests pass and then hands back to the cycle. When it started without a plan, before handing back it writes the remaining procedure in a plan of the same place and form and commits it. The cycle delegates the rest again. When the branch already has a plan at the time the cycle starts the run, the cycle makes no judgment and passes it to the implementer.
+
+For a small task kotowari-iterate runs, no plan is written.
 
 ### Rejected options
 
-- Previous decision: after the approval a plan is written and run with the cycle. Dropped because the step that writes a plan would remain between the specification and the implementation.
-- Write a plan, but do not wait for a person's approval. The reason it was not taken is not recorded.
+- Previous decision: a plan is not placed as a step of the workflow, and only when the implementer judges it necessary for a large request does it write one as uncommitted working notes. Dropped because the remaining procedure is not left in git when the implementer's context runs out.
+- After the approval, write a plan for every request and run it with the cycle. The step that writes a plan would remain between the specification and the implementation.
 - Leave the approval of the plan with the person. The reason it was not taken is not recorded.
+- Put in one delegation that only writes the plan, and have another implementer start the implementation from the plan. The cost of reading the code is paid twice.
+- The implementer judges by itself whether to write one from the start. The reason for writing before the first delegation is not left in the findings file, and nobody notices when one is written for a small amount.
+- Write one also when the session running the cycle is likely to change. The amount an implementer can hold does not change, and a plan would be written even for a request with a small amount.
+- Reduce the sections and fields of a plan now. The form would be decided before it is used.
 
 ### Confirmations
 
-- C-core-merge-3 (by reading) `agent/skills/kotowari-plan/` does not exist, and the kotowari-brainstorm and kotowari-cycle skills have neither a step that writes a plan nor its approval
-- C-core-merge-4 (by reading) The kotowari-implement skill says that the order and the files to touch are decided by the implementer, that working notes are written only when it judges them necessary, are not committed, and are not read by a person
+- C-core-merge-54 (by reading) `agent/skills/kotowari-plan/` does not exist, and the kotowari-brainstorm and kotowari-cycle skills have neither an approval of a plan nor a procedure that shows a plan to a person
+- C-core-merge-55 (by reading) The kotowari-cycle skill says that before the first delegation it judges whether the work is more than a single implementer can hold, has a plan written inside the delegation of the implementation only when it judges so, and writes that reason as one line in the findings file, and it states no numeric limit that decides the amount
+- C-core-merge-56 (by reading) The kotowari-implement skill says that when it is handed the writing of a plan it writes it at `docs/plans/<branch name>.md`, brings it to a form in which `kotowari plan` reports no error, and commits it before going on to implement, and it points at the material that describes the form of a plan
+- C-core-merge-57 (by reading) The kotowari-implement skill says that when it finds part way that it cannot hold the work, it commits at a boundary where the tests pass, and when it started without a plan it writes the remaining procedure at `docs/plans/<branch name>.md` in a form in which `kotowari plan` reports no error and commits it, before handing back to the cycle, and the kotowari-cycle skill says that when it is handed back so it delegates the rest again
+- C-core-merge-58 (by reading) The kotowari-cycle skill says that when the branch already has a plan at the time it starts the run it makes no judgment and passes it to the implementer, and the kotowari-iterate skill has no procedure that writes a plan
+
+## A plan does not bind the implementer, and the cycle does not read what is in a plan
+
+Status: implemented
+
+### Problem
+
+A step of a plan has fields for the files that may be changed and for the steps it presupposes. If these bound the implementer, every disagreement would produce a round trip of handing back to someone. If the cycle read the plan and divided the delegations by it, the plan would become the cycle's input, and the step that writes a plan would effectively come back. A plan can hold a section for the test command, so a document nobody approved could become the source that decides the check command. In a form where finished steps are written into the plan, the writer's own report becomes the progress.
+
+### Decision
+
+The order of implementation and the files to touch are decided by the implementer, even when there is a plan. When it finds that a way different from the plan is needed, the implementer rewrites the plan, commits it, writes the reason in the commit body, and goes on. It hands back neither to a person nor to the cycle. The "## Stop conditions" section and the "Stop and hand back if" field of a plan add no condition for stopping. Whether to stop is decided by the same rules as when there is no plan.
+
+The cycle only passes the path of the plan to the implementer and does not read what is in it. Even when there is a plan, the delegation hands over all the remaining work at once.
+
+No progress is written in a plan. The implementer that takes over decides what remains from "Done when" and "Shown by" of each step of the plan, the git history, and the states of the decisions. No step number is written in a commit message.
+
+The "## Test command" section of a plan is not a source that decides the test command ([The test command is decided by the project's instructions or the language's standard tool, and the person is asked when neither settles it](#the-test-command-is-decided-by-the-projects-instructions-or-the-languages-standard-tool-and-the-person-is-asked-when-neither-settles-it)).
+
+Even for a request with no plan, the implementer may write uncommitted working notes when it judges them necessary. No person reads them.
+
+### Rejected options
+
+- When a way different from the plan is needed, hand back to the cycle, and the cycle delegates the rewriting. One more round trip at every disagreement.
+- The cycle divides the steps of the plan and delegates them. The plan would become the cycle's input, and the step that writes a plan would effectively come back.
+- Delete finished steps from the plan as they are done. At the last step the whole plan would be deleted, and forgetting a deletion leaves a disagreement.
+- Write the step number in the commit body. Numbers of a plan that disappears would remain in the history.
+- Decide the test command in the order of the plan, the project's instructions, the standard tool. A document nobody approved would become the source that decides the check command.
+
+### Confirmations
+
+- C-core-merge-59 (by reading) The kotowari-implement skill says that the order and the files to touch are decided by the implementer even when there is a plan, and that when it finds a way different from the plan is needed it rewrites the plan, commits it, writes the reason in the commit body and goes on, handing back neither to a person nor to the cycle, and that the "## Stop conditions" section and the "Stop and hand back if" field of a plan add no condition for stopping
+- C-core-merge-60 (by reading) The kotowari-cycle skill says that it only passes the path of the plan to the implementer without reading what is in it, and that even when there is a plan it delegates all the remaining work at once
+- C-core-merge-61 (by reading) The kotowari-implement skill says that no progress is written in a plan, that no step number is written in a commit message, and that on a resume it decides what remains from "Done when" and "Shown by" of the steps of the plan, the git history, and the states of the decisions
+- C-core-merge-62 (by reading) The kotowari-implement skill says that the "## Test command" section of a plan is not a source that decides the test command, and that working notes are written only when it judges them necessary, are not committed, and are not read by a person
+
+## A plan is not reviewed, and when the run converges the cycle adds a commit that deletes it
+
+Status: implemented
+
+### Problem
+
+A plan committed on the working branch enters the diff from the commit where the branch parted from the merge target. Left as it is, round trips of review and fixing are paid for a document that disappears, and it enters the merge target too. In a form where the implementer that finished the last step deletes it, there is no plan when a run that ended without converging is resumed. The cycle itself neither implements nor fixes, but delegating an operation that only deletes one file adds one delegation.
+
+### Decision
+
+The reviewers and the consistency phase are handed their range with the plan, `docs/plans/<branch name>.md`, left out of it, and any other file in `docs/plans/` is in the range like any other file (the range of the consistency phase is decided in [The consistency phase reads the code of the diff and its surroundings, and the decisions in range](consistency-phase.md#the-consistency-phase-reads-the-code-of-the-diff-and-its-surroundings-and-the-decisions-in-range)). No finding is raised on a plan.
+
+When the run converges, before the branch is pushed, the cycle itself adds a commit that deletes the plan. The cycle confirms with git that nothing but the plan changed since the head before the commit and that the head of the branch does not have the plan. The review and the consistency phase are not run again for this commit. The line is judged again as for any other commit ([The line is judged by git alone, by whether the diff touched a path in .kotowari/confirm-paths](#the-line-is-judged-by-git-alone-by-whether-the-diff-touched-a-path-in-kotowariconfirm-paths)).
+
+In a run that ended without converging, the plan is not deleted and stays for the resume.
+
+### Rejected options
+
+- The implementer that finished the last step deletes it. There is no plan when a run that ended without converging is resumed.
+- Review the plan as a document. The cost of review and fixing is paid for a document that disappears.
+
+### Confirmations
+
+- C-core-merge-63 (by reading) The kotowari-cycle skill says that the reviewers and the consistency phase are handed their range with the plan, `docs/plans/<branch name>.md`, left out of it, with any other file in `docs/plans/` in the range, and are made to raise no finding on a plan
+- C-core-merge-64 (by reading) The `references/merge.md` of kotowari-cycle says that in a converged run, before the branch is pushed, the cycle adds a commit that deletes the plan, confirms with git that nothing but the plan changed since the head before the commit and that the head of the branch does not have the plan, and does not run the review and the consistency phase again for this commit
+- C-core-merge-65 (by reading) The kotowari-cycle skill says that in a run that ended without converging the plan is not deleted
 
 ## The cycle receives the place of the decision documents, the list of decisions to build this time, and the merge target
 
@@ -92,9 +171,9 @@ In a form where each resume counts the received decisions again from the branch'
 
 ### Decision
 
-The cycle writes the decisions it received in the findings file of each branch. A resume reads them from the file, and only when the file has no record does it count them again from the part of the branch's diff that lies in the place of the decision documents. No new file is made for resuming.
+The cycle writes the decisions it received in the findings file of each branch. A resume reads them from the file, and only when the file has no record does it count them again from the part of the branch's diff that lies in the place of the decision documents. The cycle makes no new file for resuming.
 
-On a resume during implementation, the implementer decides what remains, using as clues the git history and those of the received decisions whose state is still "proposed". When the implementer's working notes exist, it reads them too.
+On a resume during implementation, the implementer decides what remains, using as clues the git history and those of the received decisions whose state is still "proposed". When a plan or the implementer's working notes exist, it reads them too.
 
 ### Rejected options
 
@@ -464,6 +543,7 @@ The cycle makes no new record file about the run. It adds the following to the f
 - The result of the judgment of the line, and the paths that were hit
 - Which request this request is a fix of. It is pointed at by the branch name of the earlier request. It is written only when the request text says it is a fix of an earlier request (for a small task, kotowari-iterate writes it), and is left empty when unknown
 - Which ending the run ended with, and its reason. Sending back to an earlier step and stopping to call a person are included
+- When it judged that a plan is to be written, the one line of that reason
 
 Cost is not recorded. The findings file is not committed, and the workflow does not delete it.
 
@@ -498,3 +578,7 @@ It cleans up only when the cycle saw the merge itself during this run's watch. A
 - C-core-merge-32 (by reading) `references/merge.md` says that what is cleaned up is only the local working directory and the local branch, and that nothing on the hosting service side is deleted
 - C-core-merge-52 (by reading) `references/merge.md` says that it cleans up only when the cycle saw the merge during this run's watch, and that a run the person merged later is not cleaned up
 - C-core-merge-53 (by reading) The kotowari-cycle skill says that the findings file is placed outside the working directory, and `references/merge.md` says that before the cleanup it confirms that the file is outside, that if not it deletes nothing and reports, and that when there are uncommitted changes other than the implementer's working notes it leaves the working directory and the branch and reports
+
+## Open
+
+- Whether sharing the plan alone is enough for a handover between implementers (whether the implementer that takes over redoes steps already finished). The user decides. After the first request that wrote a plan has ended.

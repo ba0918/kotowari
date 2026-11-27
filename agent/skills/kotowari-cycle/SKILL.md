@@ -14,7 +14,8 @@ description: >-
 
 Run implement → consistency phase → review → fix on one approved specification until the visible
 findings are gone.
-Delegate everything; cycle itself never implements, reviews, or fixes. A converged run merges
+Delegate everything; cycle itself never implements, reviews, or fixes, and the one commit it makes
+is the one that deletes the plan (`references/merge.md`). A converged run merges
 without waiting for a person unless `references/merge.md` says a person confirms; the loop does not
 stop for them except in the cases below.
 
@@ -86,7 +87,7 @@ both full and diff reviews.
 
 1. Delegate the place of the decision documents, the decisions cycle received, the overturned row
    IDs and the prototype path when the brainstorm gave them, the branch, and the worktree path to
-   an implement agent, all remaining work in one delegation.
+   an implement agent, all remaining work in one delegation, as **Plans** says.
 2. Consistency phase (**Consistency phase**).
 3. Full review: base..head, profiles, strength, counterpart, plus the **known findings** (open
    `record_only` / `human_judgment`, closed `accepted`), never visible or fixed ones; a match is not raised again.
@@ -108,18 +109,47 @@ it runs, the second full review cancels the taint a diff review carries from see
 A **round trip** is one review invocation (any number of reviewers, full or diff, the first one
 included) or one consistency phase run. The limit, when the person set one, counts round trips.
 
+## Plans
+
+A plan is `docs/plans/<branch>.md` on the working branch. The implementer writes and commits it;
+no person reads or approves it.
+
+- **Whether one is written.** A start that brings a request looks, before its first delegation to
+  implement, whether the branch head has a plan
+  (`git -C <worktree> ls-tree --name-only HEAD -- docs/plans/<branch>.md` prints it). When it has
+  one, cycle makes no judgment and passes its path. When it has none, cycle judges whether the
+  work — the decisions it received and the code they reach — is more than a
+  single implementer can hold. This is a judgment; no count of files, rows or lines decides it.
+  Only when it judges so, the step 1 delegation also has the implementer write the plan before
+  implementing, and cycle writes the reason as one line in the findings file (`plan_reason`). A
+  resume makes no judgment; it passes the plan's path when the head has one.
+- **Only the path.** Cycle never reads what is in a plan and never divides the work by its steps:
+  with a plan, step 1 still delegates all the remaining work at once.
+- **Handed back for the amount.** When implement hands back that it cannot hold the rest of the
+  work, having committed at a boundary where the tests pass and left the remaining procedure in
+  the plan, delegate the rest again as step 1 with the plan's path. This is neither a stop nor an
+  ending.
+- **Not reviewed.** Every review and every consistency phase run is handed its range with the
+  plan alone left out (`git diff <base> <head> -- . ':(exclude)docs/plans/<branch>.md'`, profiles
+  chosen from the paths outside it) and is told to raise no finding on it. Any other file under
+  `docs/plans/` is in the range like any other file.
+- **Deleted at convergence.** A converged run deletes the plan before the push
+  (`references/merge.md`, **Opening and asking**). A run that ends without converging (endings
+  2–4) does not delete it; it stays for the resume.
+
 ## Delegations
 
 Every prompt is self-contained; never assume a delegate loaded a skill or read the conversation.
 
-- **implement:** carry what step 1 names. It returns commits, the state of each decision with the
+- **implement:** carry what step 1 names, with the plan instruction or path **Plans** gives. It
+  returns commits, the state of each decision with the
   evidence per row, changes beyond the decisions with their reasons, the lines of each detail or
   reading it decided by itself, and each sentence of a decision document it corrected to the facts;
-  or a hand-back with the open item it wrote.
-- **review (full):** carry the base and head, worktree path, known findings, the review items from
+  or a hand-back with the open item it wrote, or one saying it cannot hold the rest of the work.
+- **review (full):** carry the base and head (the range as **Plans** says), worktree path, known findings, the review items from
   **Inputs** if any, and the reviewer prompt of the review skill's **Reviewer setup** (it carries the Evidence
   conditions). It returns findings JSON.
-- **review (diff):** carry the diff since the last review, worktree path, open findings with IDs,
+- **review (diff):** carry the diff since the last review (the range as **Plans** says), worktree path, open findings with IDs,
   and the same review items and reviewer prompt. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
 - **consistency phase:** use **Consistency phase** below.
@@ -160,8 +190,8 @@ into the pull request body.
 - **Who.** A delegate in a context separate from the implementer, never the implement agent or the
   fixer. A model different from the implementer's is preferred, not required.
 - **What it carries.** Paste the reference in full and supply its **Inputs**, using the place of
-  the decision documents and the file of decisions prepared above, and the contract as
-  **Delegations** says.
+  the decision documents and the file of decisions prepared above, the range as **Plans** says,
+  and the contract as **Delegations** says.
 - **What cycle does with the result.** The phase fixes and commits by itself; cycle only records the
   run in the findings file under **Judgment stays here**, keeps the reason lines it returned for the
   pull request body (**Terminal report**), and applies the same **Endings**.
@@ -171,10 +201,11 @@ into the pull request body.
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `ids`,
 `merge_target`, `base`, `last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`,
-`line`, `fix_of` and `ending`), creating it at its start as **Inputs** says. It writes no other
+`line`, `fix_of`, `plan_reason` and `ending`), creating it at its start as **Inputs** says. It writes no other
 record file and records no cost. It sets `line` each time it judges the line
 (`references/merge.md`), with the paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
-the request says it is a fix of an earlier one, else null; and `ending` when the run ends, with the
+the request says it is a fix of an earlier one, else null; `plan_reason` to the one line of the
+reason when it judges that a plan is to be written (**Plans**), else null; and `ending` when the run ends, with the
 ending reached and its reason, a hand-back and a stop for the person included. Each
 time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
 kept for the phase. After every review or phase run
@@ -258,8 +289,8 @@ the loop nor add a review seat.
    loop ends here only when that step says so. A review that cannot succeed ends the loop at once.
 4. A delegate handed back a collision of intent, which goes to the person through brainstorm.
 
-Only ending 1 goes on to step 7. Endings 2–4 ask for no merge; they add to the terminal report the
-choice "run more or accept the rest and finish" and any hand-back reason.
+Only ending 1 goes on to step 7. Endings 2–4 ask for no merge and do not delete the plan; they add
+to the terminal report the choice "run more or accept the rest and finish" and any hand-back reason.
 
 ## Resuming and running more
 
@@ -299,7 +330,7 @@ request still carries a request to merge an earlier session made, and withdraw i
 
 | Situation | Go on at |
 |---|---|
-| no findings file yet | step 1 (implement decides what remains from `git log` and the decisions still proposed), then step 2 |
+| no findings file yet | step 1 (implement decides what remains from `git log`, the plan when the branch has one, and the decisions still proposed), then step 2 |
 | a later request on the same branch | step 1 as above, with all of `ids`, then step 2 and on: the phase run and the full review read from the comparison base again |
 | "run more" after an ending a phase rerun raised | that step: 2 (then on to 3) or 6 |
 | "run more" otherwise | step 4 |
