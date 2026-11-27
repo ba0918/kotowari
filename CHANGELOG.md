@@ -8,6 +8,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 ### Changed
 
 - The Evidence conditions in `kotowari-review/references/oracle-evidence.md`, which reviewers, the fixer and the consistency phase are given, no longer apply the third and fourth conditions (the specification states the rule; what the test pins is declared as a contract) to a test carrying the declaration `@kotowari[detail]`, alone or beside row IDs, when it is added or kept. Reviewers and fixers no longer delete such a test on the ground that the specification does not state its rule. The first and second conditions (something really produces the situation; the subject is the product or a check) still apply to it, and a review that demands a new such test is still held to all four.
+- `kotowari-brainstorm` no longer puts an external interface it decided without asking (the form of a command, the format of the output, the exit codes, the names and places of the files written) in the list of what was decided without asking. Instead, in the last round before approval, it asks once whether one usage example is right: the command, the first lines of its output, its exit code and the files it writes. The form the person confirms or corrects is written in the decision documents; a part the person leaves to the brainstorm stays in the list. A brainstorm that decided no external interface without asking does not ask this question.
 
 ## [0.8.3] - 2026-11-28
 
