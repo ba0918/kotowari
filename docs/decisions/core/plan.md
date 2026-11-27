@@ -62,7 +62,7 @@ Status: implemented
 
 ### Problem
 
-What the schema checks is only the form of a plan. Whether the content of a field is good (whether Done when is observable by someone else, for example) cannot be decided by machine, so it is left to self-review and review. Whether the specification IDs a plan points at exist is checked with `kotowari query` ([If the positional argument is not exactly one ID, or that ID does not exist, it is a stop with an argument error](query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error)).
+What the schema checks is only the form of a plan. Whether the content of a field is good (whether Done when is observable by someone else, for example) cannot be decided by machine, so it is left to the self-review of the implementer that wrote it. Whether the specification IDs a plan points at exist is checked with `kotowari query` ([If the positional argument is not exactly one ID, or that ID does not exist, it is a stop with an argument error](query.md#if-the-positional-argument-is-not-exactly-one-id-or-that-id-does-not-exist-it-is-a-stop-with-an-argument-error)).
 
 The template's earlier form (repeated step headings, labels in running text, the leading word of Shown by) could not be checked with the current engine. The engine matches sections by exact name, reads as fields only list lines of the form "name: value", and its allow-list of values matches the whole value. The user decided that bringing the plan's format to the engine is cheaper than widening a generic engine for the sake of plans. The number of required sections and of step fields is constrained so that the form keeps each part of the plan from being missing or overlapping.
 
@@ -105,7 +105,7 @@ Status: implemented
 
 ### Problem
 
-Plan-wide sections should be written in a way that fits their content: the Verification map as a table, Approach as prose. On the other hand, a step is a contract read by the implementer, so its form should be fixed.
+Plan-wide sections should be written in a way that fits their content: the Verification map as a table, Approach as prose. On the other hand, a step is read by the implementer that takes over when it decides what remains, so its form should be fixed.
 
 If field values could be written over several lines, then when read as a paragraph, a line that follows a field directly without a blank line would be absorbed into the field's value, and an indented line after a blank line would not become a finding, as a continuation paragraph. Then the rule that no other line is placed under a step would not hold.
 
