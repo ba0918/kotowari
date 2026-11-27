@@ -17,7 +17,7 @@
 | 部分 | 形 |
 |---|---|
 | 始まり | `@kotowari[` |
-| 中身 | カンマで区切った ID。カンマの前後に空白を置いてよい |
+| 中身 | カンマで区切った ID、または語 `detail`（[行を持たないテスト](#行を持たないテスト)）。カンマの前後に空白を置いてよい |
 | 終わり | `]`（始まりと同じ行） |
 
 - 1つの印に ID をいくつ並べてもかまいません。どの決定の文書の ID を混ぜてもよいです。
@@ -199,6 +199,27 @@ proptest! {
 
 読んで確認する行は、実装する側とレビューが読んで確かめます。`list` では2つ目の欄に `reading` が出て、`status` は `by_reading` に数えます。
 
+## 行を持たないテスト
+
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf] -->
+
+決定の文書には人が決めたことだけを書くので、エラーメッセージの文言のような細部のテストには、指す行が無いことがあります。
+そのようなテストは、直前のコメントに `@kotowari[detail]` と書いて宣言します。
+
+```rust
+// @kotowari[detail]
+#[test]
+fn empty_name_error_names_the_field() {
+    // ...
+}
+```
+
+- 宣言したテストには、`check` は `test_without_id` を出さず、`detail` に `unresolved_reference` も出しません。
+- `detail` は決まった語で、ID ではありません。小文字で書きます。`Detail` は ID として読まれ、`unresolved_reference` になります。
+- 宣言はどの行も確かめません。どの印も指していない実装済みの決定の行には、宣言したテストがいくつあっても `confirmation_without_test` が出ます。
+- テストが行も確かめるときは、1つの印に両方を書きます: `// @kotowari[C-shop-discount-1, detail]`。
+- テストが確かめる行があるときは、宣言ではなくその行の ID を書きます。`test_without_id` を消すために、テストが確かめていない行の ID を書かないでください。
+
 ## どのテストが見つかるか
 
 <!-- @kotowari[docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7, docs/decisions/core/test-discovery.md#tests-are-found-by-applying-queries-to-the-syntax-tree-not-by-searching-lines-with-regular-expressions:ce30c2d1, docs/decisions/core/test-discovery.md#the-correspondence-between-extensions-and-languages-is-the-same-as-ast-grep-and-is-case-sensitive:0894862d] -->
@@ -264,13 +285,13 @@ docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-disc
 
 ## 印に関わる指摘
 
-<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
 | 指摘 | 重さ | 出るとき | 行 | detail |
 |---|---|---|---|---|
 | `test_without_id` | error | 問い合わせのある言語のテストに印が無い | テストのノードの最初の行（Rust では `fn` の行） | テストの名前（名前が無ければテストの最初の行） |
 | `confirmation_without_test` | error | 実装済みの決定の行にテストが無い（[テストの要らない行](#テストの要らない行)） | その行 | 行の ID |
-| `unresolved_reference` | error | 印の ID が存在しないか、ID の形でない | 印の行 | その ID |
+| `unresolved_reference` | error | 印の ID が存在しないか、ID の形でない（宣言の `detail` には出ない） | 印の行 | その ID |
 | `invalid_marker` | error | 印の中が空か区切りだけ、または `]` が同じ行に無い | 印の行 | 印のある行の全体 |
 | `unparsable_file` | error | 問い合わせのある言語のテストのファイルに構文の誤りがある。そのファイルは飛ばす | なし（`-`） | ファイルのパス |
 

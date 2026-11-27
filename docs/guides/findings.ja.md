@@ -177,7 +177,7 @@ docs/decisions/shop/cart.md:45 [error] link_to_record ../../frozen/stock.md
 
 ### テストとの対応
 
-<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4, docs/decisions/core/confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests:bfbb46c7, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4, docs/decisions/core/confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests:bfbb46c7, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
 
 ```text
 docs/decisions/shop/cart.md:20 [error] confirmation_without_test C-shop-cart-2
@@ -191,7 +191,7 @@ tests/cart.rs:14 [error] test_without_id no_mark
 | 種類 | よくある原因 | 直し方 |
 |---|---|---|
 | `confirmation_without_test` | 実装済みの決定の行の ID を挙げた印が、どのテストにも無い。その行は `（読んで確認）` で始まらない | その行を確かめるテストの直前のコメントに `@kotowari[C-…]` を書く。状態が提案の決定には出ない |
-| `test_without_id` | テストに印が無い。印を関数の本体の中や、空行で切り離したコメントに書いた | テストの直前のコメントの塊に印を書く |
+| `test_without_id` | テストに印が無い。印を関数の本体の中や、空行で切り離したコメントに書いた | テストの直前のコメントの塊に印を書く。どの行も確かめないテストには、宣言 `@kotowari[detail]` を書く（[marks.ja.md](marks.ja.md#行を持たないテスト)） |
 | `unresolved_reference` | テストの印に、どの決定の文書にも無い ID を書いた。多くは書き間違い | ID を直す。`C-shop-cart` のような形の崩れた要素も、この誤りになる |
 | `invalid_marker` | テストの印の中が空か区切りだけ。`]` が同じ行に無い | `@kotowari[ID, ID]` を1行で閉じる |
 | `unparsable_file` | テストのファイルに構文の誤りがあり、tree-sitter で読めない | ファイルの構文を直す。このファイルは飛ばされ、印も読まれない |

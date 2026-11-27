@@ -92,7 +92,7 @@ pub fn check_entries<'a>(
                             line: marker.line,
                             name: None,
                         });
-                        if !known_ids.contains(id) {
+                        if !is_declaration(id) && !known_ids.contains(id) {
                             findings.push(Finding::new(
                                 FindingKind::UnresolvedReference,
                                 path.to_owned(),
@@ -145,7 +145,14 @@ fn record_test_markers(
     }
 }
 
-/// 印の無いテストに test_without_id を出す
+/// 印の中身の1語が、行を持たない振る舞いのテストの宣言か（docs/decisions/core/coverage.md）。
+/// 宣言は `ID` ではないので、どの行も満たさず、unresolved_reference も出さない。
+/// 確認することの行の ID は "C-" で始まるので、この語と重ならない
+fn is_declaration(id: &str) -> bool {
+    id == "detail"
+}
+
+/// 印の無いテストに test_without_id を出す。宣言だけの印も印があるので出さない
 fn check_unmarked_tests(all_tests: &[DiscoveredTest], findings: &mut Vec<Finding>) {
     for test in all_tests {
         if test.marker_ids.is_empty() {
@@ -173,7 +180,7 @@ fn check_test_markers(
 ) {
     // unresolved_reference の line は印のある行
     for (id, marker_line) in &test.marker_ids {
-        if !id.is_empty() && !known_ids.contains(id) {
+        if !id.is_empty() && !is_declaration(id) && !known_ids.contains(id) {
             findings.push(Finding::new(
                 FindingKind::UnresolvedReference,
                 file_path.to_string(),

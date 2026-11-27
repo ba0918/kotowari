@@ -1038,6 +1038,100 @@ fn no_decision_documents_still_checks_tests() {
     assert_eq!(output.status.code(), Some(1));
 }
 
+// --- 行を持たないテストの宣言 ---
+
+/// 行 C-t-a-1 を持つ実装済みの決定と、`tests/test_a.<ext>` に `test_source` を置いて check の JSON を返す
+fn check_with_test(test_ext: &str, test_source: &str) -> (serde_json::Value, Option<i32>) {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
+    if test_ext != "rs" {
+        fs::write(
+            tmp.path().join(".kotowari/config.yaml"),
+            format!("tests:\n  files:\n    - \"tests/**/*.{test_ext}\"\n"),
+        )
+        .unwrap();
+    }
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join(format!("tests/test_a.{test_ext}")),
+        test_source,
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    (parse_json(&output), output.status.code())
+}
+
+fn kinds_and_details(v: &serde_json::Value) -> Vec<(String, String)> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| {
+            (
+                f["kind"].as_str().unwrap().to_owned(),
+                f["detail"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect()
+}
+
+// @kotowari[C-core-cover-6]
+#[test]
+fn c_core_cover_6_declared_test_gets_no_test_without_id_nor_unresolved_reference() {
+    let (v, _) = check_with_test(
+        "rs",
+        "// @kotowari[C-t-a-1]\n#[test]\nfn marked() {}\n\n// @kotowari[detail]\n#[test]\nfn declared() {}\n",
+    );
+    assert_eq!(kinds_and_details(&v), Vec::<(String, String)>::new());
+}
+
+// @kotowari[C-core-cover-6]
+#[test]
+fn c_core_cover_6_declaration_beside_a_row_id_in_one_mark() {
+    let (v, code) = check_with_test(
+        "rs",
+        "// @kotowari[C-t-a-1, detail]\n#[test]\nfn marked_and_declared() {}\n",
+    );
+    // 行の ID は今までどおり数え、宣言は何も出さない
+    assert_eq!(kinds_and_details(&v), Vec::<(String, String)>::new());
+    assert_eq!(code, Some(0));
+}
+
+// @kotowari[C-core-cover-7]
+#[test]
+fn c_core_cover_7_declaration_does_not_satisfy_a_row() {
+    let (v, _) = check_with_test("rs", "// @kotowari[detail]\n#[test]\nfn declared() {}\n");
+    assert_eq!(
+        kinds_and_details(&v),
+        vec![("confirmation_without_test".to_owned(), "C-t-a-1".to_owned())]
+    );
+}
+
+// @kotowari[detail]
+#[test]
+fn declaration_in_a_language_without_a_query_raises_nothing_and_satisfies_no_row() {
+    let (v, _) = check_with_test("go", "// @kotowari[detail]\nfunc Test_a(t *testing.T) {}\n");
+    // invalid_marker も unresolved_reference も出さず、行も満たさない
+    assert_eq!(
+        kinds_and_details(&v),
+        vec![("confirmation_without_test".to_owned(), "C-t-a-1".to_owned())]
+    );
+}
+
+// @kotowari[detail]
+#[test]
+fn declaration_word_is_matched_exactly() {
+    let (v, _) = check_with_test(
+        "rs",
+        "// @kotowari[C-t-a-1, Detail]\n#[test]\nfn capitalised() {}\n",
+    );
+    assert_eq!(
+        kinds_and_details(&v),
+        vec![("unresolved_reference".to_owned(), "Detail".to_owned())]
+    );
+}
+
 // --- 空行を挟んだ印は結び付かない ---
 
 // @kotowari[C-core-markers-13]

@@ -17,7 +17,7 @@ Once you have written the decision documents, add marks to your existing tests, 
 | Part | Form |
 |---|---|
 | Start | `@kotowari[` |
-| Contents | IDs separated by commas. Whitespace is allowed before and after a comma |
+| Contents | IDs separated by commas, or the word `detail` ([tests that have no row](#tests-that-have-no-row)). Whitespace is allowed before and after a comma |
 | End | `]` (on the same line as the start) |
 
 - A single mark may list any number of IDs, from any decision documents.
@@ -199,6 +199,27 @@ For kotowari to read inside a macro, the macro's name must be in the `tests.rust
 
 A row confirmed by reading is read and confirmed by the implementer and the review; `list` shows `reading` in its second column, and `status` counts it under `by_reading`.
 
+## Tests that have no row
+
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf] -->
+
+Decision documents hold only what a person decided, so a test of a smaller detail, such as the wording of an error message, may have no row to point at.
+Declare such a test with `@kotowari[detail]` in the comment just before it.
+
+```rust
+// @kotowari[detail]
+#[test]
+fn empty_name_error_names_the_field() {
+    // ...
+}
+```
+
+- `check` reports no `test_without_id` for a declared test, and no `unresolved_reference` for `detail`.
+- `detail` is a fixed word, not an ID. Write it in lowercase; `Detail` is read as an ID and gives `unresolved_reference`.
+- A declaration confirms no row. A row of an implemented decision that no mark points at still gives `confirmation_without_test`, however many declared tests there are.
+- When the test confirms a row as well, write both in one mark: `// @kotowari[C-shop-discount-1, detail]`.
+- When the test confirms a row, write that row's ID instead of the declaration. Do not write the ID of a row the test does not confirm to make `test_without_id` go away.
+
 ## Which tests are found
 
 <!-- @kotowari[docs/decisions/core/test-discovery.md#test-files-are-selected-with-the-globs-of-testsfiles:f7efafe7, docs/decisions/core/test-discovery.md#tests-are-found-by-applying-queries-to-the-syntax-tree-not-by-searching-lines-with-regular-expressions:ce30c2d1, docs/decisions/core/test-discovery.md#the-correspondence-between-extensions-and-languages-is-the-same-as-ast-grep-and-is-case-sensitive:0894862d] -->
@@ -264,13 +285,13 @@ Whether the tests are marked correctly is left for a person to check.
 
 ## Findings about marks
 
-<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
 | Finding | Severity | When it appears | Line | detail |
 |---|---|---|---|---|
 | `test_without_id` | error | A test in a language with a query has no mark | The first line of the test's node (in Rust, the `fn` line) | The test name (the test's first line if it has no name) |
 | `confirmation_without_test` | error | A row of an implemented decision has no tests ([rows that need no test](#rows-that-need-no-test)) | The row | The row's ID |
-| `unresolved_reference` | error | An ID in a mark does not exist, or is not in ID form | The mark's line | That ID |
+| `unresolved_reference` | error | An ID in a mark does not exist, or is not in ID form (the declaration `detail` is not reported) | The mark's line | That ID |
 | `invalid_marker` | error | The mark is empty or only separators, or has no `]` on the same line | The mark's line | The whole line containing the mark |
 | `unparsable_file` | error | A test file in a language with a query has a syntax error. That file is skipped | None (`-`) | The file path |
 

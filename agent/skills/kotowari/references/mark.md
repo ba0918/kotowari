@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-11-26; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-11-27; the version of kotowari itself is not pinned)
 
 ## The form of a mark
 
@@ -7,7 +7,7 @@ Write it in the form `@kotowari[ID, ...]`.
 | Part | Form |
 |---|---|
 | Start | @kotowari[ |
-| Content | IDs of rows to confirm (`C-<name>-<number>`, decision-documents.md) separated by commas. Spaces may be placed before and after a comma |
+| Content | IDs of rows to confirm (`C-<name>-<number>`, decision-documents.md), or the fixed word `detail`, separated by commas. Spaces may be placed before and after a comma |
 | End | ] |
 
 Several marks may be written on one line (all are picked up). The comment syntax does not matter, and marks are picked up from any position on the line. If there is no closing bracket on the same line, an invalid_marker error. Content that is empty or only separators is also an invalid_marker error.
@@ -18,6 +18,15 @@ Examples:
 - `// @kotowari[C-shop-discount-1] @kotowari[C-shop-discount-2]` — two marks on one line. Both are picked up
 
 Mark a test only with the IDs of the rows it confirms. A row confirmed by reading (`（読んで確認）`, `(by reading)`) gets no mark. A mark naming an ID that is no row's ID is an unresolved_reference error.
+
+## A test that has no row
+
+A test of behaviour that has no confirmation row — a detail the implementing side decided, or what the brainstorm decided without asking — gets the declaration `@kotowari[detail]`. `detail` is a fixed word, not an ID, written in lowercase exactly. For a declared test, check raises no test_without_id, and no unresolved_reference for `detail`. A declaration counts toward satisfying no row: a row that only declared tests are tied to still raises confirmation_without_test. In a file of a language without a query, too, a declaration satisfies no row and raises no unresolved_reference.
+
+So the fix for test_without_id is: when the test confirms a row, write that row's ID; when it confirms none, write the declaration. Never write the ID of a row the test does not confirm to silence the error, and do not add a decision or a row to the decision documents for it. When the test confirms a row and also a detail, write both in one mark.
+
+- `// @kotowari[detail]` — a test of a detail that has no row
+- `// @kotowari[C-shop-discount-1, detail]` — confirms the row C-shop-discount-1, and also a detail
 
 ## Where marks may go
 

@@ -5,6 +5,14 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Added
+
+- A test of behaviour that has no confirmation row can be declared with `@kotowari[detail]` in the comment block directly before it. `kotowari check` reports no test_without_id for a declared test and no unresolved_reference for `detail`, which is a fixed lowercase word, not an ID. A declaration satisfies no row: a row of an implemented decision that no mark points at still gets confirmation_without_test. The declaration may share a mark with row IDs (`@kotowari[C-shop-discount-1, detail]`). In a file of a language without a query, a declaration likewise satisfies no row and raises no finding. Wherever it is written, a declaration is counted in `tests.marks` of `kotowari status` like any other mark.
+
+### Changed
+
+- `kotowari-implement` gives a test of behaviour that has no confirmation row — a detail it decided, or an item of what the brainstorm decided without asking — the declaration `@kotowari[detail]`, without asking the person, without adding a decision or a row to the decision documents, and without writing the ID of a row the test does not confirm. The `kotowari` skill's explanation of marks and its table of findings give, as the fix for test_without_id, the ID of the row the test confirms when there is one and the declaration when there is none.
+
 ## [0.8.2] - 2026-11-27
 
 ### Changed

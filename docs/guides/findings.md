@@ -177,7 +177,7 @@ Links outside the location of decision documents and links to files other than `
 
 ### Correspondence with tests
 
-<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4, docs/decisions/core/confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests:bfbb46c7, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
+<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4, docs/decisions/core/confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests:bfbb46c7, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
 
 ```text
 docs/decisions/shop/cart.md:20 [error] confirmation_without_test C-shop-cart-2
@@ -191,7 +191,7 @@ tests/cart.rs:14 [error] test_without_id no_mark
 | Kind | Common cause | How to fix |
 |---|---|---|
 | `confirmation_without_test` | No test's mark lists the ID of a row of an implemented decision, and the row does not start with `(by reading)` | Write `@kotowari[C-…]` in the comment just before a test that confirms the row. It does not appear for a decision whose state is proposed |
-| `test_without_id` | The test has no mark. The mark was written inside the function body, or in a comment separated by a blank line | Write the mark in the comment block right before the test |
+| `test_without_id` | The test has no mark. The mark was written inside the function body, or in a comment separated by a blank line | Write the mark in the comment block right before the test. For a test that confirms no row, write the declaration `@kotowari[detail]` ([marks.md](marks.md#tests-that-have-no-row)) |
 | `unresolved_reference` | A test mark lists an ID that no decision document has. Usually a typo | Fix the ID. Malformed elements in a mark, such as `C-shop-cart`, also give this error |
 | `invalid_marker` | A test mark is empty or holds only separators. The `]` is not on the same line | Close `@kotowari[ID, ID]` on one line |
 | `unparsable_file` | A test file has a syntax error and tree-sitter cannot read it | Fix the file's syntax. The file is skipped and its marks are not read |
