@@ -235,7 +235,7 @@ Whether a detail the implementing side decided has its reason written is looked 
 
 ## An external interface decided by the agent running the brainstorm is kept out of the list, and asked before approval by showing one usage example
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -272,7 +272,7 @@ An external interface decided by the agent running the brainstorm is not put in 
 
 ## No mechanism is added to catch a rule nobody asked about; it is left to the reading of the decision documents at approval
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
