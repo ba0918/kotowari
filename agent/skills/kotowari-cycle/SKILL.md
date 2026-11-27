@@ -35,10 +35,15 @@ carries the commit of the approved decisions, and its worktree first. Cycle take
 decisions as it comes: it adds no decision to it.
 
 The list of what was decided without asking is kept in commit bodies on the branch, under a line
-holding only `聞かずに決めたこと:` or `Decided without asking:`. When the brainstorm did not hand it over (a
-resume, a start in another session), read it from the branch: in
-`git log --format=%B <comparison base>..HEAD`, with no path limit, the section of the newest commit
-that has one; it replaces any earlier one whole. A branch with no such section has no list.
+holding only `聞かずに決めたこと:` or `Decided without asking:`. A section is that line and the lines
+after it up to the next blank line or the end of the body; each item starts with `- `, and the
+lines that continue an item are indented. Whoever changes the list writes the whole current list
+again as such a section in the body of the commit that carries the change. When the brainstorm
+did not hand it over (a resume, a start in another session), read it from the branch, from the
+commit where it parted from the merge target whatever comparison base is set:
+`git log --format=%B $(git merge-base origin/<merge target> HEAD)..HEAD`, with no path limit. The
+list is the section of the newest commit that has one, its last when the body has more than one;
+it replaces any earlier one whole. A branch with no such section has no list.
 
 A start that brings a request with the place of the decision documents confirms in the worktree
 that the decisions are approved, after the reads at the head of **Resuming and running more** and

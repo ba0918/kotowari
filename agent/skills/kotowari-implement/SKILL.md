@@ -70,7 +70,8 @@ The list of what the brainstorm decided without asking is followed like the deci
 each item says. When it turns out during implementation that an item needs a different way of
 deciding, decide again with grounds and write what was decided, why, and the evidence as such a
 line, in the commit body and in your report for the pull request body, naming the item it
-replaces.
+replaces. In the body of that commit, also write the whole updated list again under its heading
+line, as kotowari-cycle's **Inputs** says.
 
 Section names below are given in their Japanese spelling; an English side uses the English
 spelling of the same keyword (the kotowari skill's `references/decision-documents.md`).

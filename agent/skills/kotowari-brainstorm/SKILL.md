@@ -224,8 +224,9 @@ from the list; any of these sends you back to the dialogue.
       origin and the choice of a sample are not in it. When nothing was decided without asking,
       say there is none. An item the person says is wrong is something the person decided: write it
       in the decision documents, take it out of the list, and show the changed diff and identifiers
-      again. A list is made at each approval; when the branch already carries one, the new list
-      starts from it and keeps the items that still stand, since the newest replaces it whole.
+      again. A list is made at each approval; when the branch already carries one (its newest
+      section, as kotowari-cycle's **Inputs** reads it), the new list starts from it and keeps the
+      items that still stand, since the newest replaces it whole.
       The person commits the staged files or says they may be committed, on a new branch named
       for the topic, which the brainstorm cuts in the main working tree from the head of the merge
       target (the branch the person names, else the repository's default branch):
@@ -235,8 +236,8 @@ from the list; any of these sends you back to the dialogue.
    committed rather than committing them, the brainstorm commits them there (`git commit`). The
    list of what was decided without asking goes in the body of that commit, under a line holding
    only `聞かずに決めたこと:` (`Decided without asking:` where the commit messages are in English),
-   one line per item of what was decided and why, or `なし` (`None`) under it when the list is
-   empty. When the person committed the staged files themselves, the brainstorm adds to the same branch, before leaving it, a commit
+   in the form kotowari-cycle's **Inputs** reads: each item of what was decided and why on a line
+   starting with `- `, or `なし` (`None`) under it when the list is empty. When the person committed the staged files themselves, the brainstorm adds to the same branch, before leaving it, a commit
    with no change to files whose body carries the list in the same way:
    `git commit --allow-empty --only -F <message file>`, with no paths, which commits the tree of
    `HEAD` whatever is staged and leaves the index as it was; `git diff --name-only HEAD^ HEAD` must
