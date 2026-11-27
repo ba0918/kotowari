@@ -21,7 +21,7 @@ Mark a test only with the IDs of the rows it confirms. A row confirmed by readin
 
 ## A test that has no row
 
-A test of behaviour that has no confirmation row — a detail the implementing side decided, or what the brainstorm decided without asking — gets the declaration `@kotowari[detail]`. `detail` is a fixed word, not an ID, written in lowercase exactly. For a declared test, check raises no test_without_id, and no unresolved_reference for `detail`. A declaration counts toward satisfying no row: a row that only declared tests are tied to still raises confirmation_without_test. In a file of a language without a query, the declaration counts for nothing.
+A test of behaviour that has no confirmation row — a detail the implementing side decided, or what the brainstorm decided without asking — gets the declaration `@kotowari[detail]`. `detail` is a fixed word, not an ID, written in lowercase exactly. For a declared test, check raises no test_without_id, and no unresolved_reference for `detail`. A declaration counts toward satisfying no row: a row that only declared tests are tied to still raises confirmation_without_test. In a file of a language without a query, too, a declaration satisfies no row and raises no unresolved_reference.
 
 So the fix for test_without_id is: when the test confirms a row, write that row's ID; when it confirms none, write the declaration. Never write the ID of a row the test does not confirm to silence the error, and do not add a decision or a row to the decision documents for it. When the test confirms a row and also a detail, write both in one mark.
 

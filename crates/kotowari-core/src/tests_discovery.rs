@@ -85,14 +85,14 @@ pub fn check_entries<'a>(
                             .to_owned(),
                     ));
                 } else {
-                    for id in marker.ids.iter().filter(|id| !is_declaration(id)) {
+                    for id in &marker.ids {
                         markers.push(TestMarker {
                             id: id.clone(),
                             path: path.to_owned(),
                             line: marker.line,
                             name: None,
                         });
-                        if !known_ids.contains(id) {
+                        if !is_declaration(id) && !known_ids.contains(id) {
                             findings.push(Finding::new(
                                 FindingKind::UnresolvedReference,
                                 path.to_owned(),

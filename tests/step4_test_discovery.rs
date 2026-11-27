@@ -1110,7 +1110,7 @@ fn c_core_cover_7_declaration_does_not_satisfy_a_row() {
 
 // @kotowari[detail]
 #[test]
-fn declaration_in_a_language_without_a_query_counts_for_nothing() {
+fn declaration_in_a_language_without_a_query_raises_nothing_and_satisfies_no_row() {
     let (v, _) = check_with_test("go", "// @kotowari[detail]\nfunc Test_a(t *testing.T) {}\n");
     // invalid_marker も unresolved_reference も出さず、行も満たさない
     assert_eq!(
