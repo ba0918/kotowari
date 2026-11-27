@@ -5,6 +5,10 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Changed
+
+- The Evidence conditions in `kotowari-review/references/oracle-evidence.md`, which reviewers, the fixer and the consistency phase are given, no longer apply the third and fourth conditions (the specification states the rule; what the test pins is declared as a contract) to a test carrying the declaration `@kotowari[detail]`, alone or beside row IDs, when it is added or kept. Reviewers and fixers no longer delete such a test on the ground that the specification does not state its rule. The first and second conditions (something really produces the situation; the subject is the product or a check) still apply to it, and a review that demands a new such test is still held to all four.
+
 ## [0.8.3] - 2026-11-28
 
 ### Added

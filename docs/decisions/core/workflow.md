@@ -205,6 +205,34 @@ For a test of behaviour that has no confirmation row in the decision documents, 
 - C-core-flow-20 (by reading) The implement skill says that a test of behaviour that has no confirmation row gets the declaration marker, and that for this the person is not asked, neither a decision nor a row is added to the decision documents, and the ID of a row the test does not confirm is not written
 - C-core-flow-21 (by reading) The explanation of markers and the table of findings in the kotowari skill say, as the fix for test_without_id, to write the ID of the row the test confirms when there is one, and the declaration marker when there is none
 
+## A test that carries the declaration marker is read only by two of the Evidence conditions: that something produces its situation, and that its subject is the product or a check
+
+Status: implemented
+
+### Problem
+
+The Evidence conditions handed to the reviewers and the fixer are four, and a test counts as evidence only when all four hold. The third is that the specification states the rule the test enforces; the fourth is that the specification declares as a contract the wording, file layout, and internal names the test pins. A test that carries the declaration marker ([For a test of behaviour that has no confirmation row, the implementing side adds the declaration marker and does not ask the person](#for-a-test-of-behaviour-that-has-no-confirmation-row-the-implementing-side-adds-the-declaration-marker-and-does-not-ask-the-person)) is a test of behaviour that has no row in the decision documents, so when the third is applied literally, none of them meets it. A proposal to delete verification that does not meet the conditions is a fix that keeps a run from converging ([Of the review findings, only three kinds keep a run from converging](unattended-merge.md#of-the-review-findings-only-three-kinds-keep-a-run-from-converging)).
+
+In the run that built the declaration, the reviewer had one of the three tests carrying the declaration deleted under the third condition. That test confirmed behaviour visible from outside and failed when the behaviour was broken. Deleting it left a branch in the product that nothing guarded, the branch was deleted in turn, and the fixing went on for three rounds. The other two were kept by a reviewer reading the same condition. In a trial where an LLM played the person, 29 tests carrying only the declaration drew no finding under the third condition. The same sentence is applied differently from run to run.
+
+What is asked of a test is that it works as a test that guarantees quality. The first condition (something really produces the situation the test builds) and the second (its subject is the product or a check, not the test itself) look at that. The third and the fourth look at whether the specification allowed the rule to be pinned, and a test that has no row never had a row to allow it.
+
+### Decision
+
+The third and the fourth of the Evidence conditions are not applied to a test that carries the declaration marker. The first and the second are. The reviewers and the fixer do not delete a test that carries the declaration marker on the ground that it pins a rule the specification does not state.
+
+Whether a detail the implementing side decided has its reason written is looked at by the consistency phase, as before. Tests that pin the wording or the layout of a detail stay too, so changing a detail means fixing its test as well.
+
+### Rejected options
+
+- Read only the tests of details whose reason is written as meeting the third and the fourth. The reviewer would have to read the bodies of the commits on the branch, and would look a second time at what the consistency phase looks at.
+- Leave the conditions as they are and leave it to the reviewer's reading. The same test stays in one run and is deleted in another, and in the run where it is deleted the fixing goes on.
+- Apply the third literally and write no test that carries the declaration marker. The behaviour of details would no longer be guarded by tests, and it overturns the declaration of a test that has no row and the way of working that writes the test first.
+
+### Confirmations
+
+- C-core-flow-22 (by reading) The Conditions section of `references/oracle-evidence.md` in the kotowari-review skill says that the third and the fourth conditions are not applied to a test that carries the declaration marker, and that the first and the second are
+
 ## When taking in existing code, behaviour the person has ratified is written as "implemented"
 
 Status: implemented
