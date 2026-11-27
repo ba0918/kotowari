@@ -121,6 +121,71 @@ A working prototype is throwaway, for deciding, and is not used as the base of p
 - C-core-flow-10 (by reading) The brainstorm skill says that for a request that changes visible behaviour a sample is made and shown, and what to make is decided by the agent with reasons
 - C-core-flow-11 (by reading) The brainstorm and implementation skills say that a prototype is throwaway, not the base of the product, and is something for the implementing side to compare against
 
+## The questions put in a round of the brainstorm are narrowed to three kinds, and the agent running the brainstorm decides the rest
+
+Status: proposed
+
+### Problem
+
+There was no standard for what may be put in a round of the brainstorm, and every question whose prerequisites were settled was asked of the person with a recommendation. In a trial where an LLM played the person and three requests were carried through, the person had no answer to 11 of the 29 questions of the brainstorm. How to handle a day with only one of the break punches, how to handle punches in a wrong order, and the exit code when there are warnings were such questions, and the person's answer was "I don't know. I leave it to you." The person pays the effort of reading a question they have no answer to and replying that they leave it.
+
+Four of the 11 were questions where no option changes the agreed behaviour and a later change is cheap. The other seven were behaviour at the edges that the person had not mentioned and that neither the sample nor the records gave a clue about. They are neither self-evident nor found by looking, so a standard that only says not to ask what reading answers leaves them.
+
+On the other hand, widening what is decided without asking raises the risk of silently deciding a point the person cares about. In the same trial, the request to add a column of overtime had the question whether the part over 40 hours a week counts as overtime, and deciding it silently would keep a reading that bears on the calculation of pay from reaching the person.
+
+### Decision
+
+A question put in a round of the brainstorm is only one that is one of the following three kinds.
+
+- The product's direction, preferences and trade-offs that neither reading nor trying settles
+- Something whose change after it is decided means rebuilding what was built or the data that has accumulated
+- Something for which the request's text, the sample or the records give a clue that the person cares about it
+
+A fact that reading answers is confirmed by reading, what trying answers is tried small, and the result is written in the background of the question.
+
+A question that is none of them is decided, with grounds, by the agent running the brainstorm ([What the brainstorm decided without asking is shown as a list at approval, written in the body of the commit of the specification, and carried to the implementing side](#what-the-brainstorm-decided-without-asking-is-shown-as-a-list-at-approval-written-in-the-body-of-the-commit-of-the-specification-and-carried-to-the-implementing-side)). A question for which it cannot be judged whether it is one of them is asked.
+
+This standard is applied to the brainstorm. It is not applied to a small task kotowari-iterate runs or to taking in existing code.
+
+### Rejected options
+
+- Put every question whose prerequisites are settled in a round, with a recommendation. Questions the person has no answer to line up too, and the person pays the effort of replying that they leave it.
+- Leave behaviour at the edges untouched in the brainstorm, and let the implementing side decide it during implementation. The person would see how it was decided only after the merge.
+- Draw no line for what stays asked, and decide also the questions that cannot be judged. The list shown at approval grows long, and what the person does not catch there is built as it is.
+- Ask about all behaviour visible to the user. Nearly all the edge questions the person had no answer to in the trial would stay asked.
+
+### Confirmations
+
+- C-core-flow-15 (by reading) The brainstorm skill says that a question put in a round is only one of three kinds: the product's direction, preferences and trade-offs that neither reading nor trying settles, something whose change after being decided means rebuilding what was built or the accumulated data, and something for which the request's text, the sample or the records give a clue that the person cares
+- C-core-flow-16 (by reading) The brainstorm skill says that a fact reading answers is read, that what trying answers is tried small and the result written in the background of the question, that a question that is none of the three kinds is decided with grounds, and that one that cannot be judged is asked
+- C-core-flow-19 (by reading) The brainstorm skill says that this standard is applied to the brainstorm, and not to a small task kotowari-iterate runs or to taking in existing code
+
+## What the brainstorm decided without asking is shown as a list at approval, written in the body of the commit of the specification, and carried to the implementing side
+
+Status: proposed
+
+### Problem
+
+If what the agent running the brainstorm decided without asking goes on without being shown to the person, a point the person cared about can be missed and not be known until after the merge. A decision document holds only what a person decided, so there is no place for what was decided without asking. Kept only in the conversation, it is lost when the cycle is started in another session after the brainstorm, and what the implementing side decides later can differ from the way of deciding the person saw at approval.
+
+### Decision
+
+At approval, together with the diff of the decision documents, the user reads the list of what the brainstorm decided without asking. What goes in the list is each question that is none of [the three kinds put in a round](#the-questions-put-in-a-round-of-the-brainstorm-are-narrowed-to-three-kinds-and-the-agent-running-the-brainstorm-decides-the-rest) and that the agent running the brainstorm decided with grounds, written one line each of what and why. When nothing was decided without asking, it says there is none. What the person says is wrong is written in the decision documents as something the person decided.
+
+The rest is not written in the decision documents; it is written, in the same one line each, in the body of the commit that commits the decision documents. When the person committed by themselves, the brainstorm adds to the same branch a commit with no change to files and writes it in that body. A list is made at each approval, and when one branch has several, that of a later approval wins over an earlier one.
+
+The cycle receives, in addition to [what it receives from the brainstorm](unattended-merge.md#the-cycle-receives-the-place-of-the-decision-documents-the-list-of-decisions-to-build-this-time-and-the-merge-target), the list of what was decided without asking, and passes it to the implementing side. The implementing side follows it. When it turns out during implementation that a different way of deciding is needed, the implementing side decides again and, as with [details found during implementation](#details-found-during-implementation-are-decided-by-the-implementing-side), writes what, why and the evidence in the commit body and the pull request body.
+
+### Rejected options
+
+- Add to the decision documents a section for what an agent decided. It overturns the rule that they hold only what a person decided, and changes the form check reads and the guides. It also adds something to rewrite each time the code changes.
+- Only show it at approval, and do not carry it to the implementing side. What is built can differ from the way of deciding the person saw at approval.
+
+### Confirmations
+
+- C-core-flow-17 (by reading) The brainstorm skill says that at approval, together with the diff of the decision documents, what was decided without asking is shown one line each of what and why, that when there is none it says so, that what the person says is wrong is written as a decision, and that the rest is written in the body of the commit that commits the decision documents, or, when the person committed by themselves, in the body of a commit with no change to files added to the same branch
+- C-core-flow-18 (by reading) The brainstorm skill says that the list of what was decided without asking goes into the handover to the cycle, the cycle skill says that it receives the list and passes it to the implementing side, and the implement skill says that it follows the list and, when a different way of deciding turns out to be needed, decides again and writes what, why and the evidence in the commit body and the pull request body
+
 ## When taking in existing code, behaviour the person has ratified is written as "implemented"
 
 Status: implemented
@@ -145,3 +210,7 @@ Behaviour that the code merely has and the person has not ratified is not writte
 - C-core-flow-12 (by reading) The intake skill says that behaviour the person has ratified is written as an "implemented" decision, and no per-intake record is written
 - C-core-flow-13 (by reading) The intake skill says that behaviour the person has not ratified is not written, and if the reason is not known that is written, without inventing a reason
 - C-core-flow-14 (by reading) The intake skill says that a decision in the legacy decision records that agrees with the implementation counts as already ratified
+
+## Open
+
+- Whether, after the questions the brainstorm asks are narrowed, a run appears that silently decides a point the person cares about. The user decides. After running a trial that includes rules only the person knows, answers that disagree, and a change of mind at approval.
