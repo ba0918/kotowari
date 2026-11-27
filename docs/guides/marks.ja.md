@@ -17,7 +17,7 @@
 | 部分 | 形 |
 |---|---|
 | 始まり | `@kotowari[` |
-| 中身 | カンマで区切った ID。カンマの前後に空白を置いてよい |
+| 中身 | カンマで区切った ID、または語 `detail`（[行を持たないテスト](#行を持たないテスト)）。カンマの前後に空白を置いてよい |
 | 終わり | `]`（始まりと同じ行） |
 
 - 1つの印に ID をいくつ並べてもかまいません。どの決定の文書の ID を混ぜてもよいです。
@@ -198,6 +198,27 @@ proptest! {
 ```
 
 読んで確認する行は、実装する側とレビューが読んで確かめます。`list` では2つ目の欄に `reading` が出て、`status` は `by_reading` に数えます。
+
+## 行を持たないテスト
+
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf] -->
+
+決定の文書には人が決めたことだけを書くので、エラーメッセージの文言のような細部のテストには、指す行が無いことがあります。
+そのようなテストは、直前のコメントに `@kotowari[detail]` と書いて宣言します。
+
+```rust
+// @kotowari[detail]
+#[test]
+fn empty_name_error_names_the_field() {
+    // ...
+}
+```
+
+- 宣言したテストには、`check` は `test_without_id` を出さず、`detail` に `unresolved_reference` も出しません。
+- `detail` は決まった語で、ID ではありません。小文字で書きます。`Detail` は ID として読まれ、`unresolved_reference` になります。
+- 宣言はどの行も確かめません。どの印も指していない実装済みの決定の行には、宣言したテストがいくつあっても `confirmation_without_test` が出ます。
+- テストが行も確かめるときは、1つの印に両方を書きます: `// @kotowari[C-shop-discount-1, detail]`。
+- テストが確かめる行があるときは、宣言ではなくその行の ID を書きます。`test_without_id` を消すために、テストが確かめていない行の ID を書かないでください。
 
 ## どのテストが見つかるか
 

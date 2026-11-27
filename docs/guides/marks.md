@@ -17,7 +17,7 @@ Once you have written the decision documents, add marks to your existing tests, 
 | Part | Form |
 |---|---|
 | Start | `@kotowari[` |
-| Contents | IDs separated by commas. Whitespace is allowed before and after a comma |
+| Contents | IDs separated by commas, or the word `detail` ([tests that have no row](#tests-that-have-no-row)). Whitespace is allowed before and after a comma |
 | End | `]` (on the same line as the start) |
 
 - A single mark may list any number of IDs, from any decision documents.
@@ -198,6 +198,27 @@ For kotowari to read inside a macro, the macro's name must be in the `tests.rust
 ```
 
 A row confirmed by reading is read and confirmed by the implementer and the review; `list` shows `reading` in its second column, and `status` counts it under `by_reading`.
+
+## Tests that have no row
+
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf] -->
+
+Decision documents hold only what a person decided, so a test of a smaller detail, such as the wording of an error message, may have no row to point at.
+Declare such a test with `@kotowari[detail]` in the comment just before it.
+
+```rust
+// @kotowari[detail]
+#[test]
+fn empty_name_error_names_the_field() {
+    // ...
+}
+```
+
+- `check` reports no `test_without_id` for a declared test, and no `unresolved_reference` for `detail`.
+- `detail` is a fixed word, not an ID. Write it in lowercase; `Detail` is read as an ID and gives `unresolved_reference`.
+- A declaration confirms no row. A row of an implemented decision that no mark points at still gives `confirmation_without_test`, however many declared tests there are.
+- When the test confirms a row as well, write both in one mark: `// @kotowari[C-shop-discount-1, detail]`.
+- When the test confirms a row, write that row's ID instead of the declaration. Do not write the ID of a row the test does not confirm to make `test_without_id` go away.
 
 ## Which tests are found
 
