@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-11-28
+
 ### Added
 
 - A test of behaviour that has no confirmation row can be declared with `@kotowari[detail]` in the comment block directly before it. `kotowari check` reports no test_without_id for a declared test and no unresolved_reference for `detail`, which is a fixed lowercase word, not an ID. A declaration satisfies no row: a row of an implemented decision that no mark points at still gets confirmation_without_test. The declaration may share a mark with row IDs (`@kotowari[C-shop-discount-1, detail]`). In a file of a language without a query, a declaration likewise satisfies no row and raises no finding. Wherever it is written, a declaration is counted in `tests.marks` of `kotowari status` like any other mark.
@@ -210,7 +212,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.2...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.3...HEAD
+[0.8.3]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.2...kotowari-v0.8.3
 [0.8.2]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.1...kotowari-v0.8.2
 [0.8.1]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.0...kotowari-v0.8.1
 [0.8.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.7.0...kotowari-v0.8.0
