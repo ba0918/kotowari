@@ -118,9 +118,9 @@ A plan committed on the working branch enters the diff from the commit where the
 
 ### Decision
 
-The reviewers and the consistency phase are handed their range with `docs/plans/` left out of it (the range of the consistency phase is decided in [The consistency phase reads the code of the diff and its surroundings, and the decisions in range](consistency-phase.md#the-consistency-phase-reads-the-code-of-the-diff-and-its-surroundings-and-the-decisions-in-range)). No finding is raised on a plan.
+The reviewers and the consistency phase are handed their range with the plan, `docs/plans/<branch name>.md`, left out of it, and any other file in `docs/plans/` is in the range like any other file (the range of the consistency phase is decided in [The consistency phase reads the code of the diff and its surroundings, and the decisions in range](consistency-phase.md#the-consistency-phase-reads-the-code-of-the-diff-and-its-surroundings-and-the-decisions-in-range)). No finding is raised on a plan.
 
-When the run converges, before the branch is pushed, the cycle itself adds a commit that deletes the plan. The cycle confirms with git that the commit touches only files in `docs/plans/` and that the head of the branch has no file in `docs/plans/`. The review and the consistency phase are not run again for this commit. The line is judged again as for any other commit ([The line is judged by git alone, by whether the diff touched a path in .kotowari/confirm-paths](#the-line-is-judged-by-git-alone-by-whether-the-diff-touched-a-path-in-kotowariconfirm-paths)).
+When the run converges, before the branch is pushed, the cycle itself adds a commit that deletes the plan. The cycle confirms with git that nothing but the plan changed since the head before the commit and that the head of the branch does not have the plan. The review and the consistency phase are not run again for this commit. The line is judged again as for any other commit ([The line is judged by git alone, by whether the diff touched a path in .kotowari/confirm-paths](#the-line-is-judged-by-git-alone-by-whether-the-diff-touched-a-path-in-kotowariconfirm-paths)).
 
 In a run that ended without converging, the plan is not deleted and stays for the resume.
 
@@ -131,8 +131,8 @@ In a run that ended without converging, the plan is not deleted and stays for th
 
 ### Confirmations
 
-- C-core-merge-63 (by reading) The kotowari-cycle skill says that the reviewers and the consistency phase are handed their range with `docs/plans/` left out of it and are made to raise no finding on a plan
-- C-core-merge-64 (by reading) The `references/merge.md` of kotowari-cycle says that in a converged run, before the branch is pushed, the cycle adds a commit that deletes the plan, confirms with git that the commit touches only files in `docs/plans/` and that the head of the branch has no file in `docs/plans/`, and does not run the review and the consistency phase again for this commit
+- C-core-merge-63 (by reading) The kotowari-cycle skill says that the reviewers and the consistency phase are handed their range with the plan, `docs/plans/<branch name>.md`, left out of it, with any other file in `docs/plans/` in the range, and are made to raise no finding on a plan
+- C-core-merge-64 (by reading) The `references/merge.md` of kotowari-cycle says that in a converged run, before the branch is pushed, the cycle adds a commit that deletes the plan, confirms with git that nothing but the plan changed since the head before the commit and that the head of the branch does not have the plan, and does not run the review and the consistency phase again for this commit
 - C-core-merge-65 (by reading) The kotowari-cycle skill says that in a run that ended without converging the plan is not deleted
 
 ## The cycle receives the place of the decision documents, the list of decisions to build this time, and the merge target
