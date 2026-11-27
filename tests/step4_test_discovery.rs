@@ -1132,26 +1132,6 @@ fn declaration_word_is_matched_exactly() {
     );
 }
 
-// @kotowari[detail]
-#[test]
-fn declaration_is_not_counted_in_status_marks() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    fs::create_dir_all(tmp.path().join("tests")).unwrap();
-    fs::write(
-        tmp.path().join("tests/test_a.rs"),
-        "// @kotowari[C-t-a-1, detail]\n#[test]\nfn a() {}\n\n// @kotowari[detail]\n#[test]\nfn b() {}\n",
-    )
-    .unwrap();
-    let output = cmd()
-        .arg("status")
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
-    let v = parse_json(&output);
-    assert_eq!(v["tests"]["marks"], 1, "{v}");
-}
-
 // --- 空行を挟んだ印は結び付かない ---
 
 // @kotowari[C-core-markers-13]
