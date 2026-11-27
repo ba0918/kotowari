@@ -285,13 +285,13 @@ Whether the tests are marked correctly is left for a person to check.
 
 ## Findings about marks
 
-<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id:5f7fbfcf, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
 | Finding | Severity | When it appears | Line | detail |
 |---|---|---|---|---|
 | `test_without_id` | error | A test in a language with a query has no mark | The first line of the test's node (in Rust, the `fn` line) | The test name (the test's first line if it has no name) |
 | `confirmation_without_test` | error | A row of an implemented decision has no tests ([rows that need no test](#rows-that-need-no-test)) | The row | The row's ID |
-| `unresolved_reference` | error | An ID in a mark does not exist, or is not in ID form | The mark's line | That ID |
+| `unresolved_reference` | error | An ID in a mark does not exist, or is not in ID form (the declaration `detail` is not reported) | The mark's line | That ID |
 | `invalid_marker` | error | The mark is empty or only separators, or has no `]` on the same line | The mark's line | The whole line containing the mark |
 | `unparsable_file` | error | A test file in a language with a query has a syntax error. That file is skipped | None (`-`) | The file path |
 
