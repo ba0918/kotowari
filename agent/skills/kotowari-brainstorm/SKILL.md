@@ -86,8 +86,8 @@ question for which you cannot judge whether it is one of the kinds is asked.
 
 An external interface is a part the person's procedure or other tools and scripts depend on: the
 form of a command, the format of the output, the exit codes, the names and places of the files
-written. It is of the second kind, since changing it later means changing what calls it, so a part
-of it you decided without asking is not put in the list. Ask about all such parts once, in the last
+written. A part of it that is one of the kinds is asked in the rounds like any other question; a
+part you decided without asking is not put in the list. Ask about all such parts once, in the last
 round before approval, as one usage example (the command, the first lines of its output, its exit
 code, the files it writes) and whether it is right. The form the person confirms or corrects there
 is their decision and is written in the decision documents; a part they leave to you stays in the
