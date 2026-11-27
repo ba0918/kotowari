@@ -84,6 +84,7 @@ there meaning this run, with only these differences:
 |---|---|
 | the place of the decision documents and the list of decisions from the brainstorm | the request; the given specification path, or the one the judgment found; the decisions (`path#anchor`) the request touches, only when it touches any |
 | step 1's delegation to implement | after the judgment, the request goes to the implementer below in one delegation |
+| the judgment of whether a plan is written (cycle's **Plans**) | none: no plan is written for a small task |
 | the place of the decision documents in the fixer delegation | the request, and the specification path if any; the fixer also hands back a contradiction with the specification |
 | the choice of entry in **Resuming and running more** | a new request starts at step 1 after its judgment; when resuming that request or running more, use cycle's table without the row "no findings file yet" |
 | the place of the decision documents and the file of decisions in the consistency phase delegation | the specification path and the request; the file of decisions only when the request touches decisions; with no specification, the request alone is the counterpart |

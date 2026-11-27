@@ -81,7 +81,15 @@ the existing stop rules.
 
 ## Opening and asking
 
-1. Judge the line.
+1. Delete the plan, then judge the line. In the worktree root, when the head has the branch's
+   plan (`git ls-tree --name-only HEAD -- docs/plans/<branch>.md` prints it), cycle itself
+   removes it (`git rm -q -- docs/plans/<branch>.md`) and commits that alone, in the repository's
+   commit conventions. Then it confirms with git that the commit touches only files in
+   `docs/plans/` (`git diff --name-only HEAD~1 HEAD -- . ':(exclude)docs/plans/'` prints nothing)
+   and that the head has no file there (`git ls-tree -r --name-only HEAD -- docs/plans/` prints
+   nothing). When either does not hold, push nothing: stop and report the output of both. The
+   review and the consistency phase are not run again for this commit; the line is judged over it
+   as over any other commit. When the head has no plan, there is nothing to delete.
 2. Push the branch (`git push -u origin <branch>`) and, when there is none yet, create the pull
    request against the merge target
    (`gh pr create --base <target> --head <branch> --title <one line> --body-file <file>`). The

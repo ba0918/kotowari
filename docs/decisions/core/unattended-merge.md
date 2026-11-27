@@ -33,7 +33,7 @@ What is carried to the merge without waiting for a person is a request the cycle
 
 ## A plan is written only when the work is more than a single implementer can hold, by the implementer, committed on the working branch, and without approval
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -75,7 +75,7 @@ For a small task kotowari-iterate runs, no plan is written.
 
 ## A plan does not bind the implementer, and the cycle does not read what is in a plan
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -110,7 +110,7 @@ Even for a request with no plan, the implementer may write uncommitted working n
 
 ## A plan is not reviewed, and when the run converges the cycle adds a commit that deletes it
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

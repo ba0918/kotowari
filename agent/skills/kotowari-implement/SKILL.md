@@ -14,14 +14,38 @@ test-first; documents and small scripts may be written directly.
 In: the worktree path, the branch, the place of the decision documents, and the list of decisions
 to build (each a topic document's path and a heading's anchor); with them, when the brainstorm
 overturned decisions, the row IDs of the old decisions and the decision replacing each, and the
-path of a prototype to compare with, if one was made. Work only inside that worktree. Read each
+path of a prototype to compare with, if one was made; and, when cycle judged the work more than a
+single implementer can hold, the instruction to write a plan first, or, when the branch already
+has one, the plan's path. Work only inside that worktree. Read each
 decision in its topic document, and whatever else in the repository it needs. Nothing else is
 handed to you — the repository is the context. Out: commits on that branch, with the states of the
 decisions you finished turned to implemented.
 
-Write working notes (the order you chose, what is left) only when you judge them necessary, under
-`.agents/scratch/` in the worktree. They are never committed and no person reads them; they are
-for your own resume.
+## Plans
+
+A plan is `docs/plans/<branch>.md` on the working branch, one per branch, in the form
+`references/plan.md` describes. No person reads or approves it.
+
+- **Writing one.** When you are handed the writing of a plan, write it at `docs/plans/<branch>.md`,
+  run `kotowari plan docs/plans/<branch>.md` and fix it until it exits with 0, commit it, and then
+  go on to implement in the same delegation.
+- **More than you can hold.** When you find part way that you cannot hold the rest of the work,
+  commit at a boundary where the tests pass. If you started without a plan, write the remaining
+  procedure at `docs/plans/<branch>.md` in the same form, bring it to an exit of 0 from
+  `kotowari plan`, and commit it. Then hand back to cycle, saying so; cycle delegates the rest
+  again.
+- **It does not bind you.** The order and the files to touch are yours to decide even when there
+  is a plan. When a way different from the plan is needed, rewrite the plan, commit it with the
+  reason in the commit body, and go on; hand back neither to a person nor to cycle. The plan's
+  `## Stop conditions` section and its `Stop and hand back if` fields add no condition for
+  stopping: you stop only as **Stop only for these** says.
+- **No progress in it.** Never mark a step done or remove a finished step, and never write a step
+  number in a commit message. What remains is read from each step's `Done when` and `Shown by`,
+  the git history and the states of the decisions (**Resuming**).
+
+Write working notes (the order you chose, what is left) only when you judge them necessary, with a
+plan or without one, under `.agents/scratch/` in the worktree. They are never committed and no
+person reads them; they are for your own resume.
 
 ## Deciding what the documents do not say
 
@@ -68,6 +92,7 @@ Hand back (stop, state the reason, do not guess) when:
 - after diagnosing and changing approach once there is still no progress → question the premise
   once, as kotowari-cycle's `references/premise-step.md` says under **In implement**; hand back to
   cycle with the premise ladder only when that brings no progress either;
+- you cannot hold the rest of the work → back to cycle after the commits **Plans** says;
 - a hook stops your commit on a finding in a decision document → back to cycle, as **Decisions and
   kotowari check** says;
 - no test command can be determined (see below) → back to cycle, which asks the person, before
@@ -88,7 +113,8 @@ external. Before completing a piece, read that kind's section in `references/com
 external piece hands back before running anything unsafe, privileged, or irreversible.
 
 The test command comes from, in order: the project's own instructions, the standard tool of the
-language. If neither settles it, hand back to cycle.
+language. If neither settles it, hand back to cycle. The `## Test command` section of a plan is
+not a source of it.
 
 A prototype handed to you is throwaway, something to compare with and not a base: build the product test-first
 on its own, then set what you built beside the prototype and look at the behavior the person saw
@@ -133,7 +159,8 @@ the working diff as **Resuming** says.
 
 - Commit, stage, hook and deletion rules: the **Editing contract** section of kotowari-cycle's
   `references/editing-contract.md`. A test and the minimal code that makes it pass are one concern.
-- Message: follow the repository's commit conventions; never name session chronology. The body
+- Message: follow the repository's commit conventions; never name session chronology or a plan's
+  step number. The body
   carries the lines of each detail or reading you decided (**Deciding what the documents do not
   say**).
 - Deleting a test, adding a suppression of a check, and adding or changing a dependency are not
@@ -149,10 +176,11 @@ the working diff as **Resuming** says.
 
 ## Resuming
 
-There is no progress file. To resume, read `git log`, the working diff, `git status`, your
-working notes if there are any, and which decisions on your list are still proposed and which of
-their rows checked by a test still have no test with a marker (`tests` empty in `kotowari query`); build
-what remains. Work that leaves no trace in git (check-only work, external checks) and
+There is no progress file, and a plan holds no progress. To resume, read `git log`, the working
+diff, `git status`, the plan and your working notes if there are any, and which decisions on your
+list are still proposed and which of their rows checked by a test still have no test with a marker
+(`tests` empty in `kotowari query`); with a plan, judge each step against its `Done when` and
+`Shown by` by those same reads. Build what remains. Work that leaves no trace in git (check-only work, external checks) and
 approved-but-unexecuted human decisions are redone or re-asked.
 
 ## Report at the end
@@ -161,4 +189,5 @@ Commits made; per decision, its state and the evidence for each row (test names 
 commands, artifact passages, external summaries); changes beyond the decisions with reasons; each
 detail or reading you decided by yourself (a dependency you added included) as one line of what was
 decided, why, and the evidence; each sentence of a decision document you corrected to the facts,
-with the fact; and anything handed back, with the open item it wrote.
+with the fact; and anything handed back, with the open item it wrote or, when you could not hold
+the rest of the work, that reason and the plan's path.

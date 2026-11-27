@@ -2,7 +2,7 @@
 
 One JSON file per branch holds the current state of every finding (a snapshot that is
 overwritten, never an append-only log), and the record of the run: the decisions (`path#anchor`) and the merge target
-it received, the line, the earlier request it fixes, and its ending. Cost is not recorded. Only cycle writes it; it is never committed, lives
+it received, the line, the earlier request it fixes, the reason a plan was written, and its ending. Cost is not recorded. Only cycle writes it; it is never committed, lives
 outside the worktree that cleanup removes, and is never deleted by the workflow (the kotowari-cycle
 skill's **Resuming and running more**). Reviewers return arrays of
 findings in the same shape, without `id`, `status`, `commits`, or `evaluations`; the caller
@@ -32,6 +32,7 @@ fills those.
   ],
   "line": {"hit": true, "paths": ["scripts/gates.sh"]},
   "fix_of": null,
+  "plan_reason": null,
   "ending": {"kind": "pr_open", "reason": "the line was hit: scripts/gates.sh"},
   "findings": [
     {
@@ -75,6 +76,7 @@ fills those.
 | `merge_target` | written by cycle only, at its start: the merge target it received, the repository's default branch when none was decided |
 | `line` | written by cycle only, each time it judges the line: `hit` (`true` / `false`) and `paths`, the paths that were hit (`[]` when not hit, and when the procedure failed, which is a hit with no paths, reported as a failure); `null` until first judged |
 | `fix_of` | written by cycle only: the branch name of the earlier request this request fixes, only when the request says it is a fix of an earlier one; `null` otherwise |
+| `plan_reason` | written by cycle only, before its first delegation to implement: the one line of the reason it judged that a plan is to be written; `null` when it judged none is needed, when the branch already had a plan, and until it judges |
 | `ending` | written by cycle only, when the run ends: `kind` and `reason`; `null` until then |
 | `kind` | `merged` / `pr_open` (stopped at the pull request for the person) / `pr_closed` (the pull request was closed without being merged) / `pushed` (no pull request could be created) / `limit` (round-trip limit) / `no_progress` / `hand_back` (to brainstorm or the person) |
 | `evaluations` | one per review or consistency phase run that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a new finding's first entry is `still_present` with the round that raised it; a full-review match appends `still_present` |

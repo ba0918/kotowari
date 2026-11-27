@@ -5,6 +5,10 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Changed
+
+- `kotowari-cycle` has a plan written when it judges, before its first delegation, that the work is more than a single implementer can hold (no number decides it), and writes the one-line reason in the findings file as `plan_reason`. The implementer writes the plan at `docs/plans/<branch>.md` in the form `kotowari plan` checks (described in `kotowari-implement/references/plan.md`), commits it on the working branch, and goes on to implement; nobody approves it. An implementer that finds part way that it cannot hold the work commits at a boundary where the tests pass, leaves the remaining procedure in the plan, and hands back, and the cycle delegates the rest. A plan does not bind the implementer: it rewrites the plan when it takes another way, its stop conditions add no stop, its test command does not decide the test command, and it holds no progress. The cycle passes only the plan's path and never reads it; reviews and the consistency phase leave `docs/plans/` out of their range. A converged run commits the deletion of the plan before it pushes, without another review, and pushes nothing and reports when that commit touches anything outside `docs/plans/` or another file is left there; a run that ends without converging keeps the plan for the resume. `kotowari-iterate` never has a plan written.
+
 ## [0.8.0] - 2026-11-27
 
 ### Added
