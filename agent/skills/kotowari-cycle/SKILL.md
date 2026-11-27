@@ -115,9 +115,10 @@ A plan is `docs/plans/<branch>.md` on the working branch. The implementer writes
 no person reads or approves it.
 
 - **Whether one is written.** A start that brings a request looks, before its first delegation to
-  implement, whether the branch head has a plan (`git ls-tree --name-only HEAD -- docs/plans/<branch>.md`
-  prints it). When it has one, cycle makes no judgment and passes its path. When it has none, cycle
-  judges whether the work — the decisions it received and the code they reach — is more than a
+  implement, whether the branch head has a plan
+  (`git -C <worktree> ls-tree --name-only HEAD -- docs/plans/<branch>.md` prints it). When it has
+  one, cycle makes no judgment and passes its path. When it has none, cycle judges whether the
+  work — the decisions it received and the code they reach — is more than a
   single implementer can hold. This is a judgment; no count of files, rows or lines decides it.
   Only when it judges so, the step 1 delegation also has the implementer write the plan before
   implementing, and cycle writes the reason as one line in the findings file (`plan_reason`). A
@@ -128,9 +129,10 @@ no person reads or approves it.
   work, having committed at a boundary where the tests pass and left the remaining procedure in
   the plan, delegate the rest again as step 1 with the plan's path. This is neither a stop nor an
   ending.
-- **Not reviewed.** Every review and every consistency phase run is handed its range with
-  `docs/plans/` left out (`git diff <base> <head> -- . ':(exclude)docs/plans/'`, profiles chosen
-  from the paths outside it) and is told to raise no finding on a plan.
+- **Not reviewed.** Every review and every consistency phase run is handed its range with the
+  plan alone left out (`git diff <base> <head> -- . ':(exclude)docs/plans/<branch>.md'`, profiles
+  chosen from the paths outside it) and is told to raise no finding on it. Any other file under
+  `docs/plans/` is in the range like any other file.
 - **Deleted at convergence.** A converged run deletes the plan before the push
   (`references/merge.md`, **Opening and asking**). A run that ends without converging (endings
   2–4) does not delete it; it stays for the resume.
