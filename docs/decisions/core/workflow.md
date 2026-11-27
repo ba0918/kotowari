@@ -207,7 +207,7 @@ For a test of behaviour that has no confirmation row in the decision documents, 
 
 ## A test that carries the declaration marker is read only by two of the Evidence conditions: that something produces its situation, and that its subject is the product or a check
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
