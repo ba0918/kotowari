@@ -80,9 +80,24 @@ A question is put before the person only when it is one of these kinds:
 
 Before asking, read what reading answers, and try small what trying answers (a throwaway run, kept
 out of the commits); write what they showed in the question's background. A question that is none
-of the kinds is not put before the person in any form, wherever the rounds run: decide it yourself
-with grounds, and it goes in the list of what was decided without asking (**Finishing**). A
-question for which you cannot judge whether it is one of the kinds is asked.
+of the kinds is not put before the person in any form, wherever the rounds run, except as part of
+the usage example of an external interface below: decide it yourself with grounds, and it goes in
+the list of what was decided without asking (**Finishing**). A question for which you cannot judge
+whether it is one of the kinds is asked.
+
+An external interface is a part the person's procedure or other tools and scripts depend on: the
+form of a command, the format of the output, the exit codes, the names and places of the files
+written. A part of it that is one of the kinds is asked in the rounds like any other question; a
+part you decided without asking is not put in the list. Such parts are none of the kinds, and this
+is the one question asked about them: ask about all of them in the last round before approval, as
+one usage example and whether it is right. For a command the example is the command, the first
+lines of its output, its exit code and the files it writes; for another kind of interface, a call
+and what comes back. When rounds follow it and you decide more such parts, ask again the same way
+before approval. What the person confirms or corrects there is their decision about the interface
+(the form, the format, the codes, the names and places) and is written in the decision documents;
+the wording of a message the example happens to show is not (**Writing the decisions**). A part
+they leave to you stays in the list. When you decided no external interface without asking, this
+question is not asked.
 
 This standard is the brainstorm's. It does not apply to a small task kotowari-iterate runs or to
 taking in existing code (kotowari-adopt).
@@ -104,7 +119,9 @@ When the request changes behavior a user can see (an output, a screen, a message
 is used), do not settle it by asking in words. Make a sample and show it, and turn the person's
 reaction into the decision. The sample is a working prototype, a mock, or a sample of the output;
 which one to make, and whether to make one at all, you decide on the spot with a reason, without
-asking the person. No step is added where a person tries the built product before the merge.
+asking the person. The usage example of an external interface you decided is shown whatever you
+decide here (**What goes in a round**). No step is added where a person tries the built product
+before the merge.
 
 A working prototype is thrown away once it has done its job: it is never the base of the product
 code. Hand its path to the implementer as something to compare with (with the list of decisions,
@@ -221,7 +238,8 @@ from the list; any of these sends you back to the dialogue.
       summary as the thing approved. With the diff, show the list of what was decided without
       asking: each question that was none of the kinds of **What goes in a round** and that you
       decided with grounds, one line each of what was decided and why; answers taken from the
-      origin and the choice of a sample are not in it. When nothing was decided without asking,
+      origin, the choice of a sample, and an external interface you decided (except a part the
+      person left to you on the usage example, **What goes in a round**) are not in it. When nothing was decided without asking,
       say there is none. An item the person says is wrong is something the person decided: write it
       in the decision documents, take it out of the list, and show the changed diff and identifiers
       again. A list is made at each approval; when the branch already carries one (its newest

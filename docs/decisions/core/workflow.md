@@ -233,6 +233,60 @@ Whether a detail the implementing side decided has its reason written is looked 
 
 - C-core-flow-22 (by reading) The Conditions section of `references/oracle-evidence.md` in the kotowari-review skill says that the third and the fourth conditions are not applied to a test that carries the declaration marker, and that the first and the second are
 
+## An external interface decided by the agent running the brainstorm is kept out of the list, and asked before approval by showing one usage example
+
+Status: implemented
+
+### Problem
+
+What the brainstorm decided without asking is shown as a list at approval ([What the brainstorm decided without asking is shown as a list at approval, written in the body of the commit of the specification, and carried to the implementing side](#what-the-brainstorm-decided-without-asking-is-shown-as-a-list-at-approval-written-in-the-body-of-the-commit-of-the-specification-and-carried-to-the-implementing-side)). In a trial where an LLM played the person, the agent running the brainstorm decided the form of the command without asking and wrote it as one line of a list of nine items. The person wanted another form and was set to read the list item by item, but did not point it out in any of three approvals.
+
+The same approval request was read again by the person role under the same settings, counting whether the difference in the form of the command was pointed out.
+
+| Conversation before approval | How the form of the command was shown | Times pointed out |
+|---|---|---|
+| None | One line of the list | 16/16 |
+| After four rounds of the brainstorm | One line of the list | 1/6 |
+| After four rounds of the brainstorm | The list split into external interface and internal details, the former placed first | 3/6 |
+| After four rounds of the brainstorm | Taken out of the list and made a question | 6/6 |
+
+The miss came not from how the list was written but from reading the list after the conversation of the brainstorm. Made a question, it gets an answer. The reader was an LLM, and whether a person reads past it in the same way has not been confirmed.
+
+Of the items in the lists of the trial, those the person had a rule for and the one changed later at approval (the exit code) were external interface in both runs.
+
+### Decision
+
+An external interface is a part the user's procedure or other tools and scripts depend on. The form of a CLI command, the format of the output, the exit codes, and the names and places of the files written are such parts.
+
+An external interface decided by the agent running the brainstorm is not put in the list of what was decided without asking. In the last round before approval, one usage example is shown and the person is asked whether it is right. Internal details are written in the list as before.
+
+### Rejected options
+
+- Add no question, split the list into external interface and internal details, and place the former first. In the re-reading it was pointed out 3 times out of 6.
+- Make every item of the list a question. Each brainstorm gets 9 to 15 more questions, and narrowing the questions put in a round loses its point.
+- Leave the list as it is. In the re-reading, the reader after the brainstorm pointed it out 1 time out of 6.
+
+### Confirmations
+
+- C-core-flow-23 (by reading) The brainstorm skill says that an external interface decided by the agent running the brainstorm (a part the user's procedure or other tools and scripts depend on: the form of a command, the format of the output, the exit codes, the names and places of the files written) is not put in the list of what was decided without asking, and is asked in the last round before approval by showing one usage example
+
+## No mechanism is added to catch a rule nobody asked about; it is left to the reading of the decision documents at approval
+
+Status: implemented
+
+### Problem
+
+A rule only the person knows, with no clue in the text of the request or in the sample, is not asked about in the brainstorm and does not appear in the list of what was decided without asking. In the trial where an LLM played the person, the deduction on days without break punches was such a rule, and neither run had a question about it. In both runs the person read the decision documents at approval, stopped because the rule was missing, and approval was taken again. In the 26 re-readings of the approval request it was pointed out every time.
+
+### Decision
+
+No mechanism is added, for now, to catch a rule nobody asked about. It is left to the user reading the decision documents at approval. A run in which such a rule does not come out until approval takes one more round of approval.
+
+### Rejected options
+
+- Always put in the last round one open question asking whether there are other rules or exceptions. Its effect has not been measured.
+- For each rule the person decided, ask whether there is a case it does not apply to. The questions grow with the number of rules, and it collides with the decision that narrowed the questions put in a round.
+
 ## When taking in existing code, behaviour the person has ratified is written as "implemented"
 
 Status: implemented
