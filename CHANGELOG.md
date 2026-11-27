@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-11-28
+
 ### Changed
 
 - The Evidence conditions in `kotowari-review/references/oracle-evidence.md`, which reviewers, the fixer and the consistency phase are given, no longer apply the third and fourth conditions (the specification states the rule; what the test pins is declared as a contract) to a test carrying the declaration `@kotowari[detail]`, alone or beside row IDs, when it is added or kept. Reviewers and fixers no longer delete such a test on the ground that the specification does not state its rule. The first and second conditions (something really produces the situation; the subject is the product or a check) still apply to it, and a review that demands a new such test is still held to all four.
@@ -217,7 +219,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.3...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.4...HEAD
+[0.8.4]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.3...kotowari-v0.8.4
 [0.8.3]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.2...kotowari-v0.8.3
 [0.8.2]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.1...kotowari-v0.8.2
 [0.8.1]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.0...kotowari-v0.8.1
