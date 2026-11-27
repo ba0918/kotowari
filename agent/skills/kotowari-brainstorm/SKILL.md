@@ -89,11 +89,15 @@ An external interface is a part the person's procedure or other tools and script
 form of a command, the format of the output, the exit codes, the names and places of the files
 written. A part of it that is one of the kinds is asked in the rounds like any other question; a
 part you decided without asking is not put in the list. Such parts are none of the kinds, and this
-is the one question asked about them: ask about all of them once, in the last round before
-approval, as one usage example (the command, the first lines of its output, its exit code, the
-files it writes) and whether it is right. The form the person confirms or corrects there
-is their decision and is written in the decision documents; a part they leave to you stays in the
-list. When you decided no external interface without asking, this question is not asked.
+is the one question asked about them: ask about all of them in the last round before approval, as
+one usage example and whether it is right. For a command the example is the command, the first
+lines of its output, its exit code and the files it writes; for another kind of interface, a call
+and what comes back. When rounds follow it and you decide more such parts, ask again the same way
+before approval. What the person confirms or corrects there is their decision about the interface
+(the form, the format, the codes, the names and places) and is written in the decision documents;
+the wording of a message the example happens to show is not (**Writing the decisions**). A part
+they leave to you stays in the list. When you decided no external interface without asking, this
+question is not asked.
 
 This standard is the brainstorm's. It does not apply to a small task kotowari-iterate runs or to
 taking in existing code (kotowari-adopt).
