@@ -233,4 +233,3 @@ Behaviour that the code merely has and the person has not ratified is not writte
 ## Open
 
 - Whether, after the questions the brainstorm asks are narrowed, a run appears that silently decides a point the person cares about. The user decides. After running a trial that includes rules only the person knows, answers that disagree, and a change of mind at approval.
-- Whether, after the declaration marker is added, the implementing side stops asking the person in the middle of implementation. The user decides. After the merge, by running the same trial once with the same procedure and measure and looking at whether the worker finished by adding the declaration marker without asking the person.
