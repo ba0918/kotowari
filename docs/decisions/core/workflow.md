@@ -186,6 +186,25 @@ The cycle receives, in addition to [what it receives from the brainstorm](unatte
 - C-core-flow-17 (by reading) The brainstorm skill says that at approval, together with the diff of the decision documents, what was decided without asking is shown one line each of what and why, that when there is none it says so, that what the person says is wrong is written as a decision, and that the rest is written in the body of the commit that commits the decision documents, or, when the person committed by themselves, in the body of a commit with no change to files added to the same branch
 - C-core-flow-18 (by reading) The brainstorm skill says that the list of what was decided without asking goes into the handover to the cycle, the cycle skill says that it receives the list and passes it to the implementing side, and the implement skill says that it follows the list and, when a different way of deciding turns out to be needed, decides again and writes what, why and the evidence in the commit body and the pull request body
 
+## For a test of behaviour that has no confirmation row, the implementing side adds the declaration marker and does not ask the person
+
+Status: proposed
+
+### Problem
+
+Details the implementing side decided, and what the brainstorm decided without asking, are not written in the decision documents. A test of that behaviour has no row to point at, and neither the implement skill nor the explanation of markers said what to do.
+
+In a trial where an LLM played the person, the worker read that a test not tied to a confirmation row could not be kept, and in the middle of implementation asked the person whether to add three behaviours to the decisions. The person's answer was to take the recommendation. The way of working in which nobody waits for the person after approval broke down.
+
+### Decision
+
+For a test of behaviour that has no confirmation row in the decision documents, the implementing side adds the declaration of a test that has no row ([A test that has no row can be declared with `@kotowari[detail]`, and a declared test gets no test_without_id](coverage.md#a-test-that-has-no-row-can-be-declared-with-kotowaridetail-and-a-declared-test-gets-no-test_without_id)). It does not ask the person for this, adds neither a decision nor a confirmation row to the decision documents, and does not write the ID of a row the test does not confirm. When there is a row the test confirms, it writes that row's ID.
+
+### Confirmations
+
+- C-core-flow-20 (by reading) The implement skill says that a test of behaviour that has no confirmation row gets the declaration marker, and that for this the person is not asked, neither a decision nor a row is added to the decision documents, and the ID of a row the test does not confirm is not written
+- C-core-flow-21 (by reading) The explanation of markers and the table of findings in the kotowari skill say, as the fix for test_without_id, to write the ID of the row the test confirms when there is one, and the declaration marker when there is none
+
 ## When taking in existing code, behaviour the person has ratified is written as "implemented"
 
 Status: implemented
@@ -214,3 +233,4 @@ Behaviour that the code merely has and the person has not ratified is not writte
 ## Open
 
 - Whether, after the questions the brainstorm asks are narrowed, a run appears that silently decides a point the person cares about. The user decides. After running a trial that includes rules only the person knows, answers that disagree, and a change of mind at approval.
+- Whether, after the declaration marker is added, the implementing side stops asking the person in the middle of implementation. The user decides. After the merge, by running the same trial once with the same procedure and measure and looking at whether the worker finished by adding the declaration marker without asking the person.
