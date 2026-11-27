@@ -19,7 +19,7 @@ The first two apply to every oracle. The third and fourth apply to every oracle 
 test being added or kept: a test whose mark, in the comment block directly before it, carries the
 declaration `detail` (`@kotowari[detail]`, or beside row IDs as in
 `@kotowari[C-shop-discount-1, detail]`), which says it tests behaviour that has no confirmation row
-in the decision documents — a detail the implementer decided. Such a test is not removed on the
+in the decision documents. Such a test is not removed on the
 ground that the specification does not state its rule or declare what it pins; whether it confirms
 the rows its mark names is a question of whether the mark is correct, which review still checks,
 not of these conditions. A
