@@ -137,7 +137,12 @@ only the keys you need with `jq` (the kotowari skill's `references/findings.md` 
 Never read `kotowari list` whole.
 
 When writing a test, read the kotowari skill's scene mark (`references/mark.md`) and give the test
-a marker with the row IDs it verifies. When the brainstorm overturned a decision, point the tests that
+a marker with the row IDs it verifies. A test of behaviour that has no confirmation row — a detail
+you decided, or an item of what the brainstorm decided without asking — gets the declaration
+marker `@kotowari[detail]` instead. For this, do not ask the person, add neither a decision nor a
+row to the decision documents, and do not write the ID of a row the test does not confirm. When
+the test also confirms a row, write that row's ID beside the declaration in the same marker
+(`@kotowari[C-shop-discount-1, detail]`). When the brainstorm overturned a decision, point the tests that
 carried the old rows' IDs at the new rows, or delete them when nothing is left for them to confirm.
 Run `kotowari check` and `kotowari status` before you return; to read their output, read the
 kotowari skill's scene check (`references/findings.md`).

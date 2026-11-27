@@ -188,7 +188,7 @@ The cycle receives, in addition to [what it receives from the brainstorm](unatte
 
 ## For a test of behaviour that has no confirmation row, the implementing side adds the declaration marker and does not ask the person
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

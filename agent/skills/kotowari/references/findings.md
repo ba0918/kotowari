@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-11-26; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-11-27; the version of kotowari itself is not pinned)
 
 Look at the exit code first. 2 means a stop. Standard output is then empty, so do not read it. Look up the message on the first line of standard error in the stop table below. On 0 or 1, read the JSON on standard output and look up each entry of `findings` in the table below. Entries whose `severity` is `notice` (notices) do not change the exit code.
 
@@ -40,10 +40,10 @@ With `--format text`, one item becomes one line `ID verification name path:line 
 | unknown_line | In a decision document, a second line in the paragraph of a decision's state line (line is that line), a block other than a heading or a link reference definition between a decision's heading and its first `###` section other than the state line, a block other than a list under `### 確認すること` (an ordered list included), each block under a `###` heading that is unknown_heading, or a block other than a list or a link reference definition under `## 未決` (line is the block's first line; detail is that line as written) | Move it into a section of the decision, or write the open question as a list item | brainstorm |
 | duplicate_id | The same ID appears in two or more places (for the rows of `### 確認すること` in decision documents, raised on the second and later rows in path and line order) | Make the ID unique | brainstorm |
 | id_domain_mismatch | The name in the ID differs from the first level of the place for documents | Match the name to the place, or move the document | brainstorm |
-| unresolved_reference | A test mark names an ID that is not the ID of any row to confirm (path is the test file; line is the mark's line; detail is the ID) | Fix the ID in the mark, or remove it if the test confirms no row | implementer |
-| unresolved_reference | A test's mark refers to an ID that does not exist (path is a test file) | Change the ID in the mark to one that exists | implementer |
+| unresolved_reference | A test mark names an ID that is not the ID of any row to confirm (path is the test file; line is the mark's line; detail is the ID) | Fix the ID in the mark, or, if the test confirms no row, replace it with the declaration `detail` (mark.md) | implementer |
+| unresolved_reference | A test's mark refers to an ID that does not exist (path is a test file) | Change the ID in the mark to one that exists; if the test confirms no row, write the declaration `@kotowari[detail]` instead (mark.md) | implementer |
 | vague_word | A vague word is contained | Rephrase with a concrete word | brainstorm |
-| test_without_id | A test has no mark | Put an `@kotowari[ID]` mark on it | implementer |
+| test_without_id | A test has no mark | When the test confirms a row, put a mark with that row's ID on it (`@kotowari[ID]`); when it confirms none, put the declaration `@kotowari[detail]` on it (mark.md). Do not write the ID of a row it does not confirm | implementer |
 | invalid_marker | The form of a mark is not correct (path is a test file), or the form of a guide mark is not correct (path is a guide) | Fix a test mark to the form `@kotowari[ID, ...]`, and a guide mark to the form `@kotowari[ID:fingerprint, ...]` (guides.md) | implementer (the writer of the guide for a guide mark) |
 | unparsable_file | A test file cannot be read | Fix the syntax error in the test | implementer |
 | invalid_plan | In `kotowari plan`, the plan file does not have the form of the bundled plan schema (detail is the schema side's kind, `: `, and its detail) | Fix the plan at `line` as detail says, and run `kotowari plan` again | the writer of the plan |
