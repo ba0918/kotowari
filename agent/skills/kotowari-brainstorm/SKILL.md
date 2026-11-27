@@ -241,7 +241,7 @@ from the list; any of these sends you back to the dialogue.
    with no change to files whose body carries the list in the same way:
    `git commit --allow-empty --only -F <message file>`, with no paths, which commits the tree of
    `HEAD` whatever is staged and leaves the index as it was; `git diff --name-only HEAD^ HEAD` must
-   then print nothing. Then
+   then print nothing; when it prints a path, stop and tell the person. Then
    `git status --porcelain -- <the staged paths>` must print nothing and
    `git diff --name-only origin/<target> HEAD -- <the staged paths>` must list every one of them;
    until both hold, do not switch: tell the person which approved files are not committed on the

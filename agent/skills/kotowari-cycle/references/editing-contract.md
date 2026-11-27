@@ -36,6 +36,12 @@ who gets which section; everything below this paragraph is pasted as written.
   it) and commit that item. When the decision documents are kept in language pairs, write the item
   on every side (`## Open` on an English side) and update the agreement record (the kotowari
   skill's `references/decision-documents.md`, **Languages: a pair of sides**).
+- When you were given the list of what was decided without asking, follow it like the decisions.
+  When a fix needs an item decided differently, decide again with grounds, report it as a decision
+  line naming the item it replaces, and write the whole updated list again in the body of that
+  commit: a line holding only `聞かずに決めたこと:` (`Decided without asking:` where the commit
+  messages are in English), then each item on a line starting with `- `, the lines that continue
+  an item indented, and no blank line before the list ends.
 - Apart from that item, never edit a decision document. If a hook stops a commit on a finding in a
   decision document, leave the change uncommitted and return the finding with the files it
   blocked.

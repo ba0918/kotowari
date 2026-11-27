@@ -167,7 +167,8 @@ Every prompt is self-contained; never assume a delegate loaded a skill or read t
   `no_longer_visible` and new findings.
 - **consistency phase:** use **Consistency phase** below.
 - **fixer:** carry the visible findings, the place of the decision documents, branch, worktree path, the path of the kotowari
-  skill's `references/mark.md`, and the contract below; for a finding that is `still_present`
+  skill's `references/mark.md`, the list of what was decided without asking when the branch has one
+  (**Inputs**), and the contract below; for a finding that is `still_present`
   after a fix, also that fix's commits.
 
 Paste `references/editing-contract.md` as written: its **Editing contract** to the fixer and the
