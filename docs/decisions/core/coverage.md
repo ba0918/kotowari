@@ -60,7 +60,7 @@ When the location of decision documents has no documents at all, the findings of
 
 ## A test that has no row can be declared with `@kotowari[detail]`, and a declared test gets no test_without_id
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

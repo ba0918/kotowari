@@ -85,7 +85,7 @@ pub fn check_entries<'a>(
                             .to_owned(),
                     ));
                 } else {
-                    for id in &marker.ids {
+                    for id in marker.ids.iter().filter(|id| !is_declaration(id)) {
                         markers.push(TestMarker {
                             id: id.clone(),
                             path: path.to_owned(),
@@ -125,7 +125,7 @@ fn record_test_markers(
     for test in tests {
         // 印の検証
         check_test_markers(test, rel_path, known_ids, findings);
-        for (id, marker_line) in &test.marker_ids {
+        for (id, marker_line) in test.marker_ids.iter().filter(|(id, _)| !is_declaration(id)) {
             markers.push(TestMarker {
                 id: id.clone(),
                 path: rel_path.to_string(),
@@ -145,7 +145,14 @@ fn record_test_markers(
     }
 }
 
-/// 印の無いテストに test_without_id を出す
+/// 印の中身の1語が、行を持たない振る舞いのテストの宣言か（docs/decisions/core/coverage.md）。
+/// 宣言は `ID` ではないので、印として数えず（どの行も満たさない）、unresolved_reference も出さない。
+/// 確認することの行の ID は "C-" で始まるので、この語と重ならない
+fn is_declaration(id: &str) -> bool {
+    id == "detail"
+}
+
+/// 印の無いテストに test_without_id を出す。宣言だけの印も印があるので出さない
 fn check_unmarked_tests(all_tests: &[DiscoveredTest], findings: &mut Vec<Finding>) {
     for test in all_tests {
         if test.marker_ids.is_empty() {
@@ -173,7 +180,7 @@ fn check_test_markers(
 ) {
     // unresolved_reference の line は印のある行
     for (id, marker_line) in &test.marker_ids {
-        if !id.is_empty() && !known_ids.contains(id) {
+        if !id.is_empty() && !is_declaration(id) && !known_ids.contains(id) {
             findings.push(Finding::new(
                 FindingKind::UnresolvedReference,
                 file_path.to_string(),
