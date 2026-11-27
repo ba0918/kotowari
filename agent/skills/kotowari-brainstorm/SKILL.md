@@ -80,16 +80,18 @@ A question is put before the person only when it is one of these kinds:
 
 Before asking, read what reading answers, and try small what trying answers (a throwaway run, kept
 out of the commits); write what they showed in the question's background. A question that is none
-of the kinds is not put before the person in any form, wherever the rounds run: decide it yourself
-with grounds, and it goes in the list of what was decided without asking (**Finishing**). A
-question for which you cannot judge whether it is one of the kinds is asked.
+of the kinds is not put before the person in any form, wherever the rounds run, except as part of
+the usage example of an external interface below: decide it yourself with grounds, and it goes in
+the list of what was decided without asking (**Finishing**). A question for which you cannot judge
+whether it is one of the kinds is asked.
 
 An external interface is a part the person's procedure or other tools and scripts depend on: the
 form of a command, the format of the output, the exit codes, the names and places of the files
 written. A part of it that is one of the kinds is asked in the rounds like any other question; a
-part you decided without asking is not put in the list. Ask about all such parts once, in the last
-round before approval, as one usage example (the command, the first lines of its output, its exit
-code, the files it writes) and whether it is right. The form the person confirms or corrects there
+part you decided without asking is not put in the list. Such parts are none of the kinds, and this
+is the one question asked about them: ask about all of them once, in the last round before
+approval, as one usage example (the command, the first lines of its output, its exit code, the
+files it writes) and whether it is right. The form the person confirms or corrects there
 is their decision and is written in the decision documents; a part they leave to you stays in the
 list. When you decided no external interface without asking, this question is not asked.
 
