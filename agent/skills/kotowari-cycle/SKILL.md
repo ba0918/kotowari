@@ -28,10 +28,17 @@ configuration's `decisions.documents` names (the kotowari skill's
 Required: the place of the decision documents, the list of decisions to build (each a topic
 document's path and a heading's anchor, `docs/decisions/core/confirmations.md#<anchor>`), and the
 branch with its worktree path. The brainstorm hands over all of them, with the merge target, as
-it goes on to cycle (its **Finishing**), together with the row IDs of the decisions it overturned
-(each with the decision replacing it) and the path of any prototype to compare with; for any other
-start the main session prepares the branch, which carries the commit of the approved decisions,
-and its worktree first. Cycle takes the list as it comes: it adds no decision to it.
+it goes on to cycle (its **Finishing**), together with the list of what it decided without asking,
+the row IDs of the decisions it overturned (each with the decision replacing it) and the path of
+any prototype to compare with; for any other start the main session prepares the branch, which
+carries the commit of the approved decisions, and its worktree first. Cycle takes the list of
+decisions as it comes: it adds no decision to it.
+
+The list of what was decided without asking is kept in commit bodies on the branch, under a line
+`聞かずに決めたこと:` or `Decided without asking:`. When the brainstorm did not hand it over (a
+resume, a start in another session), read it from the branch: in
+`git log --format=%B <comparison base>..HEAD`, with no path limit, the section of the newest commit
+that has one; it replaces any earlier one whole. A branch with no such section has no list.
 
 A start that brings a request with the place of the decision documents confirms in the worktree
 that the decisions are approved, after the reads at the head of **Resuming and running more** and
@@ -85,8 +92,9 @@ both full and diff reviews.
 
 ## Loop
 
-1. Delegate the place of the decision documents, the decisions cycle received, the overturned row
-   IDs and the prototype path when the brainstorm gave them, the branch, and the worktree path to
+1. Delegate the place of the decision documents, the decisions cycle received, the list of what
+   was decided without asking when the branch has one (**Inputs**), the overturned row IDs and the
+   prototype path when the brainstorm gave them, the branch, and the worktree path to
    an implement agent, all remaining work in one delegation, as **Plans** says.
 2. Consistency phase (**Consistency phase**).
 3. Full review: base..head, profiles, strength, counterpart, plus the **known findings** (open

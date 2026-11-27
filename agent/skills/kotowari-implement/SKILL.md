@@ -12,8 +12,9 @@ test-first; documents and small scripts may be written directly.
 ## Inputs and outputs
 
 In: the worktree path, the branch, the place of the decision documents, and the list of decisions
-to build (each a topic document's path and a heading's anchor); with them, when the brainstorm
-overturned decisions, the row IDs of the old decisions and the decision replacing each, and the
+to build (each a topic document's path and a heading's anchor); with them, the list of what the
+brainstorm decided without asking when the branch has one; when the brainstorm overturned
+decisions, the row IDs of the old decisions and the decision replacing each; the
 path of a prototype to compare with, if one was made; and, when cycle judged the work more than a
 single implementer can hold, the instruction to write a plan first, or, when the branch already
 has one, the plan's path. Work only inside that worktree. Read each
@@ -64,6 +65,12 @@ Write each detail and reading you decided as one line of what was decided, why, 
 in the body of the commit that carries it and in your report, which goes into the pull request
 body (kotowari-cycle's **Terminal report**). Never write it into a decision document: those hold
 the person's decisions only.
+
+The list of what the brainstorm decided without asking is followed like the decisions: build what
+each item says. When it turns out during implementation that an item needs a different way of
+deciding, decide again with grounds and write what was decided, why, and the evidence as such a
+line, in the commit body and in your report for the pull request body, naming the item it
+replaces.
 
 Section names below are given in their Japanese spelling; an English side uses the English
 spelling of the same keyword (the kotowari skill's `references/decision-documents.md`).

@@ -123,7 +123,7 @@ A working prototype is throwaway, for deciding, and is not used as the base of p
 
 ## The questions put in a round of the brainstorm are narrowed to three kinds, and the agent running the brainstorm decides the rest
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -162,7 +162,7 @@ This standard is applied to the brainstorm. It is not applied to a small task ko
 
 ## What the brainstorm decided without asking is shown as a list at approval, written in the body of the commit of the specification, and carried to the implementing side
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
