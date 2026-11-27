@@ -125,7 +125,7 @@ fn record_test_markers(
     for test in tests {
         // 印の検証
         check_test_markers(test, rel_path, known_ids, findings);
-        for (id, marker_line) in test.marker_ids.iter().filter(|(id, _)| !is_declaration(id)) {
+        for (id, marker_line) in &test.marker_ids {
             markers.push(TestMarker {
                 id: id.clone(),
                 path: rel_path.to_string(),
@@ -146,7 +146,7 @@ fn record_test_markers(
 }
 
 /// 印の中身の1語が、行を持たない振る舞いのテストの宣言か（docs/decisions/core/coverage.md）。
-/// 宣言は `ID` ではないので、印として数えず（どの行も満たさない）、unresolved_reference も出さない。
+/// 宣言は `ID` ではないので、どの行も満たさず、unresolved_reference も出さない。
 /// 確認することの行の ID は "C-" で始まるので、この語と重ならない
 fn is_declaration(id: &str) -> bool {
     id == "detail"
