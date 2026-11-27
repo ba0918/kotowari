@@ -35,7 +35,7 @@ carries the commit of the approved decisions, and its worktree first. Cycle take
 decisions as it comes: it adds no decision to it.
 
 The list of what was decided without asking is kept in commit bodies on the branch, under a line
-`聞かずに決めたこと:` or `Decided without asking:`. When the brainstorm did not hand it over (a
+holding only `聞かずに決めたこと:` or `Decided without asking:`. When the brainstorm did not hand it over (a
 resume, a start in another session), read it from the branch: in
 `git log --format=%B <comparison base>..HEAD`, with no path limit, the section of the newest commit
 that has one; it replaces any earlier one whole. A branch with no such section has no list.

@@ -113,8 +113,9 @@ that a test carries it.
 
 ### Terms and concrete cases
 
-When a word can be read two ways, ask "does *X* mean this?" with your reading as the
-recommended answer, in the normal round. A settled definition used by several decisions goes into
+When a word can be read two ways and its reading is one of the kinds **What goes in a round**
+names, ask "does *X* mean this?" with your reading as the recommended answer, in the normal round;
+otherwise decide the reading as that section says. A settled definition used by several decisions goes into
 the decision that settled it, and the others link to it; the meaning of a term goes into the
 project's glossary.
 
@@ -227,14 +228,15 @@ from the list; any of these sends you back to the dialogue.
       starts from it and keeps the items that still stand, since the newest replaces it whole.
       The person commits the staged files or says they may be committed, on a new branch named
       for the topic, which the brainstorm cuts in the main working tree from the head of the merge
-      target (the branch the person names, else the repository's default branch): `git fetch origin <target>` and `git switch -c <branch> origin/<target>`,
-      the staged files going with it.
+      target (the branch the person names, else the repository's default branch):
+      `git fetch origin <target>` and `git switch -c <branch> origin/<target>`, the staged files
+      going with it.
 4. The commit comes before leaving the new branch: when the person said the staged files may be
    committed rather than committing them, the brainstorm commits them there (`git commit`). The
-   list of what was decided without asking goes in the body of that commit, under a line
-   `聞かずに決めたこと:` (`Decided without asking:` where the commit messages are in English), one
-   line per item of what was decided and why, or `なし` (`None`) under it when the list is empty. When the person committed the
-   staged files themselves, the brainstorm adds to the same branch, before leaving it, a commit
+   list of what was decided without asking goes in the body of that commit, under a line holding
+   only `聞かずに決めたこと:` (`Decided without asking:` where the commit messages are in English),
+   one line per item of what was decided and why, or `なし` (`None`) under it when the list is
+   empty. When the person committed the staged files themselves, the brainstorm adds to the same branch, before leaving it, a commit
    with no change to files (`git commit --allow-empty`) whose body carries the list in the same
    way. Then
    `git status --porcelain -- <the staged paths>` must print nothing and
