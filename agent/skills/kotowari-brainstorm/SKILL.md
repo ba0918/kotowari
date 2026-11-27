@@ -237,8 +237,10 @@ from the list; any of these sends you back to the dialogue.
    only `聞かずに決めたこと:` (`Decided without asking:` where the commit messages are in English),
    one line per item of what was decided and why, or `なし` (`None`) under it when the list is
    empty. When the person committed the staged files themselves, the brainstorm adds to the same branch, before leaving it, a commit
-   with no change to files (`git commit --allow-empty`) whose body carries the list in the same
-   way. Then
+   with no change to files whose body carries the list in the same way:
+   `git commit --allow-empty --only -F <message file>`, with no paths, which commits the tree of
+   `HEAD` whatever is staged and leaves the index as it was; `git diff --name-only HEAD^ HEAD` must
+   then print nothing. Then
    `git status --porcelain -- <the staged paths>` must print nothing and
    `git diff --name-only origin/<target> HEAD -- <the staged paths>` must list every one of them;
    until both hold, do not switch: tell the person which approved files are not committed on the
