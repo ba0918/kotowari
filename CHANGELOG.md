@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-11-27
+
 ### Changed
 
 - `kotowari-cycle` has a plan written when it judges, before its first delegation, that the work is more than a single implementer can hold (no number decides it), and writes the one-line reason in the findings file as `plan_reason`. The implementer writes the plan at `docs/plans/<branch>.md` in the form `kotowari plan` checks (described in `kotowari-implement/references/plan.md`), commits it on the working branch, and goes on to implement; nobody approves it. An implementer that finds part way that it cannot hold the work commits at a boundary where the tests pass, leaves the remaining procedure in the plan, and hands back, and the cycle delegates the rest. A plan does not bind the implementer: it rewrites the plan when it takes another way, its stop conditions add no stop, its test command does not decide the test command, and it holds no progress. The cycle passes only the plan's path and never reads it; reviews and the consistency phase leave only that file out of their range, and read any other file under `docs/plans/` like any other file. A converged run commits the deletion of the plan before it pushes, with only that path in the commit and without another review; when anything else changed since the head before that commit or the plan is still at the head, it pushes nothing, puts the branch back with the plan restored, ends as a hand-back and reports, and a resume runs the deletion and its confirmations again. A run that ends without converging keeps the plan for the resume. `kotowari-iterate` never has a plan written.
@@ -194,7 +196,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.1...HEAD
+[0.8.1]: https://github.com/ba0918/kotowari/compare/kotowari-v0.8.0...kotowari-v0.8.1
 [0.8.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.7.0...kotowari-v0.8.0
 [0.7.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.6.0...kotowari-v0.7.0
 [0.6.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.5.0...kotowari-v0.6.0
