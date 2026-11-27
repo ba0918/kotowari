@@ -5,6 +5,10 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Changed
+
+- `kotowari-brainstorm` asks the person only three kinds of question: the product's direction, preferences and trade-offs that neither reading nor trying settles; something whose change after it is decided means rebuilding what was built or the accumulated data; and something the request, the sample or the records show the person cares about. It reads what reading answers and tries small what trying answers, writing the result in the question's background, and asks a question when it cannot tell whether it is one of the kinds. Every other question it decides itself with grounds instead of putting it before the person. This applies to the brainstorm only, not to `kotowari-iterate` or `kotowari-adopt`. At approval it shows, with the diff, the list of what it decided without asking, one line each of what and why, or says there is none; an item the person says is wrong becomes a decision in the decision documents. The rest goes in the body of the commit of the decision documents under a line `聞かずに決めたこと:` (`Decided without asking:` in English history), with `なし` (`None`) when the list is empty; when the person committed the files themselves, the brainstorm adds a commit with no file change carrying it. Whoever changes the list writes it again whole in the body of the commit carrying the change, and the newest such list on a branch replaces earlier ones. `kotowari-cycle` receives the list from the brainstorm, or reads it from the commit bodies since the branch parted from the merge target on a resume or a start in another session, and passes it to `kotowari-implement` and to the fixer, which follow it and, when an item needs deciding differently, decide again, write what, why and the evidence in the commit body and the pull request body, and write the updated list again in that commit body.
+
 ## [0.8.1] - 2026-11-27
 
 ### Changed
