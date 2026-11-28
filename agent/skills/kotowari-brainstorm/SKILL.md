@@ -92,7 +92,9 @@ part you decided without asking is not put in the list. Such parts are none of t
 is the one question asked about them: ask about all of them in the last round before approval, as
 one usage example and whether it is right. For a command the example is the command, the first
 lines of its output, its exit code and the files it writes; for another kind of interface, a call
-and what comes back. When rounds follow it and you decide more such parts, ask again the same way
+and what comes back. The example shows one ordinary use; an edge case it does not show (which
+exit code wins when errors coincide, the fine points of which input counts as an error) is not
+asked and goes in the list. When rounds follow it and you decide more such parts, ask again the same way
 before approval. What the person confirms or corrects there is their decision about the interface
 (the form, the format, the codes, the names and places) and is written in the decision documents;
 the wording of a message the example happens to show is not (**Writing the decisions**). A part
@@ -239,7 +241,8 @@ from the list; any of these sends you back to the dialogue.
       asking: each question that was none of the kinds of **What goes in a round** and that you
       decided with grounds, one line each of what was decided and why; answers taken from the
       origin, the choice of a sample, and an external interface you decided (except a part the
-      person left to you on the usage example, **What goes in a round**) are not in it. When nothing was decided without asking,
+      person left to you on the usage example and an edge case the example does not show,
+      **What goes in a round**) are not in it. When nothing was decided without asking,
       say there is none. An item the person says is wrong is something the person decided: write it
       in the decision documents, take it out of the list, and show the changed diff and identifiers
       again. A list is made at each approval; when the branch already carries one (its newest
