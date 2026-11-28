@@ -5,6 +5,10 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Changed
+
+- `kotowari-brainstorm` says what the usage example of an external interface covers: one ordinary use. An edge case the example does not show (which exit code wins when errors coincide, the fine points of which input counts as an error) is not asked and is written in the list of what was decided without asking.
+
 ## [0.8.4] - 2026-11-28
 
 ### Changed

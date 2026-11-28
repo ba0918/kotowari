@@ -260,15 +260,19 @@ An external interface is a part the user's procedure or other tools and scripts 
 
 An external interface decided by the agent running the brainstorm is not put in the list of what was decided without asking. In the last round before approval, one usage example is shown and the person is asked whether it is right. Internal details are written in the list as before.
 
+The usage example shows one ordinary use. An edge case the example does not show is written in the list of what was decided without asking. Which exit code wins when errors coincide, and the fine points of which input counts as an error, are such edge cases. In a trial run after the usage example question was added, the question was asked, but the precedence of exit codes when errors coincide did not enter the example and stayed in the list. One usage example cannot show the combinations, and showing them all would ask the person about fine points they have no answer for.
+
 ### Rejected options
 
 - Add no question, split the list into external interface and internal details, and place the former first. In the re-reading it was pointed out 3 times out of 6.
 - Make every item of the list a question. Each brainstorm gets 9 to 15 more questions, and narrowing the questions put in a round loses its point.
+- Attach to the usage example a table of the exit codes and their conditions, showing every edge case too. The question gets long, and the person is asked about fine points they have no answer for.
 - Leave the list as it is. In the re-reading, the reader after the brainstorm pointed it out 1 time out of 6.
 
 ### Confirmations
 
 - C-core-flow-23 (by reading) The brainstorm skill says that an external interface decided by the agent running the brainstorm (a part the user's procedure or other tools and scripts depend on: the form of a command, the format of the output, the exit codes, the names and places of the files written) is not put in the list of what was decided without asking, and is asked in the last round before approval by showing one usage example
+- C-core-flow-24 (by reading) The brainstorm skill says that the usage example shows an ordinary use, and that an edge case the example does not show is written in the list of what was decided without asking
 
 ## No mechanism is added to catch a rule nobody asked about; it is left to the reading of the decision documents at approval
 
